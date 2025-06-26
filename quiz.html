@@ -2,121 +2,85 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quiz TribuCoach</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #111;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
-    .quiz-container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #222;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
-    }
-    h1 {
-      text-align: center;
-    }
-    .question {
-      margin-bottom: 20px;
-    }
-    .answers button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      background: #444;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .answers button:hover {
-      background: #666;
-    }
-    .result {
-      text-align: center;
-      font-size: 18px;
-      margin-top: 20px;
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz TribuCoach</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header img {
+            max-width: 150px;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #ff9900;
+        }
+        .section {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 22px;
+            color: #ffcc00;
+        }
+        .section p {
+            font-size: 16px;
+        }
+        footer {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 30px;
+            color: #aaa;
+        }
+    </style>
 </head>
 <body>
-  <div class="quiz-container">
-    <h1>Scopri a che punto sei!</h1>
-    <div id="quiz">
-      <div class="question" id="question"></div>
-      <div class="answers" id="answers"></div>
+    <header>
+        <img src="tribu_logo_monocromo.png" alt="Logo Tribù">
+        <h1>Il tuo check-up personalizzato</h1>
+        <p>Rispondi a queste domande per scoprire in che fase sei e cosa puoi migliorare</p>
+    </header>
+
+    <div class="section">
+        <h2>🏋️‍♂️ Allenamento</h2>
+        <p>Quante volte ti alleni ogni settimana?</p>
+        <p>Qual è il tuo obiettivo attuale (forza, dimagrimento, performance)?</p>
+        <p>Hai un piano strutturato o vai “a sentimento”?</p>
     </div>
-    <div class="result" id="result"></div>
-  </div>
 
-  <script>
-    const quizData = [
-      {
-        question: "Come valuti la tua alimentazione attuale?",
-        answers: ["Molto sana", "Abbastanza equilibrata", "Spesso sregolata", "Disordinata e casuale"]
-      },
-      {
-        question: "Quante volte ti alleni ogni settimana?",
-        answers: ["5 o più", "3-4 volte", "1-2 volte", "Mai"]
-      },
-      {
-        question: "Quanto tempo dedichi al tuo benessere mentale?",
-        answers: ["Ogni giorno", "Ogni tanto", "Solo quando sto male", "Mai"]
-      },
-      {
-        question: "Quanto spesso segui buone abitudini (sonno, idratazione, routine)?",
-        answers: ["Sempre", "Spesso", "Poco", "Quasi mai"]
-      }
-    ];
+    <div class="section">
+        <h2>🥗 Alimentazione</h2>
+        <p>Come valuteresti la tua alimentazione da 1 a 10?</p>
+        <p>Segui uno schema alimentare o vai “a occhio”?</p>
+        <p>Qual è il tuo punto debole (snack, porzioni, organizzazione)?</p>
+    </div>
 
-    let currentQuestion = 0;
-    const questionEl = document.getElementById("question");
-    const answersEl = document.getElementById("answers");
-    const resultEl = document.getElementById("result");
+    <div class="section">
+        <h2>🧠 Buone Abitudini</h2>
+        <p>Quanto dormi in media per notte?</p>
+        <p>Hai momenti dedicati al relax o sei sempre di corsa?</p>
+        <p>Quanto tempo dedichi a te stesso ogni giorno?</p>
+    </div>
 
-    function showQuestion() {
-      const q = quizData[currentQuestion];
-      questionEl.textContent = q.question;
-      answersEl.innerHTML = "";
-      q.answers.forEach(answer => {
-        const btn = document.createElement("button");
-        btn.textContent = answer;
-        btn.onclick = () => nextQuestion();
-        answersEl.appendChild(btn);
-      });
-    }
+    <div class="section">
+        <h2>💡 Conclusione Motivazionale</h2>
+        <p>Ogni risposta che hai dato è un punto di partenza. Il cambiamento non richiede perfezione, ma consapevolezza e azione costante. Sii fiero di esserti fermato a riflettere. Ora è il momento di agire.</p>
+    </div>
 
-    function nextQuestion() {
-      currentQuestion++;
-      if (currentQuestion < quizData.length) {
-        showQuestion();
-      } else {
-        showResult();
-      }
-    }
-
-    function showResult() {
-      document.getElementById("quiz").style.display = "none";
-      resultEl.style.display = "block";
-      resultEl.innerHTML = `
-        <p>🔍 Analisi completata!</p>
-        <p>💡 Ricorda: anche piccoli miglioramenti quotidiani possono fare la differenza.</p>
-        <p>Vuoi un consiglio su misura? Scrivimi su WhatsApp 👉 <a href="https://wa.me/393478881515" style="color:#0f0;">Clicca qui</a></p>
-      `;
-    }
-
-    showQuestion();
-  </script>
+    <footer>
+        Powered by TribuCoach • www.personaltrainerverona.it
+    </footer>
 </body>
 </html>
