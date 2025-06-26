@@ -2,85 +2,123 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz TribuCoach</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #121212;
-            color: #fff;
-            margin: 0;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        header img {
-            max-width: 150px;
-        }
-        h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: #ff9900;
-        }
-        .section {
-            background-color: #1e1e1e;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .section h2 {
-            font-size: 22px;
-            color: #ffcc00;
-        }
-        .section p {
-            font-size: 16px;
-        }
-        footer {
-            text-align: center;
-            font-size: 14px;
-            margin-top: 30px;
-            color: #aaa;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz TribuCoach</title>
+  <style>
+    body {
+      background-color: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .quiz-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: orange;
+      text-align: center;
+    }
+    .question {
+      margin: 20px 0;
+    }
+    .question h2 {
+      color: #f1c40f;
+    }
+    .options {
+      margin-left: 20px;
+    }
+    .result {
+      display: none;
+      margin-top: 20px;
+      background-color: #222;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    button {
+      background-color: orange;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <img src="tribu_logo_monocromo.png" alt="Logo Tribù">
-        <h1>Il tuo check-up personalizzato</h1>
-        <p>Rispondi a queste domande per scoprire in che fase sei e cosa puoi migliorare</p>
-    </header>
+  <div class="quiz-container">
+    <h1>Il tuo Check-up Personalizzato</h1>
 
-    <div class="section">
-        <h2>🏋️‍♂️ Allenamento</h2>
-        <p>Quante volte ti alleni ogni settimana?</p>
-        <p>Qual è il tuo obiettivo attuale (forza, dimagrimento, performance)?</p>
-        <p>Hai un piano strutturato o vai “a sentimento”?</p>
-    </div>
+    <form id="quizForm">
+      <div class="question">
+        <h2>🏋️ Allenamento</h2>
+        <p>Quante volte ti alleni a settimana?</p>
+        <div class="options">
+          <label><input type="radio" name="allenamento" value="basso" /> 0-1 volte</label><br />
+          <label><input type="radio" name="allenamento" value="medio" /> 2-3 volte</label><br />
+          <label><input type="radio" name="allenamento" value="alto" /> 4+ volte</label>
+        </div>
+      </div>
 
-    <div class="section">
+      <div class="question">
         <h2>🥗 Alimentazione</h2>
-        <p>Come valuteresti la tua alimentazione da 1 a 10?</p>
-        <p>Segui uno schema alimentare o vai “a occhio”?</p>
-        <p>Qual è il tuo punto debole (snack, porzioni, organizzazione)?</p>
-    </div>
+        <p>Quanto sei soddisfatto della tua alimentazione?</p>
+        <div class="options">
+          <label><input type="radio" name="alimentazione" value="basso" /> Poco</label><br />
+          <label><input type="radio" name="alimentazione" value="medio" /> Abbastanza</label><br />
+          <label><input type="radio" name="alimentazione" value="alto" /> Molto</label>
+        </div>
+      </div>
 
-    <div class="section">
-        <h2>🧠 Buone Abitudini</h2>
-        <p>Quanto dormi in media per notte?</p>
-        <p>Hai momenti dedicati al relax o sei sempre di corsa?</p>
+      <div class="question">
+        <h2>🧠 Abitudini</h2>
         <p>Quanto tempo dedichi a te stesso ogni giorno?</p>
-    </div>
+        <div class="options">
+          <label><input type="radio" name="abitudini" value="basso" /> Quasi niente</label><br />
+          <label><input type="radio" name="abitudini" value="medio" /> Qualche minuto</label><br />
+          <label><input type="radio" name="abitudini" value="alto" /> Almeno 30 min</label>
+        </div>
+      </div>
 
-    <div class="section">
-        <h2>💡 Conclusione Motivazionale</h2>
-        <p>Ogni risposta che hai dato è un punto di partenza. Il cambiamento non richiede perfezione, ma consapevolezza e azione costante. Sii fiero di esserti fermato a riflettere. Ora è il momento di agire.</p>
-    </div>
+      <button type="button" onclick="valutaRisultato()">Scopri il tuo profilo</button>
+    </form>
 
-    <footer>
-        Powered by TribuCoach • www.personaltrainerverona.it
-    </footer>
+    <div class="result" id="result">
+      <h2>Il tuo profilo:</h2>
+      <p id="profilo"></p>
+    </div>
+  </div>
+
+  <script>
+    function valutaRisultato() {
+      const risposte = ['allenamento', 'alimentazione', 'abitudini'];
+      let punteggio = 0;
+
+      for (const r of risposte) {
+        const scelta = document.querySelector(`input[name="${r}"]:checked`);
+        if (!scelta) {
+          alert("Per favore rispondi a tutte le domande.");
+          return;
+        }
+        if (scelta.value === "medio") punteggio += 1;
+        if (scelta.value === "alto") punteggio += 2;
+      }
+
+      let profilo = "";
+      if (punteggio <= 2) {
+        profilo = "Sei nella fase di partenza. Serve una guida per ripartire con il piede giusto!";
+      } else if (punteggio <= 4) {
+        profilo = "Hai già una buona base! Con qualche miglioramento puoi fare il salto di qualità.";
+      } else {
+        profilo = "Ottimo lavoro! Stai seguendo abitudini solide e sei sulla strada giusta.";
+      }
+
+      document.getElementById("profilo").innerText = profilo;
+      document.getElementById("result").style.display = "block";
+    }
+  </script>
 </body>
 </html>
