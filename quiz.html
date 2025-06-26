@@ -2,103 +2,121 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quiz TribuCoach</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #0f0f0f;
-      color: #ffffff;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #111;
+      color: white;
       margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 20px;
+    }
+    .quiz-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #222;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
     }
     h1 {
-      color: #ffc107;
-      font-size: 2rem;
-      margin-bottom: 1rem;
+      text-align: center;
     }
-    .section {
-      max-width: 700px;
-      margin: 2rem 0;
-      background-color: #1f1f1f;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(255,193,7,0.2);
+    .question {
+      margin-bottom: 20px;
     }
-    .section h2 {
-      color: #ff9800;
-      margin-bottom: 1rem;
-    }
-    .section ul {
-      list-style: none;
-      padding-left: 0;
-    }
-    .section li {
-      margin-bottom: 0.8rem;
-    }
-    .cta {
-      margin-top: 2rem;
-      padding: 1rem 2rem;
-      background-color: #ffc107;
-      color: #000;
+    .answers button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      background: #444;
       border: none;
-      font-weight: bold;
-      font-size: 1.2rem;
-      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
-    .cta:hover {
-      background-color: #ffb300;
+    .answers button:hover {
+      background: #666;
     }
-    .motivational {
-      margin-top: 2rem;
-      font-style: italic;
-      color: #ddd;
+    .result {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 20px;
+      display: none;
     }
   </style>
 </head>
 <body>
-
-  <h1>Risultato del Quiz</h1>
-
-  <div class="section">
-    <h2>🍽 Alimentazione</h2>
-    <ul>
-      <li>✅ Inizia la giornata con una colazione proteica e bilanciata.</li>
-      <li>✅ Bevi almeno 1.5–2 litri d'acqua ogni giorno.</li>
-      <li>✅ Riduci i cibi processati: privilegia ingredienti semplici e freschi.</li>
-    </ul>
+  <div class="quiz-container">
+    <h1>Scopri a che punto sei!</h1>
+    <div id="quiz">
+      <div class="question" id="question"></div>
+      <div class="answers" id="answers"></div>
+    </div>
+    <div class="result" id="result"></div>
   </div>
 
-  <div class="section">
-    <h2>🏋️‍♂️ Allenamento</h2>
-    <ul>
-      <li>✅ Punta su allenamenti brevi ma costanti: anche 20' al giorno bastano.</li>
-      <li>✅ Alterna giorni di lavoro forza a mobilità o cardio leggero.</li>
-      <li>✅ Ascolta il corpo: allenarsi troppo è controproducente.</li>
-    </ul>
-  </div>
+  <script>
+    const quizData = [
+      {
+        question: "Come valuti la tua alimentazione attuale?",
+        answers: ["Molto sana", "Abbastanza equilibrata", "Spesso sregolata", "Disordinata e casuale"]
+      },
+      {
+        question: "Quante volte ti alleni ogni settimana?",
+        answers: ["5 o più", "3-4 volte", "1-2 volte", "Mai"]
+      },
+      {
+        question: "Quanto tempo dedichi al tuo benessere mentale?",
+        answers: ["Ogni giorno", "Ogni tanto", "Solo quando sto male", "Mai"]
+      },
+      {
+        question: "Quanto spesso segui buone abitudini (sonno, idratazione, routine)?",
+        answers: ["Sempre", "Spesso", "Poco", "Quasi mai"]
+      }
+    ];
 
-  <div class="section">
-    <h2>🧠 Buone abitudini</h2>
-    <ul>
-      <li>✅ Dormi almeno 7 ore per notte, senza schermo nell’ora prima.</li>
-      <li>✅ Pianifica la tua settimana: allenamento, pasti, tempi per te.</li>
-      <li>✅ Spegni le notifiche durante l’allenamento o la meditazione.</li>
-    </ul>
-  </div>
+    let currentQuestion = 0;
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const resultEl = document.getElementById("result");
 
-  <div class="motivational">
-    💡 Ricorda: non serve essere perfetti, serve essere costanti. Inizia oggi, anche con poco. Il tuo futuro ringrazia.
-  </div>
+    function showQuestion() {
+      const q = quizData[currentQuestion];
+      questionEl.textContent = q.question;
+      answersEl.innerHTML = "";
+      q.answers.forEach(answer => {
+        const btn = document.createElement("button");
+        btn.textContent = answer;
+        btn.onclick = () => nextQuestion();
+        answersEl.appendChild(btn);
+      });
+    }
 
-  <button class="cta" onclick="window.location.href='https://tribucoach.netlify.app'">Torna a TribuCoach</button>
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < quizData.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
 
+    function showResult() {
+      document.getElementById("quiz").style.display = "none";
+      resultEl.style.display = "block";
+      resultEl.innerHTML = `
+        <p>🔍 Analisi completata!</p>
+        <p>💡 Ricorda: anche piccoli miglioramenti quotidiani possono fare la differenza.</p>
+        <p>Vuoi un consiglio su misura? Scrivimi su WhatsApp 👉 <a href="https://wa.me/393478881515" style="color:#0f0;">Clicca qui</a></p>
+      `;
+    }
+
+    showQuestion();
+  </script>
 </body>
 </html>
