@@ -373,6 +373,54 @@
         .benefit-card:nth-child(2) { animation-delay: 0.2s; }
         .benefit-card:nth-child(3) { animation-delay: 0.4s; }
         .benefit-card:nth-child(4) { animation-delay: 0.6s; }
+
+        /* Fix Chatbase Widget */
+        #chatbase-bubble-button {
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 999 !important;
+        }
+
+        #chatbase-bubble-window {
+            bottom: 80px !important;
+            right: 20px !important;
+            z-index: 998 !important;
+            max-width: 400px !important;
+            max-height: 600px !important;
+        }
+
+        /* Ensure content doesn't overlap with chat widget */
+        body {
+            padding-bottom: 100px;
+        }
+
+        /* Hide chatbase widget on very small screens to avoid overlap */
+        @media (max-width: 480px) {
+            #chatbase-bubble-button,
+            #chatbase-bubble-window {
+                display: none !important;
+            }
+            
+            /* Show a notice for mobile users */
+            .mobile-chat-notice {
+                display: block !important;
+                position: fixed;
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                background: #ff6600;
+                color: white;
+                padding: 10px;
+                border-radius: 10px;
+                text-align: center;
+                font-size: 0.9rem;
+                z-index: 1000;
+            }
+        }
+
+        .mobile-chat-notice {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -484,6 +532,11 @@
             <a href="https://www.personaltrainerverona.it" target="_blank"><img src="browser.png" alt="Sito"></a>
         </div>
     </footer>
+
+    <!-- Mobile chat notice -->
+    <div class="mobile-chat-notice">
+        💬 Su mobile usa il pulsante "Chatta con TribuCoach" qui sopra
+    </div>
 
     <script>
     (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="EjoHCEogMfkkrVzIK6V07";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
