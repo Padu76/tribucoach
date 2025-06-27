@@ -293,7 +293,61 @@
         <div id="quizContainer"></div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     <script>
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-9564b.firebaseapp.com",
+            projectId: "tribucoach-9564b",
+            storageBucket: "tribucoach-9564b.appspot.com",
+            messagingSenderId: "476626832985",
+            appId: "1:476626832985:web:7835188f40f4348567ab48",
+            measurementId: "G-YZ565MKQ6V"
+        };
+        
+        // Inizializza Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const analytics = firebase.analytics();
+
+        // Funzione per salvare i risultati del quiz
+        function saveQuizResult(data) {
+            return db.collection('quiz_leads').add({
+                ...data,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                source: 'advanced_quiz',
+                lead_score: data.score
+            }).then((docRef) => {
+                console.log('Quiz salvato con ID:', docRef.id);
+                // Log evento analytics
+                analytics.logEvent('quiz_completed', {
+                    profile: data.profile,
+                    score: data.score
+                });
+                return docRef.id;
+            }).catch((error) => {
+                console.error('Errore salvataggio:', error);
+                throw error;
+            });
+        }
+
+        // Funzione per calcolare lead score
+        function calculateLeadScore(data) {
+            return data.score; // Il punteggio è già calcolato
+        }
+
+        // Funzione per ottenere l'icona del profilo
+        function getProfileIcon(profile) {
+            switch(profile) {
+                case 'Nuovo Esploratore': return '🌱';
+                case 'Guerriero': return '⚔️';
+                case 'Atleta': return '🏆';
+                default: return '🌟';
+            }
+        }
         const questions = [
             {
                 q: "Qual è il tuo nome?",
@@ -674,16 +728,21 @@
                 }
             };
 
-            // Salva i risultati
+            // Salva i risultati su Firebase
             const finalData = {
                 ...responses,
                 score: score,
                 profile: profile,
+                lead_score: score,
                 timestamp: new Date().toISOString()
             };
 
-            // Simula salvataggio (sostituisci con la tua logica Firebase)
-            console.log('Risultati salvati:', finalData);
+            // Salva su Firebase
+            saveQuizResult(finalData).then(() => {
+                console.log('Dati salvati con successo su Firebase!');
+            }).catch((error) => {
+                console.error('Errore nel salvataggio:', error);
+            });
 
             let resultHTML = `
                 <div class='result-container'>
