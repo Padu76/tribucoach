@@ -141,7 +141,7 @@
         .input-group input[type="text"],
         .input-group input[type="email"],
         .input-group input[type="number"],
-        .input-group input[type="tel"] { /* Aggiunto input[type="tel"] */
+        .input-group input[type="tel"] {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #444;
@@ -155,7 +155,7 @@
         .input-group input[type="text"]:focus,
         .input-group input[type="email"]:focus,
         .input-group input[type="number"]:focus,
-        .input-group input[type="tel"]:focus { /* Aggiunto input[type="tel"] */
+        .input-group input[type="tel"]:focus {
             outline: none;
             border-color: #ff6600;
         }
@@ -753,8 +753,15 @@
             if (currentQuestion === 1) { // Dati personali
                 const name = document.getElementById('name').value;
                 const email = document.getElementById('email').value;
-                const age = document.getElementById('age').value;
-                isValid = name.length > 0 && email.length > 0 && age.length > 0 && age >= 16 && age <= 80 && email.includes('@');
+                const ageInput = document.getElementById('age').value; // Ottieni come stringa
+                const age = parseInt(ageInput); // Parsa a intero
+
+                isValid = name.length > 0 && 
+                          email.length > 0 && 
+                          email.includes('@') && // Verifica formato email
+                          ageInput.length > 0 && // Verifica che l'input non sia vuoto
+                          !isNaN(age) && // Verifica che l'età sia un numero valido
+                          age >= 16 && age <= 80; // Verifica il range dell'età
             } else if (currentQuestion === 2) { // Esperienza Fitness
                 isValid = document.querySelector('input[name="experience"]:checked') !== null;
             } else if (currentQuestion === 3) { // Obiettivi Principali
