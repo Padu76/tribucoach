@@ -297,9 +297,9 @@
             margin-bottom: 25px;
         }
 
-        .quiz-section.final-section p #personalized-profile-message {
+        .quiz-section.final-section #personalized-profile-message {
             display: block;
-            font-size: 1.3rem;
+            font-size: 1.1rem; /* Slightly smaller for multi-line text */
             color: #fff;
             background: rgba(255,102,0,0.1);
             border-radius: 8px;
@@ -308,6 +308,7 @@
             margin-bottom: 20px;
             line-height: 1.8;
             text-align: left;
+            white-space: pre-wrap; /* For line breaks from JS */
         }
 
         .final-actions {
@@ -410,7 +411,7 @@
             </div>
 
             <div class="question-block" id="question-3">
-                <h2>3. Quali sono i tuoi <b>3</b> obiettivi principali? (seleziona massimo 3)</h2>
+                <h2>3. Quali sono i <b>3</b> obiettivi principali? (seleziona massimo 3)</h2>
                 <div class="question-options">
                     <label class="option-card">
                         <input type="checkbox" name="goals" value="perdita_peso_grasso">
@@ -604,9 +605,9 @@
         <div id="quiz-complete" class="quiz-section final-section" style="display: none;">
             <h2>Grazie per aver completato il quiz!</h2>
             <p>Il tuo punteggio di lead è: <span id="final-lead-score"></span></p>
-            <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
             <p class="explanation-text">Il punteggio di lead è un indicatore interno che ci aiuta a valutare il tuo livello di engagement e a comprendere meglio le tue esigenze.</p>
-            <p><span id="personalized-profile-message"></span> Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
+            <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
+            <div id="personalized-profile-message"></div> <p>Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
 
             <div class="final-actions">
                 <p>Nel frattempo, ecco alcune opzioni utili:</p>
@@ -665,17 +666,16 @@
             if (currentQBlock.id === 'question-1' || currentQBlock.id === 'question-2') {
                 const input = currentQBlock.querySelector('input');
                 isValid = input && input.value.trim() !== '';
-            } else if (currentQBlock.id === 'question-3' || currentQBlock.id === 'question-7') {
-                // Checkbox con o senza limite (gestito nel listener)
+            } else if (currentQBlock.id === 'question-3') { // Obiettivi (min 1, max 3)
                 const checkedCount = currentQBlock.querySelectorAll('input[type="checkbox"]:checked').length;
-                isValid = checkedCount > 0;
-            } else {
+                isValid = checkedCount > 0 && checkedCount <= 3;
+            } else if (currentQBlock.id === 'question-7') { // Ostacoli (checkbox, può essere zero)
+                isValid = true; // Non è obbligatorio selezionare ostacoli
+            }
+            else {
                 // Radio buttons e altri input fields
                 const selectedOption = currentQBlock.querySelector('input[type="radio"]:checked');
-                const textInput = currentQBlock.querySelector('input[type="text"], input[type="email"], input[type="number"]');
-                const checkboxInput = currentQBlock.querySelector('input[type="checkbox"]:checked'); // For other checkboxes
-
-                isValid = !!selectedOption || (textInput && textInput.value.trim() !== '') || !!checkboxInput;
+                isValid = !!selectedOption;
             }
 
             // Abilita/disabilita il pulsante Avanti
@@ -717,6 +717,7 @@
             const dailyActivity = document.querySelector('#question-10 input[type="radio"]:checked');
             quizData.daily_activity = dailyActivity ? dailyActivity.value : '';
 
+
             // Calcola il lead score e il profilo in base ai dati del quiz
             const leadScore = calculateLeadScore(quizData);
             let profileType = 'Nuovo Esploratore'; // Default
@@ -738,24 +739,66 @@
                 document.getElementById('final-profile-type').textContent = profileType;
 
                 let personalizedMessage = "";
+                
+                const formatList = (items) => {
+                    if (!items || items.length === 0) return 'nessuna preferenza specifica';
+                    return items.map(item => item.replace(/_/g, ' ')).join(', ');
+                };
+
+                const goalsList = formatList(quizData.goals);
+                const obstaclesList = formatList(quizData.obstacles);
+                const frequencyText = quizData.frequency ? `${quizData.frequency.replace(/-/g, ' ')} volte a settimana` : 'la frequenza desiderata';
+                const placeText = quizData.place ? `a ${quizData.place.replace(/_/g, ' ')}` : 'dove preferisci';
+                const experienceText = quizData.experience ? quizData.experience.replace(/_/g, ' ') : 'il tuo livello';
+
+
                 switch(profileType) {
                     case 'Nuovo Esploratore':
-                        personalizedMessage = `Il tuo profilo **Nuovo Esploratore** indica che sei all'inizio del tuo percorso fitness o desideri una guida completa. Siamo qui per aiutarti a gettare le basi perfette!`;
+                        personalizedMessage = `Ciao ${quizData.name || '!'}\n\n`;
+                        personalizedMessage += `Il tuo percorso da **Nuovo Esploratore** è appena iniziato! Questo profilo indica che sei all'inizio del tuo viaggio nel fitness o desideri una guida completa e strutturata per avviare o riprendere l'attività fisica.\n\n`;
+                        personalizedMessage += `Abbiamo notato che i tuoi obiettivi principali includono: **${goalsList}**. Ottimo punto di partenza!\n\n`;
+                        if (obstaclesList !== 'nessuna preferenza specifica') {
+                            personalizedMessage += `Comprendiamo che ostacoli come **${obstaclesList}** possano aver reso difficile il progresso in passato. Siamo esperti nel trasformare queste sfide in successi.\n\n`;
+                        } else {
+                            personalizedMessage += `Sembra che tu sia pronto a iniziare con slancio, e siamo qui per supportarti!\n\n`;
+                        }
+                        personalizedMessage += `Con TribuCoach, riceverai un piano passo-passo, ideale per chi cerca risultati solidi partendo dalle basi, con flessibilità per allenarti ${frequencyText} ${placeText}. Ci concentreremo su un approccio ${experienceText} per massimizzare il tuo potenziale.\n\n`;
                         break;
+
                     case 'Guerriero':
-                        personalizedMessage = `Il tuo profilo **Guerriero** mostra che hai già una buona base, ma sei pronto a superare nuove sfide e consolidare i tuoi progressi. Preparati a spingerti oltre i tuoi limiti!`;
+                        personalizedMessage = `Complimenti ${quizData.name || ''}! Il tuo spirito da **Guerriero** è evidente!\n\n`;
+                        personalizedMessage += `Sei già in cammino e hai una buona base, ma sei pronto a superare nuove sfide e consolidare i tuoi progressi. Cerchi costanza e un'efficacia maggiore nel tuo allenamento.\n\n`;
+                        personalizedMessage += `I tuoi obiettivi, come **${goalsList}**, sono ambiziosi e raggiungibili. Siamo qui per darti gli strumenti e la motivazione per superarli.\n\n`;
+                        if (obstaclesList !== 'nessuna preferenza specifica') {
+                            personalizedMessage += `Abbiamo preso nota degli ostacoli come **${obstaclesList}** che potresti aver incontrato. Il nostro approccio è pensato per superare queste barriere e mantenere alta la tua motivazione.\n\n`;
+                        }
+                        personalizedMessage += `TribuCoach ti offrirà un allenamento strategico e un supporto costante, che ti permetterà di ottimizzare la tua routine ${frequencyText} ${placeText} e raggiungere i tuoi traguardi con determinazione. Il tuo livello ${experienceText} ci permetterà di creare un percorso stimolante e produttivo.\n\n`;
                         break;
+
                     case 'Atleta':
-                        personalizedMessage = `Il tuo profilo **Atleta** rivela una forte dedizione e un'ottima condizione fisica. Ti aiuteremo a raggiungere picchi di performance ancora più elevati e a perfezionare ogni aspetto del tuo allenamento!`;
+                        personalizedMessage = `Ottimo lavoro ${quizData.name || ''}! Il tuo profilo **Atleta** parla chiaro!\n\n`;
+                        personalizedMessage += `Hai una forte dedizione, un'ottima condizione fisica e una chiara visione dei tuoi obiettivi. Cerchi la massimizzazione delle performance e la perfezione dei dettagli.\n\n`;
+                        personalizedMessage += `Con obiettivi come **${goalsList}**, è chiaro che sei orientato all'eccellenza. Siamo qui per affinare ogni aspetto del tuo potenziale.\n\n`;
+                        if (obstaclesList !== 'nessuna preferenza specifica') {
+                            personalizedMessage += `Anche gli atleti più avanzati incontrano sfide, come **${obstaclesList}**. La nostra consulenza ti fornirà strategie avanzate per superarle e mantenere la tua costanza a livelli ottimali.\n\n`;
+                        }
+                        personalizedMessage += `TribuCoach ti offrirà un programma di allenamento altamente specializzato, ideale per le tue esigenze di allenamento ${frequencyText} ${placeText}, e un supporto mirato per superare i tuoi record personali. Il tuo livello ${experienceText} è la base da cui partiremo per farti raggiungere traguardi straordinari.\n\n`;
                         break;
+
                     default:
                         personalizedMessage = `Basandoci sulle tue risposte, abbiamo identificato il tuo profilo unico. `;
+                        personalizedMessage += `I tuoi obiettivi principali sono: **${goalsList}**.`;
+                        if (obstaclesList !== 'nessuna preferenza specifica') {
+                            personalizedMessage += ` Hai menzionato come ostacoli: **${obstaclesList}**.`;
+                        }
+                        personalizedMessage += ` Siamo qui per aiutarti a raggiungere i tuoi traguardi.`;
                 }
-                document.getElementById('personalized-profile-message').innerHTML = personalizedMessage;
+
+                document.getElementById('personalized-profile-message').innerHTML = personalizedMessage.replace(/\n/g, '<br>');
 
 
                 // Nascondi gli elementi del quiz
-                document.getElementById('quiz-section').style.display = 'none'; // Changed from quiz-sections to quiz-section
+                document.getElementById('quiz-section').style.display = 'none';
                 document.querySelector('.navigation-buttons').style.display = 'none';
                 document.querySelector('.progress-bar-container').style.display = 'none';
 
