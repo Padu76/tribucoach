@@ -296,32 +296,38 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>
-        // Configurazione Firebase (senza Analytics per evitare conflitti)
+        // Forza pulizia di qualsiasi configurazione Firebase esistente
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            firebase.apps.forEach(app => app.delete());
+        }
+
+        // Configurazione Firebase PULITA (senza Analytics)
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-            authDomain: "tribucoach-9564b.firebaseapp.com",
+            authDomain: "tribucoach-9564b.firebaseapp.com", 
             projectId: "tribucoach-9564b",
             storageBucket: "tribucoach-9564b.appspot.com",
             messagingSenderId: "476626832985",
             appId: "1:476626832985:web:7835188f40f4348567ab48"
+            // NESSUN measurementId per evitare conflitti Analytics
         };
         
-        // Inizializza Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // Inizializza Firebase con nome unico
+        const app = firebase.initializeApp(firebaseConfig, 'quiz-app');
+        const db = app.firestore();
 
         // Funzione per salvare i risultati del quiz
         function saveQuizResult(data) {
             return db.collection('quiz_leads').add({
                 ...data,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                source: 'advanced_quiz',
+                source: 'advanced_quiz_v2',
                 lead_score: data.score
             }).then((docRef) => {
-                console.log('Quiz salvato con ID:', docRef.id);
+                console.log('✅ Quiz salvato con ID:', docRef.id);
                 return docRef.id;
             }).catch((error) => {
-                console.error('Errore salvataggio:', error);
+                console.error('❌ Errore salvataggio:', error);
                 throw error;
             });
         }
