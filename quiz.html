@@ -129,12 +129,6 @@
                     </label>
                 </div>
             </div>
-
-            <!-- Pulsanti di navigazione DENTRO il quiz container -->
-            <div class="navigation-buttons">
-                <button id="prev-btn" class="nav-btn" disabled>Indietro</button>
-                <button id="next-btn" class="nav-btn">Avanti</button>
-            </div>
         </div>
 
         <div class="result-container" id="result-page">
@@ -254,18 +248,38 @@
         }
 
         function updateNavigation() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-
-            prevBtn.disabled = currentQuestion === 1;
-            nextBtn.textContent = currentQuestion === totalQuestions ? 'Completa Quiz' : 'Avanti';
+            // Aggiorna pulsanti inline per ogni domanda
+            const prevBtns = document.querySelectorAll('#inline-prev-btn, .inline-prev-btn');
+            const nextBtns = document.querySelectorAll('#inline-next-btn, .inline-next-btn');
             
-            // Forza la validazione e abilita il pulsante se valido
-            const isValid = validateCurrentQuestion(false);
-            nextBtn.disabled = !isValid;
+            prevBtns.forEach(btn => {
+                if (currentQuestion === 1) {
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
+                    btn.style.backgroundColor = '#555';
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.style.backgroundColor = '#555';
+                }
+            });
             
-            // Debug per vedere cosa succede
-            console.log(`Domanda ${currentQuestion}, Valida: ${isValid}`, quizData);
+            nextBtns.forEach(btn => {
+                const isValid = validateCurrentQuestion(false);
+                btn.textContent = currentQuestion === totalQuestions ? 'Completa Quiz' : 'Avanti';
+                
+                if (isValid) {
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                    btn.style.backgroundColor = '#ff6600';
+                } else {
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
+                    btn.style.backgroundColor = '#555';
+                }
+            });
+            
+            console.log(`Domanda ${currentQuestion}, Valida: ${validateCurrentQuestion(false)}`);
         }
 
         function validateCurrentQuestion(showAlert = true) {
@@ -585,24 +599,26 @@
                 input.addEventListener('change', updateNavigation);
             });
 
-            // Logica pulsanti di navigazione
-            document.getElementById('next-btn').addEventListener('click', () => {
-                if (validateCurrentQuestion()) {
-                    if (currentQuestion < totalQuestions) {
-                        currentQuestion++;
-                        showQuestion(currentQuestion);
-                        updateNavigation();
-                    } else {
-                        completeQuiz();
+            // Logica pulsanti di navigazione (inline)
+            document.addEventListener('click', (e) => {
+                if (e.target.id === 'inline-next-btn' || e.target.classList.contains('inline-next-btn')) {
+                    if (validateCurrentQuestion()) {
+                        if (currentQuestion < totalQuestions) {
+                            currentQuestion++;
+                            showQuestion(currentQuestion);
+                            updateNavigation();
+                        } else {
+                            completeQuiz();
+                        }
                     }
                 }
-            });
-
-            document.getElementById('prev-btn').addEventListener('click', () => {
-                if (currentQuestion > 1) {
-                    currentQuestion--;
-                    showQuestion(currentQuestion);
-                    updateNavigation();
+                
+                if (e.target.id === 'inline-prev-btn' || e.target.classList.contains('inline-prev-btn')) {
+                    if (currentQuestion > 1) {
+                        currentQuestion--;
+                        showQuestion(currentQuestion);
+                        updateNavigation();
+                    }
                 }
             });
         }
@@ -980,6 +996,10 @@
                     <label for="user-name">Nome completo:</label>
                     <input type="text" id="user-name" placeholder="Inserisci il tuo nome">
                 </div>
+                <div style="margin-top: 30px; display: flex; justify-content: space-between; gap: 15px;">
+                    <div id="inline-prev-btn" style="background-color: #555; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: not-allowed; flex: 1; max-width: 200px; text-align: center; opacity: 0.6;">Indietro</div>
+                    <div id="inline-next-btn" style="background-color: #ff6600; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center; transition: background-color 0.3s ease;">Avanti</div>
+                </div>
             </div>
 
             <div class="question-container" id="question-2">
@@ -987,6 +1007,10 @@
                 <div class="text-input-group">
                     <label for="user-email">Email:</label>
                     <input type="email" id="user-email" placeholder="Inserisci la tua email">
+                </div>
+                <div style="margin-top: 30px; display: flex; justify-content: space-between; gap: 15px;">
+                    <div class="inline-prev-btn" style="background-color: #555; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center;">Indietro</div>
+                    <div class="inline-next-btn" style="background-color: #ff6600; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center; transition: background-color 0.3s ease;">Avanti</div>
                 </div>
             </div>
 
