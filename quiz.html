@@ -1,47 +1,3 @@
-            <div class="question-container" id="question-18">
-                <h2>18. Ti senti soddisfatto del tuo equilibrio vita-lavoro?</h2>
-                <div class="options-grid">
-                    <label class="option-card">
-                        <input type="radio" name="work_life_balance" value="Sì, molto soddisfatto">
-                        <span>Sì, molto soddisfatto</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="work_life_balance" value="Abbastanza">
-                        <span>Abbastanza</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="work_life_balance" value="Poco">
-                        <span>Poco</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="work_life_balance" value="Per niente">
-                        <span>Per niente</span>
-                    </label>
-                </div>
-            </div>
-
-            <div class="question-container" id="question-19">
-                <h2>19. Quanto spesso prendi pause attive durante il lavoro?</h2>
-                <div class="options-grid">
-                    <label class="option-card">
-                        <input type="radio" name="active_breaks" value="Mai">
-                        <span>Mai</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="active_breaks" value="Una volta al giorno">
-                        <span>Una volta al giorno</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="active_breaks" value="Più volte al giorno">
-                        <span>Più volte al giorno</span>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="active_breaks" value="Ogni ora">
-                        <span>Ogni ora</span>
-                    </label>
-                </div>
-            </div>
-
             <div class="question-container" id="question-20">
                 <h2>20. Ti svegli durante la notte?</h2>
                 <div class="options-grid">
@@ -202,11 +158,7 @@
         </div>
     </div>
 
-    <script type="module">
-        import { saveQuizResult, calculateLeadScore, getProfileIcon } from './firebase-functions.js';
-        import { analytics } from './firebase.js';
-        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js';
-
+    <script>
         let currentQuestion = 1;
         const totalQuestions = 25;
 
@@ -275,6 +227,15 @@
                 ]
             }
         };
+
+        function getProfileIcon(profile) {
+            switch(profile) {
+                case 'Nuovo Esploratore': return '🌱';
+                case 'Guerriero': return '⚔️';
+                case 'Atleta': return '🏆';
+                default: return '🌟';
+            }
+        }
 
         function showQuestion(questionNumber) {
             document.querySelectorAll('.question-container').forEach(q => {
@@ -453,11 +414,19 @@
             document.getElementById('result-page').style.display = 'block';
 
             try {
-                const docId = await saveQuizResult(quizData);
-                console.log('Quiz salvato con ID:', docId);
+                console.log('Quiz completato:', quizData);
             } catch (error) {
-                console.error('Errore durante il salvataggio del quiz:', error);
+                console.error('Errore:', error);
             }
+        }
+
+        function calculateLeadScore(data) {
+            // Funzione placeholder - calcola un punteggio base
+            let score = 0;
+            if (data.goals.length > 0) score += 20;
+            if (data.activity_level.includes('Molto attivo')) score += 30;
+            if (data.diet.includes('Eccellente')) score += 25;
+            return Math.min(score, 100);
         }
 
         function determineProfile(data) {
@@ -482,7 +451,146 @@
             if (data.obstacles.includes('Non ho ostacoli particolari')) score += 10;
             if (data.obstacles.includes('Costi elevati (palestra, personal trainer)')) score -= 5;
 
-            if (data<!DOCTYPE html>
+            if (data.age >= 18 && data.age <= 35) score += 5;
+
+            // Nuovi parametri di scoring
+            if (data.training_style === 'Con personal trainer') score += 8;
+            else if (data.training_style === 'Entrambi') score += 12;
+            else if (data.training_style === 'Mi alleno da solo') score += 5;
+
+            if (data.workout_duration === 'Più di un\'ora') score += 10;
+            else if (data.workout_duration === '45-60 minuti') score += 8;
+            else if (data.workout_duration === '30-45 minuti') score += 5;
+
+            if (data.breakfast_habit === 'Sì, ogni giorno') score += 5;
+            if (data.supplements === 'Sì, regolarmente') score += 5;
+            if (data.eating_out === 'Mai' || data.eating_out === '1-2 volte') score += 5;
+
+            if (data.stress_management === 'Sì, ogni giorno') score += 8;
+            else if (data.stress_management === 'Sì, qualche volta') score += 4;
+
+            if (data.work_life_balance === 'Sì, molto soddisfatto') score += 5;
+            else if (data.work_life_balance === 'Abbastanza') score += 3;
+
+            if (data.active_breaks === 'Ogni ora' || data.active_breaks === 'Più volte al giorno') score += 5;
+
+            if (data.devices_before_sleep === 'Mai' || data.devices_before_sleep === 'Raramente') score += 5;
+
+            if (data.motivation_source === 'Obiettivi personali' || data.motivation_source === 'Salute e benessere') score += 5;
+            if (data.skip_workouts === 'Mai' || data.skip_workouts === 'Raramente') score += 8;
+
+            if (data.preferred_activities.length >= 3) score += 5;
+            if (data.preferred_activities.includes('Palestra')) score += 3;
+            if (data.preferred_activities.includes('Sport di squadra')) score += 3;
+
+            if (score >= 60) return 'Atleta';
+            else if (score >= 30) return 'Guerriero';
+            else return 'Nuovo Esploratore';
+        }
+
+        function displayResults() {
+            const profileNameElement = document.getElementById('profile-name');
+            const profileDescriptionElement = document.getElementById('profile-description');
+            const recommendationsList = document.getElementById('recommendations-list');
+            const profileIconElement = document.getElementById('profile-icon');
+
+            profileNameElement.textContent = quizData.profile;
+            profileIconElement.textContent = getProfileIcon(quizData.profile);
+            profileDescriptionElement.textContent = profiles[quizData.profile].description;
+
+            recommendationsList.innerHTML = '';
+            profiles[quizData.profile].recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+        }
+
+        // Event Listeners per radio buttons
+        document.querySelectorAll('.option-card input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll(`input[name="${this.name}"]`).forEach(sibling => {
+                    sibling.parentNode.classList.remove('selected');
+                });
+                this.parentNode.classList.add('selected');
+                updateNavigation();
+            });
+        });
+
+        // Event Listeners per checkbox con limite (Obiettivi Principali)
+        document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checked = document.querySelectorAll('#question-3 input[type="checkbox"]:checked');
+                if (checked.length > 3) {
+                    this.checked = false;
+                    alert('Puoi selezionare massimo 3 obiettivi principali!');
+                }
+                this.parentNode.classList.toggle('selected', this.checked);
+                updateNavigation();
+            });
+        });
+
+        // Setup per altri checkbox (Ostacoli) - Domanda 7
+        document.querySelectorAll('#question-7 input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.parentNode.classList.toggle('selected', this.checked);
+                updateNavigation();
+            });
+        });
+
+        // Setup per checkbox (Attività Preferite) - Domanda 11
+        document.querySelectorAll('#question-11 input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.parentNode.classList.toggle('selected', this.checked);
+                updateNavigation();
+            });
+        });
+
+        // Event Listeners per input fields
+        document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
+            input.addEventListener('input', updateNavigation);
+        });
+
+        // Logica pulsanti di navigazione
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (validateCurrentQuestion()) {
+                if (currentQuestion < totalQuestions) {
+                    currentQuestion++;
+                    showQuestion(currentQuestion);
+                    updateNavigation();
+                } else {
+                    completeQuiz();
+                }
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (currentQuestion > 1) {
+                currentQuestion--;
+                showQuestion(currentQuestion);
+                updateNavigation();
+            }
+        });
+
+        // Inizializza al caricamento
+        document.addEventListener('DOMContentLoaded', () => {
+            showQuestion(currentQuestion);
+            updateNavigation();
+            
+            // Event listener for CTA buttons
+            document.getElementById('cta-chatbot')?.addEventListener('click', () => {
+                window.open('https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07', '_blank');
+            });
+            
+            document.getElementById('cta-consultation')?.addEventListener('click', () => {
+                const message = encodeURIComponent(`Ciao! Ho completato il Quiz TribuCoach. Il mio profilo è "${quizData.profile}" e vorrei richiedere una consulenza gratuita.`);
+                window.open(`https://wa.me/3478881515?text=${message}`, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>
+            <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -491,7 +599,6 @@
     <meta name="description" content="Quiz avanzato per analizzare il tuo profilo fitness completo e ricevere consigli personalizzati">
     
     <style>
-        /* Stili CSS esistenti */
         * {
             margin: 0;
             padding: 0;
@@ -531,7 +638,6 @@
             color: #ccc;
         }
 
-        /* Stili specifici del quiz */
         .quiz-container {
             background-color: #1a1a1a;
             border-radius: 12px;
@@ -586,7 +692,7 @@
             margin-bottom: 30px;
         }
 
-        .option-card, .text-input-group, .checkbox-group label {
+        .option-card {
             background-color: #333;
             padding: 20px;
             border-radius: 10px;
@@ -603,19 +709,20 @@
             min-height: 120px;
         }
 
-        .option-card:hover, .checkbox-group label:hover {
+        .option-card:hover {
             background-color: #444;
             transform: translateY(-5px);
         }
 
-        .option-card.selected, .checkbox-group label.selected {
+        .option-card.selected {
             background-color: #ff6600;
             border-color: #ff9933;
             color: #fff;
             transform: translateY(-5px);
         }
 
-        .option-card input[type="radio"], .checkbox-group input[type="checkbox"] {
+        .option-card input[type="radio"], 
+        .option-card input[type="checkbox"] {
             display: none;
         }
 
@@ -637,8 +744,9 @@
             color: #eee;
         }
 
-        .text-input-group input, .text-input-group textarea {
-            width: calc(100% - 20px);
+        .text-input-group input, 
+        .text-input-group textarea {
+            width: 100%;
             padding: 12px;
             border: 1px solid #555;
             border-radius: 8px;
@@ -649,7 +757,8 @@
             resize: vertical;
         }
 
-        .text-input-group input:focus, .text-input-group textarea:focus {
+        .text-input-group input:focus, 
+        .text-input-group textarea:focus {
             outline: none;
             border-color: #ff6600;
             box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.3);
@@ -690,7 +799,6 @@
             background-color: #666;
         }
 
-        /* Stili per la pagina dei risultati */
         .result-container {
             display: none;
             text-align: center;
@@ -850,7 +958,7 @@
 
             <div class="question-container" id="question-3">
                 <h2>3. Quali sono i tuoi <b>3 obiettivi principali</b> in questo momento? (Max 3)</h2>
-                <div class="options-grid checkbox-group">
+                <div class="options-grid">
                     <label class="option-card">
                         <input type="checkbox" name="goal" value="Perdere peso e dimagrire">
                         <span>Perdere peso e dimagrire</span>
@@ -962,7 +1070,7 @@
 
             <div class="question-container" id="question-7">
                 <h2>7. Quali sono i tuoi <b>maggiori ostacoli</b> al raggiungimento dei tuoi obiettivi? (Seleziona tutto ciò che si applica)</h2>
-                <div class="options-grid checkbox-group">
+                <div class="options-grid">
                     <label class="option-card">
                         <input type="checkbox" name="obstacle" value="Mancanza di tempo">
                         <span>Mancanza di tempo</span>
@@ -1042,7 +1150,7 @@
 
             <div class="question-container" id="question-11">
                 <h2>11. Quali attività preferisci? (Seleziona tutto ciò che ti piace)</h2>
-                <div class="options-grid checkbox-group">
+                <div class="options-grid">
                     <label class="option-card">
                         <input type="checkbox" name="preferred_activity" value="Palestra">
                         <span>Palestra</span>
@@ -1190,3 +1298,48 @@
                 <h2>18. Ti senti soddisfatto del tuo equilibrio vita-lavoro?</h2>
                 <div class="options-grid">
                     <label class="option-card">
+                        <input type="radio" name="work_life_balance" value="Sì, molto soddisfatto">
+                        <span>Sì, molto soddisfatto</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="work_life_balance" value="Abbastanza">
+                        <span>Abbastanza</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="work_life_balance" value="Poco">
+                        <span>Poco</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="work_life_balance" value="Per niente">
+                        <span>Per niente</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-container" id="question-19">
+                <h2>19. Quanto spesso prendi pause attive durante il lavoro?</h2>
+                <div class="options-grid">
+                    <label class="option-card">
+                        <input type="radio" name="active_breaks" value="Mai">
+                        <span>Mai</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="active_breaks" value="Una volta al giorno">
+                        <span>Una volta al giorno</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="active_breaks" value="Più volte al giorno">
+                        <span>Più volte al giorno</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="radio" name="active_breaks" value="Ogni ora">
+                        <span>Ogni ora</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="question-container" id="question-20">
+                <h2>20. Ti svegli durante la notte?</h2>
+                <div class="options-grid">
+                    <label class="option-card">
+                        <input type="radio" name="sleep_interruptions"
