@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz TribuCoach Corretto</title>
-  <script src="firebase.js"></script>
-  <script src="firebase-functions.js"></script>
+  <title>Quiz TribuCoach con Firebase Inline</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
   <style>
     body { font-family: Arial, sans-serif; background-color: #111; color: #fff; text-align: center; padding: 20px; }
     .question-box { background: #222; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
@@ -18,6 +18,25 @@
   <div id="quizContainer"></div>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+      authDomain: "tribucoach-9564b.firebaseapp.com",
+      projectId: "tribucoach-9564b",
+      storageBucket: "tribucoach-9564b.appspot.com",
+      messagingSenderId: "476626832985",
+      appId: "1:476626832985:web:7835188f40f4348567ab48"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function saveQuizResult(responses) {
+      db.collection('leads').add({
+        responses: responses,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => console.log("Risposte salvate!"))
+        .catch((e) => console.error("Errore salvataggio:", e));
+    }
+
     const questions = [
       { q: "Quante volte ti alleni a settimana?", a: ["0", "1-2", "3-4", "5+"], s: [0, 1, 2, 3] },
       { q: "Come valuti la tua alimentazione?", a: ["Disordinata", "Mediocre", "Buona", "Ottima"], s: [0, 1, 2, 3] },
@@ -55,12 +74,12 @@
       let advice = `
         <div class='question-box'>
           <h2>Profilo: ${profile}</h2>
-          <p>Le tue risposte sono state salvate. Ecco i consigli per te:</p>
+          <p>Le tue risposte sono state salvate. Ecco i tuoi consigli personalizzati:</p>
           <ul style='text-align: left;'>
-            <li>Allena la costanza con 3 allenamenti a settimana.</li>
+            <li>Allena la costanza con almeno 3 allenamenti a settimana.</li>
             <li>Integra frutta e verdura ad ogni pasto.</li>
-            <li>Dormi 7-8 ore a notte.</li>
-            <li>Stabilisci obiettivi chiari per rimanere motivato.</li>
+            <li>Dormi 7-8 ore a notte per un recupero ottimale.</li>
+            <li>Stabilisci obiettivi chiari per restare motivato.</li>
           </ul>
           <button onclick="window.location.href='index.html'">🔄 Riprova il Quiz</button>
           <button onclick="window.location.href='https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07'">💬 Chatta con TribuCoach</button>
