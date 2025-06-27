@@ -326,6 +326,29 @@
             color: white;
         }
 
+        .no-data {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 40px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            color: #ff6600;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .empty-state p {
+            margin-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -358,40 +381,46 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-title">Utenti Oggi</div>
-                <div class="metric-value" id="users-today">--</div>
-                <div class="metric-change" id="users-change">Caricamento...</div>
+                <div class="metric-value" id="users-today">0</div>
+                <div class="metric-change" id="users-change">Nessun dato</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Quiz Completati</div>
-                <div class="metric-value" id="quiz-completed">--</div>
-                <div class="metric-change" id="quiz-change">Caricamento...</div>
+                <div class="metric-value" id="quiz-completed">0</div>
+                <div class="metric-change" id="quiz-change">Nessun dato</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Lead Caldi</div>
-                <div class="metric-value" id="hot-leads">--</div>
-                <div class="metric-change" id="leads-change">Caricamento...</div>
+                <div class="metric-value" id="hot-leads">0</div>
+                <div class="metric-change" id="leads-change">Nessun dato</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Conversioni</div>
-                <div class="metric-value" id="conversions">--</div>
-                <div class="metric-change" id="conv-change">Caricamento...</div>
+                <div class="metric-value" id="conversions">0</div>
+                <div class="metric-change" id="conv-change">Nessun dato</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Revenue Oggi</div>
-                <div class="metric-value" id="revenue">--</div>
-                <div class="metric-change" id="revenue-change">Caricamento...</div>
+                <div class="metric-value" id="revenue">€0</div>
+                <div class="metric-change" id="revenue-change">Nessun dato</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Tasso Conversione</div>
-                <div class="metric-value" id="conversion-rate">--</div>
-                <div class="metric-change" id="rate-change">Caricamento...</div>
+                <div class="metric-value" id="conversion-rate">0%</div>
+                <div class="metric-change" id="rate-change">Nessun dato</div>
             </div>
         </div>
 
         <!-- Lead Management -->
         <div class="section">
             <h2>🔥 Lead Management</h2>
-            <div id="leads-loading" class="loading">Caricamento lead da Firebase...</div>
+            <div id="leads-container">
+                <div class="empty-state">
+                    <h3>Nessun lead ancora</h3>
+                    <p>I lead appariranno qui quando qualcuno completerà il quiz</p>
+                    <p>o interagirà significativamente con TribuCoach</p>
+                </div>
+            </div>
             <table class="leads-table" id="leads-table" style="display: none;">
                 <thead>
                     <tr>
@@ -412,7 +441,13 @@
         <div class="charts-grid">
             <div class="chart-container">
                 <div class="chart-title">📊 Distribuzione Profili Utenti</div>
-                <div id="profiles-loading" class="loading">Caricamento dati profili...</div>
+                <div id="profiles-container">
+                    <div class="empty-state">
+                        <h3>Nessun profilo registrato</h3>
+                        <p>Le statistiche dei profili appariranno</p>
+                        <p>quando gli utenti completeranno il quiz</p>
+                    </div>
+                </div>
                 <div id="profiles-chart" style="display: none;">
                     <div class="profile-bar">
                         <div class="profile-label">🌱 Nuovo Esploratore</div>
@@ -440,7 +475,13 @@
 
             <div class="chart-container">
                 <div class="chart-title">🏆 Content Performance</div>
-                <div id="content-loading" class="loading">Caricamento performance contenuti...</div>
+                <div id="content-container">
+                    <div class="empty-state">
+                        <h3>Nessuna interazione registrata</h3>
+                        <p>Le performance dei contenuti appariranno</p>
+                        <p>quando gli utenti inizieranno a usare TribuCoach</p>
+                    </div>
+                </div>
                 <ul class="content-list" id="content-list" style="display: none;">
                 </ul>
             </div>
@@ -450,7 +491,11 @@
         <div class="section">
             <h2>🚨 Alert e Opportunità</h2>
             <div id="alerts-container">
-                <div class="loading">Caricamento alert da Firebase...</div>
+                <div class="empty-state">
+                    <h3>Nessun alert</h3>
+                    <p>Gli alert automatici appariranno qui</p>
+                    <p>quando ci saranno opportunità o lead caldi da contattare</p>
+                </div>
             </div>
         </div>
 
@@ -458,7 +503,14 @@
         <div class="section">
             <h2>💡 Business Insights</h2>
             <div class="insights-grid" id="insights-container">
-                <div class="loading">Caricamento insights...</div>
+                <div class="empty-state">
+                    <h3>Dashboard in attesa di dati</h3>
+                    <p>Invita le persone a provare TribuCoach per vedere insights sui tuoi clienti!</p>
+                    <p><strong>Per generare i primi dati:</strong></p>
+                    <p>1. Completa il quiz di TribuCoach</p>
+                    <p>2. Chiedi ai tuoi clienti di provare il sistema</p>
+                    <p>3. Torna qui per vedere le statistiche real-time</p>
+                </div>
             </div>
         </div>
 
@@ -474,7 +526,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, getDocs, addDoc, onSnapshot, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, onSnapshot, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         import { getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
 
         // Configurazione Firebase
@@ -509,7 +561,7 @@
             }
         }
 
-        // Funzioni per caricare dati da Firebase
+        // Funzioni per caricare dati da Firebase (SOLO DATI REALI)
         async function loadMetrics() {
             try {
                 const metricsRef = collection(db, 'metrics');
@@ -520,13 +572,12 @@
                     const data = snapshot.docs[0].data();
                     updateMetricsUI(data);
                 } else {
-                    // Se non ci sono dati, crea dati demo
-                    await createDemoData();
+                    // Nessun dato - mantieni valori zero
+                    console.log('Nessuna metrica trovata - dashboard vuota');
                 }
             } catch (error) {
                 console.error('Errore caricamento metriche:', error);
                 updateConnectionStatus(false);
-                loadDemoMetrics();
             }
         }
 
@@ -536,15 +587,17 @@
                 const leadsQuery = query(leadsRef, orderBy('score', 'desc'));
                 const snapshot = await getDocs(leadsQuery);
                 
-                const leadsData = [];
-                snapshot.forEach(doc => {
-                    leadsData.push({ id: doc.id, ...doc.data() });
-                });
-                
-                updateLeadsUI(leadsData);
+                if (!snapshot.empty) {
+                    const leadsData = [];
+                    snapshot.forEach(doc => {
+                        leadsData.push({ id: doc.id, ...doc.data() });
+                    });
+                    updateLeadsUI(leadsData);
+                } else {
+                    console.log('Nessun lead trovato');
+                }
             } catch (error) {
                 console.error('Errore caricamento lead:', error);
-                loadDemoLeads();
             }
         }
 
@@ -553,16 +606,18 @@
                 const profilesRef = collection(db, 'user_profiles');
                 const snapshot = await getDocs(profilesRef);
                 
-                const profiles = { beginner: 0, warrior: 0, athlete: 0 };
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    profiles[data.profile_type] = (profiles[data.profile_type] || 0) + 1;
-                });
-                
-                updateProfilesUI(profiles);
+                if (!snapshot.empty) {
+                    const profiles = { beginner: 0, warrior: 0, athlete: 0 };
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        profiles[data.profile_type] = (profiles[data.profile_type] || 0) + 1;
+                    });
+                    updateProfilesUI(profiles);
+                } else {
+                    console.log('Nessun profilo trovato');
+                }
             } catch (error) {
                 console.error('Errore caricamento profili:', error);
-                loadDemoProfiles();
             }
         }
 
@@ -572,15 +627,17 @@
                 const contentQuery = query(contentRef, orderBy('requests', 'desc'));
                 const snapshot = await getDocs(contentQuery);
                 
-                const contentData = [];
-                snapshot.forEach(doc => {
-                    contentData.push(doc.data());
-                });
-                
-                updateContentUI(contentData);
+                if (!snapshot.empty) {
+                    const contentData = [];
+                    snapshot.forEach(doc => {
+                        contentData.push(doc.data());
+                    });
+                    updateContentUI(contentData);
+                } else {
+                    console.log('Nessun contenuto trovato');
+                }
             } catch (error) {
                 console.error('Errore caricamento contenuti:', error);
-                loadDemoContent();
             }
         }
 
@@ -590,41 +647,47 @@
                 const alertsQuery = query(alertsRef, where('active', '==', true), orderBy('priority', 'desc'));
                 const snapshot = await getDocs(alertsQuery);
                 
-                const alertsData = [];
-                snapshot.forEach(doc => {
-                    alertsData.push(doc.data());
-                });
-                
-                updateAlertsUI(alertsData);
+                if (!snapshot.empty) {
+                    const alertsData = [];
+                    snapshot.forEach(doc => {
+                        alertsData.push(doc.data());
+                    });
+                    updateAlertsUI(alertsData);
+                } else {
+                    console.log('Nessun alert trovato');
+                }
             } catch (error) {
                 console.error('Errore caricamento alert:', error);
-                loadDemoAlerts();
+                // Non mostrare dati demo - mantieni vuoto
             }
         }
 
-        // Funzioni per aggiornare l'UI
+        // Funzioni per aggiornare l'UI (SOLO CON DATI REALI)
         function updateMetricsUI(data) {
-            document.getElementById('users-today').textContent = data.users_today || 47;
-            document.getElementById('users-change').textContent = `+${data.users_change || 23}% vs ieri`;
+            document.getElementById('users-today').textContent = data.users_today || 0;
+            document.getElementById('users-change').textContent = data.users_change ? `+${data.users_change}% vs ieri` : 'Primo giorno';
             
-            document.getElementById('quiz-completed').textContent = data.quiz_completed || 12;
-            document.getElementById('quiz-change').textContent = `+${data.quiz_change || 15}% vs ieri`;
+            document.getElementById('quiz-completed').textContent = data.quiz_completed || 0;
+            document.getElementById('quiz-change').textContent = data.quiz_change ? `+${data.quiz_change}% vs ieri` : 'Primo giorno';
             
-            document.getElementById('hot-leads').textContent = data.hot_leads || 8;
-            document.getElementById('leads-change').textContent = `+${data.leads_change || 2} vs ieri`;
+            document.getElementById('hot-leads').textContent = data.hot_leads || 0;
+            document.getElementById('leads-change').textContent = data.leads_change ? `+${data.leads_change} vs ieri` : 'Primo giorno';
             
-            document.getElementById('conversions').textContent = data.conversions || 3;
-            document.getElementById('conv-change').textContent = `+${data.conv_change || 50}% vs ieri`;
+            document.getElementById('conversions').textContent = data.conversions || 0;
+            document.getElementById('conv-change').textContent = data.conv_change ? `+${data.conv_change}% vs ieri` : 'Primo giorno';
             
-            document.getElementById('revenue').textContent = `€${data.revenue || 450}`;
-            document.getElementById('revenue-change').textContent = `+${data.revenue_change || 25}% vs ieri`;
+            document.getElementById('revenue').textContent = `€${data.revenue || 0}`;
+            document.getElementById('revenue-change').textContent = data.revenue_change ? `+${data.revenue_change}% vs ieri` : 'Primo giorno';
             
-            document.getElementById('conversion-rate').textContent = `${data.conversion_rate || 6.4}%`;
-            document.getElementById('rate-change').textContent = `+${data.rate_change || 1.2}% vs ieri`;
+            document.getElementById('conversion-rate').textContent = `${data.conversion_rate || 0}%`;
+            document.getElementById('rate-change').textContent = data.rate_change ? `+${data.rate_change}% vs ieri` : 'Primo giorno';
         }
 
         function updateLeadsUI(leads) {
+            const container = document.getElementById('leads-container');
+            const table = document.getElementById('leads-table');
             const tbody = document.getElementById('leads-tbody');
+            
             tbody.innerHTML = '';
             
             leads.forEach(lead => {
@@ -640,11 +703,14 @@
                 tbody.appendChild(row);
             });
             
-            document.getElementById('leads-loading').style.display = 'none';
-            document.getElementById('leads-table').style.display = 'table';
+            container.style.display = 'none';
+            table.style.display = 'table';
         }
 
         function updateProfilesUI(profiles) {
+            const container = document.getElementById('profiles-container');
+            const chart = document.getElementById('profiles-chart');
+            
             const total = profiles.beginner + profiles.warrior + profiles.athlete;
             
             if (total > 0) {
@@ -660,14 +726,16 @@
                 
                 document.getElementById('athlete-bar').style.width = `${athletePercent}%`;
                 document.getElementById('athlete-percent').textContent = `${athletePercent}%`;
+                
+                container.style.display = 'none';
+                chart.style.display = 'block';
             }
-            
-            document.getElementById('profiles-loading').style.display = 'none';
-            document.getElementById('profiles-chart').style.display = 'block';
         }
 
         function updateContentUI(content) {
+            const container = document.getElementById('content-container');
             const contentList = document.getElementById('content-list');
+            
             contentList.innerHTML = '';
             
             content.forEach(item => {
@@ -683,8 +751,8 @@
                 contentList.appendChild(li);
             });
             
-            document.getElementById('content-loading').style.display = 'none';
-            document.getElementById('content-list').style.display = 'block';
+            container.style.display = 'none';
+            contentList.style.display = 'block';
         }
 
         function updateAlertsUI(alerts) {
@@ -702,154 +770,12 @@
             });
         }
 
-        // Funzioni demo per quando Firebase non è disponibile
-        function loadDemoMetrics() {
-            updateMetricsUI({
-                users_today: 47,
-                users_change: 23,
-                quiz_completed: 12,
-                quiz_change: 15,
-                hot_leads: 8,
-                leads_change: 2,
-                conversions: 3,
-                conv_change: 50,
-                revenue: 450,
-                revenue_change: 25,
-                conversion_rate: 6.4,
-                rate_change: 1.2
-            });
-        }
-
-        function loadDemoLeads() {
-            const demoLeads = [
-                { name: 'Marco R.', profile: '💪 Guerriero', score: 95, last_action: 'Chiesto prezzi PT', status: 'Pronto acquisto' },
-                { name: 'Giulia M.', profile: '🌱 Nuovo Esploratore', score: 75, last_action: 'Quiz + video visto', status: 'Interessata' },
-                { name: 'Luca P.', profile: '🏆 Atleta', score: 88, last_action: 'Info studio + orari', status: 'Valutando' },
-                { name: 'Sara L.', profile: '💪 Guerriero', score: 45, last_action: 'Solo workout casa', status: 'Educazione' }
-            ];
-            updateLeadsUI(demoLeads);
-        }
-
-        function loadDemoProfiles() {
-            updateProfilesUI({ beginner: 45, warrior: 35, athlete: 20 });
-        }
-
-        function loadDemoContent() {
-            const demoContent = [
-                { name: 'Workout Casa', requests: 85, conversion_rate: 12 },
-                { name: 'Prezzi Servizi', requests: 72, conversion_rate: 25 },
-                { name: 'Consigli Alimentari', requests: 58, conversion_rate: 8 },
-                { name: 'Video Personalizzati', requests: 34, conversion_rate: 35 }
-            ];
-            updateContentUI(demoContent);
-        }
-
-        function loadDemoAlerts() {
-            const demoAlerts = [
-                { icon: '🔥', title: 'Lead Caldo Identificato', message: 'Marco R. ha chiesto prezzi + completato quiz. Contatta entro 4 ore!' },
-                { icon: '📈', title: 'Trend Positivo', message: 'Richieste "Workout Casa" +40% questa settimana. Crea più contenuti simili.' },
-                { icon: '💡', title: 'Opportunità', message: 'Molte domande su "alimentazione vegana". Considera contenuto specializzato.' }
-            ];
-            updateAlertsUI(demoAlerts);
-        }
-
-        // Funzione per creare dati demo in Firebase
-        async function createDemoData() {
-            try {
-                // Crea metriche demo
-                await addDoc(collection(db, 'metrics'), {
-                    users_today: 47,
-                    users_change: 23,
-                    quiz_completed: 12,
-                    quiz_change: 15,
-                    hot_leads: 8,
-                    leads_change: 2,
-                    conversions: 3,
-                    conv_change: 50,
-                    revenue: 450,
-                    revenue_change: 25,
-                    conversion_rate: 6.4,
-                    rate_change: 1.2,
-                    timestamp: new Date()
-                });
-
-                // Crea lead demo
-                const demoLeads = [
-                    { name: 'Marco R.', profile: '💪 Guerriero', score: 95, last_action: 'Chiesto prezzi PT', status: 'Pronto acquisto' },
-                    { name: 'Giulia M.', profile: '🌱 Nuovo Esploratore', score: 75, last_action: 'Quiz + video visto', status: 'Interessata' },
-                    { name: 'Luca P.', profile: '🏆 Atleta', score: 88, last_action: 'Info studio + orari', status: 'Valutando' },
-                    { name: 'Sara L.', profile: '💪 Guerriero', score: 45, last_action: 'Solo workout casa', status: 'Educazione' }
-                ];
-                
-                for (const lead of demoLeads) {
-                    await addDoc(collection(db, 'leads'), lead);
-                }
-
-                // Crea profili demo
-                const profiles = [
-                    { profile_type: 'beginner', user_id: 'user1' },
-                    { profile_type: 'beginner', user_id: 'user2' },
-                    { profile_type: 'warrior', user_id: 'user3' },
-                    { profile_type: 'athlete', user_id: 'user4' }
-                ];
-                
-                for (const profile of profiles) {
-                    await addDoc(collection(db, 'user_profiles'), profile);
-                }
-
-                // Crea contenuti demo
-                const contents = [
-                    { name: 'Workout Casa', requests: 85, conversion_rate: 12 },
-                    { name: 'Prezzi Servizi', requests: 72, conversion_rate: 25 },
-                    { name: 'Consigli Alimentari', requests: 58, conversion_rate: 8 },
-                    { name: 'Video Personalizzati', requests: 34, conversion_rate: 35 }
-                ];
-                
-                for (const content of contents) {
-                    await addDoc(collection(db, 'content_performance'), content);
-                }
-
-                // Crea alert demo
-                const alerts = [
-                    { 
-                        icon: '🔥', 
-                        title: 'Lead Caldo Identificato', 
-                        message: 'Marco R. ha chiesto prezzi + completato quiz. Contatta entro 4 ore!',
-                        priority: 3,
-                        active: true
-                    },
-                    { 
-                        icon: '📈', 
-                        title: 'Trend Positivo', 
-                        message: 'Richieste "Workout Casa" +40% questa settimana. Crea più contenuti simili.',
-                        priority: 2,
-                        active: true
-                    },
-                    { 
-                        icon: '💡', 
-                        title: 'Opportunità', 
-                        message: 'Molte domande su "alimentazione vegana". Considera contenuto specializzato.',
-                        priority: 1,
-                        active: true
-                    }
-                ];
-                
-                for (const alert of alerts) {
-                    await addDoc(collection(db, 'alerts'), alert);
-                }
-
-                console.log('Dati demo creati con successo!');
-            } catch (error) {
-                console.error('Errore creazione dati demo:', error);
-            }
-        }
-
         // Funzione principale di inizializzazione
         async function initDashboard() {
             try {
                 updateConnectionStatus(true);
                 
-                // Carica tutti i dati
+                // Carica tutti i dati (SOLO REALI)
                 await Promise.all([
                     loadMetrics(),
                     loadLeads(),
@@ -861,49 +787,38 @@
                 // Setup real-time listeners
                 setupRealtimeListeners();
                 
-                console.log('Dashboard inizializzata con successo!');
+                console.log('Dashboard inizializzata - mostrando solo dati reali');
             } catch (error) {
                 console.error('Errore inizializzazione dashboard:', error);
                 updateConnectionStatus(false);
-                
-                // Carica dati demo se Firebase non funziona
-                loadDemoMetrics();
-                loadDemoLeads();
-                loadDemoProfiles();
-                loadDemoContent();
-                loadDemoAlerts();
             }
         }
 
         // Setup listeners real-time
         function setupRealtimeListeners() {
-            // Listener per metriche
-            const metricsRef = collection(db, 'metrics');
-            onSnapshot(query(metricsRef, orderBy('timestamp', 'desc'), limit(1)), (snapshot) => {
-                if (!snapshot.empty) {
-                    updateMetricsUI(snapshot.docs[0].data());
-                }
-            });
-
-            // Listener per lead
-            const leadsRef = collection(db, 'leads');
-            onSnapshot(query(leadsRef, orderBy('score', 'desc')), (snapshot) => {
-                const leadsData = [];
-                snapshot.forEach(doc => {
-                    leadsData.push({ id: doc.id, ...doc.data() });
+            try {
+                // Listener per metriche
+                const metricsRef = collection(db, 'metrics');
+                onSnapshot(query(metricsRef, orderBy('timestamp', 'desc'), limit(1)), (snapshot) => {
+                    if (!snapshot.empty) {
+                        updateMetricsUI(snapshot.docs[0].data());
+                    }
                 });
-                updateLeadsUI(leadsData);
-            });
 
-            // Listener per alert
-            const alertsRef = collection(db, 'alerts');
-            onSnapshot(query(alertsRef, where('active', '==', true), orderBy('priority', 'desc')), (snapshot) => {
-                const alertsData = [];
-                snapshot.forEach(doc => {
-                    alertsData.push(doc.data());
+                // Listener per lead
+                const leadsRef = collection(db, 'leads');
+                onSnapshot(query(leadsRef, orderBy('score', 'desc')), (snapshot) => {
+                    if (!snapshot.empty) {
+                        const leadsData = [];
+                        snapshot.forEach(doc => {
+                            leadsData.push({ id: doc.id, ...doc.data() });
+                        });
+                        updateLeadsUI(leadsData);
+                    }
                 });
-                updateAlertsUI(alertsData);
-            });
+            } catch (error) {
+                console.error('Errore setup listeners:', error);
+            }
         }
 
         // Funzione refresh accessibile globalmente
@@ -947,32 +862,6 @@
             // Auto-refresh ogni 5 minuti
             setInterval(window.refreshData, 300000);
         });
-
-        // Funzione per aggiungere nuovi dati (utile per testing)
-        window.addTestData = async function() {
-            try {
-                await addDoc(collection(db, 'metrics'), {
-                    users_today: Math.floor(Math.random() * 30) + 40,
-                    users_change: Math.floor(Math.random() * 20) + 10,
-                    quiz_completed: Math.floor(Math.random() * 15) + 5,
-                    quiz_change: Math.floor(Math.random() * 25) + 5,
-                    hot_leads: Math.floor(Math.random() * 10) + 3,
-                    leads_change: Math.floor(Math.random() * 5) + 1,
-                    conversions: Math.floor(Math.random() * 5) + 1,
-                    conv_change: Math.floor(Math.random() * 60) + 20,
-                    revenue: Math.floor(Math.random() * 300) + 200,
-                    revenue_change: Math.floor(Math.random() * 40) + 10,
-                    conversion_rate: (Math.random() * 5 + 3).toFixed(1),
-                    rate_change: (Math.random() * 3).toFixed(1),
-                    timestamp: new Date()
-                });
-                
-                console.log('Nuovi dati test aggiunti!');
-                logEvent(analytics, 'test_data_added');
-            } catch (error) {
-                console.error('Errore aggiunta dati test:', error);
-            }
-        }
 
     </script>
 </body>
