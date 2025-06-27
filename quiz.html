@@ -506,42 +506,35 @@
             });
         }
 
-        // Event Listeners per radio buttons
-        document.querySelectorAll('.option-card input[type="radio"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.querySelectorAll(`input[name="${this.name}"]`).forEach(sibling => {
-                    sibling.parentNode.classList.remove('selected');
-                });
-                this.parentNode.classList.add('selected');
-                updateNavigation();
-            });
-        });
-
-        // Event Listeners per checkbox con limite (Obiettivi Principali)
-        document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const checked = document.querySelectorAll('#question-3 input[type="checkbox"]:checked');
-                if (checked.length > 3) {
-                    this.checked = false;
-                    alert('Puoi selezionare massimo 3 obiettivi principali!');
+        // Event Listeners per option cards (gestisce sia radio che checkbox)
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const input = this.querySelector('input');
+                
+                if (input.type === 'radio') {
+                    // Per radio buttons, rimuovi selected da tutti nel gruppo
+                    document.querySelectorAll(`input[name="${input.name}"]`).forEach(sibling => {
+                        sibling.parentNode.classList.remove('selected');
+                        sibling.checked = false;
+                    });
+                    // Seleziona questo
+                    input.checked = true;
+                    this.classList.add('selected');
+                } else if (input.type === 'checkbox') {
+                    // Per checkbox, toggle selection
+                    if (input.name === 'goal') {
+                        // Controlla limite di 3 per obiettivi
+                        const checked = document.querySelectorAll('#question-3 input[name="goal"]:checked');
+                        if (!input.checked && checked.length >= 3) {
+                            alert('Puoi selezionare massimo 3 obiettivi principali!');
+                            return;
+                        }
+                    }
+                    
+                    input.checked = !input.checked;
+                    this.classList.toggle('selected', input.checked);
                 }
-                this.parentNode.classList.toggle('selected', this.checked);
-                updateNavigation();
-            });
-        });
-
-        // Setup per altri checkbox (Ostacoli) - Domanda 7
-        document.querySelectorAll('#question-7 input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                this.parentNode.classList.toggle('selected', this.checked);
-                updateNavigation();
-            });
-        });
-
-        // Setup per checkbox (Attività Preferite) - Domanda 11
-        document.querySelectorAll('#question-11 input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                this.parentNode.classList.toggle('selected', this.checked);
+                
                 updateNavigation();
             });
         });
@@ -707,6 +700,7 @@
             align-items: center;
             justify-content: center;
             min-height: 120px;
+            position: relative;
         }
 
         .option-card:hover {
@@ -723,11 +717,17 @@
 
         .option-card input[type="radio"], 
         .option-card input[type="checkbox"] {
-            display: none;
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            cursor: pointer;
         }
 
         .option-card span {
-            margin-top: 10px;
+            margin-top: 0;
+            pointer-events: none;
         }
 
         .text-input-group {
