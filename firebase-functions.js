@@ -1,15 +1,15 @@
 // firebase-functions.js - Funzioni helper per TribuCoach
 import { db } from './firebase.js';
-import { 
-    collection, 
-    addDoc, 
-    getDocs, 
-    updateDoc, 
-    deleteDoc, 
-    doc, 
-    query, 
-    where, 
-    orderBy, 
+import {
+    collection,
+    addDoc,
+    getDocs,
+    updateDoc,
+    deleteDoc,
+    doc,
+    query,
+    where,
+    orderBy,
     limit,
     onSnapshot,
     serverTimestamp,
@@ -23,7 +23,7 @@ export async function saveQuizResult(quizData) {
             ...quizData,
             timestamp: serverTimestamp()
         });
-        
+
         console.log('✅ Quiz salvato con ID:', docRef.id);
         return docRef.id;
     } catch (error) {
@@ -47,7 +47,10 @@ export async function getLeads() {
 
 export async function addLead(leadData) {
     try {
-        const docRef = await addDoc(collection(db, 'leads'), leadData);
+        const docRef = await addDoc(collection(db, 'leads'), {
+            ...leadData, // Mantiene i dati esistenti
+            timestamp: serverTimestamp() // AGGIUNTA: Aggiunge il timestamp del server per la consistenza
+        });
         return docRef.id;
     } catch (error) {
         console.error('❌ Errore aggiunta lead:', error);
@@ -92,14 +95,14 @@ export async function saveMetrics(metricsData) {
 // === LISTENERS REAL-TIME ===
 export function setupQuizListener(callback) {
     console.log('🔄 Attivando listener per quiz_results...');
-    
+
     try {
         const q = query(
             collection(db, 'quiz_results'),
             orderBy('timestamp', 'desc'),
             limit(50)  // Aumentato il limite per vedere più dati
         );
-        
+
         return onSnapshot(q, (snapshot) => {
             console.log('📊 Dati quiz ricevuti:', snapshot.size, 'documenti');
             callback(snapshot);
@@ -114,14 +117,14 @@ export function setupQuizListener(callback) {
 
 export function setupLeadsListener(callback) {
     console.log('🔄 Attivando listener per leads...');
-    
+
     try {
         const q = query(
             collection(db, 'leads'),
             orderBy('timestamp', 'desc'),
             limit(50)
         );
-        
+
         return onSnapshot(q, (snapshot) => {
             console.log('👥 Dati leads ricevuti:', snapshot.size, 'documenti');
             callback(snapshot);
@@ -136,14 +139,14 @@ export function setupLeadsListener(callback) {
 
 export function setupMetricsListener(callback) {
     console.log('🔄 Attivando listener per metrics...');
-    
+
     try {
         const q = query(
             collection(db, 'metrics'),
             orderBy('timestamp', 'desc'),
             limit(10)
         );
-        
+
         return onSnapshot(q, (snapshot) => {
             console.log('📈 Dati metrics ricevuti:', snapshot.size, 'documenti');
             callback(snapshot);
@@ -159,7 +162,7 @@ export function setupMetricsListener(callback) {
 // === UTILITY FUNCTIONS ===
 export function formatDateTime(timestamp) {
     if (!timestamp) return 'N/A';
-    
+
     try {
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         return date.toLocaleString('it-IT');
@@ -171,7 +174,7 @@ export function formatDateTime(timestamp) {
 
 export function calculateTrend(current, previous) {
     if (!previous || previous === 0) return { value: 0, isPositive: true };
-    
+
     const change = ((current - previous) / previous) * 100;
     return {
         value: Math.abs(change).toFixed(1),
