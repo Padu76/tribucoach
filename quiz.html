@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz TribuCoach</title>
+  <title>Quiz TribuCoach con Salvataggio</title>
+  <script src="firebase.js"></script>
+  <script src="firebase-functions.js"></script>
   <style>
     body { font-family: Arial, sans-serif; background-color: #111; color: #fff; text-align: center; padding: 20px; }
     .question-box { background: #222; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
@@ -22,15 +24,10 @@
       { q: "Come valuti la tua alimentazione?", a: ["Disordinata", "Mediocre", "Buona", "Ottima"], s: [0, 1, 2, 3] },
       { q: "Quanto dormi a notte?", a: ["Meno di 5 ore", "5-6 ore", "7-8 ore", "9+ ore"], s: [0, 1, 2, 3] },
       { q: "Quanto ti senti motivato?", a: ["Per niente", "Poco", "Abbastanza", "Molto"], s: [0, 1, 2, 3] },
-      { q: "Quanti passi fai in un giorno?", a: ["<3000", "3000-6000", "6000-9000", "9000+"], s: [0, 1, 2, 3] },
-      { q: "Consumi frutta e verdura ogni giorno?", a: ["Mai", "Raramente", "Spesso", "Sempre"], s: [0, 1, 2, 3] },
-      { q: "Come gestisci lo stress?", a: ["Male", "Così così", "Bene", "Molto bene"], s: [0, 1, 2, 3] },
-      { q: "Quanto tempo dedichi a hobby?", a: ["Nessuno", "Poco", "Abbastanza", "Molto"], s: [0, 1, 2, 3] },
-      { q: "Fai stretching regolarmente?", a: ["Mai", "A volte", "Spesso", "Sempre"], s: [0, 1, 2, 3] },
-      { q: "Quanta acqua bevi al giorno?", a: ["<1L", "1-1.5L", "1.5-2L", "2L+"], s: [0, 1, 2, 3] },
     ];
 
     let currentQ = 0, score = 0;
+    const responses = [];
     const quizContainer = document.getElementById('quizContainer');
 
     function showQuestion() {
@@ -41,42 +38,39 @@
       const q = questions[currentQ];
       let html = `<div class='question-box'><h2>${q.q}</h2>`;
       q.a.forEach((ans, i) => {
-        html += `<button onclick='answer(${q.s[i]})'>${ans}</button><br>`;
+        html += `<button onclick='answer(${q.s[i]}, "${ans}")'>${ans}</button><br>`;
       });
       html += `</div>`;
       quizContainer.innerHTML = html;
     }
 
-    function answer(points) {
+    function answer(points, answerText) {
       score += points;
+      responses.push({ question: questions[currentQ].q, answer: answerText });
       currentQ++;
       showQuestion();
     }
 
     function showResult() {
+      saveQuizResult(responses);
       let profile = '';
-      if (score < 10) profile = "Profilo: 🚦 Da migliorare. Urge un cambiamento radicale.";
-      else if (score < 20) profile = "Profilo: ⚠️ Intermedio. Buona base, ma c'è da lavorare.";
-      else profile = "Profilo: 🏅 Avanzato. Ottimo, continua così!";
+      if (score < 5) profile = "Profilo: 🚦 Da migliorare.";
+      else if (score < 8) profile = "Profilo: ⚠️ Intermedio.";
+      else profile = "Profilo: 🏅 Avanzato.";
 
       let advice = `
         <div class='question-box'>
         <h2>${profile}</h2>
-        <p>Ecco i tuoi consigli personalizzati:</p>
+        <p>Le tue risposte sono state salvate. Ecco i tuoi consigli personalizzati:</p>
         <ul style='text-align: left;'>
-          <li>Programma 3-4 allenamenti settimanali con esercizi funzionali.</li>
-          <li>Integra frutta e verdura a ogni pasto per bilanciare i micronutrienti.</li>
-          <li>Bevi almeno 2L di acqua al giorno per una buona idratazione.</li>
-          <li>Dedica almeno 15 minuti al giorno a tecniche di respirazione o meditazione.</li>
-          <li>Incrementa la qualità del sonno riducendo l'uso di dispositivi prima di dormire.</li>
-          <li>Utilizza playlist energiche per motivarti durante l'allenamento.</li>
-          <li>Riduci cibi processati e zuccheri aggiunti nella tua dieta.</li>
-          <li>Fissa obiettivi a breve e medio termine per restare motivato.</li>
-          <li>Programma stretching al termine di ogni allenamento per ridurre tensioni muscolari.</li>
-          <li>Sii costante: la regolarità è il segreto del successo.</li>
+          <li>Allena la costanza con almeno 3 allenamenti a settimana.</li>
+          <li>Migliora l'alimentazione introducendo frutta e verdura a ogni pasto.</li>
+          <li>Dedica tempo al riposo per migliorare il recupero.</li>
+          <li>Imposta obiettivi chiari per mantenere alta la motivazione.</li>
         </ul>
         <button onclick="window.location.href='index.html'">🔄 Riprova il Quiz</button>
-        <button onclick="window.location.href='https://wa.me/3478881515'">💬 Chiedi la Consulenza</button>
+        <button onclick="window.location.href='https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07'">💬 Chatta con TribuCoach</button>
+        <button onclick="window.location.href='https://wa.me/393478881515'">📲 Chiedi la Consulenza</button>
         </div>
       `;
       quizContainer.innerHTML = advice;
