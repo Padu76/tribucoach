@@ -170,6 +170,24 @@
             box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.3);
         }
 
+        .text-input-group textarea {
+            width: calc(100% - 20px);
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background-color: #222;
+            color: #fff;
+            font-size: 1rem;
+            margin-top: 5px;
+            resize: vertical;
+        }
+
+        .text-input-group textarea:focus {
+            outline: none;
+            border-color: #ff6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.3);
+        }
+
         .navigation-buttons {
             display: flex;
             justify-content: space-between;
@@ -600,8 +618,8 @@
             </div>
 
             <div class="cta-buttons">
-                <a href="#" id="cta-personal-plan" class="cta-primary">Ottieni il tuo Piano Personale Gratuito</a>
-                <a href="#" class="cta-secondary cta-talk-to-coach">Parla con un Coach</a>
+                <a href="#" id="cta-chatbot" class="cta-primary">Chatta con il tuo Assistant TribuCoach</a>
+                <a href="#" id="cta-consultation" class="cta-secondary">Richiedi Consulenza Gratuita</a>
             </div>
         </div>
     </div>
@@ -909,14 +927,16 @@
             logEvent(analytics, 'advanced_quiz_started'); // Log inizio quiz
 
             // Event listener for CTA buttons
-            document.getElementById('cta-personal-plan')?.addEventListener('click', () => {
-                logEvent(analytics, 'cta_personal_plan_clicked', { profile: quizData.profile, score: quizData.lead_score });
-                alert('Verrai presto ricontattato per il tuo piano personalizzato!');
+            document.getElementById('cta-chatbot')?.addEventListener('click', () => {
+                logEvent(analytics, 'cta_chatbot_clicked', { profile: quizData.profile, score: quizData.lead_score });
+                // Apri il chatbot TribuCoach
+                window.open('https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07', '_blank');
             });
-            document.querySelector('.cta-secondary.cta-talk-to-coach')?.addEventListener('click', () => {
-                logEvent(analytics, 'cta_talk_to_coach_clicked', { profile: quizData.profile, score: quizData.lead_score });
-                 // Per esempio, aprire WhatsApp:
-                const message = encodeURIComponent(`Ciao! Ho appena completato il Quiz TribuCoach. Il mio profilo è "${quizData.profile}" e vorrei parlare con un coach.`);
+            
+            document.getElementById('cta-consultation')?.addEventListener('click', () => {
+                logEvent(analytics, 'cta_consultation_clicked', { profile: quizData.profile, score: quizData.lead_score });
+                // Apri WhatsApp con messaggio precompilato per consulenza
+                const message = encodeURIComponent(`Ciao! Ho completato il Quiz TribuCoach. Il mio profilo è "${quizData.profile}" e vorrei richiedere una consulenza gratuita.`);
                 window.open(`https://wa.me/3478881515?text=${message}`, '_blank');
             });
         });
