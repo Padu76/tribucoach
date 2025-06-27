@@ -293,15 +293,12 @@
         <div id="quizContainer"></div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script>
-        // Forza pulizia di qualsiasi configurazione Firebase esistente
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-            firebase.apps.forEach(app => app.delete());
-        }
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-        // Configurazione Firebase PULITA (senza Analytics)
+        // Configurazione Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-9564b.firebaseapp.com", 
@@ -309,19 +306,19 @@
             storageBucket: "tribucoach-9564b.appspot.com",
             messagingSenderId: "476626832985",
             appId: "1:476626832985:web:7835188f40f4348567ab48"
-            // NESSUN measurementId per evitare conflitti Analytics
         };
         
-        // Inizializza Firebase con nome unico
-        const app = firebase.initializeApp(firebaseConfig, 'quiz-app');
-        const db = app.firestore();
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         // Funzione per salvare i risultati del quiz
-        function saveQuizResult(data) {
-            return db.collection('quiz_leads').add({
+        window.saveQuizResult = function(data) {
+            return addDoc(collection(db, 'quiz_results'), {
                 ...data,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                timestamp: serverTimestamp(),
                 source: 'advanced_quiz_v2',
+                score: data.score,
                 lead_score: data.score
             }).then((docRef) => {
                 console.log('✅ Quiz salvato con ID:', docRef.id);
@@ -330,9 +327,7 @@
                 console.error('❌ Errore salvataggio:', error);
                 throw error;
             });
-        }
-
-        // Funzione per calcolare lead score
+        };        // Funzione per calcolare lead score
         function calculateLeadScore(data) {
             return data.score; // Il punteggio è già calcolato
         }
@@ -346,6 +341,31 @@
                 default: return '🌟';
             }
         }
+
+        // Funzione per determinare il profilo basato sui campi del quiz
+        function determineProfile(responses, totalScore) {
+            // Logica migliorata che considera sia il punteggio che le risposte specifiche
+            let profileScore = totalScore;
+            
+            // Aggiusta il punteggio basato su risposte specifiche
+            if (responses.goals && responses.goals.includes('Preparazione atletica specifica')) {
+                profileScore += 10;
+            }
+            
+            if (responses.training_style === 'Con personal trainer') {
+                profileScore += 5;
+            }
+            
+            if (responses.activity_level === 'Molto attivo (5+ allenamenti intensi)') {
+                profileScore += 10;
+            }
+            
+            // Determina il profilo finale
+            if (profileScore >= 80) return 'Atleta';
+            else if (profileScore >= 40) return 'Guerriero';
+            else return 'Nuovo Esploratore';
+        }
+
         const questions = [
             {
                 q: "Qual è il tuo nome?",
@@ -671,23 +691,9 @@
             showQuestion();
         }
 
-        function determineProfile(totalScore) {
-            if (totalScore >= 80) return 'Atleta';
-            else if (totalScore >= 40) return 'Guerriero';
-            else return 'Nuovo Esploratore';
-        }
-
-        function getProfileIcon(profile) {
-            switch(profile) {
-                case 'Nuovo Esploratore': return '🌱';
-                case 'Guerriero': return '⚔️';
-                case 'Atleta': return '🏆';
-                default: return '🌟';
-            }
-        }
-
         function showResult() {
-            const profile = determineProfile(score);
+            // Usa la nuova funzione che considera sia score che risposte
+            const profile = determineProfile(responses, score);
             const icon = getProfileIcon(profile);
             
             const profiles = {
@@ -726,20 +732,20 @@
                 }
             };
 
-            // Salva i risultati su Firebase
+            // Salva i risultati su Firebase con i campi corretti
             const finalData = {
                 ...responses,
-                score: score,
-                profile: profile,
-                lead_score: score,
+                score: score,                    // Campo score per compatibilità con firebase-functions.js
+                profile: profile,                // Profilo determinato
+                lead_score: score,              // Manteniamo anche questo per compatibilità
                 timestamp: new Date().toISOString()
             };
 
-            // Salva su Firebase
-            saveQuizResult(finalData).then(() => {
-                console.log('Dati salvati con successo su Firebase!');
+            // Salva su Firebase nella collection corretta
+            window.saveQuizResult(finalData).then(() => {
+                console.log('✅ Dati salvati con successo su Firebase!');
             }).catch((error) => {
-                console.error('Errore nel salvataggio:', error);
+                console.error('❌ Errore nel salvataggio:', error);
             });
 
             let resultHTML = `
