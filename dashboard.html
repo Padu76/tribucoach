@@ -201,14 +201,76 @@
             transform: rotate(30deg);
         }
 
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 15px;
-            border-radius: 20px;
+        .insight-card {
+            background: rgba(255,102,0,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255,102,0,0.2);
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .chart-label {
+            width: 120px;
             font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .chart-progress {
+            flex: 1;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .chart-value {
+            width: 50px;
+            text-align: right;
             font-weight: bold;
+            color: #ff6600;
+        }
+
+        .opportunity-card {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .opportunity-card h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .opportunity-card .priority {
+            background: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .opportunity-card .priority.high {
+            background: #f44336;
+        }
+
+        .opportunity-card .priority.medium {
+            background: #ff9800;
         }
 
         .status-connected {
@@ -289,42 +351,48 @@
             </div>
         </div>
 
-        <!-- Sezione per Conversazioni Chatbot (NUOVA) -->
+        <!-- Sezione per Analisi Obiettivi (DATI REALI DAL QUIZ) -->
         <div class="dashboard-section">
-            <h2>💬 Conversazioni Chatbot Recenti</h2>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Cliente</th>
-                        <th>Ultima Domanda</th>
-                        <th>Risposta Bot</th>
-                        <th>Sentiment</th>
-                        <th>Data</th>
-                        <th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody id="conversations-table-body">
-                    <tr><td colspan="6" class="no-data">Nessuna conversazione ancora registrata</td></tr>
-                </tbody>
-            </table>
+            <h2>🎯 Obiettivi dei Clienti</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div>
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Top Obiettivi</h3>
+                    <div id="goals-chart"></div>
+                </div>
+                <div>
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Sfide Principali</h3>
+                    <div id="challenges-chart"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Sezione per Domande Frequenti (NUOVA) -->
+        <!-- Sezione per Insights sui Clienti (DATI REALI DAL QUIZ) -->
         <div class="dashboard-section">
-            <h2>❓ Domande Più Frequenti</h2>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Domanda</th>
-                        <th>Frequenza</th>
-                        <th>Categoria</th>
-                        <th>Tasso Risoluzione</th>
-                    </tr>
-                </thead>
-                <tbody id="faq-table-body">
-                    <tr><td colspan="4" class="no-data">Analizzando le conversazioni...</td></tr>
-                </tbody>
-            </table>
+            <h2>💡 Insights sui Clienti</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="insight-card">
+                    <h4 style="color: #ff6600; margin-bottom: 10px;">📊 Distribuzione Budget</h4>
+                    <div id="budget-analysis"></div>
+                </div>
+                <div class="insight-card">
+                    <h4 style="color: #ff6600; margin-bottom: 10px;">⏰ Disponibilità Tempo</h4>
+                    <div id="time-analysis"></div>
+                </div>
+                <div class="insight-card">
+                    <h4 style="color: #ff6600; margin-bottom: 10px;">🏋️ Frequenza Allenamento</h4>
+                    <div id="frequency-analysis"></div>
+                </div>
+                <div class="insight-card">
+                    <h4 style="color: #ff6600; margin-bottom: 10px;">📍 Distribuzione Geografica</h4>
+                    <div id="location-analysis"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione per Opportunità Business (ANALISI INTELLIGENTE) -->
+        <div class="dashboard-section">
+            <h2>💼 Opportunità Business</h2>
+            <div id="business-opportunities"></div>
         </div>
 
         <div class="dashboard-section">
@@ -485,25 +553,181 @@
         }
 
         async function loadConversations() {
-            try {
-                // Questa collezione verrà popolata dai webhook di Chatbase
-                const conversationsRef = collection(db, 'chatbot_conversations');
-                const q = query(conversationsRef, orderBy('timestamp', 'desc'), limit(20));
-                
-                onSnapshot(q, (querySnapshot) => {
-                    const conversations = [];
-                    querySnapshot.forEach(doc => {
-                        conversations.push({ id: doc.id, ...doc.data() });
+            // Rimuoviamo questa funzione dato che Chatbase è a pagamento
+            // Invece analizziamo i dati del quiz che abbiamo già
+            console.log('Analisi basata sui dati del quiz disponibili');
+        }
+
+        // Nuove funzioni di analisi basate sui dati del quiz
+        function analyzeGoals(quizzes) {
+            const goalsCount = {};
+            const challengesCount = {};
+            
+            quizzes.forEach(quiz => {
+                // Analizza obiettivi
+                if (quiz.goals && Array.isArray(quiz.goals)) {
+                    quiz.goals.forEach(goal => {
+                        const cleanGoal = goal.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+                        goalsCount[cleanGoal] = (goalsCount[cleanGoal] || 0) + 1;
                     });
-                    
-                    allConversations = conversations;
-                    renderConversations(conversations);
-                    analyzeFrequentQuestions(conversations);
-                });
+                }
                 
-            } catch (error) {
-                console.error('Errore caricamento conversazioni:', error);
+                // Analizza sfide
+                if (quiz.challenges && Array.isArray(quiz.challenges)) {
+                    quiz.challenges.forEach(challenge => {
+                        const cleanChallenge = challenge.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+                        challengesCount[cleanChallenge] = (challengesCount[cleanChallenge] || 0) + 1;
+                    });
+                }
+            });
+            
+            renderChart('goals-chart', goalsCount);
+            renderChart('challenges-chart', challengesCount);
+        }
+
+        function renderChart(elementId, data) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            if (Object.keys(data).length === 0) {
+                container.innerHTML = '<p class="no-data">Nessun dato disponibile</p>';
+                return;
             }
+            
+            const maxValue = Math.max(...Object.values(data));
+            
+            Object.entries(data)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5) // Top 5
+                .forEach(([label, count]) => {
+                    const percentage = (count / maxValue) * 100;
+                    const barHtml = `
+                        <div class="chart-bar">
+                            <div class="chart-label">${label}</div>
+                            <div class="chart-progress">
+                                <div class="chart-fill" style="width: ${percentage}%"></div>
+                            </div>
+                            <div class="chart-value">${count}</div>
+                        </div>
+                    `;
+                    container.innerHTML += barHtml;
+                });
+        }
+
+        function analyzeCustomerInsights(quizzes, leads) {
+            // Analisi Budget
+            const budgetData = {};
+            quizzes.forEach(quiz => {
+                if (quiz.budget) {
+                    const budgetLabel = {
+                        'low': '€0-50',
+                        'medium': '€50-150', 
+                        'high': '€150-300',
+                        'premium': '€300+'
+                    }[quiz.budget] || quiz.budget;
+                    budgetData[budgetLabel] = (budgetData[budgetLabel] || 0) + 1;
+                }
+            });
+            renderChart('budget-analysis', budgetData);
+
+            // Analisi Tempo
+            const timeData = {};
+            quizzes.forEach(quiz => {
+                if (quiz.time_available) {
+                    timeData[quiz.time_available + ' min'] = (timeData[quiz.time_available + ' min'] || 0) + 1;
+                }
+            });
+            renderChart('time-analysis', timeData);
+
+            // Analisi Frequenza
+            const frequencyData = {};
+            quizzes.forEach(quiz => {
+                if (quiz.frequency) {
+                    frequencyData[quiz.frequency + ' volte/sett'] = (frequencyData[quiz.frequency + ' volte/sett'] || 0) + 1;
+                }
+            });
+            renderChart('frequency-analysis', frequencyData);
+
+            // Analisi Location
+            const locationData = {};
+            leads.forEach(lead => {
+                if (lead.city) {
+                    locationData[lead.city] = (locationData[lead.city] || 0) + 1;
+                }
+            });
+            renderChart('location-analysis', locationData);
+        }
+
+        function generateBusinessOpportunities(quizzes, leads) {
+            const container = document.getElementById('business-opportunities');
+            container.innerHTML = '';
+            
+            const opportunities = [];
+            
+            // Analizza i dati per identificare opportunità
+            const highBudgetLeads = leads.filter(lead => {
+                const quiz = quizzes.find(q => q.email === lead.email);
+                return quiz && (quiz.budget === 'high' || quiz.budget === 'premium');
+            }).length;
+            
+            const beginnerLeads = leads.filter(lead => {
+                const quiz = quizzes.find(q => q.email === lead.email);
+                return quiz && quiz.experience === 'principiante';
+            }).length;
+            
+            const timeConstrainedLeads = leads.filter(lead => {
+                const quiz = quizzes.find(q => q.email === lead.email);
+                return quiz && quiz.time_available === '15-30';
+            }).length;
+
+            // Genera opportunità basate sui dati
+            if (highBudgetLeads > 0) {
+                opportunities.push({
+                    title: `${highBudgetLeads} Lead High-Value`,
+                    description: `Hai ${highBudgetLeads} potenziali clienti con budget alto. Contattali per servizi premium!`,
+                    priority: 'high',
+                    action: 'Crea una proposta premium personalizzata'
+                });
+            }
+
+            if (beginnerLeads > 0) {
+                opportunities.push({
+                    title: `${beginnerLeads} Principianti Motivati`,
+                    description: `Molti nuovi clienti alle prime armi. Considera un corso base!`,
+                    priority: 'medium',
+                    action: 'Sviluppa un programma "Fitness Foundation"'
+                });
+            }
+
+            if (timeConstrainedLeads > 0) {
+                opportunities.push({
+                    title: `${timeConstrainedLeads} Clienti con Poco Tempo`,
+                    description: `Molti vogliono allenamenti brevi. Crea workout da 15-30 minuti!`,
+                    priority: 'medium',
+                    action: 'Sviluppa programmi "Express Workout"'
+                });
+            }
+
+            // Sempre mostra almeno un'opportunità generale
+            if (opportunities.length === 0) {
+                opportunities.push({
+                    title: 'Primi Dati Disponibili',
+                    description: 'Continua a raccogliere dati per identificare opportunità specifiche.',
+                    priority: 'low',
+                    action: 'Promuovi il quiz per ottenere più insights'
+                });
+            }
+
+            opportunities.forEach(opp => {
+                const oppHtml = `
+                    <div class="opportunity-card">
+                        <h4>${opp.title} <span class="priority ${opp.priority}">PRIORITÀ ${opp.priority.toUpperCase()}</span></h4>
+                        <p style="margin-bottom: 10px; color: #ccc;">${opp.description}</p>
+                        <p style="color: #4CAF50;"><strong>Azione suggerita:</strong> ${opp.action}</p>
+                    </div>
+                `;
+                container.innerHTML += oppHtml;
+            });
         }
 
         // Funzioni di rendering
@@ -551,6 +775,11 @@
                     <td><button class="action-btn" onclick="viewQuizDetails('${quiz.id}')">Vedi Dettagli</button></td>
                 `;
             });
+
+            // Analizza i dati per insights
+            analyzeGoals(quizzes);
+            analyzeCustomerInsights(quizzes, allLeads);
+            generateBusinessOpportunities(quizzes, allLeads);
         }
 
         function renderConversations(conversations) {
@@ -643,8 +872,7 @@
             try {
                 await Promise.all([
                     loadLeads(),
-                    loadQuizzes(),
-                    loadConversations()
+                    loadQuizzes()
                 ]);
                 
                 document.getElementById('last-update').textContent = new Date().toLocaleString('it-IT');
@@ -690,8 +918,7 @@
                 
                 await Promise.all([
                     loadLeads(),
-                    loadQuizzes(),
-                    loadConversations()
+                    loadQuizzes()
                 ]);
                 
                 document.getElementById('last-update').textContent = new Date().toLocaleString('it-IT');
