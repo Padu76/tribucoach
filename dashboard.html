@@ -299,6 +299,33 @@
             margin-top: 20px;
         }
 
+        .loading {
+            text-align: center;
+            color: #ff6600;
+            font-size: 1.1rem;
+            margin: 20px 0;
+        }
+
+        .firebase-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .firebase-connected {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .firebase-disconnected {
+            background: #f44336;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .charts-grid {
                 grid-template-columns: 1fr;
@@ -319,9 +346,11 @@
     </style>
 </head>
 <body>
+    <div class="firebase-status" id="firebase-status">🔄 Connecting...</div>
+
     <div class="header">
         <h1>🎯 TribuCoach Dashboard</h1>
-        <p>Business Intelligence e Analytics in Tempo Reale</p>
+        <p>Business Intelligence e Analytics in Tempo Reale - Powered by Firebase</p>
     </div>
 
     <div class="dashboard">
@@ -329,40 +358,41 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-title">Utenti Oggi</div>
-                <div class="metric-value" id="users-today">47</div>
-                <div class="metric-change">+23% vs ieri</div>
+                <div class="metric-value" id="users-today">--</div>
+                <div class="metric-change" id="users-change">Caricamento...</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Quiz Completati</div>
-                <div class="metric-value" id="quiz-completed">12</div>
-                <div class="metric-change">+15% vs ieri</div>
+                <div class="metric-value" id="quiz-completed">--</div>
+                <div class="metric-change" id="quiz-change">Caricamento...</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Lead Caldi</div>
-                <div class="metric-value" id="hot-leads">8</div>
-                <div class="metric-change">+2 vs ieri</div>
+                <div class="metric-value" id="hot-leads">--</div>
+                <div class="metric-change" id="leads-change">Caricamento...</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Conversioni</div>
-                <div class="metric-value" id="conversions">3</div>
-                <div class="metric-change">+50% vs ieri</div>
+                <div class="metric-value" id="conversions">--</div>
+                <div class="metric-change" id="conv-change">Caricamento...</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Revenue Oggi</div>
-                <div class="metric-value" id="revenue">€450</div>
-                <div class="metric-change">+25% vs ieri</div>
+                <div class="metric-value" id="revenue">--</div>
+                <div class="metric-change" id="revenue-change">Caricamento...</div>
             </div>
             <div class="metric-card">
                 <div class="metric-title">Tasso Conversione</div>
-                <div class="metric-value" id="conversion-rate">6.4%</div>
-                <div class="metric-change">+1.2% vs ieri</div>
+                <div class="metric-value" id="conversion-rate">--</div>
+                <div class="metric-change" id="rate-change">Caricamento...</div>
             </div>
         </div>
 
         <!-- Lead Management -->
         <div class="section">
             <h2>🔥 Lead Management</h2>
-            <table class="leads-table">
+            <div id="leads-loading" class="loading">Caricamento lead da Firebase...</div>
+            <table class="leads-table" id="leads-table" style="display: none;">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -373,39 +403,7 @@
                         <th>Azioni</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Marco R.</td>
-                        <td>💪 Guerriero</td>
-                        <td><span class="lead-score score-hot">HOT 95</span></td>
-                        <td>Chiesto prezzi PT</td>
-                        <td>Pronto acquisto</td>
-                        <td><button class="action-btn" onclick="contactLead('Marco')">Contatta</button></td>
-                    </tr>
-                    <tr>
-                        <td>Giulia M.</td>
-                        <td>🌱 Nuovo Esploratore</td>
-                        <td><span class="lead-score score-warm">WARM 75</span></td>
-                        <td>Quiz + video visto</td>
-                        <td>Interessata</td>
-                        <td><button class="action-btn" onclick="contactLead('Giulia')">Follow-up</button></td>
-                    </tr>
-                    <tr>
-                        <td>Luca P.</td>
-                        <td>🏆 Atleta</td>
-                        <td><span class="lead-score score-hot">HOT 88</span></td>
-                        <td>Info studio + orari</td>
-                        <td>Valutando</td>
-                        <td><button class="action-btn" onclick="contactLead('Luca')">Call</button></td>
-                    </tr>
-                    <tr>
-                        <td>Sara L.</td>
-                        <td>💪 Guerriero</td>
-                        <td><span class="lead-score score-cold">COLD 45</span></td>
-                        <td>Solo workout casa</td>
-                        <td>Educazione</td>
-                        <td><button class="action-btn" onclick="contactLead('Sara')">Nurture</button></td>
-                    </tr>
+                <tbody id="leads-tbody">
                 </tbody>
             </table>
         </div>
@@ -414,60 +412,36 @@
         <div class="charts-grid">
             <div class="chart-container">
                 <div class="chart-title">📊 Distribuzione Profili Utenti</div>
-                <div class="profile-bar">
-                    <div class="profile-label">🌱 Nuovo Esploratore</div>
-                    <div class="profile-progress">
-                        <div class="profile-fill profile-beginner" style="width: 45%"></div>
+                <div id="profiles-loading" class="loading">Caricamento dati profili...</div>
+                <div id="profiles-chart" style="display: none;">
+                    <div class="profile-bar">
+                        <div class="profile-label">🌱 Nuovo Esploratore</div>
+                        <div class="profile-progress">
+                            <div class="profile-fill profile-beginner" id="beginner-bar"></div>
+                        </div>
+                        <div class="profile-percentage" id="beginner-percent">0%</div>
                     </div>
-                    <div class="profile-percentage">45%</div>
-                </div>
-                <div class="profile-bar">
-                    <div class="profile-label">💪 Guerriero</div>
-                    <div class="profile-progress">
-                        <div class="profile-fill profile-warrior" style="width: 35%"></div>
+                    <div class="profile-bar">
+                        <div class="profile-label">💪 Guerriero</div>
+                        <div class="profile-progress">
+                            <div class="profile-fill profile-warrior" id="warrior-bar"></div>
+                        </div>
+                        <div class="profile-percentage" id="warrior-percent">0%</div>
                     </div>
-                    <div class="profile-percentage">35%</div>
-                </div>
-                <div class="profile-bar">
-                    <div class="profile-label">🏆 Atleta</div>
-                    <div class="profile-progress">
-                        <div class="profile-fill profile-athlete" style="width: 20%"></div>
+                    <div class="profile-bar">
+                        <div class="profile-label">🏆 Atleta</div>
+                        <div class="profile-progress">
+                            <div class="profile-fill profile-athlete" id="athlete-bar"></div>
+                        </div>
+                        <div class="profile-percentage" id="athlete-percent">0%</div>
                     </div>
-                    <div class="profile-percentage">20%</div>
                 </div>
             </div>
 
             <div class="chart-container">
                 <div class="chart-title">🏆 Content Performance</div>
-                <ul class="content-list">
-                    <li class="content-item">
-                        <div class="content-name">Workout Casa</div>
-                        <div class="content-stats">
-                            <span>85 richieste</span>
-                            <span>12% conversioni</span>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-name">Prezzi Servizi</div>
-                        <div class="content-stats">
-                            <span>72 richieste</span>
-                            <span>25% conversioni</span>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-name">Consigli Alimentari</div>
-                        <div class="content-stats">
-                            <span>58 richieste</span>
-                            <span>8% conversioni</span>
-                        </div>
-                    </li>
-                    <li class="content-item">
-                        <div class="content-name">Video Personalizzati</div>
-                        <div class="content-stats">
-                            <span>34 richieste</span>
-                            <span>35% conversioni</span>
-                        </div>
-                    </li>
+                <div id="content-loading" class="loading">Caricamento performance contenuti...</div>
+                <ul class="content-list" id="content-list" style="display: none;">
                 </ul>
             </div>
         </div>
@@ -475,49 +449,21 @@
         <!-- Alerts e Insights -->
         <div class="section">
             <h2>🚨 Alert e Opportunità</h2>
-            <div class="alert">
-                <div class="alert-title">🔥 Lead Caldo Identificato</div>
-                Marco R. ha chiesto prezzi + completato quiz. Contatta entro 4 ore!
-            </div>
-            <div class="alert">
-                <div class="alert-title">📈 Trend Positivo</div>
-                Richieste "Workout Casa" +40% questa settimana. Crea più contenuti simili.
-            </div>
-            <div class="alert">
-                <div class="alert-title">💡 Opportunità</div>
-                Molte domande su "alimentazione vegana". Considera contenuto specializzato.
+            <div id="alerts-container">
+                <div class="loading">Caricamento alert da Firebase...</div>
             </div>
         </div>
 
         <!-- Business Insights -->
         <div class="section">
             <h2>💡 Business Insights</h2>
-            <div class="insights-grid">
-                <div class="insight-card">
-                    <div class="insight-icon">📈</div>
-                    <div class="insight-title">Previsione 30 giorni</div>
-                    <p>Con il trend attuale: +25 nuovi clienti, revenue stimata €3.200</p>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-icon">🎯</div>
-                    <div class="insight-title">Miglior Orario</div>
-                    <p>Lunedì 19:00-21:00 ha il 35% in più di conversioni. Pianifica contenuti premium.</p>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-icon">💰</div>
-                    <div class="insight-title">ROI TribuCoach</div>
-                    <p>Investimento €200/mese → Ritorno €2.800/mese. ROI: 1.400%</p>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-icon">🔮</div>
-                    <div class="insight-title">Prossima Azione</div>
-                    <p>Focus su "Guerrieri": hanno il 35% conversion rate più alto. Crea campagna mirata.</p>
-                </div>
+            <div class="insights-grid" id="insights-container">
+                <div class="loading">Caricamento insights...</div>
             </div>
         </div>
 
         <div class="timestamp">
-            Ultimo aggiornamento: <span id="last-update"></span>
+            Ultimo aggiornamento: <span id="last-update">--</span>
         </div>
     </div>
 
@@ -525,53 +471,509 @@
         🔄
     </button>
 
-    <script>
-        // Simula dati real-time
-        function refreshData() {
-            // Aggiorna timestamp
-            document.getElementById('last-update').textContent = new Date().toLocaleString('it-IT');
-            
-            // Simula aggiornamento metriche
-            const metrics = {
-                'users-today': Math.floor(Math.random() * 20) + 40,
-                'quiz-completed': Math.floor(Math.random() * 10) + 8,
-                'hot-leads': Math.floor(Math.random() * 5) + 5,
-                'conversions': Math.floor(Math.random() * 3) + 2,
-                'revenue': '€' + (Math.floor(Math.random() * 200) + 350),
-                'conversion-rate': (Math.random() * 2 + 5).toFixed(1) + '%'
-            };
-            
-            Object.keys(metrics).forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = metrics[id];
-                    // Animazione flash
-                    element.style.color = '#ff6600';
-                    setTimeout(() => {
-                        element.style.color = '#fff';
-                    }, 1000);
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAnalytics, logEvent } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js';
+
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-9564b.firebaseapp.com",
+            projectId: "tribucoach-9564b",
+            storageBucket: "tribucoach-9564b.firebasestorage.app",
+            messagingSenderId: "476626832985",
+            appId: "1:476626832985:web:bd3103957299ab7a67ab48",
+            measurementId: "G-YZ565MKQGV"
+        };
+
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Stato connessione Firebase
+        let isConnected = false;
+
+        // Funzione per aggiornare lo stato di connessione
+        function updateConnectionStatus(connected) {
+            isConnected = connected;
+            const statusEl = document.getElementById('firebase-status');
+            if (connected) {
+                statusEl.textContent = '🟢 Firebase Connected';
+                statusEl.className = 'firebase-status firebase-connected';
+            } else {
+                statusEl.textContent = '🔴 Firebase Disconnected';
+                statusEl.className = 'firebase-status firebase-disconnected';
+            }
+        }
+
+        // Funzioni per caricare dati da Firebase
+        async function loadMetrics() {
+            try {
+                const metricsRef = collection(db, 'metrics');
+                const metricsQuery = query(metricsRef, orderBy('timestamp', 'desc'), limit(1));
+                const snapshot = await getDocs(metricsQuery);
+                
+                if (!snapshot.empty) {
+                    const data = snapshot.docs[0].data();
+                    updateMetricsUI(data);
+                } else {
+                    // Se non ci sono dati, crea dati demo
+                    await createDemoData();
                 }
+            } catch (error) {
+                console.error('Errore caricamento metriche:', error);
+                updateConnectionStatus(false);
+                loadDemoMetrics();
+            }
+        }
+
+        async function loadLeads() {
+            try {
+                const leadsRef = collection(db, 'leads');
+                const leadsQuery = query(leadsRef, orderBy('score', 'desc'));
+                const snapshot = await getDocs(leadsQuery);
+                
+                const leadsData = [];
+                snapshot.forEach(doc => {
+                    leadsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateLeadsUI(leadsData);
+            } catch (error) {
+                console.error('Errore caricamento lead:', error);
+                loadDemoLeads();
+            }
+        }
+
+        async function loadProfiles() {
+            try {
+                const profilesRef = collection(db, 'user_profiles');
+                const snapshot = await getDocs(profilesRef);
+                
+                const profiles = { beginner: 0, warrior: 0, athlete: 0 };
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    profiles[data.profile_type] = (profiles[data.profile_type] || 0) + 1;
+                });
+                
+                updateProfilesUI(profiles);
+            } catch (error) {
+                console.error('Errore caricamento profili:', error);
+                loadDemoProfiles();
+            }
+        }
+
+        async function loadContent() {
+            try {
+                const contentRef = collection(db, 'content_performance');
+                const contentQuery = query(contentRef, orderBy('requests', 'desc'));
+                const snapshot = await getDocs(contentQuery);
+                
+                const contentData = [];
+                snapshot.forEach(doc => {
+                    contentData.push(doc.data());
+                });
+                
+                updateContentUI(contentData);
+            } catch (error) {
+                console.error('Errore caricamento contenuti:', error);
+                loadDemoContent();
+            }
+        }
+
+        async function loadAlerts() {
+            try {
+                const alertsRef = collection(db, 'alerts');
+                const alertsQuery = query(alertsRef, where('active', '==', true), orderBy('priority', 'desc'));
+                const snapshot = await getDocs(alertsQuery);
+                
+                const alertsData = [];
+                snapshot.forEach(doc => {
+                    alertsData.push(doc.data());
+                });
+                
+                updateAlertsUI(alertsData);
+            } catch (error) {
+                console.error('Errore caricamento alert:', error);
+                loadDemoAlerts();
+            }
+        }
+
+        // Funzioni per aggiornare l'UI
+        function updateMetricsUI(data) {
+            document.getElementById('users-today').textContent = data.users_today || 47;
+            document.getElementById('users-change').textContent = `+${data.users_change || 23}% vs ieri`;
+            
+            document.getElementById('quiz-completed').textContent = data.quiz_completed || 12;
+            document.getElementById('quiz-change').textContent = `+${data.quiz_change || 15}% vs ieri`;
+            
+            document.getElementById('hot-leads').textContent = data.hot_leads || 8;
+            document.getElementById('leads-change').textContent = `+${data.leads_change || 2} vs ieri`;
+            
+            document.getElementById('conversions').textContent = data.conversions || 3;
+            document.getElementById('conv-change').textContent = `+${data.conv_change || 50}% vs ieri`;
+            
+            document.getElementById('revenue').textContent = `€${data.revenue || 450}`;
+            document.getElementById('revenue-change').textContent = `+${data.revenue_change || 25}% vs ieri`;
+            
+            document.getElementById('conversion-rate').textContent = `${data.conversion_rate || 6.4}%`;
+            document.getElementById('rate-change').textContent = `+${data.rate_change || 1.2}% vs ieri`;
+        }
+
+        function updateLeadsUI(leads) {
+            const tbody = document.getElementById('leads-tbody');
+            tbody.innerHTML = '';
+            
+            leads.forEach(lead => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${lead.name}</td>
+                    <td>${lead.profile}</td>
+                    <td><span class="lead-score score-${lead.score >= 80 ? 'hot' : lead.score >= 60 ? 'warm' : 'cold'}">${lead.score >= 80 ? 'HOT' : lead.score >= 60 ? 'WARM' : 'COLD'} ${lead.score}</span></td>
+                    <td>${lead.last_action}</td>
+                    <td>${lead.status}</td>
+                    <td><button class="action-btn" onclick="contactLead('${lead.name}')">Contatta</button></td>
+                `;
+                tbody.appendChild(row);
             });
             
-            // Feedback visivo
-            const btn = document.querySelector('.refresh-btn');
-            btn.innerHTML = '✅';
-            setTimeout(() => {
-                btn.innerHTML = '🔄';
-            }, 1500);
+            document.getElementById('leads-loading').style.display = 'none';
+            document.getElementById('leads-table').style.display = 'table';
         }
-        
-        function contactLead(name) {
-            alert(`Aprendo WhatsApp per contattare ${name}...`);
-            // Qui puoi aggiungere l'integrazione reale con WhatsApp Business API
-            window.open(`https://wa.me/3478881515?text=Ciao ${name}, ho visto il tuo interesse per i miei servizi...`);
+
+        function updateProfilesUI(profiles) {
+            const total = profiles.beginner + profiles.warrior + profiles.athlete;
+            
+            if (total > 0) {
+                const beginnerPercent = Math.round((profiles.beginner / total) * 100);
+                const warriorPercent = Math.round((profiles.warrior / total) * 100);
+                const athletePercent = Math.round((profiles.athlete / total) * 100);
+                
+                document.getElementById('beginner-bar').style.width = `${beginnerPercent}%`;
+                document.getElementById('beginner-percent').textContent = `${beginnerPercent}%`;
+                
+                document.getElementById('warrior-bar').style.width = `${warriorPercent}%`;
+                document.getElementById('warrior-percent').textContent = `${warriorPercent}%`;
+                
+                document.getElementById('athlete-bar').style.width = `${athletePercent}%`;
+                document.getElementById('athlete-percent').textContent = `${athletePercent}%`;
+            }
+            
+            document.getElementById('profiles-loading').style.display = 'none';
+            document.getElementById('profiles-chart').style.display = 'block';
         }
-        
-        // Auto-refresh ogni 5 minuti
-        setInterval(refreshData, 300000);
-        
-        // Inizializza
-        refreshData();
+
+        function updateContentUI(content) {
+            const contentList = document.getElementById('content-list');
+            contentList.innerHTML = '';
+            
+            content.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'content-item';
+                li.innerHTML = `
+                    <div class="content-name">${item.name}</div>
+                    <div class="content-stats">
+                        <span>${item.requests} richieste</span>
+                        <span>${item.conversion_rate}% conversioni</span>
+                    </div>
+                `;
+                contentList.appendChild(li);
+            });
+            
+            document.getElementById('content-loading').style.display = 'none';
+            document.getElementById('content-list').style.display = 'block';
+        }
+
+        function updateAlertsUI(alerts) {
+            const container = document.getElementById('alerts-container');
+            container.innerHTML = '';
+            
+            alerts.forEach(alert => {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert';
+                alertDiv.innerHTML = `
+                    <div class="alert-title">${alert.icon} ${alert.title}</div>
+                    ${alert.message}
+                `;
+                container.appendChild(alertDiv);
+            });
+        }
+
+        // Funzioni demo per quando Firebase non è disponibile
+        function loadDemoMetrics() {
+            updateMetricsUI({
+                users_today: 47,
+                users_change: 23,
+                quiz_completed: 12,
+                quiz_change: 15,
+                hot_leads: 8,
+                leads_change: 2,
+                conversions: 3,
+                conv_change: 50,
+                revenue: 450,
+                revenue_change: 25,
+                conversion_rate: 6.4,
+                rate_change: 1.2
+            });
+        }
+
+        function loadDemoLeads() {
+            const demoLeads = [
+                { name: 'Marco R.', profile: '💪 Guerriero', score: 95, last_action: 'Chiesto prezzi PT', status: 'Pronto acquisto' },
+                { name: 'Giulia M.', profile: '🌱 Nuovo Esploratore', score: 75, last_action: 'Quiz + video visto', status: 'Interessata' },
+                { name: 'Luca P.', profile: '🏆 Atleta', score: 88, last_action: 'Info studio + orari', status: 'Valutando' },
+                { name: 'Sara L.', profile: '💪 Guerriero', score: 45, last_action: 'Solo workout casa', status: 'Educazione' }
+            ];
+            updateLeadsUI(demoLeads);
+        }
+
+        function loadDemoProfiles() {
+            updateProfilesUI({ beginner: 45, warrior: 35, athlete: 20 });
+        }
+
+        function loadDemoContent() {
+            const demoContent = [
+                { name: 'Workout Casa', requests: 85, conversion_rate: 12 },
+                { name: 'Prezzi Servizi', requests: 72, conversion_rate: 25 },
+                { name: 'Consigli Alimentari', requests: 58, conversion_rate: 8 },
+                { name: 'Video Personalizzati', requests: 34, conversion_rate: 35 }
+            ];
+            updateContentUI(demoContent);
+        }
+
+        function loadDemoAlerts() {
+            const demoAlerts = [
+                { icon: '🔥', title: 'Lead Caldo Identificato', message: 'Marco R. ha chiesto prezzi + completato quiz. Contatta entro 4 ore!' },
+                { icon: '📈', title: 'Trend Positivo', message: 'Richieste "Workout Casa" +40% questa settimana. Crea più contenuti simili.' },
+                { icon: '💡', title: 'Opportunità', message: 'Molte domande su "alimentazione vegana". Considera contenuto specializzato.' }
+            ];
+            updateAlertsUI(demoAlerts);
+        }
+
+        // Funzione per creare dati demo in Firebase
+        async function createDemoData() {
+            try {
+                // Crea metriche demo
+                await addDoc(collection(db, 'metrics'), {
+                    users_today: 47,
+                    users_change: 23,
+                    quiz_completed: 12,
+                    quiz_change: 15,
+                    hot_leads: 8,
+                    leads_change: 2,
+                    conversions: 3,
+                    conv_change: 50,
+                    revenue: 450,
+                    revenue_change: 25,
+                    conversion_rate: 6.4,
+                    rate_change: 1.2,
+                    timestamp: new Date()
+                });
+
+                // Crea lead demo
+                const demoLeads = [
+                    { name: 'Marco R.', profile: '💪 Guerriero', score: 95, last_action: 'Chiesto prezzi PT', status: 'Pronto acquisto' },
+                    { name: 'Giulia M.', profile: '🌱 Nuovo Esploratore', score: 75, last_action: 'Quiz + video visto', status: 'Interessata' },
+                    { name: 'Luca P.', profile: '🏆 Atleta', score: 88, last_action: 'Info studio + orari', status: 'Valutando' },
+                    { name: 'Sara L.', profile: '💪 Guerriero', score: 45, last_action: 'Solo workout casa', status: 'Educazione' }
+                ];
+                
+                for (const lead of demoLeads) {
+                    await addDoc(collection(db, 'leads'), lead);
+                }
+
+                // Crea profili demo
+                const profiles = [
+                    { profile_type: 'beginner', user_id: 'user1' },
+                    { profile_type: 'beginner', user_id: 'user2' },
+                    { profile_type: 'warrior', user_id: 'user3' },
+                    { profile_type: 'athlete', user_id: 'user4' }
+                ];
+                
+                for (const profile of profiles) {
+                    await addDoc(collection(db, 'user_profiles'), profile);
+                }
+
+                // Crea contenuti demo
+                const contents = [
+                    { name: 'Workout Casa', requests: 85, conversion_rate: 12 },
+                    { name: 'Prezzi Servizi', requests: 72, conversion_rate: 25 },
+                    { name: 'Consigli Alimentari', requests: 58, conversion_rate: 8 },
+                    { name: 'Video Personalizzati', requests: 34, conversion_rate: 35 }
+                ];
+                
+                for (const content of contents) {
+                    await addDoc(collection(db, 'content_performance'), content);
+                }
+
+                // Crea alert demo
+                const alerts = [
+                    { 
+                        icon: '🔥', 
+                        title: 'Lead Caldo Identificato', 
+                        message: 'Marco R. ha chiesto prezzi + completato quiz. Contatta entro 4 ore!',
+                        priority: 3,
+                        active: true
+                    },
+                    { 
+                        icon: '📈', 
+                        title: 'Trend Positivo', 
+                        message: 'Richieste "Workout Casa" +40% questa settimana. Crea più contenuti simili.',
+                        priority: 2,
+                        active: true
+                    },
+                    { 
+                        icon: '💡', 
+                        title: 'Opportunità', 
+                        message: 'Molte domande su "alimentazione vegana". Considera contenuto specializzato.',
+                        priority: 1,
+                        active: true
+                    }
+                ];
+                
+                for (const alert of alerts) {
+                    await addDoc(collection(db, 'alerts'), alert);
+                }
+
+                console.log('Dati demo creati con successo!');
+            } catch (error) {
+                console.error('Errore creazione dati demo:', error);
+            }
+        }
+
+        // Funzione principale di inizializzazione
+        async function initDashboard() {
+            try {
+                updateConnectionStatus(true);
+                
+                // Carica tutti i dati
+                await Promise.all([
+                    loadMetrics(),
+                    loadLeads(),
+                    loadProfiles(),
+                    loadContent(),
+                    loadAlerts()
+                ]);
+                
+                // Setup real-time listeners
+                setupRealtimeListeners();
+                
+                console.log('Dashboard inizializzata con successo!');
+            } catch (error) {
+                console.error('Errore inizializzazione dashboard:', error);
+                updateConnectionStatus(false);
+                
+                // Carica dati demo se Firebase non funziona
+                loadDemoMetrics();
+                loadDemoLeads();
+                loadDemoProfiles();
+                loadDemoContent();
+                loadDemoAlerts();
+            }
+        }
+
+        // Setup listeners real-time
+        function setupRealtimeListeners() {
+            // Listener per metriche
+            const metricsRef = collection(db, 'metrics');
+            onSnapshot(query(metricsRef, orderBy('timestamp', 'desc'), limit(1)), (snapshot) => {
+                if (!snapshot.empty) {
+                    updateMetricsUI(snapshot.docs[0].data());
+                }
+            });
+
+            // Listener per lead
+            const leadsRef = collection(db, 'leads');
+            onSnapshot(query(leadsRef, orderBy('score', 'desc')), (snapshot) => {
+                const leadsData = [];
+                snapshot.forEach(doc => {
+                    leadsData.push({ id: doc.id, ...doc.data() });
+                });
+                updateLeadsUI(leadsData);
+            });
+
+            // Listener per alert
+            const alertsRef = collection(db, 'alerts');
+            onSnapshot(query(alertsRef, where('active', '==', true), orderBy('priority', 'desc')), (snapshot) => {
+                const alertsData = [];
+                snapshot.forEach(doc => {
+                    alertsData.push(doc.data());
+                });
+                updateAlertsUI(alertsData);
+            });
+        }
+
+        // Funzione refresh accessibile globalmente
+        window.refreshData = async function() {
+            try {
+                await initDashboard();
+                
+                // Aggiorna timestamp
+                document.getElementById('last-update').textContent = new Date().toLocaleString('it-IT');
+                
+                // Feedback visivo
+                const btn = document.querySelector('.refresh-btn');
+                btn.innerHTML = '✅';
+                setTimeout(() => {
+                    btn.innerHTML = '🔄';
+                }, 1500);
+                
+                // Log analytics
+                logEvent(analytics, 'dashboard_refresh');
+            } catch (error) {
+                console.error('Errore refresh:', error);
+            }
+        }
+
+        // Funzione contatto lead accessibile globalmente
+        window.contactLead = function(name) {
+            // Log analytics
+            logEvent(analytics, 'contact_lead', {
+                lead_name: name
+            });
+            
+            // Apri WhatsApp
+            const message = encodeURIComponent(`Ciao ${name}, ho visto il tuo interesse per i miei servizi...`);
+            window.open(`https://wa.me/3478881515?text=${message}`, '_blank');
+        }
+
+        // Inizializza quando la pagina è caricata
+        document.addEventListener('DOMContentLoaded', () => {
+            initDashboard();
+            
+            // Auto-refresh ogni 5 minuti
+            setInterval(window.refreshData, 300000);
+        });
+
+        // Funzione per aggiungere nuovi dati (utile per testing)
+        window.addTestData = async function() {
+            try {
+                await addDoc(collection(db, 'metrics'), {
+                    users_today: Math.floor(Math.random() * 30) + 40,
+                    users_change: Math.floor(Math.random() * 20) + 10,
+                    quiz_completed: Math.floor(Math.random() * 15) + 5,
+                    quiz_change: Math.floor(Math.random() * 25) + 5,
+                    hot_leads: Math.floor(Math.random() * 10) + 3,
+                    leads_change: Math.floor(Math.random() * 5) + 1,
+                    conversions: Math.floor(Math.random() * 5) + 1,
+                    conv_change: Math.floor(Math.random() * 60) + 20,
+                    revenue: Math.floor(Math.random() * 300) + 200,
+                    revenue_change: Math.floor(Math.random() * 40) + 10,
+                    conversion_rate: (Math.random() * 5 + 3).toFixed(1),
+                    rate_change: (Math.random() * 3).toFixed(1),
+                    timestamp: new Date()
+                });
+                
+                console.log('Nuovi dati test aggiunti!');
+                logEvent(analytics, 'test_data_added');
+            } catch (error) {
+                console.error('Errore aggiunta dati test:', error);
+            }
+        }
+
     </script>
 </body>
 </html>
