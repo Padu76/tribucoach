@@ -1,834 +1,101 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz di Analisi Fitness - Scopri il Tuo Potenziale</title>
-    <meta name="description" content="Quiz avanzato per analizzare il tuo profilo fitness completo e ricevere consigli personalizzati">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
-            color: #fff;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            font-size: 2.8rem;
-            background: linear-gradient(135deg, #ff6600, #ff9933);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 15px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            color: #ccc;
-        }
-
-        .quiz-container {
-            background-color: #1a1a1a;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            position: relative;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            background-color: #333;
-            border-radius: 10px;
-            height: 10px;
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-            border-radius: 10px;
-            transition: width 0.3s ease-in-out;
-        }
-
-        .question-container {
-            text-align: center;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .question-container h2 {
-            font-size: 1.8rem;
-            color: #ff6600;
-            margin-bottom: 25px;
-        }
-
-        .options-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .option-btn {
-            background-color: #333;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            font-size: 1.1rem;
-            color: #eee;
-            border: 2px solid transparent;
-            min-height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-        }
-
-        .option-btn:hover {
-            background-color: #ff6600;
-            border-color: #ff9933;
-            color: #fff;
-            transform: translateY(-5px);
-        }
-
-        .text-input-container {
-            max-width: 500px;
-            margin: 0 auto 30px;
-        }
-
-        .text-input-container input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #555;
-            border-radius: 8px;
-            background-color: #222;
-            color: #fff;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-        }
-
-        .text-input-container input:focus {
-            outline: none;
-            border-color: #ff6600;
-            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.3);
-        }
-
-        .text-input-container button {
-            background-color: #ff6600;
-            color: #fff;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-        }
-
-        .text-input-container button:hover {
-            background-color: #ff7711;
-        }
-
-        .result-container {
-            text-align: center;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .result-container h2 {
-            font-size: 2.5rem;
-            color: #ff6600;
-            margin-bottom: 20px;
-        }
-
-        .profile-card {
-            background-color: #333;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .profile-card h3 {
-            font-size: 1.8rem;
-            color: #ff9933;
-            margin-bottom: 15px;
-        }
-
-        .profile-card p {
-            font-size: 1rem;
-            color: #ccc;
-            line-height: 1.8;
-            text-align: left;
-        }
-
-        .recommendations {
-            text-align: left;
-            margin-top: 30px;
-        }
-
-        .recommendations h3 {
-            color: #ff6600;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .recommendations ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .recommendations ul li {
-            background-color: #3a3a3a;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            align-items: flex-start;
-            font-size: 1rem;
-            color: #eee;
-            line-height: 1.6;
-        }
-
-        .recommendations ul li::before {
-            content: '✅';
-            margin-right: 10px;
-            color: #ff6600;
-            font-size: 1.2em;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .cta-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 30px;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .cta-btn {
-            display: block;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-decoration: none;
-            transition: transform 0.2s ease;
-            text-align: center;
-            cursor: pointer;
-            border: none;
-        }
-
-        .cta-primary {
-            background-color: #ff6600;
-            color: #fff;
-        }
-
-        .cta-primary:hover {
-            background-color: #ff7711;
-            transform: translateY(-3px);
-        }
-
-        .cta-secondary {
-            background-color: #555;
-            color: #fff;
-        }
-
-        .cta-secondary:hover {
-            background-color: #666;
-            transform: translateY(-3px);
-        }
-
-        .checkbox-container {
-            max-width: 600px;
-            margin: 0 auto 30px;
-        }
-
-        .checkbox-item {
-            background-color: #333;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            border: 2px solid transparent;
-        }
-
-        .checkbox-item:hover {
-            background-color: #444;
-        }
-
-        .checkbox-item.selected {
-            background-color: #ff6600;
-            border-color: #ff9933;
-            color: #fff;
-        }
-
-        .checkbox-item input {
-            margin-right: 10px;
-            transform: scale(1.2);
-        }
-
-        .progress-text {
-            text-align: center;
-            color: #ccc;
-            margin-bottom: 20px;
-            font-size: 1rem;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz TribuCoach - Minimal Elegante</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <style>
+    body { font-family: 'Helvetica Neue', sans-serif; background-color: #f4f4f4; color: #333; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    h1 { color: #000; margin-bottom: 20px; }
+    .quiz-container { background: #fff; max-width: 600px; width: 100%; border-radius: 12px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .question-box { margin-bottom: 30px; }
+    .question-box h2 { font-size: 20px; margin-bottom: 20px; }
+    .answer-btn { background-color: #ff8800; color: white; border: none; border-radius: 8px; padding: 12px 20px; margin: 8px 0; font-size: 16px; width: 100%; cursor: pointer; transition: background 0.3s; }
+    .answer-btn:hover { background-color: #e67300; }
+    .cta-btn { background-color: #555; color: white; border: none; border-radius: 8px; padding: 12px 20px; margin: 10px 5px; font-size: 16px; cursor: pointer; transition: background 0.3s; }
+    .cta-btn:hover { background-color: #333; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Quiz di Analisi Fitness</h1>
-            <p>Scopri il tuo potenziale e ricevi consigli personalizzati</p>
-        </header>
+  <h1>🏆 Quiz TribuCoach</h1>
+  <div class="quiz-container" id="quizContainer"></div>
 
-        <div class="quiz-container">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-            <div class="progress-text" id="progress-text">Domanda 1 di 25</div>
-            
-            <div id="quiz-content">
-                <!-- Il contenuto del quiz verrà generato qui -->
-            </div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+      authDomain: "tribucoach-9564b.firebaseapp.com",
+      projectId: "tribucoach-9564b",
+      storageBucket: "tribucoach-9564b.appspot.com",
+      messagingSenderId: "476626832985",
+      appId: "1:476626832985:web:7835188f40f4348567ab48"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function saveQuizResult(responses) {
+      db.collection('leads').add({
+        responses: responses,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => console.log("Risposte salvate!"))
+        .catch((e) => console.error("Errore salvataggio:", e));
+    }
+
+    const questions = [
+      { q: "Quante volte ti alleni a settimana?", a: ["0", "1-2", "3-4", "5+"], s: [0, 1, 2, 3] },
+      { q: "Come valuti la tua alimentazione?", a: ["Disordinata", "Mediocre", "Buona", "Ottima"], s: [0, 1, 2, 3] },
+      { q: "Quanto dormi a notte?", a: ["Meno di 5 ore", "5-6 ore", "7-8 ore", "9+ ore"], s: [0, 1, 2, 3] },
+      { q: "Quanto ti senti motivato?", a: ["Per niente", "Poco", "Abbastanza", "Molto"], s: [0, 1, 2, 3] }
+    ];
+
+    let currentQ = 0, score = 0, responses = [];
+    const quizContainer = document.getElementById('quizContainer');
+
+    function showQuestion() {
+      if (currentQ >= questions.length) {
+        showResult();
+        return;
+      }
+      const q = questions[currentQ];
+      let html = `<div class='question-box'><h2>${q.q}</h2>`;
+      q.a.forEach((ans, i) => {
+        html += `<button class='answer-btn' onclick='answer(${q.s[i]}, "${ans}")'>${ans}</button>`;
+      });
+      html += `</div>`;
+      quizContainer.innerHTML = html;
+    }
+
+    function answer(points, answerText) {
+      score += points;
+      responses.push({ question: questions[currentQ].q, answer: answerText });
+      currentQ++;
+      showQuestion();
+    }
+
+    function showResult() {
+      saveQuizResult(responses);
+      let profile = score < 5 ? "🚦 Da migliorare." : (score < 8 ? "⚠️ Intermedio." : "🏅 Avanzato.");
+      let advice = `
+        <div class='question-box'>
+          <h2>Profilo: ${profile}</h2>
+          <p>Le tue risposte sono state salvate. Ecco i consigli per te:</p>
+          <ul style='text-align: left;'>
+            <li>Allena la costanza con almeno 3 allenamenti a settimana.</li>
+            <li>Integra frutta e verdura ad ogni pasto.</li>
+            <li>Dormi 7-8 ore per notte per recuperare.</li>
+            <li>Definisci obiettivi chiari per restare motivato.</li>
+          </ul>
+          <button class="cta-btn" onclick="window.location.href='index.html'">🔄 Riprova il Quiz</button>
+          <button class="cta-btn" onclick="window.location.href='https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07'">💬 Chatta con TribuCoach</button>
+          <button class="cta-btn" onclick="window.location.href='https://wa.me/393478881515'">📲 Chiedi la Consulenza</button>
         </div>
-    </div>
+      `;
+      quizContainer.innerHTML = advice;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-    <script>
-        const questions = [
-            {
-                q: "1. Iniziamo! Qual è il tuo nome?",
-                type: "text",
-                key: "name"
-            },
-            {
-                q: "2. Qual è la tua email migliore?",
-                type: "email", 
-                key: "email"
-            },
-            {
-                q: "3. Quali sono i tuoi 3 obiettivi principali? (Seleziona fino a 3)",
-                type: "checkbox",
-                key: "goals",
-                max: 3,
-                options: [
-                    "Perdere peso e dimagrire",
-                    "Aumentare massa muscolare", 
-                    "Migliorare la forza",
-                    "Migliorare la resistenza",
-                    "Migliorare la postura",
-                    "Avere più energia e benessere",
-                    "Definire il corpo",
-                    "Preparazione atletica specifica",
-                    "Gestire lo stress",
-                    "Migliorare la flessibilità"
-                ]
-            },
-            {
-                q: "4. Quanto sei attivo fisicamente ogni settimana?",
-                type: "single",
-                key: "activity_level",
-                options: [
-                    "Sedentario (quasi nessuno esercizio)",
-                    "Leggermente attivo (1-2 allenamenti leggeri)", 
-                    "Moderatamente attivo (3-4 allenamenti)",
-                    "Molto attivo (5+ allenamenti intensi)"
-                ]
-            },
-            {
-                q: "5. Come descriveresti la tua alimentazione tipica?",
-                type: "single",
-                key: "diet",
-                options: [
-                    "Scarsa (molti cibi processati, poca frutta/verdura)",
-                    "Discreta (cerco di mangiare sano, ma con sgarri)",
-                    "Buona (generalmente equilibrata e consapevole)",
-                    "Eccellente (molto attento, pianifico i pasti, pochi sgarri)"
-                ]
-            },
-            {
-                q: "6. Quante ore dormi in media a notte?",
-                type: "single", 
-                key: "sleep",
-                options: [
-                    "Meno di 5 ore",
-                    "5-6 ore",
-                    "7-8 ore", 
-                    "Più di 8 ore"
-                ]
-            },
-            {
-                q: "7. Quali sono i tuoi maggiori ostacoli? (Seleziona tutti quelli che si applicano)",
-                type: "checkbox",
-                key: "obstacles",
-                options: [
-                    "Mancanza di tempo",
-                    "Mancanza di motivazione",
-                    "Non so da dove iniziare",
-                    "Costi elevati (palestra, personal trainer)",
-                    "Difficoltà a mantenere la costanza",
-                    "Mancanza di supporto/guida",
-                    "Problemi di salute/infortuni",
-                    "Poca conoscenza di allenamento/nutrizione",
-                    "Stress o ansia",
-                    "Non ho ostacoli particolari"
-                ]
-            },
-            {
-                q: "8. Quanti anni hai?",
-                type: "number",
-                key: "age"
-            },
-            {
-                q: "9. Qual è il tuo genere?",
-                type: "single",
-                key: "gender", 
-                options: [
-                    "Uomo",
-                    "Donna",
-                    "Preferisco non dirlo"
-                ]
-            },
-            {
-                q: "10. Hai qualche nota o commento aggiuntivo per noi?",
-                type: "textarea",
-                key: "notes"
-            },
-            {
-                q: "11. Quali attività preferisci? (Seleziona tutto ciò che ti piace)",
-                type: "checkbox",
-                key: "preferred_activities",
-                options: [
-                    "Palestra",
-                    "Corsa",
-                    "Yoga/Pilates", 
-                    "Sport di squadra",
-                    "Camminate",
-                    "Altro"
-                ]
-            },
-            {
-                q: "12. Usi un personal trainer o ti alleni da solo?",
-                type: "single",
-                key: "training_style",
-                options: [
-                    "Con personal trainer",
-                    "Mi alleno da solo",
-                    "Entrambi"
-                ]
-            },
-            {
-                q: "13. Quanto tempo dura in media il tuo allenamento?",
-                type: "single",
-                key: "workout_duration", 
-                options: [
-                    "Meno di 30 minuti",
-                    "30-45 minuti",
-                    "45-60 minuti",
-                    "Più di un'ora"
-                ]
-            },
-            {
-                q: "14. Fai colazione regolarmente?",
-                type: "single",
-                key: "breakfast_habit",
-                options: [
-                    "Sì, ogni giorno",
-                    "Qualche volta", 
-                    "Mai"
-                ]
-            },
-            {
-                q: "15. Consumi integratori o vitamine?",
-                type: "single",
-                key: "supplements",
-                options: [
-                    "Sì, regolarmente",
-                    "A volte",
-                    "No"
-                ]
-            },
-            {
-                q: "16. Quante volte mangi fuori casa ogni settimana?", 
-                type: "single",
-                key: "eating_out",
-                options: [
-                    "Mai",
-                    "1-2 volte",
-                    "3-4 volte",
-                    "5+ volte"
-                ]
-            },
-            {
-                q: "17. Pratichi tecniche di gestione dello stress?",
-                type: "single",
-                key: "stress_management",
-                options: [
-                    "Sì, ogni giorno",
-                    "Sì, qualche volta",
-                    "No"
-                ]
-            },
-            {
-                q: "18. Ti senti soddisfatto del tuo equilibrio vita-lavoro?",
-                type: "single", 
-                key: "work_life_balance",
-                options: [
-                    "Sì, molto soddisfatto",
-                    "Abbastanza",
-                    "Poco",
-                    "Per niente"
-                ]
-            },
-            {
-                q: "19. Quanto spesso prendi pause attive durante il lavoro?",
-                type: "single",
-                key: "active_breaks",
-                options: [
-                    "Mai",
-                    "Una volta al giorno", 
-                    "Più volte al giorno",
-                    "Ogni ora"
-                ]
-            },
-            {
-                q: "20. Ti svegli durante la notte?",
-                type: "single",
-                key: "sleep_interruptions",
-                options: [
-                    "Mai",
-                    "Raramente",
-                    "Spesso",
-                    "Sempre"
-                ]
-            },
-            {
-                q: "21. Qual è la tua principale fonte di motivazione?",
-                type: "single",
-                key: "motivation_source",
-                options: [
-                    "Obiettivi personali",
-                    "Salute e benessere",
-                    "Estetica", 
-                    "Altro"
-                ]
-            },
-            {
-                q: "22. Ti capita di saltare allenamenti per mancanza di voglia?",
-                type: "single",
-                key: "skip_workouts",
-                options: [
-                    "Mai",
-                    "Raramente",
-                    "A volte",
-                    "Spesso"
-                ]
-            },
-            {
-                q: "23. Ti confronti con altre persone per migliorarti?",
-                type: "single",
-                key: "comparison",
-                options: [
-                    "Sì, spesso",
-                    "A volte",
-                    "Raramente",
-                    "Mai"
-                ]
-            },
-            {
-                q: "24. Usi dispositivi elettronici prima di dormire?",
-                type: "single", 
-                key: "devices_before_sleep",
-                options: [
-                    "Sempre",
-                    "Qualche volta",
-                    "Raramente",
-                    "Mai"
-                ]
-            },
-            {
-                q: "25. Ti senti riposato al mattino?",
-                type: "single",
-                key: "morning_energy",
-                options: [
-                    "Sempre",
-                    "Spesso", 
-                    "Raramente",
-                    "Mai"
-                ]
-            }
-        ];
-
-        let currentQuestion = 0;
-        let responses = {};
-        let selectedCheckboxes = [];
-
-        function updateProgress() {
-            const progress = ((currentQuestion + 1) / questions.length) * 100;
-            document.getElementById('progress-bar').style.width = progress + '%';
-            document.getElementById('progress-text').textContent = `Domanda ${currentQuestion + 1} di ${questions.length}`;
-        }
-
-        function showQuestion() {
-            if (currentQuestion >= questions.length) {
-                showResults();
-                return;
-            }
-
-            const question = questions[currentQuestion];
-            const container = document.getElementById('quiz-content');
-            updateProgress();
-
-            let html = `<div class="question-container"><h2>${question.q}</h2>`;
-
-            switch (question.type) {
-                case 'text':
-                case 'email':
-                case 'number':
-                    html += `
-                        <div class="text-input-container">
-                            <input type="${question.type}" id="textInput" placeholder="Inserisci la tua risposta" ${question.type === 'number' ? 'min="12" max="99"' : ''}>
-                            <button onclick="submitTextAnswer()">Avanti</button>
-                        </div>
-                    `;
-                    break;
-
-                case 'textarea':
-                    html += `
-                        <div class="text-input-container">
-                            <textarea id="textInput" rows="4" placeholder="Scrivi qui i tuoi commenti..." style="resize: vertical; font-family: Arial, sans-serif;"></textarea>
-                            <button onclick="submitTextAnswer()">Avanti</button>
-                        </div>
-                    `;
-                    break;
-
-                case 'single':
-                    html += '<div class="options-grid">';
-                    question.options.forEach((option, index) => {
-                        html += `<div class="option-btn" onclick="answer('${question.key}', '${option}')">${option}</div>`;
-                    });
-                    html += '</div>';
-                    break;
-
-                case 'checkbox':
-                    selectedCheckboxes = [];
-                    html += '<div class="checkbox-container">';
-                    question.options.forEach((option, index) => {
-                        html += `
-                            <div class="checkbox-item" onclick="toggleCheckbox('${option}', this)">
-                                <input type="checkbox" onclick="event.stopPropagation()"> ${option}
-                            </div>
-                        `;
-                    });
-                    html += `<button class="cta-btn cta-primary" onclick="submitCheckboxAnswers('${question.key}')" style="margin-top: 20px;">Avanti</button>`;
-                    html += '</div>';
-                    break;
-            }
-
-            html += '</div>';
-            container.innerHTML = html;
-
-            // Focus su input di testo
-            if (question.type === 'text' || question.type === 'email' || question.type === 'number' || question.type === 'textarea') {
-                setTimeout(() => {
-                    document.getElementById('textInput').focus();
-                }, 100);
-            }
-        }
-
-        function submitTextAnswer() {
-            const input = document.getElementById('textInput');
-            const value = input.value.trim();
-            const question = questions[currentQuestion];
-
-            if (!value) {
-                alert('Per favore, inserisci una risposta prima di continuare.');
-                return;
-            }
-
-            if (question.type === 'email' && !isValidEmail(value)) {
-                alert('Per favore, inserisci un indirizzo email valido.');
-                return;
-            }
-
-            if (question.type === 'number') {
-                const num = parseInt(value);
-                if (isNaN(num) || num < 12 || num > 99) {
-                    alert('Per favore, inserisci un\'età valida (12-99 anni).');
-                    return;
-                }
-            }
-
-            answer(question.key, value);
-        }
-
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        function toggleCheckbox(option, element) {
-            const question = questions[currentQuestion];
-            const checkbox = element.querySelector('input[type="checkbox"]');
-            
-            if (checkbox.checked) {
-                checkbox.checked = false;
-                element.classList.remove('selected');
-                selectedCheckboxes = selectedCheckboxes.filter(item => item !== option);
-            } else {
-                if (question.max && selectedCheckboxes.length >= question.max) {
-                    alert(`Puoi selezionare massimo ${question.max} opzioni!`);
-                    return;
-                }
-                checkbox.checked = true;
-                element.classList.add('selected');
-                selectedCheckboxes.push(option);
-            }
-        }
-
-        function submitCheckboxAnswers(key) {
-            if (selectedCheckboxes.length === 0) {
-                alert('Per favore, seleziona almeno un\'opzione prima di continuare.');
-                return;
-            }
-            answer(key, selectedCheckboxes.slice());
-        }
-
-        function answer(key, value) {
-            responses[key] = value;
-            currentQuestion++;
-            showQuestion();
-        }
-
-        function calculateProfile() {
-            let score = 0;
-
-            // Scoring basato sulle risposte
-            if (responses.goals && responses.goals.includes) {
-                if (responses.goals.includes('Aumentare massa muscolare')) score += 10;
-                if (responses.goals.includes('Migliorare la forza')) score += 10;
-                if (responses.goals.includes('Preparazione atletica specifica')) score += 15;
-                if (responses.goals.includes('Perdere peso e dimagrire')) score += 5;
-                if (responses.goals.includes('Definire il corpo')) score += 7;
-            }
-
-            if (responses.activity_level === 'Molto attivo (5+ allenamenti intensi)') score += 15;
-            else if (responses.activity_level === 'Moderatamente attivo (3-4 allenamenti)') score += 10;
-            else if (responses.activity_level === 'Leggermente attivo (1-2 allenamenti leggeri)') score += 5;
-
-            if (responses.diet === 'Eccellente (molto attento, pianifico i pasti, pochi sgarri)') score += 10;
-            else if (responses.diet === 'Buona (generalmente equilibrata e consapevole)') score += 7;
-            else if (responses.diet === 'Discreta (cerco di mangiare sano, ma con sgarri)') score += 3;
-
-            if (responses.sleep === '7-8 ore') score += 5;
-
-            if (responses.training_style === 'Con personal trainer') score += 8;
-            else if (responses.training_style === 'Entrambi') score += 12;
-
-            if (responses.workout_duration === 'Più di un\'ora') score += 10;
-            else if (responses.workout_duration === '45-60 minuti') score += 8;
-
-            if (responses.breakfast_habit === 'Sì, ogni giorno') score += 5;
-            if (responses.supplements === 'Sì, regolarmente') score += 5;
-            if (responses.stress_management === 'Sì, ogni giorno') score += 8;
-            if (responses.skip_workouts === 'Mai' || responses.skip_workouts === 'Raramente') score += 8;
-
-            // Determina il profilo
-            if (score >= 60) return 'Atleta';
-            else if (score >= 30) return 'Guerriero';
-            else return 'Nuovo Esploratore';
-        }
-
-        function getProfileIcon(profile) {
-            switch(profile) {
-                case 'Nuovo Esploratore': return '🌱';
-                case 'Guerriero': return '⚔️';
-                case 'Atleta': return '🏆';
-                default: return '🌟';
-            }
-        }
-
-        function getProfileInfo(profile) {
-            const profiles = {
-                'Nuovo Esploratore': {
-                    description: 'Sei all\'inizio del tuo viaggio nel mondo del fitness e questo è il momento più emozionante! Hai l\'energia e la motivazione per iniziare, ma potresti sentirti sopraffatto dalla quantità di informazioni disponibili. È normale sentirsi confusi su dove iniziare e quali strategie adottare. Il tuo profilo indica che hai bisogno di una guida strutturata e di un supporto costante per costruire solide fondamenta.',
-                    recommendations: [
-                        'FITNESS: Inizia con 3 allenamenti settimanali di 30-45 minuti, alternando cardio leggero a esercizi di forza base con peso corporeo.',
-                        'ALIMENTAZIONE: Stabilisci orari fissi per i pasti principali e introduci almeno 3 porzioni di verdura al giorno.',
-                        'MOTIVAZIONE: Tieni un diario dei progressi e celebra ogni piccolo traguardo. La costanza batte sempre l\'intensità sporadica.',
-                        'ABITUDINI: Crea una routine mattutina che includa 10 minuti di stretching e vai a letto sempre alla stessa ora.',
-                        'PROSSIMI PASSI: Trova un compagno di allenamento e considera l\'acquisto di un fitness tracker per monitorare i progressi.',
-                        'SOLUZIONI: Investi in un programma di coaching personalizzato e utilizza app di fitness per principianti.'
-                    ]
-                },
-                'Guerriero': {
-                    description: 'Sei un vero combattente del fitness! Hai già costruito una base solida di conoscenze ed esperienze, ma senti che c\'è ancora tanto da esplorare e migliorare. Il tuo profilo rivela una persona determinata che ha superato la fase iniziale e ora si trova ad affrontare nuove sfide. Potresti aver raggiunto un plateau nei risultati o semplicemente sentire il bisogno di evolvere il tuo approccio.',
-                    recommendations: [
-                        'FITNESS: Introduci la periodizzazione negli allenamenti alternando fasi di forza, ipertrofia e resistenza ogni 4-6 settimane.',
-                        'ALIMENTAZIONE: Calcola i tuoi macronutrienti specifici e introduci il timing nutrizionale con carboidrati pre-workout.',
-                        'MOTIVAZIONE: Stabilisci obiettivi SMART e documenta i progressi con misurazioni corporee e performance.',
-                        'ABITUDINI: Ottimizza il recupero con 7-9 ore di sonno qualitativo e introduci pratiche di mindfulness.',
-                        'PROSSIMI PASSI: Considera l\'analisi della composizione corporea e sperimenta nuove discipline sportive.',
-                        'SOLUZIONI: Collabora con un trainer specializzato e utilizza software di tracking per allenamenti e nutrizione.'
-                    ]
-                },
-                'Atleta': {
-                    description: 'Complimenti, sei arrivato al livello elite! Il tuo profilo rappresenta l\'eccellenza nel mondo del fitness e del benessere. Hai costruito un approccio sistematico e scientifico al tuo stile di vita, dove ogni dettaglio conta e ogni decisione è orientata all\'ottimizzazione delle performance. Il fitness non è più un hobby per te, ma una filosofia di vita.',
-                    recommendations: [
-                        'FITNESS AVANZATO: Implementa periodizzazione complessa con microcicli specializzati e utilizza tecnologie avanzate per il monitoraggio.',
-                        'NUTRIZIONE PRECISION: Adotta strategie nutrizionali periodizzate e monitora biomarkers attraverso analisi del sangue regolari.',
-                        'RECUPERO ELITE: Implementa protocolli di recupero avanzati come crioterapia, saune e tecniche di rilascio miofasciale.',
-                        'PERFORMANCE MENTALE: Sviluppa strategie di mental training specifiche e lavora con sport psychologist.',
-                        'MONITORAGGIO: Utilizza wearable devices avanzati e mantieni un database dettagliato di allenamenti e nutrizione.',
-                        'STRATEGIE ELITE: Lavora con team multidisciplinare e considera il coaching di altri atleti per approfondire le conoscenze.'
-                    ]
-                }
-            };
-            return profiles[profile];
-        }
-
-        function showResults() {
-            const profile = calculateProfile();
-            const profileInfo = getProfileInfo(profile);
-            const container = document.getElementById('quiz-content');
-
-            // Salva i risultati (se hai Firebase configurato)
-            const finalData = {
-                ...responses,
-                profile: profile,
-                timestamp: new Date().toISOString()
-            };
+    showQuestion();
+  </script>
+</body>
+</html>
