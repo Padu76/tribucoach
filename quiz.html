@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz TribuCoach con Salvataggio</title>
+  <title>Quiz TribuCoach - Flusso Corretto</title>
   <script src="firebase.js"></script>
   <script src="firebase-functions.js"></script>
   <style>
@@ -31,17 +31,17 @@
     const quizContainer = document.getElementById('quizContainer');
 
     function showQuestion() {
-      if (currentQ >= questions.length) {
+      if (currentQ < questions.length) {
+        const q = questions[currentQ];
+        let html = `<div class='question-box'><h2>${q.q}</h2>`;
+        q.a.forEach((ans, i) => {
+          html += `<button onclick='answer(${q.s[i]}, "${ans}")'>${ans}</button><br>`;
+        });
+        html += `</div>`;
+        quizContainer.innerHTML = html;
+      } else {
         showResult();
-        return;
       }
-      const q = questions[currentQ];
-      let html = `<div class='question-box'><h2>${q.q}</h2>`;
-      q.a.forEach((ans, i) => {
-        html += `<button onclick='answer(${q.s[i]}, "${ans}")'>${ans}</button><br>`;
-      });
-      html += `</div>`;
-      quizContainer.innerHTML = html;
     }
 
     function answer(points, answerText) {
@@ -53,20 +53,16 @@
 
     function showResult() {
       saveQuizResult(responses);
-      let profile = '';
-      if (score < 5) profile = "Profilo: 🚦 Da migliorare.";
-      else if (score < 8) profile = "Profilo: ⚠️ Intermedio.";
-      else profile = "Profilo: 🏅 Avanzato.";
-
+      let profile = score < 5 ? "🚦 Da migliorare." : (score < 8 ? "⚠️ Intermedio." : "🏅 Avanzato.");
       let advice = `
         <div class='question-box'>
-        <h2>${profile}</h2>
+        <h2>Profilo: ${profile}</h2>
         <p>Le tue risposte sono state salvate. Ecco i tuoi consigli personalizzati:</p>
         <ul style='text-align: left;'>
           <li>Allena la costanza con almeno 3 allenamenti a settimana.</li>
-          <li>Migliora l'alimentazione introducendo frutta e verdura a ogni pasto.</li>
-          <li>Dedica tempo al riposo per migliorare il recupero.</li>
-          <li>Imposta obiettivi chiari per mantenere alta la motivazione.</li>
+          <li>Integra frutta e verdura in ogni pasto.</li>
+          <li>Dormi 7-8 ore per notte per recuperare.</li>
+          <li>Stabilisci obiettivi realistici e motivanti.</li>
         </ul>
         <button onclick="window.location.href='index.html'">🔄 Riprova il Quiz</button>
         <button onclick="window.location.href='https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07'">💬 Chatta con TribuCoach</button>
@@ -74,6 +70,7 @@
         </div>
       `;
       quizContainer.innerHTML = advice;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     showQuestion();
