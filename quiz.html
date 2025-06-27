@@ -295,23 +295,20 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     <script>
-        // Configurazione Firebase
+        // Configurazione Firebase (senza Analytics per evitare conflitti)
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-9564b.firebaseapp.com",
             projectId: "tribucoach-9564b",
             storageBucket: "tribucoach-9564b.appspot.com",
             messagingSenderId: "476626832985",
-            appId: "1:476626832985:web:7835188f40f4348567ab48",
-            measurementId: "G-EVYE5YBZJE"
+            appId: "1:476626832985:web:7835188f40f4348567ab48"
         };
         
         // Inizializza Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const analytics = firebase.analytics();
 
         // Funzione per salvare i risultati del quiz
         function saveQuizResult(data) {
@@ -322,11 +319,6 @@
                 lead_score: data.score
             }).then((docRef) => {
                 console.log('Quiz salvato con ID:', docRef.id);
-                // Log evento analytics
-                analytics.logEvent('quiz_completed', {
-                    profile: data.profile,
-                    score: data.score
-                });
                 return docRef.id;
             }).catch((error) => {
                 console.error('Errore salvataggio:', error);
