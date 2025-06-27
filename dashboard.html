@@ -561,7 +561,7 @@
             }
         }
 
-        // Funzioni per caricare dati da Firebase (SOLO DATI REALI)
+        // Funzioni per caricare dati da Firebase (SOLO DATI REALI - NO AUTO-CREATE)
         async function loadMetrics() {
             try {
                 const metricsRef = collection(db, 'metrics');
@@ -572,8 +572,7 @@
                     const data = snapshot.docs[0].data();
                     updateMetricsUI(data);
                 } else {
-                    // Nessun dato - mantieni valori zero
-                    console.log('Nessuna metrica trovata - dashboard vuota');
+                    console.log('Nessuna metrica trovata - dashboard resta vuota');
                 }
             } catch (error) {
                 console.error('Errore caricamento metriche:', error);
@@ -657,8 +656,7 @@
                     console.log('Nessun alert trovato');
                 }
             } catch (error) {
-                console.error('Errore caricamento alert:', error);
-                // Non mostrare dati demo - mantieni vuoto
+                console.error('Errore caricamento alert (normale se collection vuota):', error);
             }
         }
 
@@ -770,12 +768,12 @@
             });
         }
 
-        // Funzione principale di inizializzazione
+        // Funzione principale di inizializzazione (NO AUTO-CREATE MAI!)
         async function initDashboard() {
             try {
                 updateConnectionStatus(true);
                 
-                // Carica tutti i dati (SOLO REALI)
+                // Carica SOLO dati reali - non crea MAI dati demo
                 await Promise.all([
                     loadMetrics(),
                     loadLeads(),
@@ -787,10 +785,11 @@
                 // Setup real-time listeners
                 setupRealtimeListeners();
                 
-                console.log('Dashboard inizializzata - mostrando solo dati reali');
+                console.log('Dashboard inizializzata - mostrando SOLO dati reali, ZERO auto-create');
             } catch (error) {
                 console.error('Errore inizializzazione dashboard:', error);
                 updateConnectionStatus(false);
+                // NON caricare dati demo - lascia tutto vuoto
             }
         }
 
