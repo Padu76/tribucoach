@@ -14,8 +14,8 @@ import {
     onSnapshot,
     serverTimestamp,
     arrayUnion // Import arrayUnion for updating notes
-} from 'firebase/firestore';
-import { logEvent } from 'firebase/analytics'; // CORREZIONE QUI: da '=' a 'from'
+} from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js'; // Aggiornato percorso CDN
+import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'; // Aggiornato percorso CDN
 
 // === GESTIONE QUIZ RESULTS ===
 export async function saveQuizResult(quizData) {
