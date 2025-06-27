@@ -569,10 +569,50 @@
                 }
             }
 
-            // Event Listeners per option cards (gestisce sia radio che checkbox)
-            document.querySelectorAll('.option-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    const input = this.querySelector('input');
+            // Event Listeners per input fields
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
+                console.log('Collegando event listener a:', input.id);
+                input.addEventListener('input', function() {
+                    console.log('Input cambiato:', this.id, this.value);
+                    updateNavigation();
+                });
+                input.addEventListener('keyup', updateNavigation);
+                input.addEventListener('change', updateNavigation);
+            });
+
+            // Event Listeners UNIVERSALI per tutti i click
+            document.addEventListener('click', (e) => {
+                // Gestione click sui pulsanti di navigazione
+                if (e.target.classList.contains('inline-next-btn') || e.target.id === 'inline-next-btn') {
+                    console.log('Click su Avanti');
+                    if (validateCurrentQuestion()) {
+                        if (currentQuestion < totalQuestions) {
+                            currentQuestion++;
+                            showQuestion(currentQuestion);
+                            updateNavigation();
+                        } else {
+                            completeQuiz();
+                        }
+                    } else {
+                        alert('Per favore, completa la domanda corrente prima di procedere.');
+                    }
+                }
+                
+                if (e.target.classList.contains('inline-prev-btn') || e.target.id === 'inline-prev-btn') {
+                    console.log('Click su Indietro');
+                    if (currentQuestion > 1) {
+                        currentQuestion--;
+                        showQuestion(currentQuestion);
+                        updateNavigation();
+                    }
+                }
+
+                // Gestione click sulle option cards
+                if (e.target.closest('.option-card')) {
+                    const card = e.target.closest('.option-card');
+                    const input = card.querySelector('input');
+                    
+                    console.log('Click su option card:', input.name, input.value);
                     
                     if (input.type === 'radio') {
                         // Per radio buttons, rimuovi selected da tutti nel gruppo
@@ -582,7 +622,7 @@
                         });
                         // Seleziona questo
                         input.checked = true;
-                        this.classList.add('selected');
+                        card.classList.add('selected');
                     } else if (input.type === 'checkbox') {
                         // Per checkbox, toggle selection
                         if (input.name === 'goal') {
@@ -595,44 +635,11 @@
                         }
                         
                         input.checked = !input.checked;
-                        this.classList.toggle('selected', input.checked);
+                        card.classList.toggle('selected', input.checked);
                     }
                     
+                    console.log('Nuovo stato input:', input.checked);
                     updateNavigation();
-                });
-            });
-
-            // Event Listeners per input fields
-            document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
-                console.log('Collegando event listener a:', input.id);
-                input.addEventListener('input', function() {
-                    console.log('Input cambiato:', this.id, this.value);
-                    updateNavigation();
-                });
-                input.addEventListener('keyup', updateNavigation);
-                input.addEventListener('change', updateNavigation);
-            });
-
-            // Logica pulsanti di navigazione (inline)
-            document.addEventListener('click', (e) => {
-                if (e.target.id === 'inline-next-btn' || e.target.classList.contains('inline-next-btn')) {
-                    if (validateCurrentQuestion()) {
-                        if (currentQuestion < totalQuestions) {
-                            currentQuestion++;
-                            showQuestion(currentQuestion);
-                            updateNavigation();
-                        } else {
-                            completeQuiz();
-                        }
-                    }
-                }
-                
-                if (e.target.id === 'inline-prev-btn' || e.target.classList.contains('inline-prev-btn')) {
-                    if (currentQuestion > 1) {
-                        currentQuestion--;
-                        showQuestion(currentQuestion);
-                        updateNavigation();
-                    }
                 }
             });
         }
