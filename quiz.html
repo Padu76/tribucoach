@@ -43,132 +43,120 @@
         }
 
         .header p {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #ccc;
-        }
-
-        .quiz-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         }
 
         .progress-bar-container {
             width: 100%;
             background-color: #333;
-            border-radius: 5px;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 15px;
             margin-bottom: 30px;
-            overflow: hidden; /* Ensure inner bar respects border-radius */
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
         }
 
         .progress-bar {
-            height: 20px;
+            height: 100%;
             width: 0%;
-            background-color: #ff6600;
-            border-radius: 5px;
-            text-align: center;
-            color: #fff;
-            font-weight: bold;
-            line-height: 20px; /* Vertically align text */
-            transition: width 0.3s ease-in-out;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            border-radius: 10px;
+            transition: width 0.4s ease-in-out;
         }
 
-        .question-block {
-            display: none; /* Hidden by default */
-            animation: fadeIn 0.5s ease-out;
+        .quiz-section {
+            background-color: rgba(26, 26, 26, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
         }
 
-        .question-block.active {
-            display: block; /* Show active question */
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .question-block h2 {
-            font-size: 1.8rem;
+        .quiz-section h2 {
             color: #ff6600;
+            font-size: 1.8rem;
             margin-bottom: 25px;
             text-align: center;
         }
 
-        .question-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
+        .question-group {
             margin-bottom: 30px;
         }
 
-        .option-card {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            flex: 1 1 calc(33.333% - 20px); /* 3 cards per row */
-            max-width: calc(33.333% - 20px);
-            text-align: center;
-        }
-
-        .option-card:hover {
-            border-color: #ff9933;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .option-card.selected {
-            border-color: #ff6600;
-            background: rgba(255, 102, 0, 0.3);
-            box-shadow: 0 0 15px rgba(255, 102, 0, 0.5);
-            transform: translateY(-5px);
-        }
-
-        .option-card label {
-            cursor: pointer;
+        .question-group label {
             display: block;
-            font-size: 1.1rem;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #eee;
             font-weight: bold;
-            color: #fff;
-        }
-        
-        .option-card p {
-            font-size: 0.9rem;
-            color: #ccc;
-            margin-top: 5px;
         }
 
-        .option-card input[type="radio"],
-        .option-card input[type="checkbox"] {
-            display: none; /* Hide default radio/checkbox */
+        .input-group {
+            margin-bottom: 20px;
         }
 
-        /* Stili per input di testo */
         input[type="text"],
         input[type="email"],
         input[type="number"] {
-            width: calc(100% - 40px); /* Adjust width to fit padding */
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            border: 2px solid #555;
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ff6600;
             border-radius: 8px;
             background-color: #333;
             color: #fff;
-            font-size: 1.1rem;
-            outline: none;
+            font-size: 1em;
             transition: border-color 0.3s ease;
-            display: block; /* Ensure it takes full width */
-            margin-left: auto;
-            margin-right: auto;
         }
 
         input[type="text"]:focus,
         input[type="email"]:focus,
         input[type="number"]:focus {
+            outline: none;
+            border-color: #ff9933;
+            box-shadow: 0 0 8px rgba(255, 153, 51, 0.5);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .option-box {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+        }
+
+        .option-box:hover {
+            background-color: #555;
             border-color: #ff6600;
+        }
+
+        .option-box.selected {
+            background-color: #ff6600;
+            border-color: #ff9933;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .option-box input[type="radio"],
+        .option-box input[type="checkbox"] {
+            display: none;
+        }
+
+        .option-box span {
+            font-size: 1em;
         }
 
         .navigation-buttons {
@@ -177,1002 +165,752 @@
             margin-top: 30px;
         }
 
-        .btn {
-            background-color: #ff6600;
-            color: #fff;
+        .nav-btn {
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            color: #000;
             padding: 12px 25px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1rem;
+            font-size: 1.1em;
             font-weight: bold;
             transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .btn:hover {
-            background-color: #ff9933;
+        .nav-btn:hover:not(:disabled) {
+            background: linear-gradient(90deg, #e05c00, #e08a2b);
             transform: translateY(-2px);
         }
 
-        .btn:disabled {
-            background-color: #555;
+        .nav-btn:disabled {
+            background: #555;
             cursor: not-allowed;
-            opacity: 0.7;
-            transform: none;
-        }
-
-        .btn-prev {
-            background-color: #555;
-        }
-
-        .btn-prev:hover:enabled {
-            background-color: #777;
-        }
-
-        #quiz-result {
-            text-align: center;
-            padding: 40px 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            display: none; /* Hidden until quiz is complete */
-        }
-
-        #quiz-result h2 {
-            color: #ff6600;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-
-        #quiz-result p {
-            font-size: 1.2rem;
-            color: #ccc;
-            margin-bottom: 10px;
+            opacity: 0.6;
+            box-shadow: none;
         }
         
-        #quiz-result #result-message {
-            font-size: 1.3rem;
-            color: #fff;
-            margin-top: 30px;
+        /* Stili aggiuntivi per i pulsanti finali */
+        .final-actions {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .final-actions p {
             margin-bottom: 20px;
-            line-height: 1.8;
-            white-space: pre-wrap; /* Preserve whitespace for newlines */
-            text-align: left; /* Align message text to left */
-            background: rgba(255,102,0,0.1);
+            font-size: 1.1em;
+            color: #ccc;
+        }
+
+        .action-button {
+            display: block;
+            width: 80%;
+            max-width: 400px;
+            margin: 15px auto;
+            padding: 15px 25px;
             border-radius: 8px;
-            padding: 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        #contact-info {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        .chat-button {
+            background: linear-gradient(90deg, #1a73e8, #4285f4); /* Blu di Google */
+            color: #fff;
+            border: none;
         }
 
-        #contact-info h3 {
-            color: #ff9933;
-            margin-bottom: 15px;
+        .chat-button:hover {
+            background: linear-gradient(90deg, #1669d2, #3c7ae0);
+            transform: translateY(-2px);
         }
 
-        #contact-info p {
-            margin-bottom: 10px;
+        .consultation-button {
+            background: linear-gradient(90deg, #ff6600, #ff9933); /* Arancione TribuCoach */
+            color: #fff;
+            border: none;
         }
 
-        #contact-info .btn-contact {
-            background-color: #25D366; /* WhatsApp green */
-            margin-top: 15px;
-            padding: 15px 30px;
-            font-size: 1.2rem;
+        .consultation-button:hover {
+            background: linear-gradient(90deg, #e65c00, #e08a2b);
+            transform: translateY(-2px);
         }
 
-        #contact-info .btn-contact:hover {
-            background-color: #1DA851;
-        }
-
-        @media (max-width: 768px) {
-            .option-card {
-                flex: 1 1 calc(50% - 15px); /* 2 cards per row on smaller screens */
-                max-width: calc(50% - 15px);
-            }
-            .header h1 {
-                font-size: 2rem;
-            }
-            .question-block h2 {
-                font-size: 1.5rem;
-            }
-            .btn {
-                padding: 10px 20px;
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .option-card {
-                flex: 1 1 100%; /* 1 card per row on very small screens */
-                max-width: 100%;
-            }
-            .quiz-section, #quiz-result {
-                padding: 20px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <header class="header">
-            <h1>Analisi Completa del Profilo Fitness</h1>
-            <p>Rispondi a poche domande per ricevere un'analisi personalizzata e scoprire come TribuCoach può aiutarti a raggiungere i tuoi obiettivi.</p>
-        </header>
+        <div class="header">
+            <h1>Quiz TribuCoach</h1>
+            <p>Analisi Completa del Tuo Profilo Fitness</p>
+        </div>
 
-        <main class="quiz-section" id="quiz-section">
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progress-bar">0%</div>
-            </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
 
-            <div class="question-block active" id="question-1">
+        <div id="quiz-sections">
+            <div id="question-1" class="quiz-section">
                 <h2>1. Qual è il tuo nome e cognome?</h2>
-                <input type="text" id="user-name" placeholder="Inserisci il tuo nome e cognome" required>
+                <div class="input-group">
+                    <input type="text" id="user-name" placeholder="Nome Cognome">
+                </div>
             </div>
 
-            <div class="question-block" id="question-2">
+            <div id="question-2" class="quiz-section" style="display: none;">
                 <h2>2. Qual è la tua email?</h2>
-                <input type="email" id="user-email" placeholder="Inserisci la tua email" required>
+                <div class="input-group">
+                    <input type="email" id="user-email" placeholder="email@esempio.com">
+                </div>
             </div>
 
-            <div class="question-block" id="question-3">
-                <h2>3. Quali sono i tuoi <b>3</b> obiettivi principali? (seleziona massimo 3)</h2>
-                <div class="question-options">
-                    <label class="option-card">
+            <div id="question-3" class="quiz-section" style="display: none;">
+                <h2>3. Quali sono i tuoi 3 obiettivi principali? (seleziona massimo 3)</h2>
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="perdita_peso_grasso">
-                        <label>Perdita di peso/grasso</label>
+                        <span>Perdita di peso e grasso</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="aumento_massa_muscolare">
-                        <label>Aumento massa muscolare</label>
+                        <span>Aumento massa muscolare</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="tonificazione_generale">
-                        <label>Tonificazione generale</label>
+                        <span>Tonificazione generale</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="aumento_forza">
-                        <label>Aumento della forza</label>
+                        <span>Aumento della forza</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="miglioramento_resistenza">
-                        <label>Miglioramento della resistenza</label>
+                        <span>Miglioramento della resistenza</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="goals" value="benessere_salute">
-                        <label>Benessere e salute generale</label>
+                        <span>Benessere e salute generale</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-4">
+            <div id="question-4" class="quiz-section" style="display: none;">
                 <h2>4. Quante volte a settimana vorresti allenarti?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="frequency" value="1-2">
-                        <label>1-2 volte</label>
+                        <span>1-2 volte</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="frequency" value="3-4">
-                        <label>3-4 volte</label>
+                        <span>3-4 volte</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="frequency" value="5-6">
-                        <label>5-6 volte</label>
+                        <span>5-6 volte</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-5">
+            <div id="question-5" class="quiz-section" style="display: none;">
                 <h2>5. Dove preferisci allenarti?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="place" value="palestra">
-                        <label>In palestra</label>
+                        <span>In palestra</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="place" value="casa">
-                        <label>A casa</label>
+                        <span>A casa</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="place" value="all_aperto">
-                        <label>All'aperto</label>
+                        <span>All'aperto</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="place" value="misto">
-                        <label>Misto (palestra, casa, all'aperto)</label>
+                        <span>Misto (palestra, casa, all'aperto)</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-6">
+            <div id="question-6" class="quiz-section" style="display: none;">
                 <h2>6. Qual è il tuo livello di esperienza attuale con l'allenamento?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="experience" value="principiante">
-                        <label>Principiante</label>
-                        <p>Inizio ora, ho poca esperienza o riparto da zero.</p>
+                        <span>Principiante (poche o nessuna esperienza)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="experience" value="intermedio">
-                        <label>Intermedio</label>
-                        <p>Mi alleno già, ma senza un piano strutturato o risultati costanti.</p>
+                        <span>Intermedio (mi alleno da un po', ma non regolarmente)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="experience" value="avanzato">
-                        <label>Avanzato</label>
-                        <p>Mi alleno regolarmente, ho buona tecnica e cerco nuovi stimoli o massimizzazione dei risultati.</p>
+                        <span>Avanzato (mi alleno regolarmente da anni)</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-7">
+            <div id="question-7" class="quiz-section" style="display: none;">
                 <h2>7. Quali sono i principali ostacoli che ti impediscono di raggiungere i tuoi obiettivi? (puoi selezionare più opzioni)</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="mancanza_tempo">
-                        <label>Mancanza di tempo</label>
+                        <span>Mancanza di tempo</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="mancanza_motivazione">
-                        <label>Mancanza di motivazione</label>
+                        <span>Mancanza di motivazione o costanza</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="mancanza_conoscenze">
-                        <label>Mancanza di conoscenze (cosa fare, come farlo)</label>
+                        <span>Mancanza di conoscenze su allenamento/alimentazione</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="costo_pt">
-                        <label>Costo elevato del personal trainer</label>
+                        <span>Costo elevato di un personal trainer</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="difficolta_costanza">
-                        <label>Difficoltà a mantenere la costanza</label>
+                        <span>Difficoltà a mantenere la costanza nel lungo termine</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="mancanza_risultati_passati">
-                        <label>Mancanza di risultati con approcci passati</label>
+                        <span>Mancanza di risultati visibili in passato</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="obstacles" value="altro_ostacolo">
-                        <label>Altro</label>
+                        <span>Altro (specificare se vuoi nella consulenza)</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-8">
+            <div id="question-8" class="quiz-section" style="display: none;">
                 <h2>8. Qual è la tua principale motivazione a migliorare la tua forma fisica?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="motivation" value="salute_benessere">
-                        <label>Salute e benessere generale</label>
+                        <span>Salute e benessere generale</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="motivation" value="aspetto_fisico">
-                        <label>Miglioramento dell'aspetto fisico</label>
+                        <span>Migliorare l'aspetto fisico</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="motivation" value="performance_sportiva">
-                        <label>Aumento delle performance sportive</label>
+                        <span>Migliorare le performance sportive</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="motivation" value="stile_vita_attivo">
-                        <label>Adottare uno stile di vita più attivo</label>
+                        <span>Adottare uno stile di vita più attivo</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-9">
+            <div id="question-9" class="quiz-section" style="display: none;">
                 <h2>9. Come descriveresti le tue attuali abitudini alimentari?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="diet" value="equilibrata_consapevole">
-                        <label>Equilibrata e consapevole</label>
+                        <span>Equilibrata e consapevole</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="diet" value="a_volte_sgarro">
-                        <label>Generalmente buona, ma a volte "sgarro"</label>
+                        <span>A volte sgarro, ma cerco di mangiare bene</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="diet" value="non_ci_penso_molto">
-                        <label>Non ci penso molto, mangio quello che capita</label>
+                        <span>Non ci penso molto, mangio quello che capita</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-10">
+            <div id="question-10" class="quiz-section" style="display: none;">
                 <h2>10. Qual è il tuo livello di attività fisica quotidiana (non legata all'allenamento)?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="dailyActivity" value="molto_attivo">
-                        <label>Molto attivo (lavoro fisicamente impegnativo, tanti spostamenti a piedi)</label>
+                        <span>Molto attivo (lavoro fisicamente impegnativo, molte camminate)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="dailyActivity" value="moderatamente_attivo">
-                        <label>Moderatamente attivo (cammino o mi muovo regolarmente durante il giorno)</label>
+                        <span>Moderatamente attivo (cammino regolarmente, lavoro d'ufficio ma mi muovo)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="dailyActivity" value="sedentario">
-                        <label>Sedentario (lavoro d'ufficio, poco movimento)</label>
+                        <span>Sedentario (lavoro d'ufficio, poco movimento)</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-11">
+            <div id="question-11" class="quiz-section" style="display: none;">
                 <h2>11. Quali attività fisiche preferisci? (puoi selezionare più opzioni)</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="palestra">
-                        <label>Palestra</label>
+                        <span>Allenamento in palestra (pesi, cardio)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="corsa">
-                        <label>Corsa</label>
+                        <span>Corsa / Jogging</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="yoga_pilates">
-                        <label>Yoga/Pilates</label>
+                        <span>Yoga / Pilates</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="sport_di_squadra">
-                        <label>Sport di squadra</label>
+                        <span>Sport di squadra (calcio, basket, ecc.)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="camminate">
-                        <label>Camminate</label>
+                        <span>Camminate / Trekking</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="checkbox" name="preferredActivities" value="altro_attivita">
-                        <label>Altro</label>
+                        <span>Altro</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-12">
+            <div id="question-12" class="quiz-section" style="display: none;">
                 <h2>12. Usi un personal trainer o ti alleni da solo?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="personalTrainerUsage" value="con_pt">
-                        <label>Con personal trainer</label>
+                        <span>Sì, mi alleno con un personal trainer</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="personalTrainerUsage" value="da_solo">
-                        <label>Mi alleno da solo</label>
+                        <span>No, mi alleno da solo</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="personalTrainerUsage" value="entrambi">
-                        <label>Entrambi</label>
+                        <span>Entrambi, a volte con PT, a volte da solo</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-13">
+            <div id="question-13" class="quiz-section" style="display: none;">
                 <h2>13. Quanto tempo dura in media il tuo allenamento?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="avgWorkoutDuration" value="meno_30">
-                        <label>Meno di 30 minuti</label>
+                        <span>Meno di 30 minuti</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="avgWorkoutDuration" value="30-45">
-                        <label>30-45 minuti</label>
+                        <span>30-45 minuti</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="avgWorkoutDuration" value="45-60">
-                        <label>45-60 minuti</label>
+                        <span>45-60 minuti</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="avgWorkoutDuration" value="piu_un_ora">
-                        <label>Più di un’ora</label>
+                        <span>Più di un'ora</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-14">
+            <div id="question-14" class="quiz-section" style="display: none;">
                 <h2>14. Fai colazione regolarmente?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="breakfastHabit" value="si_ogni_giorno">
-                        <label>Sì, ogni giorno</label>
+                        <span>Sì, ogni giorno</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="breakfastHabit" value="qualche_volta">
-                        <label>Qualche volta</label>
+                        <span>Qualche volta</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="breakfastHabit" value="mai_colazione">
-                        <label>Mai</label>
+                        <span>No, mai</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-15">
+            <div id="question-15" class="quiz-section" style="display: none;">
                 <h2>15. Consumi integratori o vitamine?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="supplementsUsage" value="si_regolarmente">
-                        <label>Sì, regolarmente</label>
+                        <span>Sì, regolarmente</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="supplementsUsage" value="a_volte">
-                        <label>A volte</label>
+                        <span>A volte</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="supplementsUsage" value="no_integratori">
-                        <label>No</label>
+                        <span>No</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-16">
+            <div id="question-16" class="quiz-section" style="display: none;">
                 <h2>16. Quante volte mangi fuori casa ogni settimana?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="eatOutFrequency" value="mai_fuori">
-                        <label>Mai</label>
+                        <span>Mai o quasi mai</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="eatOutFrequency" value="1-2_volte">
-                        <label>1-2 volte</label>
+                        <span>1-2 volte</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="eatOutFrequency" value="3-4_volte">
-                        <label>3-4 volte</label>
+                        <span>3-4 volte</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="eatOutFrequency" value="5_piu_volte">
-                        <label>5+ volte</label>
+                        <span>5 o più volte</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-17">
+            <div id="question-17" class="quiz-section" style="display: none;">
                 <h2>17. Pratichi tecniche di gestione dello stress (es. meditazione, mindfulness, hobby rilassanti)?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="stressManagement" value="si_ogni_giorno">
-                        <label>Sì, ogni giorno</label>
+                        <span>Sì, ogni giorno</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="stressManagement" value="si_qualche_volta">
-                        <label>Sì, qualche volta</label>
+                        <span>Sì, qualche volta</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="stressManagement" value="no_stress">
-                        <label>No</label>
+                        <span>No</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-18">
+            <div id="question-18" class="quiz-section" style="display: none;">
                 <h2>18. Ti senti soddisfatto del tuo equilibrio vita-lavoro?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="workLifeBalance" value="si_molto_soddisfatto">
-                        <label>Sì, molto soddisfatto</label>
+                        <span>Sì, molto soddisfatto</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="workLifeBalance" value="abbastanza">
-                        <label>Abbastanza</label>
+                        <span>Abbastanza soddisfatto</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="workLifeBalance" value="poco">
-                        <label>Poco</label>
+                        <span>Poco soddisfatto</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="workLifeBalance" value="per_niente">
-                        <label>Per niente</label>
+                        <span>Per niente soddisfatto</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-19">
+            <div id="question-19" class="quiz-section" style="display: none;">
                 <h2>19. Quanto spesso prendi pause attive (es. camminare, stretching) durante il lavoro?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="activeBreaks" value="mai_pause">
-                        <label>Mai</label>
+                        <span>Mai o quasi mai</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="activeBreaks" value="una_volta_giorno">
-                        <label>Una volta al giorno</label>
+                        <span>Una volta al giorno</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="activeBreaks" value="piu_volte_giorno">
-                        <label>Più volte al giorno</label>
+                        <span>Più volte al giorno</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="activeBreaks" value="ogni_ora">
-                        <label>Ogni ora</label>
+                        <span>Ogni ora circa</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-20">
+            <div id="question-20" class="quiz-section" style="display: none;">
                 <h2>20. Ti svegli durante la notte?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="wakeUpAtNight" value="mai_svegliarsi">
-                        <label>Mai</label>
+                        <span>Mai o quasi mai</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="wakeUpAtNight" value="raramente">
-                        <label>Raramente</label>
+                        <span>Raramente (1-2 volte a settimana)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="wakeUpAtNight" value="spesso">
-                        <label>Spesso</label>
+                        <span>Spesso (3-4 volte a settimana)</span>
                     </label>
-                    <label class="option-card">
+                    <label class="option-box">
                         <input type="radio" name="wakeUpAtNight" value="sempre">
-                        <label>Sempre</label>
+                        <span>Quasi ogni notte</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-21">
+            <div id="question-21" class="quiz-section" style="display: none;">
                 <h2>21. Qual è la tua principale fonte di motivazione per l'allenamento e il benessere?</h2>
-                <div class="question-options">
-                    <label class="option-card">
+                <div class="options-grid">
+                    <label class="option-box">
                         <input type="radio" name="mainMotivationNew" value="obiettivi_personali">
-                        <label>Raggiungere obiettivi personali (es. un tempo in una gara, un certo peso)</label>
+                        <span>Raggiungimento di obiettivi personali (es. maratona, sollevamento peso)</span>
                     </label>
-                    <label class="option-card">
-                        <input type="radio" name="mainMotivationNew" value="salute_benessere_profondo">
-                        <label>Migliorare salute e benessere generale a lungo termine</label>
+                    <label class="option-box">
+                        <input type="radio" name="mainMotivationNew" value="salute_generale">
+                        <span>Miglioramento della salute generale e prevenzione</span>
                     </label>
-                    <label class="option-card">
-                        <input type="radio" name="mainMotivationNew" value="estetica">
-                        <label>Migliorare l'aspetto estetico</label>
+                    <label class="option-box">
+                        <input type="radio" name="mainMotivationNew" value="energia_quotidiana">
+                        <span>Aumento dell'energia e vitalità quotidiana</span>
                     </label>
-                    <label class="option-card">
-                        <input type="radio" name="mainMotivationNew" value="altro_motivazione">
-                        <label>Altro</label>
+                    <label class="option-box">
+                        <input type="radio" name="mainMotivationNew" value="prevenire_malattie">
+                        <span>Prevenire malattie o gestire condizioni esistenti</span>
                     </label>
-                </div>
-            </div>
-
-            <div class="question-block" id="question-22">
-                <h2>22. Ti capita di saltare allenamenti per mancanza di voglia o motivazione?</h2>
-                <div class="question-options">
-                    <label class="option-card">
-                        <input type="radio" name="skipWorkouts" value="mai_saltare">
-                        <label>Mai</label>
+                    <label class="option-box">
+                        <input type="radio" name="mainMotivationNew" value="sentirsi_bene">
+                        <span>Sentirsi bene con se stessi e ridurre lo stress</span>
                     </label>
-                    <label class="option-card">
-                        <input type="radio" name="skipWorkouts" value="raramente">
-                        <label>Raramente</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="skipWorkouts" value="a_volte">
-                        <label>A volte</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="skipWorkouts" value="spesso">
-                        <label>Spesso</label>
+                    <label class="option-box">
+                        <input type="radio" name="mainMotivationNew" value="aspetto_fisico">
+                        <span>Migliorare l'aspetto fisico e la fiducia in sé</span>
                     </label>
                 </div>
             </div>
 
-            <div class="question-block" id="question-23">
-                <h2>23. Ti confronti o cerchi feedback da altre persone (amici, coach, community) per migliorarti?</h2>
-                <div class="question-options">
-                    <label class="option-card">
-                        <input type="radio" name="compareWithOthers" value="si_spesso">
-                        <label>Sì, spesso</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="compareWithOthers" value="a_volte">
-                        <label>A volte</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="compareWithOthers" value="raramente">
-                        <label>Raramente</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="compareWithOthers" value="mai_confronto">
-                        <label>Mai</label>
-                    </label>
+            <div id="quiz-complete" class="quiz-section" style="display: none;">
+                <h2>Grazie per aver completato il quiz!</h2>
+                <p>Il tuo punteggio di lead è: <span id="final-lead-score"></span></p>
+                <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
+                <p>Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
+                
+                <div class="final-actions">
+                    <p>Nel frattempo, ecco alcune opzioni utili:</p>
+                    <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="action-button chat-button">
+                        💬 Apri la Chat Automatica per domande e consigli
+                    </a>
+                    <a href="https://wa.me/3478881515?text=Ciao%2C%20vorrei%20prenotare%20una%20consulenza%20gratuita%20dopo%20aver%20completato%20il%20quiz." target="_blank" class="action-button consultation-button">
+                        📅 Prenota una Consulenza Gratuita
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <div class="question-block" id="question-24">
-                <h2>24. Usi dispositivi elettronici (smartphone, tablet, TV) nei 30 minuti prima di dormire?</h2>
-                <div class="question-options">
-                    <label class="option-card">
-                        <input type="radio" name="electronicsBeforeSleep" value="sempre_elettronici">
-                        <label>Sempre</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="electronicsBeforeSleep" value="qualche_volta">
-                        <label>Qualche volta</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="electronicsBeforeSleep" value="raramente">
-                        <label>Raramente</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="electronicsBeforeSleep" value="mai_elettronici">
-                        <label>Mai</label>
-                    </label>
-                </div>
-            </div>
-
-            <div class="question-block" id="question-25">
-                <h2>25. Ti senti generalmente riposato e carico di energia al mattino?</h2>
-                <div class="question-options">
-                    <label class="option-card">
-                        <input type="radio" name="restedInMorning" value="sempre_riposato">
-                        <label>Sempre</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="restedInMorning" value="spesso">
-                        <label>Spesso</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="restedInMorning" value="raramente">
-                        <label>Raramente</label>
-                    </label>
-                    <label class="option-card">
-                        <input type="radio" name="restedInMorning" value="mai_riposato">
-                        <label>Mai</label>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="navigation-buttons">
-                <button class="btn btn-prev" id="prev-btn" disabled>Indietro</button>
-                <button class="btn btn-next" id="next-btn">Avanti</button>
-            </div>
-        </main>
-
-        <section id="quiz-result" class="quiz-result">
-            <h2>🎉 Complimenti, <span id="user-name-display">[Nome Utente]</span>!</h2>
-            <p>La tua analisi è completa. Ecco il tuo profilo fitness e alcuni consigli personalizzati:</p>
-            <p>Il tuo profilo: <span id="profile-type"></span> <span id="profile-icon"></span></p>
-            <p>Punteggio Lead: <span id="lead-score"></span>/100</p>
-            
-            <div id="result-message">
-                </div>
-
-            <div id="contact-info">
-                <h3>Pronto a trasformare il tuo potenziale in risultati reali?</h3>
-                <p>Un coach ti contatterà a breve per discutere la tua analisi e come possiamo creare il programma perfetto per te.</p>
-                <p>Oppure, contattaci subito su WhatsApp per accelerare il processo:</p>
-                <button class="btn btn-contact" id="contact-whatsapp-btn">Contatta su WhatsApp</button>
-            </div>
-        </section>
+        <div class="navigation-buttons">
+            <button id="prev-btn" class="nav-btn" disabled>Indietro</button>
+            <button id="next-btn" class="nav-btn">Avanti</button>
+        </div>
     </div>
 
     <script type="module">
-        import { calculateLeadScore, saveQuizResult, getProfileIcon } from './firebase-functions.js';
-        import { analytics } from './firebase.js'; // Importa l'oggetto analytics
-        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'; // Importa logEvent direttamente
+        import { saveQuizResult, calculateLeadScore } from './firebase-functions.js';
+        import { analytics } from './firebase.js'; // Importa analytics da firebase.js
+        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'; // Assicurati sia importato anche qui se lo usi
 
+        const quizSections = document.querySelectorAll('.quiz-section:not(#quiz-complete)');
+        const totalQuestions = quizSections.length;
         let currentQuestion = 1;
-        const totalQuestions = 25; // Aggiornato il numero totale di domande
-        const questionMap = {
-            1: { type: 'text', id: 'user-name' },
-            2: { type: 'email', id: 'user-email' },
-            3: { type: 'checkbox', name: 'goals', min: 1, max: 3 }, // Min 1, Max 3 per gli obiettivi
-            4: { type: 'radio', name: 'frequency' },
-            5: { type: 'radio', name: 'place' },
-            6: { type: 'radio', name: 'experience' },
-            7: { type: 'checkbox', name: 'obstacles', min: 0 }, // Min 0 per gli ostacoli (opzionale)
-            8: { type: 'radio', name: 'motivation' }, // Vecchia motivazione (generale)
-            9: { type: 'radio', name: 'diet' },
-            10: { type: 'radio', name: 'dailyActivity' },
-            // Nuove domande
-            11: { type: 'checkbox', name: 'preferredActivities', min: 1 },
-            12: { type: 'radio', name: 'personalTrainerUsage' },
-            13: { type: 'radio', name: 'avgWorkoutDuration' },
-            14: { type: 'radio', name: 'breakfastHabit' },
-            15: { type: 'radio', name: 'supplementsUsage' },
-            16: { type: 'radio', name: 'eatOutFrequency' },
-            17: { type: 'radio', name: 'stressManagement' },
-            18: { type: 'radio', name: 'workLifeBalance' },
-            19: { type: 'radio', name: 'activeBreaks' },
-            20: { type: 'radio', name: 'wakeUpAtNight' },
-            21: { type: 'radio', name: 'mainMotivationNew' }, // Nuova motivazione (più specifica)
-            22: { type: 'radio', name: 'skipWorkouts' },
-            23: { type: 'radio', name: 'compareWithOthers' },
-            24: { type: 'radio', name: 'electronicsBeforeSleep' },
-            25: { type: 'radio', name: 'restedInMorning' }
-        };
 
-        const quizData = {};
+        function showQuestion(questionNumber) {
+            quizSections.forEach((section, index) => {
+                section.style.display = (index + 1 === questionNumber) ? 'block' : 'none';
+            });
+            document.getElementById('quiz-complete').style.display = 'none'; // Nascondi sempre la sezione completa
+            updateProgress();
+            updateNavigation();
+            validateCurrentQuestion(); // Rimuovi il commento per validare quando la domanda cambia
+        }
 
         function updateProgress() {
             const progressBar = document.getElementById('progress-bar');
             const progress = (currentQuestion / totalQuestions) * 100;
-            progressBar.style.width = progress + '%';
-            progressBar.textContent = Math.round(progress) + '%';
+            progressBar.style.width = `${progress}%`;
         }
 
         function updateNavigation() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
+            document.getElementById('prev-btn').disabled = currentQuestion === 1;
+            document.getElementById('next-btn').disabled = !validateCurrentQuestion(); // Disabilita se la domanda corrente non è valida
 
-            prevBtn.disabled = currentQuestion === 1;
-            nextBtn.textContent = currentQuestion === totalQuestions ? 'Completa' : 'Avanti';
-            
-            // Validate current question to enable/disable next button
-            validateCurrentQuestion();
-        }
-
-        function showQuestion(questionNumber) {
-            document.querySelectorAll('.question-block').forEach(block => {
-                block.classList.remove('active');
-            });
-            document.getElementById(`question-${questionNumber}`).classList.add('active');
-            updateProgress();
-            updateNavigation();
+            if (currentQuestion === totalQuestions) {
+                document.getElementById('next-btn').textContent = 'Completa Quiz';
+            } else {
+                document.getElementById('next-btn').textContent = 'Avanti';
+            }
         }
 
         function validateCurrentQuestion() {
-            const currentQ = questionMap[currentQuestion];
             let isValid = false;
+            const currentSection = document.getElementById(`question-${currentQuestion}`);
 
-            if (currentQ.type === 'text' || currentQ.type === 'email') {
-                const input = document.getElementById(currentQ.id);
-                isValid = input.value.trim() !== '';
-                if (currentQ.type === 'email') {
-                    isValid = isValid && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value); // Basic email validation
-                }
-            } else if (currentQ.type === 'radio') {
-                isValid = document.querySelector(`#question-${currentQuestion} input[name="${currentQ.name}"]:checked`) !== null;
-            } else if (currentQ.type === 'checkbox') {
-                const checkedCount = document.querySelectorAll(`#question-${currentQuestion} input[name="${currentQ.name}"]:checked`).length;
-                isValid = checkedCount >= (currentQ.min || 1) && (currentQ.max ? checkedCount <= currentQ.max : true);
+            switch (currentQuestion) {
+                case 1: // Nome e Cognome
+                    isValid = currentSection.querySelector('#user-name').value.trim() !== '';
+                    break;
+                case 2: // Email
+                    const emailInput = currentSection.querySelector('#user-email');
+                    isValid = emailInput.value.trim() !== '' && emailInput.checkValidity();
+                    break;
+                case 3: // Obiettivi Principali (max 3)
+                    const checkedGoals = currentSection.querySelectorAll('input[name="goals"]:checked');
+                    isValid = checkedGoals.length > 0 && checkedGoals.length <= 3;
+                    break;
+                case 4: // Frequenza allenamento
+                case 5: // Dove preferisci allenarti
+                case 6: // Livello di esperienza
+                case 8: // Motivazione principale
+                case 9: // Abitudini alimentari
+                case 10: // Livello attività fisica quotidiana
+                case 12: // Usi un personal trainer
+                case 13: // Durata media allenamento
+                case 14: // Colazione regolarmente
+                case 15: // Consumi integratori
+                case 16: // Mangiare fuori casa
+                case 17: // Gestione stress
+                case 18: // Equilibrio vita-lavoro
+                case 19: // Pause attive
+                case 20: // Svegliarsi durante la notte
+                case 21: // Principale fonte di motivazione
+                    isValid = currentSection.querySelector(`input[name="${currentSection.querySelector('input').name}"]:checked`) !== null;
+                    break;
+                case 7: // Ostacoli (checkbox, può essere zero)
+                case 11: // Attività preferite (checkbox, può essere zero)
+                    isValid = true; // Sempre valido per checkbox multi-selezione senza minimo obbligatorio
+                    break;
+                default:
+                    isValid = true; // Per sicurezza, se una domanda non è gestita
             }
-            
-            document.getElementById('next-btn').disabled = !isValid;
+            document.getElementById('next-btn').disabled = !isValid; // Aggiorna lo stato del pulsante Avanti
             return isValid;
         }
 
-        function collectQuizData() {
-            // General function to collect data from ALL questions
-            for (let i = 1; i <= totalQuestions; i++) {
-                const q = questionMap[i];
-                if (q.type === 'text' || q.type === 'email') {
-                    quizData[q.id] = document.getElementById(q.id).value.trim();
-                } else if (q.type === 'radio') {
-                    const selected = document.querySelector(`#question-${i} input[name="${q.name}"]:checked`);
-                    if (selected) {
-                        quizData[q.name] = selected.value;
-                    }
-                } else if (q.type === 'checkbox') {
-                    const checkedValues = [];
-                    document.querySelectorAll(`#question-${i} input[name="${q.name}"]:checked`).forEach(checkbox => {
-                        checkedValues.push(checkbox.value);
-                    });
-                    quizData[q.name] = checkedValues;
-                }
-            }
-        }
-
         async function completeQuiz() {
-            collectQuizData();
+            const userName = document.getElementById('user-name').value;
+            const userEmail = document.getElementById('user-email').value;
 
-            // Calculate lead score
+            const getSelectedValues = (name) => {
+                const selected = [];
+                document.querySelectorAll(`input[name="${name}"]:checked`).forEach(checkbox => {
+                    selected.push(checkbox.value);
+                });
+                return selected;
+            };
+
+            const getRadioValue = (name) => {
+                const radio = document.querySelector(`input[name="${name}"]:checked`);
+                return radio ? radio.value : null;
+            };
+
+            const quizData = {
+                name: userName,
+                email: userEmail,
+                goals: getSelectedValues('goals'),
+                frequency: getRadioValue('frequency'),
+                place: getRadioValue('place'),
+                experience: getRadioValue('experience'),
+                obstacles: getSelectedValues('obstacles'),
+                motivation: getRadioValue('motivation'),
+                diet: getRadioValue('diet'),
+                dailyActivity: getRadioValue('dailyActivity'),
+                preferredActivities: getSelectedValues('preferredActivities'),
+                personalTrainerUsage: getRadioValue('personalTrainerUsage'),
+                avgWorkoutDuration: getRadioValue('avgWorkoutDuration'),
+                breakfastHabit: getRadioValue('breakfastHabit'),
+                supplementsUsage: getRadioValue('supplementsUsage'),
+                eatOutFrequency: getRadioValue('eatOutFrequency'),
+                stressManagement: getRadioValue('stressManagement'),
+                workLifeBalance: getRadioValue('workLifeBalance'),
+                activeBreaks: getRadioValue('activeBreaks'),
+                wakeUpAtNight: getRadioValue('wakeUpAtNight'),
+                mainMotivationNew: getRadioValue('mainMotivationNew'),
+            };
+
+            // Calculate lead score on the client side using the updated firebase-functions.js logic
             const leadScore = calculateLeadScore(quizData);
-            quizData.lead_score = leadScore; // Store score in quizData
-
-            // Determine profile type based on score and experience
-            let profileType = 'Nuovo Esploratore';
-            const experience = quizData.experience;
-
-            if (leadScore >= 80) { // New higher thresholds due to more questions
-                profileType = 'Atleta';
-            } else if (leadScore >= 50) { 
-                profileType = 'Guerriero';
-            } else {
-                profileType = 'Nuovo Esploratore';
-            }
-
-            // Refine profile type based on experience (these are more general guidelines now with more factors)
-            // The score is more holistic, so experience influences less directly unless it's an extreme case.
-            if (experience === 'avanzato' && leadScore < 80) {
-                 // If advanced, but score is not super high, could be a very specific 'Atleta' needing niche help
-                 // or perhaps their habits aren't fully aligned despite experience.
-                 // We'll keep 'Atleta' if advanced unless score is extremely low.
-                if (leadScore > 60) profileType = 'Atleta';
-            } else if (experience === 'principiante' && leadScore >= 50) {
-                 // If beginner, but high score due to good habits, still classify as 'Nuovo Esploratore'
-                 // but acknowledge high potential.
-                if (leadScore > 60) profileType = 'Guerriero'; // Beginner with high potential
-            }
-
-
-            quizData.profile = profileType; // Store profile in quizData
             
-            // Save to Firestore
+            // Determine profile type based on quiz data
+            // Questa è una logica semplificata, dovrai raffinarla in base alle tue esigenze
+            let profileType = 'Nuovo Esploratore'; // Default
+            if (leadScore >= 70) {
+                profileType = 'Atleta';
+            } else if (leadScore >= 40) {
+                profileType = 'Guerriero';
+            }
+            // Puoi aggiungere logica più complessa qui per determinare il profilo
+            // ad esempio, basandoti su combinazioni di risposte e non solo sul punteggio
+
+            quizData.lead_score = leadScore;
+            quizData.profile = profileType;
+
             try {
-                const docId = await saveQuizResult(quizData);
-                console.log('Quiz salvato con ID:', docId);
+                const quizResultId = await saveQuizResult(quizData);
+                console.log('Risultato quiz salvato con ID:', quizResultId);
 
-                // Display results
-                document.getElementById('quiz-section').style.display = 'none';
-                const resultSection = document.getElementById('quiz-result');
-                resultSection.style.display = 'block';
-
-                document.getElementById('profile-type').textContent = profileType;
-                document.getElementById('profile-icon').textContent = getProfileIcon(profileType); 
-                document.getElementById('lead-score').textContent = leadScore;
-                document.getElementById('user-name-display').textContent = quizData['user-name']; // Display name in result title
-
-                // Generate personalized message
-                const personalizedMessage = generatePersonalizedMessage(quizData, leadScore, profileType);
-                document.getElementById('result-message').innerHTML = personalizedMessage;
-
-                // Update contact button for WhatsApp
-                const whatsappName = encodeURIComponent(quizData['user-name'] || 'Cliente');
-                const whatsappMessage = encodeURIComponent(`Ciao! Ho appena completato il quiz sul tuo sito. Sono ${quizData['user-name']} (${quizData['user-email']}). Vorrei saperne di più sul mio profilo fitness e come TribuCoach può aiutarmi.`);
-                document.getElementById('contact-whatsapp-btn').onclick = () => {
-                    window.open(`https://wa.me/3478881515?text=${whatsappMessage}`, '_blank');
-                };
+                // Mostra i risultati finali
+                document.getElementById('final-lead-score').textContent = leadScore;
+                document.getElementById('final-profile-type').textContent = profileType;
+                document.getElementById('quiz-sections').style.display = 'none';
+                document.getElementById('navigation-buttons').style.display = 'none'; // Nascondi i bottoni di navigazione
+                document.getElementById('quiz-complete').style.display = 'block';
+                document.querySelector('.progress-bar-container').style.display = 'none'; // Nascondi la progress bar
 
                 // Log analytics
-                logEvent(analytics, 'quiz_completed_success', {
+                logEvent(analytics, 'quiz_completed', {
                     profile_type: profileType,
                     score: leadScore
                 });
 
             } catch (error) {
-                console.error('Errore durante il completamento del quiz:', error);
-                alert('Si è verificato un errore durante il salvataggio del quiz. Riprova più tardi.');
-                logEvent(analytics, 'quiz_completed_error', { error_message: error.message });
+                console.error('Errore durante il completamento o il salvataggio del quiz:', error);
+                alert('Si è verificato un errore durante il salvataggio dei tuoi risultati. Riprova più tardi.');
             }
         }
 
-        // Function to generate personalized message
-        function generatePersonalizedMessage(quizData, score, profile) {
-            let message = `Ciao **${quizData['user-name'] || 'futuro atleta'}**! Grazie per aver completato il tuo quiz. Analizzando le tue risposte, abbiamo elaborato il tuo profilo unico e preparato alcuni consigli su misura per te.\n\n`;
-
-            message += `**Il tuo Profilo: ${profile} ${getProfileIcon(profile)}** (Punteggio: ${score}/100)\n\n`;
-
-            // General advice based on profile
-            if (profile === 'Atleta') {
-                message += `Complimenti! Sei un vero **Atleta** con un'ottima base e grande determinazione. Il tuo impegno è evidente, e sei pronto a spingerti oltre per massimizzare i tuoi risultati. Con TribuCoach potrai affinare le tue tecniche, ottimizzare la periodizzazione e superare i tuoi limiti attuali con strategie avanzate e supporto continuo.\n\n`;
-            } else if (profile === 'Guerriero') {
-                message += `Ottimo! Sei un **Guerriero** con buona disciplina e la voglia di migliorare. Hai già delle buone abitudini, ma cerchi la spinta giusta per superare gli altopiani e raggiungere la tua massima performance. TribuCoach ti fornirà la struttura e la motivazione necessarie per trasformare i tuoi sforzi in successi concreti e duraturi.\n\n`;
-            } else { // Nuovo Esploratore
-                message += `Benvenuto, **Nuovo Esploratore**! Sei all'inizio del tuo percorso o cerchi un nuovo inizio. Questo è il momento perfetto per costruire solide fondamenta. TribuCoach è qui per guidarti passo dopo passo, fornendoti le conoscenze e il supporto per iniziare con il piede giusto e trasformare la tua voglia di cambiamento in risultati tangibili, senza stress.\n\n`;
-            }
-
-            message += `**Dalla tua analisi, abbiamo notato alcuni punti chiave e suggerimenti specifici:**\n\n`;
-
-            // Personalized advice based on specific answers
-            // Fitness Activities
-            if (quizData.preferredActivities?.includes('camminate') && quizData.frequency !== '5-6' && quizData.goals?.includes('perdita_peso_grasso')) {
-                message += `👉 Le camminate sono un ottimo punto di partenza, ma per una perdita di peso più efficace, potremmo integrare allenamenti mirati o aumentare l'intensità. Siamo qui per trovare ciò che ti stimola!\n`;
-            } else if (quizData.preferredActivities?.includes('palestra') && quizData.experience === 'principiante') {
-                message += `👉 Se ami la palestra e sei un principiante, un programma ben strutturato è fondamentale per prevenire infortuni e massimizzare i guadagni. Con TribuCoach, avrai un piano chiaro da seguire.\n`;
-            } else if (quizData.preferredActivities?.includes('sport_di_squadra') && quizData.goals?.includes('performance_sportiva')) {
-                message += `👉 La tua passione per gli sport di squadra è un grande motore! Possiamo creare programmi di forza e condizionamento specifici per migliorare la tua performance nel tuo sport preferito.\n`;
-            }
-
-            // Trainer Usage
-            if (quizData.personalTrainerUsage === 'da_solo') {
-                message += `👉 Allenarsi da soli è sfidante. Se senti di non progredire o cerchi maggiore responsabilità, un personal trainer può offrirti la guida e la motivazione necessarie per sbloccare il tuo potenziale.\n`;
-            } else if (quizData.personalTrainerUsage === 'con_pt') {
-                 message += `👉 Se ti alleni già con un personal trainer, sei sulla strada giusta per risultati di qualità! Possiamo fornirti strumenti complementari o un secondo parere per ottimizzare ulteriormente il tuo percorso.\n`;
-            }
-
-            // Workout Duration
-            if (quizData.avgWorkoutDuration === 'meno_30') {
-                message += `👉 Anche sessioni brevi sono efficaci! Possiamo ottimizzare al massimo il tuo tempo con allenamenti ad alta intensità o circuiti che massimizzano i risultati in meno di 30 minuti.\n`;
-            } else if (quizData.avgWorkoutDuration === 'piu_un_ora') {
-                message += `👉 Dedicare molto tempo all'allenamento è un impegno notevole. Assicuriamoci che ogni minuto sia efficace e che non ci sia il rischio di sovrallenamento. Un programma ottimizzato può darti di più in meno tempo.\n`;
-            }
-
-            // Breakfast Habit
-            if (quizData.breakfastHabit === 'qualche_volta' || quizData.breakfastHabit === 'mai_colazione') {
-                message += `👉 La colazione è il primo "carburante" della giornata. Iniziare con un pasto equilibrato può migliorare l'energia, l'umore e aiutare a controllare la fame. Ti aiuteremo a trovare opzioni facili e veloci.\n`;
-            }
-
-            // Supplements Usage
-            if (quizData.supplementsUsage === 'no_integratori' && (quizData.goals?.includes('aumento_massa_muscolare') || quizData.goals?.includes('aumento_forza'))) {
-                message += `👉 Per obiettivi come l'aumento di massa o forza, una valutazione su possibili integratori (proteine, creatina) potrebbe supportare i tuoi progressi, se la dieta non basta. Ma sempre con un approccio consapevole!\n`;
-            } else if (quizData.supplementsUsage === 'si_regolarmente') {
-                message += `👉 Ottimo che tu sia attento agli integratori! Assicuriamoci che quelli che usi siano effettivamente utili per i tuoi obiettivi e ben bilanciati con la tua dieta. Una revisione personalizzata è sempre utile.\n`;
-            }
-
-            // Eating Out Frequency
-            if (quizData.eatOutFrequency === '3-4_volte' || quizData.eatOutFrequency === '5_piu_volte') {
-                message += `👉 Mangiare spesso fuori casa rende più difficile il controllo della dieta. Possiamo fornirti strategie pratiche per fare scelte più sane al ristorante o preparare pasti veloci che puoi portare con te.\n`;
-            } else if (quizData.eatOutFrequency === 'mai_fuori') {
-                message += `👉 Complimenti per la tua disciplina alimentare! Questo è un grande vantaggio per raggiungere i tuoi obiettivi. Continua così e vediamo come ottimizzare al massimo la tua alimentazione casalinga.\n`;
-            }
-
-            // Stress Management
-            if (quizData.stressManagement === 'no_stress') {
-                message += `👉 Lo stress influisce notevolmente su energia, sonno e recupero. Anche semplici tecniche di gestione dello stress possono avere un impatto positivo sui tuoi risultati fisici e sul benessere generale. Scopri come integrarle!\n`;
-            } else if (quizData.stressManagement === 'si_ogni_giorno') {
-                 message += `👉 Fantastico che tu dia importanza alla gestione dello stress! Questo ti pone in una posizione privilegiata per massimizzare i tuoi progressi. Un corpo e una mente equilibrati sono la base del successo.\n`;
-            }
-
-            // Work-Life Balance
-            if (quizData.workLifeBalance === 'poco' || quizData.workLifeBalance === 'per_niente') {
-                message += `👉 Un buon equilibrio vita-lavoro è essenziale. Se ti senti sopraffatto, questo può essere un freno per i tuoi obiettivi fitness. Possiamo aiutarti a trovare soluzioni che integrino il benessere nella tua routine frenetica.\n`;
-            } else if (quizData.workLifeBalance === 'si_molto_soddisfatto') {
-                message += `👉 Avere un ottimo equilibrio vita-lavoro è una risorsa incredibile! Questo ti permette di dedicare energia e concentrazione al tuo benessere. Sfruttiamo al meglio questa stabilità per i tuoi obiettivi!\n`;
-            }
-
-            // Active Breaks
-            if (quizData.activeBreaks === 'mai_pause' && quizData.dailyActivity === 'sedentario') {
-                message += `👉 Dato il tuo lavoro sedentario, le pause attive sono fondamentali! Anche solo pochi minuti di stretching o camminata ogni ora possono migliorare la postura, la circolazione e mantenere alta l'energia.\n`;
-            } else if (quizData.activeBreaks === 'ogni_ora' || quizData.activeBreaks === 'piu_volte_giorno') {
-                message += `👉 Ottima abitudine le pause attive! Questo mostra proattività e attenzione alla salute anche sul lavoro. Continua così, è un pilastro importante per il tuo benessere generale.\n`;
-            }
-
-            // Sleep Quality
-            if (quizData.wakeUpAtNight === 'spesso' || quizData.wakeUpAtNight === 'sempre' || quizData.restedInMorning === 'raramente' || quizData.restedInMorning === 'mai_riposato') {
-                message += `👉 Il sonno è il tuo migliore alleato per il recupero e l'energia. Se la qualità del sonno è scarsa, può rallentare i tuoi progressi. Possiamo lavorare sull'igiene del sonno per migliorare il tuo riposo.\n`;
-            }
-            if (quizData.electronicsBeforeSleep === 'sempre_elettronici' || quizData.electronicsBeforeSleep === 'qualche_volta') {
-                message += `👉 La luce blu degli schermi prima di dormire può ostacolare il sonno. Prova a creare una "zona cuscinetto" di 30-60 minuti senza dispositivi prima di coricarti per un riposo più profondo.\n`;
-            } else if (quizData.electronicsBeforeSleep === 'mai_elettronici') {
-                message += `👉 Complimenti per l'ottima abitudine di evitare gli schermi prima di dormire! Questo è un fattore chiave per un sonno ristoratore e un recupero ottimale. Sei già avanti su questo fronte!\n`;
-            }
-
-            // Motivation and Consistency
-            if (quizData.skipWorkouts === 'a_volte' || quizData.skipWorkouts === 'spesso') {
-                message += `👉 La mancanza di voglia è un ostacolo comune. Un piano personalizzato e un supporto costante possono aiutarti a superare questi momenti e a costruire una routine inarrestabile. Con TribuCoach, non sarai più solo!\n`;
-            }
-            if (quizData.mainMotivationNew === 'estetica' && score < 60) {
-                 message += `👉 La motivazione estetica è potente, ma spesso è più sostenibile se abbinata a un focus sul benessere generale. Costruiremo un piano che ti faccia sentire bene dentro e fuori!\n`;
-            } else if (quizData.mainMotivationNew === 'salute_benessere_profondo') {
-                 message += `👉 La tua motivazione orientata a salute e benessere è la più solida! Questo approccio ti garantirà risultati duraturi e un miglioramento della qualità della vita. Siamo allineati sui tuoi valori!\n`;
-            }
-
-            // Comparison/Feedback
-            if (quizData.compareWithOthers === 'raramente' || quizData.compareWithOthers === 'mai_confronto') {
-                message += `👉 Cercare feedback e confrontarsi con altri può accelerare la crescita e offrire nuove prospettive. Entrare in una community o avere un coach è un modo eccellente per rimanere motivati e imparare.\n`;
-            } else if (quizData.compareWithOthers === 'si_spesso') {
-                 message += `👉 Il tuo approccio proattivo nel cercare confronto e feedback è ammirevole. Sei una persona orientata alla crescita, e questo ti porterà lontano nel tuo percorso fitness.\n`;
-            }
-
-
-            // Final Call to action
-            message += `\n**Noi di TribuCoach siamo pronti a trasformare queste intuizioni in un piano d'azione concreto e personalizzato per te!**\n`;
-            message += `Il tuo percorso personalizzato inizia adesso.`;
-
-            return message;
-        }
-
-        // Event Listeners for option cards
-        document.querySelectorAll('.option-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const input = this.querySelector('input');
-                if (input.type === 'radio') {
-                    // Deselect other radio buttons in the same group
-                    document.querySelectorAll(`input[name="${input.name}"]`).forEach(radio => {
-                        radio.closest('.option-card').classList.remove('selected');
-                    });
-                    input.checked = true;
-                    this.classList.add('selected');
-                } else if (input.type === 'checkbox') {
-                    input.checked = !input.checked; // Toggle checkbox state
-                    this.classList.toggle('selected', input.checked);
-                    // Specific logic for goals to limit to 3
-                    if (input.name === 'goals') {
-                        const checked = document.querySelectorAll('#question-3 input[name="goals"]:checked');
-                        if (checked.length > 3) {
-                            input.checked = false; // Revert if over limit
-                            this.classList.remove('selected');
-                            alert('Puoi selezionare massimo 3 obiettivi principali!');
-                        }
-                    }
-                }
+        // Event Listeners per le opzioni radio
+        document.querySelectorAll('.option-box input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Rimuovi 'selected' da tutti i fratelli dello stesso gruppo (nome)
+                document.querySelectorAll(`input[name="${this.name}"]`).forEach(sibling => {
+                    sibling.parentNode.classList.remove('selected');
+                });
+                // Aggiungi 'selected' all'elemento padre dell'opzione selezionata
+                this.parentNode.classList.add('selected');
                 validateCurrentQuestion();
             });
         });
         
+        // Setup per checkbox con limite (Obiettivi Principali)
+        document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checked = document.querySelectorAll('#question-3 input[type="checkbox"]:checked');
+                if (checked.length > 3) {
+                    this.checked = false;
+                    alert('Puoi selezionare massimo 3 obiettivi principali!');
+                }
+                // Toggle 'selected' class based on checked state
+                this.parentNode.classList.toggle('selected', this.checked);
+                validateCurrentQuestion();
+            });
+        });
+
+        // Setup per altri checkbox (Obiettivi/Ostacoli)
+        document.querySelectorAll('input[type="checkbox"]:not(#question-3 input[type="checkbox"])').forEach(checkbox => { // Modificato il selettore per escludere Q3
+            checkbox.addEventListener('change', function() {
+                this.parentNode.classList.toggle('selected', this.checked);
+                validateCurrentQuestion();
+            });
+        });
+
         // Event Listeners for text/email/number inputs
         document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"]').forEach(input => {
             input.addEventListener('input', validateCurrentQuestion);
