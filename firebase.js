@@ -11,7 +11,7 @@ const firebaseConfig = {
   storageBucket: "tribucoach-9564b.firebasestorage.app",
   messagingSenderId: "476626832985",
   appId: "1:476626832985:web:7835188f40f4348567ab48",
-  measurementId: "G-YZ565MKQ6V"
+  measurementId: "G-EVYE5YBZJE" // Aggiornato per corrispondere all'ID del server
 };
 
 // Inizializza Firebase
