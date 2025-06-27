@@ -15,7 +15,7 @@ import {
     serverTimestamp,
     arrayUnion // Import arrayUnion for updating notes
 } from 'firebase/firestore';
-import { logEvent } = 'firebase/analytics';
+import { logEvent } from 'firebase/analytics'; // CORREZIONE QUI: da '=' a 'from'
 
 // === GESTIONE QUIZ RESULTS ===
 export async function saveQuizResult(quizData) {
