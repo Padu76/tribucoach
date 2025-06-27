@@ -1,46 +1,88 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz TribuCoach - Risultato</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz TribuCoach</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #111; color: #eee; text-align: center; padding: 20px; }
-    .result-container { background-color: #222; border-radius: 10px; padding: 20px; margin: auto; max-width: 700px; }
-    h1, h2 { color: orange; }
-    p { text-align: left; margin: 10px 0; }
-    .cta-btn { display: inline-block; margin: 15px; padding: 15px 25px; color: #fff; background-color: orange; border: none; border-radius: 8px; font-size: 18px; text-decoration: none; }
+    body { font-family: Arial, sans-serif; background-color: #111; color: #fff; text-align: center; padding: 20px; }
+    .question-box { background: #222; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    button { background-color: orange; color: black; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+    button:hover { background-color: #ff9900; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="result-container">
-    <h1>🏆 Quiz TribuCoach - Risultato</h1>
-    <h2>🎯 Profilo Benessere Completo</h2>
-    <p>
-      Complimenti! Hai completato il quiz e il tuo profilo rivela importanti informazioni per migliorare il tuo benessere:
-      <br><br>
-      • Il tuo livello di allenamento attuale richiede un incremento graduale di intensità per evitare infortuni e stimolare progressi costanti.<br>
-      • L’alimentazione mostra carenze in micronutrienti essenziali: è consigliato integrare frutta, verdura e fonti proteiche magre.<br>
-      • Le tue abitudini di riposo non sono ottimali: lavoriamo insieme per migliorare qualità e quantità del sonno.<br>
-      • La motivazione è altalenante: serve definire obiettivi chiari e strategie di automotivazione per non perdere la costanza.<br>
-      • È fondamentale programmare almeno 3 sessioni di allenamento settimanale con esercizi funzionali.<br>
-      • Integra stretching e mobilità per ridurre rigidità e favorire il recupero muscolare.<br>
-      • La gestione dello stress può essere migliorata con pratiche di respirazione consapevole e meditazione breve.<br>
-      • Incrementa l’idratazione: almeno 2 litri d’acqua al giorno sono essenziali per performance e benessere.<br>
-      • Crea un diario alimentare per aumentare la consapevolezza su ciò che mangi.<br>
-      • Introduci almeno 30 minuti di camminata quotidiana per stimolare metabolismo e salute cardiaca.<br>
-      • Limita zuccheri semplici e alimenti processati, favorendo cibi freschi e integrali.<br>
-      • Organizza un piano settimanale che comprenda allenamento, pasti e riposo.<br>
-      • Dedica del tempo a hobby e attività piacevoli per migliorare l’umore.<br>
-      • Se possibile, cerca un partner di allenamento per aumentare motivazione e impegno.<br>
-      • Pianifica controlli periodici per monitorare i progressi e adeguare il percorso.<br>
-      • Lavora sulla respirazione diaframmatica per migliorare resistenza e ridurre ansia.<br>
-      • Utilizza playlist musicali energiche per rendere l’allenamento più stimolante.<br>
-      • Prediligi un’alimentazione equilibrata con rapporto corretto tra carboidrati complessi, grassi buoni e proteine.<br>
-      • Affronta ogni giornata con mentalità positiva: ricorda che la costanza è il vero segreto del successo!<br>
-    </p>
-    <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" class="cta-btn">💬 Avvia il Chatbot</a>
-    <a href="https://wa.me/393478881515?text=Ciao!%20Vorrei%20una%20consulenza%20personalizzata%20sul%20mio%20piano%20di%20allenamento" class="cta-btn">📲 Chiedi la Consulenza</a>
-  </div>
+  <h1>🏆 Quiz TribuCoach</h1>
+  <div id="quizContainer"></div>
+
+  <script>
+    const questions = [
+      { q: "Quante volte ti alleni a settimana?", a: ["0", "1-2", "3-4", "5+"], s: [0, 1, 2, 3] },
+      { q: "Come valuti la tua alimentazione?", a: ["Disordinata", "Mediocre", "Buona", "Ottima"], s: [0, 1, 2, 3] },
+      { q: "Quanto dormi a notte?", a: ["Meno di 5 ore", "5-6 ore", "7-8 ore", "9+ ore"], s: [0, 1, 2, 3] },
+      { q: "Quanto ti senti motivato?", a: ["Per niente", "Poco", "Abbastanza", "Molto"], s: [0, 1, 2, 3] },
+      { q: "Quanti passi fai in un giorno?", a: ["<3000", "3000-6000", "6000-9000", "9000+"], s: [0, 1, 2, 3] },
+      { q: "Consumi frutta e verdura ogni giorno?", a: ["Mai", "Raramente", "Spesso", "Sempre"], s: [0, 1, 2, 3] },
+      { q: "Come gestisci lo stress?", a: ["Male", "Così così", "Bene", "Molto bene"], s: [0, 1, 2, 3] },
+      { q: "Quanto tempo dedichi a hobby?", a: ["Nessuno", "Poco", "Abbastanza", "Molto"], s: [0, 1, 2, 3] },
+      { q: "Fai stretching regolarmente?", a: ["Mai", "A volte", "Spesso", "Sempre"], s: [0, 1, 2, 3] },
+      { q: "Quanta acqua bevi al giorno?", a: ["<1L", "1-1.5L", "1.5-2L", "2L+"], s: [0, 1, 2, 3] },
+    ];
+
+    let currentQ = 0, score = 0;
+    const quizContainer = document.getElementById('quizContainer');
+
+    function showQuestion() {
+      if (currentQ >= questions.length) {
+        showResult();
+        return;
+      }
+      const q = questions[currentQ];
+      let html = `<div class='question-box'><h2>${q.q}</h2>`;
+      q.a.forEach((ans, i) => {
+        html += `<button onclick='answer(${q.s[i]})'>${ans}</button><br>`;
+      });
+      html += `</div>`;
+      quizContainer.innerHTML = html;
+    }
+
+    function answer(points) {
+      score += points;
+      currentQ++;
+      showQuestion();
+    }
+
+    function showResult() {
+      let profile = '';
+      if (score < 10) profile = "Profilo: 🚦 Da migliorare. Urge un cambiamento radicale.";
+      else if (score < 20) profile = "Profilo: ⚠️ Intermedio. Buona base, ma c'è da lavorare.";
+      else profile = "Profilo: 🏅 Avanzato. Ottimo, continua così!";
+
+      let advice = `
+        <div class='question-box'>
+        <h2>${profile}</h2>
+        <p>Ecco i tuoi consigli personalizzati:</p>
+        <ul style='text-align: left;'>
+          <li>Programma 3-4 allenamenti settimanali con esercizi funzionali.</li>
+          <li>Integra frutta e verdura a ogni pasto per bilanciare i micronutrienti.</li>
+          <li>Bevi almeno 2L di acqua al giorno per una buona idratazione.</li>
+          <li>Dedica almeno 15 minuti al giorno a tecniche di respirazione o meditazione.</li>
+          <li>Incrementa la qualità del sonno riducendo l'uso di dispositivi prima di dormire.</li>
+          <li>Utilizza playlist energiche per motivarti durante l'allenamento.</li>
+          <li>Riduci cibi processati e zuccheri aggiunti nella tua dieta.</li>
+          <li>Fissa obiettivi a breve e medio termine per restare motivato.</li>
+          <li>Programma stretching al termine di ogni allenamento per ridurre tensioni muscolari.</li>
+          <li>Sii costante: la regolarità è il segreto del successo.</li>
+        </ul>
+        <button onclick="window.location.href='index.html'">🔄 Riprova il Quiz</button>
+        <button onclick="window.location.href='https://wa.me/3478881515'">💬 Chiedi la Consulenza</button>
+        </div>
+      `;
+      quizContainer.innerHTML = advice;
+    }
+
+    showQuestion();
+  </script>
 </body>
 </html>
