@@ -1,131 +1,47 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quiz TribuCoach</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risultato Quiz - TribuCoach</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
-    .quiz-container {
-      max-width: 700px;
-      margin: auto;
-      background-color: #1e1e1e;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    h1 {
-      text-align: center;
-      color: #ffc107;
-    }
-    .question, .result {
-      margin-bottom: 20px;
-    }
-    .question h2 {
-      color: #ff9800;
-    }
-    .question label {
-      display: block;
-      margin: 10px 0;
-    }
-    button {
-      background-color: #ffc107;
-      color: black;
-      border: none;
-      padding: 12px 20px;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .cta-buttons {
-      text-align: center;
-      margin-top: 30px;
-    }
-    .cta-buttons a {
-      display: inline-block;
-      margin: 10px;
-      padding: 12px 24px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .cta-primary {
-      background-color: #ffc107;
-      color: black;
-    }
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #1f1f1f; border-radius: 10px; }
+    h1 { color: #ff7b00; }
+    .score { font-size: 20px; margin: 10px 0; color: #f0c040; }
+    .description { margin-bottom: 20px; }
+    .plan { text-align: left; background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .plan h2 { color: #ff7b00; }
+    .plan ul { list-style-type: none; padding: 0; }
+    .plan ul li::before { content: "✔️ "; margin-right: 8px; }
+    .button-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .button { background-color: #ff7b00; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 8px; font-weight: bold; display: inline-block; }
+    .button:hover { background-color: #e06d00; }
   </style>
 </head>
 <body>
-  <div class="quiz-container">
-    <h1>Quiz TribuCoach</h1>
-
-    <div class="question" id="q1">
-      <h2>1) Quanto ti alleni a settimana?</h2>
-      <label><input type="radio" name="q1" value="1"> 0-1 volte</label>
-      <label><input type="radio" name="q1" value="2"> 2-3 volte</label>
-      <label><input type="radio" name="q1" value="3"> 4 o più</label>
+  <div class="container">
+    <h1>🏆 Atleta Avanzato</h1>
+    <div class="score">Lead Score: 48/100</div>
+    <div class="description">
+      Sei un vero atleta con esperienza e dedizione. È tempo di perfezionare ogni dettaglio per raggiungere l'eccellenza.
+    </div>
+    <div class="plan">
+      <h2>🥅 Il tuo piano personalizzato:</h2>
+      <ul>
+        <li>Programmazione scientifica con periodizzazione avanzata</li>
+        <li>Protocolli di recupero e rigenerazione specifici</li>
+        <li>Ottimizzazione nutrizionale per performance di elite</li>
+        <li>Analisi biomeccanica e correzioni tecniche avanzate</li>
+        <li>Preparazione mentale e strategie di peak performance</li>
+      </ul>
     </div>
 
-    <div class="question" id="q2">
-      <h2>2) Come valuti la tua alimentazione?</h2>
-      <label><input type="radio" name="q2" value="1"> Disordinata</label>
-      <label><input type="radio" name="q2" value="2"> Abbastanza curata</label>
-      <label><input type="radio" name="q2" value="3"> Molto equilibrata</label>
-    </div>
-
-    <div class="question" id="q3">
-      <h2>3) Quanta importanza dai al recupero e al sonno?</h2>
-      <label><input type="radio" name="q3" value="1"> Poca</label>
-      <label><input type="radio" name="q3" value="2"> Nella media</label>
-      <label><input type="radio" name="q3" value="3"> Molta</label>
-    </div>
-
-    <button onclick="showResult()">Scopri il tuo profilo</button>
-
-    <div class="result" id="result" style="display:none;">
-      <h2>Il tuo profilo:</h2>
-      <p id="profileText"></p>
-      <div class="cta-buttons">
-        <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="cta-primary">
-          💬 Ricevi il Piano Completo
-        </a>
-      </div>
+    <div class="button-container">
+      <a href="https://wa.me/3478881515?text=Ciao!%20Vorrei%20ricevere%20il%20mio%20piano%20completo%20dopo%20il%20quiz!" class="button complete-button">
+        🗨️ Ricevi il Piano Completo
+      </a>
     </div>
   </div>
-
-  <script>
-    function showResult() {
-      const answers = ['q1', 'q2', 'q3'];
-      let score = 0;
-
-      for (let q of answers) {
-        const selected = document.querySelector(`input[name="${q}"]:checked`);
-        if (!selected) {
-          alert("Per favore rispondi a tutte le domande.");
-          return;
-        }
-        score += parseInt(selected.value);
-      }
-
-      let profile = "";
-      if (score <= 4) {
-        profile = "Hai bisogno di un supporto completo per ripartire al meglio.";
-      } else if (score <= 7) {
-        profile = "Sei a buon punto, ma puoi fare ancora progressi!";
-      } else {
-        profile = "Complimenti! Sei sulla strada giusta e hai buone abitudini.";
-      }
-
-      document.getElementById("profileText").innerText = profile;
-      document.getElementById("result").style.display = "block";
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-  </script>
 </body>
 </html>
