@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz TribuCoach - Analisi Completa del Profilo Fitness</title>
     <meta name="description" content="Quiz avanzato per analizzare il tuo profilo fitness completo e ricevere un piano personalizzato da TribuCoach">
-    
+
     <style>
         /* Stili CSS esistenti */
         * {
@@ -189,7 +189,7 @@
             opacity: 0.6;
             box-shadow: none;
         }
-        
+
         /* Stili aggiuntivi per i pulsanti finali */
         .final-actions {
             margin-top: 40px;
@@ -694,7 +694,7 @@
                 <p>Il tuo punteggio di lead è: <span id="final-lead-score"></span></p>
                 <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
                 <p>Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
-                
+
                 <div class="final-actions">
                     <p>Nel frattempo, ecco alcune opzioni utili:</p>
                     <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="action-button chat-button">
@@ -726,7 +726,7 @@
             quizSections.forEach((section, index) => {
                 section.style.display = (index + 1 === questionNumber) ? 'block' : 'none';
             });
-            document.getElementById('quiz-complete').style.display = 'none'; // Nascondi sempre la sezione completa
+            // RIMOZIONE: document.getElementById('quiz-complete').style.display = 'none'; // Questa riga è stata rimossa
             updateProgress();
             updateNavigation();
             validateCurrentQuestion(); // Rimuovi il commento per validare quando la domanda cambia
@@ -837,7 +837,7 @@
 
             // Calculate lead score on the client side using the updated firebase-functions.js logic
             const leadScore = calculateLeadScore(quizData);
-            
+
             // Determine profile type based on quiz data
             // Questa è una logica semplificata, dovrai raffinarla in base alle tue esigenze
             let profileType = 'Nuovo Esploratore'; // Default
@@ -860,8 +860,8 @@
                 document.getElementById('final-lead-score').textContent = leadScore;
                 document.getElementById('final-profile-type').textContent = profileType;
                 document.getElementById('quiz-sections').style.display = 'none';
-                document.querySelector('.navigation-buttons').style.display = 'none'; // CORREZIONE QUI
-                document.getElementById('quiz-complete').style.display = 'block';
+                document.querySelector('.navigation-buttons').style.display = 'none';
+                document.getElementById('quiz-complete').style.display = 'block'; // Mostra la sezione finale
                 document.querySelector('.progress-bar-container').style.display = 'none'; // Nascondi la progress bar
 
                 // Log analytics
@@ -888,7 +888,7 @@
                 validateCurrentQuestion();
             });
         });
-        
+
         // Setup per checkbox con limite (Obiettivi Principali)
         document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
@@ -915,7 +915,7 @@
         document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"]').forEach(input => {
             input.addEventListener('input', validateCurrentQuestion);
         });
-        
+
         // Navigation button logic
         document.getElementById('next-btn').addEventListener('click', () => {
             if (validateCurrentQuestion()) {
