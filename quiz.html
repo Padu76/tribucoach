@@ -612,7 +612,7 @@
                     const card = e.target.closest('.option-card');
                     const input = card.querySelector('input');
                     
-                    console.log('Click su option card:', input.name, input.value);
+                    console.log('Click su option card:', input.name, input.value, 'Stato prima:', input.checked);
                     
                     if (input.type === 'radio') {
                         // Per radio buttons, rimuovi selected da tutti nel gruppo
@@ -624,18 +624,21 @@
                         input.checked = true;
                         card.classList.add('selected');
                     } else if (input.type === 'checkbox') {
-                        // Per checkbox, toggle selection
-                        if (input.name === 'goal') {
-                            // Controlla limite di 3 per obiettivi
-                            const checked = document.querySelectorAll('#question-3 input[name="goal"]:checked');
-                            if (!input.checked && checked.length >= 3) {
+                        // Per checkbox, determina il nuovo stato
+                        const newState = !input.checked;
+                        
+                        // Controlla limite di 3 per obiettivi PRIMA di cambiare stato
+                        if (input.name === 'goal' && newState) {
+                            const currentlyChecked = document.querySelectorAll('#question-3 input[name="goal"]:checked');
+                            if (currentlyChecked.length >= 3) {
                                 alert('Puoi selezionare massimo 3 obiettivi principali!');
                                 return;
                             }
                         }
                         
-                        input.checked = !input.checked;
-                        card.classList.toggle('selected', input.checked);
+                        // Applica il nuovo stato
+                        input.checked = newState;
+                        card.classList.toggle('selected', newState);
                     }
                     
                     console.log('Nuovo stato input:', input.checked);
