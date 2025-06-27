@@ -6,7 +6,6 @@
     <title>TribuCoach - Il tuo Personal Trainer sempre con te, gratis</title>
     <meta name="description" content="Coach virtuale gratuito sempre disponibile per allenamento, alimentazione e motivazione. Oltre 500 persone già lo usano ogni giorno.">
     
-    <!-- Open Graph -->
     <meta property="og:title" content="TribuCoach - Il tuo Personal Trainer sempre con te">
     <meta property="og:description" content="Coach virtuale gratuito sempre disponibile 24/7">
     <meta property="og:image" content="https://tribucoach.netlify.app/Padu_tribu045.jpg">
@@ -14,33 +13,26 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="it_IT">
     
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="TribuCoach - Il tuo Personal Trainer sempre con te">
     <meta name="twitter:description" content="Coach virtuale gratuito sempre disponibile 24/7">
     <meta name="twitter:image" content="https://tribucoach.netlify.app/Padu_tribu045.jpg">
     
-    <!-- SEO Keywords -->
     <meta name="keywords" content="personal trainer verona, coach virtuale, allenamento personalizzato, dieta online, motivazione fitness, Andrea Padoan">
     <meta name="author" content="Andrea Padoan">
     <meta name="robots" content="index, follow">
     
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://tribucoach.netlify.app/">
     
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     
-    <!-- Preload critical resources -->
     <link rel="preload" href="Padu_tribu045.jpg" as="image" type="image/jpeg">
     <link rel="preload" href="tribu_logo_monocromo.png" as="image" type="image/png">
     
-    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://www.chatbase.co">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XBPW3F3PKE"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -49,7 +41,6 @@
       gtag('config', 'G-XBPW3F3PKE');
     </script>
     
-    <!-- Structured Data - JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -74,6 +65,44 @@
         "priceCurrency": "EUR"
       }
     }
+    </script>
+    
+    <script>
+        function hideChatbaseOnSmallScreens() {
+            if (window.innerWidth <= 480) {
+                const chatbaseButton = document.getElementById('chatbase-bubble-button');
+                const chatbaseWindow = document.getElementById('chatbase-bubble-window');
+                if (chatbaseButton) {
+                    chatbaseButton.style.display = 'none';
+                }
+                if (chatbaseWindow) {
+                    chatbaseWindow.style.display = 'none';
+                }
+                // Mostra la notifica mobile se il chatbot è nascosto
+                const mobileNotice = document.querySelector('.mobile-chat-notice');
+                if (mobileNotice) {
+                    mobileNotice.style.display = 'block';
+                }
+            } else {
+                // Se lo schermo è grande, assicurati che il chatbot sia visibile e la notifica mobile sia nascosta
+                const chatbaseButton = document.getElementById('chatbase-bubble-button');
+                const chatbaseWindow = document.getElementById('chatbase-bubble-window');
+                if (chatbaseButton) {
+                    chatbaseButton.style.display = ''; // Reimposta al valore predefinito
+                }
+                if (chatbaseWindow) {
+                    chatbaseWindow.style.display = ''; // Reimposta al valore predefinito
+                }
+                const mobileNotice = document.querySelector('.mobile-chat-notice');
+                if (mobileNotice) {
+                    mobileNotice.style.display = 'none';
+                }
+            }
+        }
+        // Esegui la funzione immediatamente al caricamento
+        hideChatbaseOnSmallScreens();
+        // Esegui la funzione anche al ridimensionamento della finestra
+        window.addEventListener('resize', hideChatbaseOnSmallScreens);
     </script>
     
     <style>
@@ -573,7 +602,7 @@
             
             /* Show a notice for mobile users */
             .mobile-chat-notice {
-                display: block !important;
+                display: none; /* Inizialmente nascosto, verrà gestito dallo script JS per prevenire flickering */
                 position: fixed;
                 bottom: 10px;
                 left: 10px;
@@ -587,9 +616,11 @@
                 z-index: 1000;
             }
         }
-
-        .mobile-chat-notice {
-            display: none;
+        /* Assicurati che su schermi più grandi il notice sia sempre nascosto */
+        @media (min-width: 481px) {
+            .mobile-chat-notice {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -721,7 +752,6 @@
         </div>
     </footer>
 
-    <!-- Mobile chat notice -->
     <div class="mobile-chat-notice">
         💬 Su mobile usa il pulsante "Chatta con TribuCoach" qui sopra
     </div>
@@ -744,7 +774,9 @@
         
         // Load chatbase after page load to improve performance
         const onLoad=function(){
-            setTimeout(() => {
+            // Rimuovi il setTimeout qui se vuoi che lo script si carichi prima per testare la soluzione JS in head
+            // Il delay di 2 secondi è pensato per ottimizzare LCP su desktop
+            setTimeout(() => { 
                 const script=document.createElement("script");
                 script.src="https://www.chatbase.co/embed.min.js";
                 script.id="EjoHCEogMfkkrVzIK6V07";
@@ -752,7 +784,7 @@
                 script.async = true;
                 script.defer = true;
                 document.body.appendChild(script);
-            }, 2000); // Delay 2 seconds for better LCP
+            }, 2000); 
         };
         
         if(document.readyState==="complete"){
