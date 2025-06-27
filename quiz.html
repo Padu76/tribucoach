@@ -515,74 +515,13 @@
             });
         }
 
-        // Event Listeners per option cards (gestisce sia radio che checkbox)
-        document.querySelectorAll('.option-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const input = this.querySelector('input');
-                
-                if (input.type === 'radio') {
-                    // Per radio buttons, rimuovi selected da tutti nel gruppo
-                    document.querySelectorAll(`input[name="${input.name}"]`).forEach(sibling => {
-                        sibling.parentNode.classList.remove('selected');
-                        sibling.checked = false;
-                    });
-                    // Seleziona questo
-                    input.checked = true;
-                    this.classList.add('selected');
-                } else if (input.type === 'checkbox') {
-                    // Per checkbox, toggle selection
-                    if (input.name === 'goal') {
-                        // Controlla limite di 3 per obiettivi
-                        const checked = document.querySelectorAll('#question-3 input[name="goal"]:checked');
-                        if (!input.checked && checked.length >= 3) {
-                            alert('Puoi selezionare massimo 3 obiettivi principali!');
-                            return;
-                        }
-                    }
-                    
-                    input.checked = !input.checked;
-                    this.classList.toggle('selected', input.checked);
-                }
-                
-                updateNavigation();
-            });
-        });
-
-        // Event Listeners per input fields
-        document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
-            input.addEventListener('input', function() {
-                console.log('Input cambiato:', this.id, this.value);
-                updateNavigation();
-            });
-            input.addEventListener('keyup', updateNavigation);
-            input.addEventListener('change', updateNavigation);
-        });
-
-        // Logica pulsanti di navigazione
-        document.getElementById('next-btn').addEventListener('click', () => {
-            if (validateCurrentQuestion()) {
-                if (currentQuestion < totalQuestions) {
-                    currentQuestion++;
-                    showQuestion(currentQuestion);
-                    updateNavigation();
-                } else {
-                    completeQuiz();
-                }
-            }
-        });
-
-        document.getElementById('prev-btn').addEventListener('click', () => {
-            if (currentQuestion > 1) {
-                currentQuestion--;
-                showQuestion(currentQuestion);
-                updateNavigation();
-            }
-        });
-
         // Inizializza al caricamento
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Quiz inizializzato');
             showQuestion(currentQuestion);
+            
+            // Collega gli event listeners DOPO che il DOM è caricato
+            setupEventListeners();
             
             // Forza aggiornamento dopo un piccolo delay
             setTimeout(() => {
@@ -599,6 +538,73 @@
                 window.open(`https://wa.me/3478881515?text=${message}`, '_blank');
             });
         });
+
+        function setupEventListeners() {
+            // Event Listeners per option cards (gestisce sia radio che checkbox)
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const input = this.querySelector('input');
+                    
+                    if (input.type === 'radio') {
+                        // Per radio buttons, rimuovi selected da tutti nel gruppo
+                        document.querySelectorAll(`input[name="${input.name}"]`).forEach(sibling => {
+                            sibling.parentNode.classList.remove('selected');
+                            sibling.checked = false;
+                        });
+                        // Seleziona questo
+                        input.checked = true;
+                        this.classList.add('selected');
+                    } else if (input.type === 'checkbox') {
+                        // Per checkbox, toggle selection
+                        if (input.name === 'goal') {
+                            // Controlla limite di 3 per obiettivi
+                            const checked = document.querySelectorAll('#question-3 input[name="goal"]:checked');
+                            if (!input.checked && checked.length >= 3) {
+                                alert('Puoi selezionare massimo 3 obiettivi principali!');
+                                return;
+                            }
+                        }
+                        
+                        input.checked = !input.checked;
+                        this.classList.toggle('selected', input.checked);
+                    }
+                    
+                    updateNavigation();
+                });
+            });
+
+            // Event Listeners per input fields
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
+                console.log('Collegando event listener a:', input.id);
+                input.addEventListener('input', function() {
+                    console.log('Input cambiato:', this.id, this.value);
+                    updateNavigation();
+                });
+                input.addEventListener('keyup', updateNavigation);
+                input.addEventListener('change', updateNavigation);
+            });
+
+            // Logica pulsanti di navigazione
+            document.getElementById('next-btn').addEventListener('click', () => {
+                if (validateCurrentQuestion()) {
+                    if (currentQuestion < totalQuestions) {
+                        currentQuestion++;
+                        showQuestion(currentQuestion);
+                        updateNavigation();
+                    } else {
+                        completeQuiz();
+                    }
+                }
+            });
+
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                if (currentQuestion > 1) {
+                    currentQuestion--;
+                    showQuestion(currentQuestion);
+                    updateNavigation();
+                }
+            });
+        }
     </script>
 </body>
 </html>
