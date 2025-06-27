@@ -699,9 +699,11 @@
     </div>
 
     <script type="module">
-        import { saveQuizResult, calculateLeadScore, getProfileIcon, logEvent } from './firebase-functions.js';
-        import { analytics } from './firebase.js'; // Importa analytics
-
+        // MODIFICA QUI: Importa logEvent direttamente dalla CDN
+        import { saveQuizResult, calculateLeadScore, getProfileIcon } from './firebase-functions.js'; 
+        import { analytics } from './firebase.js'; // Importa analytics (l'istanza)
+        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'; // <--- QUESTA È LA RIGA AGGIUNTA/MODIFICATA
+        
         let currentQuestion = 1;
         const totalQuestions = 5; // Ho rimosso il risultato dal conteggio delle domande per la barra di progresso
         const questionsContainer = document.getElementById('quiz-card');
@@ -756,12 +758,19 @@
                 const ageInput = document.getElementById('age').value; // Ottieni come stringa
                 const age = parseInt(ageInput); // Parsa a intero
 
+                console.log('--- Validazione Domanda 1 ---');
+                console.log('Nome:', name, 'Length > 0:', name.length > 0);
+                console.log('Email:', email, 'Length > 0:', email.length > 0, 'Includes @:', email.includes('@'));
+                console.log('Età Input:', ageInput, 'Età Parsed:', age, 'Input Length > 0:', ageInput.length > 0, 'Is NaN:', isNaN(age), 'Range (16-80):', age >= 16 && age <= 80);
+
                 isValid = name.length > 0 && 
                           email.length > 0 && 
                           email.includes('@') && // Verifica formato email
                           ageInput.length > 0 && // Verifica che l'input non sia vuoto
                           !isNaN(age) && // Verifica che l'età sia un numero valido
                           age >= 16 && age <= 80; // Verifica il range dell'età
+                
+                console.log('Validazione finale Domanda 1 (isValid):', isValid); // Questo ti dirà il risultato finale della validazione
             } else if (currentQuestion === 2) { // Esperienza Fitness
                 isValid = document.querySelector('input[name="experience"]:checked') !== null;
             } else if (currentQuestion === 3) { // Obiettivi Principali
@@ -841,7 +850,7 @@
                 showQuestion(totalQuestions + 1); // Mostra la schermata dei risultati
                 loadingScreen.classList.remove('active');
             } catch (error) {
-                console.error('Error submitting quiz:', error);
+                console.error('Errore salvataggio quiz:', error);
                 errorMessage.textContent = 'Si è verificato un errore durante il salvataggio dei tuoi dati. Riprova più tardi.';
                 errorMessage.classList.add('active');
                 loadingScreen.classList.remove('active');
@@ -958,7 +967,7 @@
             updateProgress();
             updateNavigation();
             validateCurrentQuestion(); // Validare la prima domanda al caricamento
-            logEvent(analytics, 'advanced_quiz_started');
+            logEvent(analytics, 'advanced_quiz_started'); // Usa logEvent correttamente
         });
 
     </script>
