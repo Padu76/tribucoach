@@ -555,6 +555,20 @@
         });
 
         function setupEventListeners() {
+            // Aggiungi pulsanti a tutte le domande che non li hanno
+            for (let i = 4; i <= 25; i++) {
+                const questionContainer = document.getElementById(`question-${i}`);
+                if (questionContainer && !questionContainer.querySelector('.inline-prev-btn')) {
+                    const buttonsHTML = `
+                        <div style="margin-top: 30px; display: flex; justify-content: space-between; gap: 15px;">
+                            <div class="inline-prev-btn" style="background-color: #555; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center;">Indietro</div>
+                            <div class="inline-next-btn" style="background-color: #ff6600; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center; transition: background-color 0.3s ease;">${i === 25 ? 'Completa Quiz' : 'Avanti'}</div>
+                        </div>
+                    `;
+                    questionContainer.insertAdjacentHTML('beforeend', buttonsHTML);
+                }
+            }
+
             // Event Listeners per option cards (gestisce sia radio che checkbox)
             document.querySelectorAll('.option-card').forEach(card => {
                 card.addEventListener('click', function() {
@@ -1057,6 +1071,10 @@
                         <input type="checkbox" name="goal" value="Migliorare la flessibilità">
                         <span>Migliorare la flessibilità</span>
                     </label>
+                </div>
+                <div style="margin-top: 30px; display: flex; justify-content: space-between; gap: 15px;">
+                    <div class="inline-prev-btn" style="background-color: #555; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center;">Indietro</div>
+                    <div class="inline-next-btn" style="background-color: #ff6600; color: #fff; padding: 15px 30px; border-radius: 8px; font-size: 1.2rem; font-weight: bold; cursor: pointer; flex: 1; max-width: 200px; text-align: center; transition: background-color 0.3s ease;">Avanti</div>
                 </div>
             </div>
 
