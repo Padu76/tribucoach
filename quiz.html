@@ -258,7 +258,13 @@
 
             prevBtn.disabled = currentQuestion === 1;
             nextBtn.textContent = currentQuestion === totalQuestions ? 'Completa Quiz' : 'Avanti';
-            nextBtn.disabled = !validateCurrentQuestion(false);
+            
+            // Forza la validazione e abilita il pulsante se valido
+            const isValid = validateCurrentQuestion(false);
+            nextBtn.disabled = !isValid;
+            
+            // Debug per vedere cosa succede
+            console.log(`Domanda ${currentQuestion}, Valida: ${isValid}`, quizData);
         }
 
         function validateCurrentQuestion(showAlert = true) {
@@ -267,8 +273,11 @@
             switch (currentQuestion) {
                 case 1:
                     const nameInput = document.getElementById('user-name');
-                    quizData.name = nameInput.value.trim();
-                    isValid = quizData.name.length > 1;
+                    if (nameInput) {
+                        quizData.name = nameInput.value.trim();
+                        isValid = quizData.name.length > 1;
+                        console.log('Nome:', quizData.name, 'Valido:', isValid);
+                    }
                     break;
                 case 2:
                     const emailInput = document.getElementById('user-email');
@@ -541,7 +550,12 @@
 
         // Event Listeners per input fields
         document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], textarea').forEach(input => {
-            input.addEventListener('input', updateNavigation);
+            input.addEventListener('input', function() {
+                console.log('Input cambiato:', this.id, this.value);
+                updateNavigation();
+            });
+            input.addEventListener('keyup', updateNavigation);
+            input.addEventListener('change', updateNavigation);
         });
 
         // Logica pulsanti di navigazione
@@ -567,8 +581,13 @@
 
         // Inizializza al caricamento
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('Quiz inizializzato');
             showQuestion(currentQuestion);
-            updateNavigation();
+            
+            // Forza aggiornamento dopo un piccolo delay
+            setTimeout(() => {
+                updateNavigation();
+            }, 100);
             
             // Event listener for CTA buttons
             document.getElementById('cta-chatbot')?.addEventListener('click', () => {
