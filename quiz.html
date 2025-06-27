@@ -688,22 +688,22 @@
                     </label>
                 </div>
             </div>
+        </div>
 
-            <div id="quiz-complete" class="quiz-section" style="display: none;">
-                <h2>Grazie per aver completato il quiz!</h2>
-                <p>Il tuo punteggio di lead è: <span id="final-lead-score"></span></p>
-                <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
-                <p>Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
+        <div id="quiz-complete" class="quiz-section" style="display: none;">
+            <h2>Grazie per aver completato il quiz!</h2>
+            <p>Il tuo punteggio di lead è: <span id="final-lead-score"></span></p>
+            <p>Il tuo profilo suggerito è: <span id="final-profile-type"></span></p>
+            <p>Presto sarai ricontattato da un membro del team TribuCoach con un'analisi dettagliata e consigli personalizzati in base alle tue risposte.</p>
 
-                <div class="final-actions">
-                    <p>Nel frattempo, ecco alcune opzioni utili:</p>
-                    <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="action-button chat-button">
-                        💬 Apri la Chat Automatica per domande e consigli
-                    </a>
-                    <a href="https://wa.me/3478881515?text=Ciao%2C%20vorrei%20prenotare%20una%20consulenza%20gratuita%20dopo%20aver%20completato%20il%20quiz." target="_blank" class="action-button consultation-button">
-                        📅 Prenota una Consulenza Gratuita
-                    </a>
-                </div>
+            <div class="final-actions">
+                <p>Nel frattempo, ecco alcune opzioni utili:</p>
+                <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="action-button chat-button">
+                    💬 Apri la Chat Automatica per domande e consigli
+                </a>
+                <a href="https://wa.me/3478881515?text=Ciao%2C%20vorrei%20prenotare%20una%20consulenza%20gratuita%20dopo%20aver%20completato%20il%20quiz." target="_blank" class="action-button consultation-button">
+                    📅 Prenota una Consulenza Gratuita
+                </a>
             </div>
         </div>
 
@@ -715,8 +715,8 @@
 
     <script type="module">
         import { saveQuizResult, calculateLeadScore } from './firebase-functions.js';
-        import { analytics } from './firebase.js'; // Importa analytics da firebase.js
-        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'; // Assicurati sia importato anche qui se lo usi
+        import { analytics } from './firebase.js';
+        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js';
 
         const quizSections = document.querySelectorAll('.quiz-section:not(#quiz-complete)');
         const totalQuestions = quizSections.length;
@@ -726,10 +726,9 @@
             quizSections.forEach((section, index) => {
                 section.style.display = (index + 1 === questionNumber) ? 'block' : 'none';
             });
-            // RIMOZIONE: document.getElementById('quiz-complete').style.display = 'none'; // Questa riga è stata rimossa
             updateProgress();
             updateNavigation();
-            validateCurrentQuestion(); // Rimuovi il commento per validare quando la domanda cambia
+            validateCurrentQuestion();
         }
 
         function updateProgress() {
@@ -740,7 +739,7 @@
 
         function updateNavigation() {
             document.getElementById('prev-btn').disabled = currentQuestion === 1;
-            document.getElementById('next-btn').disabled = !validateCurrentQuestion(); // Disabilita se la domanda corrente non è valida
+            document.getElementById('next-btn').disabled = !validateCurrentQuestion();
 
             if (currentQuestion === totalQuestions) {
                 document.getElementById('next-btn').textContent = 'Completa Quiz';
@@ -788,9 +787,9 @@
                     isValid = true; // Sempre valido per checkbox multi-selezione senza minimo obbligatorio
                     break;
                 default:
-                    isValid = true; // Per sicurezza, se una domanda non è gestita
+                    isValid = true;
             }
-            document.getElementById('next-btn').disabled = !isValid; // Aggiorna lo stato del pulsante Avanti
+            document.getElementById('next-btn').disabled = !isValid;
             return isValid;
         }
 
@@ -835,19 +834,13 @@
                 mainMotivationNew: getRadioValue('mainMotivationNew'),
             };
 
-            // Calculate lead score on the client side using the updated firebase-functions.js logic
             const leadScore = calculateLeadScore(quizData);
-
-            // Determine profile type based on quiz data
-            // Questa è una logica semplificata, dovrai raffinarla in base alle tue esigenze
-            let profileType = 'Nuovo Esploratore'; // Default
+            let profileType = 'Nuovo Esploratore';
             if (leadScore >= 70) {
                 profileType = 'Atleta';
             } else if (leadScore >= 40) {
                 profileType = 'Guerriero';
             }
-            // Puoi aggiungere logica più complessa qui per determinare il profilo
-            // ad esempio, basandoti su combinazioni di risposte e non solo sul punteggio
 
             quizData.lead_score = leadScore;
             quizData.profile = profileType;
@@ -859,10 +852,14 @@
                 // Mostra i risultati finali
                 document.getElementById('final-lead-score').textContent = leadScore;
                 document.getElementById('final-profile-type').textContent = profileType;
+                
+                // Nascondi gli elementi del quiz
                 document.getElementById('quiz-sections').style.display = 'none';
                 document.querySelector('.navigation-buttons').style.display = 'none';
-                document.getElementById('quiz-complete').style.display = 'block'; // Mostra la sezione finale
-                document.querySelector('.progress-bar-container').style.display = 'none'; // Nascondi la progress bar
+                document.querySelector('.progress-bar-container').style.display = 'none';
+
+                // Mostra la sezione finale
+                document.getElementById('quiz-complete').style.display = 'block'; 
 
                 // Log analytics
                 logEvent(analytics, 'quiz_completed', {
@@ -879,11 +876,9 @@
         // Event Listeners per le opzioni radio
         document.querySelectorAll('.option-box input[type="radio"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                // Rimuovi 'selected' da tutti i fratelli dello stesso gruppo (nome)
                 document.querySelectorAll(`input[name="${this.name}"]`).forEach(sibling => {
                     sibling.parentNode.classList.remove('selected');
                 });
-                // Aggiungi 'selected' all'elemento padre dell'opzione selezionata
                 this.parentNode.classList.add('selected');
                 validateCurrentQuestion();
             });
@@ -897,14 +892,13 @@
                     this.checked = false;
                     alert('Puoi selezionare massimo 3 obiettivi principali!');
                 }
-                // Toggle 'selected' class based on checked state
                 this.parentNode.classList.toggle('selected', this.checked);
                 validateCurrentQuestion();
             });
         });
 
         // Setup per altri checkbox (Obiettivi/Ostacoli)
-        document.querySelectorAll('input[type="checkbox"]:not(#question-3 input[type="checkbox"])').forEach(checkbox => { // Modificato il selettore per escludere Q3
+        document.querySelectorAll('input[type="checkbox"]:not(#question-3 input[type="checkbox"])').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 this.parentNode.classList.toggle('selected', this.checked);
                 validateCurrentQuestion();
@@ -937,9 +931,9 @@
 
         // Initialize quiz on page load
         document.addEventListener('DOMContentLoaded', () => {
-            showQuestion(currentQuestion); // Show the first question
-            validateCurrentQuestion(); // Validare la prima domanda al caricamento
-            logEvent(analytics, 'advanced_quiz_started'); // Log inizio quiz
+            showQuestion(currentQuestion);
+            validateCurrentQuestion();
+            logEvent(analytics, 'advanced_quiz_started');
         });
     </script>
 </body>
