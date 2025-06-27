@@ -1,6 +1,7 @@
 import { auth, db } from './firebase.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.x/firebase-auth.js';
-import { collection, query, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.x/firebase-firestore.js';
+// TUTTI GLI IMPORT DA GSTATIC DEVONO USARE LA STESSA VERSIONE (es. 9.23.0)
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+import { collection, query, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 // Funzione per aggiornare lo stato della connessione
 function updateConnectionStatus(isConnected) {
@@ -39,8 +40,7 @@ onAuthStateChanged(auth, (user) => {
 
 // Renderizza i risultati dei quiz
 function renderQuizResults(docs) {
-    // *** CORREZIONE QUI ***
-    const quizTableBody = document.querySelector('#quizzes-table-body'); // Corretto ID
+    const quizTableBody = document.querySelector('#quizzes-table-body');
     if (!quizTableBody) {
         console.error("Elemento #quizzes-table-body non trovato!");
         return;
@@ -70,8 +70,7 @@ function renderQuizResults(docs) {
 
 // Renderizza i dati dei lead
 function renderLeads(docs) {
-    // *** CORREZIONE QUI ***
-    const leadsTableBody = document.querySelector('#leads-table-body'); // Corretto ID
+    const leadsTableBody = document.querySelector('#leads-table-body');
     if (!leadsTableBody) {
         console.error("Elemento #leads-table-body non trovato!");
         return;
@@ -103,10 +102,9 @@ function renderLeads(docs) {
 
 // Renderizza i dati delle metriche chiave
 function renderMetrics(docs) {
-    // *** CORREZIONE QUI: Modificato per aggiornare DIV individuali non una tabella ***
     const metrics = docs.reduce((acc, doc) => {
         const data = doc.data();
-        acc[data.id] = data.value; // Assumi che ogni documento metriche abbia un 'id' e un 'value'
+        acc[data.id] = data.value;
         return acc;
     }, {});
 
@@ -120,7 +118,6 @@ function renderMetrics(docs) {
     if (avgLeadScoreElement) avgLeadScoreElement.innerHTML = metrics['avgLeadScore'] !== undefined ? metrics['avgLeadScore'].toFixed(1) : '-';
     if (newLeadsTodayElement) newLeadsTodayElement.innerHTML = metrics['newLeadsToday'] !== undefined ? metrics['newLeadsToday'] : '-';
 
-    // Placeholder per l'aggiornamento dei trend (potrebbe essere esteso con dati reali)
     const leadsTrendElement = document.getElementById('leads-trend');
     if (leadsTrendElement) leadsTrendElement.querySelector('.percentage').textContent = '+5%';
     const quizzesTrendElement = document.getElementById('quizzes-trend');
@@ -154,21 +151,17 @@ function updateLastUpdateTimestamp() {
 // Funzione placeholder per i dettagli del quiz (da implementare)
 window.viewQuizDetails = function(quizId) {
     alert('Visualizza dettagli quiz per ID: ' + quizId);
-    // Qui potresti aprire un modale o reindirizzare a una pagina di dettaglio
 };
 
 // Funzione placeholder per contattare il lead (da implementare)
 window.contactLead = function(leadId) {
     alert('Contatta lead con ID: ' + leadId);
-    // Qui potresti aprire un form di contatto o integrare con un CRM
 };
 
-// Funzione per il refresh dei dati (richiama tutti i listener o le fetch se non sono in tempo reale)
+// Funzione per il refresh dei dati
 window.refreshData = function() {
     console.log("Ricaricando i dati...");
     updateLastUpdateTimestamp();
-    // Se i listener sono attivi, non serve fare nulla qui, si aggiorneranno automaticamente.
-    // Se non usi listener in tempo reale, dovresti richiamare le funzioni di fetch qui.
 };
 
 // --- Inizializzazione Listener Firebase ---
@@ -197,9 +190,8 @@ function initFirebaseListeners() {
         updateConnectionStatus(false);
     });
 
-    // Listener per 'metrics' (assumendo una collezione 'metrics' con documenti id: value)
+    // Listener per 'metrics'
     const metricsCol = collection(db, 'metrics');
-    // Qui potresti voler filtrare o limitare le metriche se ne hai molte
     onSnapshot(metricsCol, (snapshot) => {
         renderMetrics(snapshot.docs);
         console.log("🔄 Attivando listener per metrics...");
@@ -213,5 +205,5 @@ function initFirebaseListeners() {
 document.addEventListener('DOMContentLoaded', () => {
     // initFirebaseListeners è ora chiamato dopo l'autenticazione in onAuthStateChanged
     // Se non usi l'autenticazione, puoi chiamarlo direttamente qui:
-    // initFirebaseListeners();
+    initFirebaseListeners(); // Rimosso il commento qui, assumendo che tu voglia avviare i listener subito
 });
