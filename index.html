@@ -6,6 +6,7 @@
     <title>TribuCoach - Il tuo Personal Trainer sempre con te, gratis</title>
     <meta name="description" content="Coach virtuale gratuito sempre disponibile per allenamento, alimentazione e motivazione. Oltre 500 persone già lo usano ogni giorno.">
     
+    <!-- Open Graph -->
     <meta property="og:title" content="TribuCoach - Il tuo Personal Trainer sempre con te">
     <meta property="og:description" content="Coach virtuale gratuito sempre disponibile 24/7">
     <meta property="og:image" content="https://tribucoach.netlify.app/Padu_tribu045.jpg">
@@ -13,26 +14,33 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="it_IT">
     
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="TribuCoach - Il tuo Personal Trainer sempre con te">
     <meta name="twitter:description" content="Coach virtuale gratuito sempre disponibile 24/7">
     <meta name="twitter:image" content="https://tribucoach.netlify.app/Padu_tribu045.jpg">
     
+    <!-- SEO Keywords -->
     <meta name="keywords" content="personal trainer verona, coach virtuale, allenamento personalizzato, dieta online, motivazione fitness, Andrea Padoan">
     <meta name="author" content="Andrea Padoan">
     <meta name="robots" content="index, follow">
     
+    <!-- Canonical URL -->
     <link rel="canonical" href="https://tribucoach.netlify.app/">
     
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     
+    <!-- Preload critical resources -->
     <link rel="preload" href="Padu_tribu045.jpg" as="image" type="image/jpeg">
     <link rel="preload" href="tribu_logo_monocromo.png" as="image" type="image/png">
     
+    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://www.chatbase.co">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XBPW3F3PKE"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -41,6 +49,7 @@
       gtag('config', 'G-XBPW3F3PKE');
     </script>
     
+    <!-- Structured Data - JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,44 +74,6 @@
         "priceCurrency": "EUR"
       }
     }
-    </script>
-    
-    <script>
-        function hideChatbaseOnSmallScreens() {
-            if (window.innerWidth <= 480) {
-                const chatbaseButton = document.getElementById('chatbase-bubble-button');
-                const chatbaseWindow = document.getElementById('chatbase-bubble-window');
-                if (chatbaseButton) {
-                    chatbaseButton.style.display = 'none';
-                }
-                if (chatbaseWindow) {
-                    chatbaseWindow.style.display = 'none';
-                }
-                // Mostra la notifica mobile se il chatbot è nascosto
-                const mobileNotice = document.querySelector('.mobile-chat-notice');
-                if (mobileNotice) {
-                    mobileNotice.style.display = 'block';
-                }
-            } else {
-                // Se lo schermo è grande, assicurati che il chatbot sia visibile e la notifica mobile sia nascosta
-                const chatbaseButton = document.getElementById('chatbase-bubble-button');
-                const chatbaseWindow = document.getElementById('chatbase-bubble-window');
-                if (chatbaseButton) {
-                    chatbaseButton.style.display = ''; // Reimposta al valore predefinito
-                }
-                if (chatbaseWindow) {
-                    chatbaseWindow.style.display = ''; // Reimposta al valore predefinito
-                }
-                const mobileNotice = document.querySelector('.mobile-chat-notice');
-                if (mobileNotice) {
-                    mobileNotice.style.display = 'none';
-                }
-            }
-        }
-        // Esegui la funzione immediatamente al caricamento
-        hideChatbaseOnSmallScreens();
-        // Esegui la funzione anche al ridimensionamento della finestra
-        window.addEventListener('resize', hideChatbaseOnSmallScreens);
     </script>
     
     <style>
@@ -492,8 +463,34 @@
             color: white;
         }
 
+        /* Fix Chatbase Widget */
+        #chatbase-bubble-button {
+            bottom: 20px !important;
+            right: 20px !important;
+            z-index: 999 !important;
+        }
+
+        #chatbase-bubble-window {
+            bottom: 80px !important;
+            right: 20px !important;
+            z-index: 998 !important;
+            max-width: 400px !important;
+            max-height: 600px !important;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            /* Hide chatbase widget on mobile to avoid layout issues */
+            #chatbase-bubble-button,
+            #chatbase-bubble-window {
+                display: none !important;
+            }
+            
+            /* Reduce body padding-bottom on mobile */
+            body {
+                padding-bottom: 20px;
+            }
+
             .hero {
                 padding: 20px 20px 30px 20px;
             }
@@ -551,6 +548,48 @@
             .testimonial-grid {
                 grid-template-columns: 1fr;
             }
+
+            /* Show mobile chat notice */
+            .mobile-chat-notice {
+                display: block !important;
+            }
+        }
+
+        /* Mobile chat notice */
+        .mobile-chat-notice {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: #ff6600;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 25px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(255,102,0,0.3);
+            animation: slideUpMobile 0.5s ease;
+        }
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Ensure content doesn't overlap with chat widget on desktop */
+        @media (min-width: 769px) {
+            body {
+                padding-bottom: 100px;
+            }
         }
 
         /* Animations */
@@ -572,56 +611,6 @@
         .benefit-card:nth-child(2) { animation-delay: 0.2s; }
         .benefit-card:nth-child(3) { animation-delay: 0.4s; }
         .benefit-card:nth-child(4) { animation-delay: 0.6s; }
-
-        /* Fix Chatbase Widget */
-        #chatbase-bubble-button {
-            bottom: 20px !important;
-            right: 20px !important;
-            z-index: 999 !important;
-        }
-
-        #chatbase-bubble-window {
-            bottom: 80px !important;
-            right: 20px !important;
-            z-index: 998 !important;
-            max-width: 400px !important;
-            max-height: 600px !important;
-        }
-
-        /* Ensure content doesn't overlap with chat widget */
-        body {
-            padding-bottom: 100px;
-        }
-
-        /* Hide chatbase widget on very small screens to avoid overlap */
-        @media (max-width: 480px) {
-            #chatbase-bubble-button,
-            #chatbase-bubble-window {
-                display: none !important;
-            }
-            
-            /* Show a notice for mobile users */
-            .mobile-chat-notice {
-                display: none; /* Inizialmente nascosto, verrà gestito dallo script JS per prevenire flickering */
-                position: fixed;
-                bottom: 10px;
-                left: 10px;
-                right: 10px;
-                background: #ff6600;
-                color: white;
-                padding: 10px;
-                border-radius: 10px;
-                text-align: center;
-                font-size: 0.9rem;
-                z-index: 1000;
-            }
-        }
-        /* Assicurati che su schermi più grandi il notice sia sempre nascosto */
-        @media (min-width: 481px) {
-            .mobile-chat-notice {
-                display: none !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -752,45 +741,49 @@
         </div>
     </footer>
 
+    <!-- Mobile chat notice -->
     <div class="mobile-chat-notice">
         💬 Su mobile usa il pulsante "Chatta con TribuCoach" qui sopra
     </div>
 
     <script>
-    // Performance optimization - defer chatbase loading
+    // Performance optimization - defer chatbase loading only on desktop
     (function(){
-        if(!window.chatbase||window.chatbase("getState")!=="initialized"){
-            window.chatbase=(...arguments)=>{
-                if(!window.chatbase.q){window.chatbase.q=[]}
-                window.chatbase.q.push(arguments)
+        // Check if it's mobile
+        const isMobile = window.innerWidth <= 768;
+        
+        if (!isMobile) {
+            if(!window.chatbase||window.chatbase("getState")!=="initialized"){
+                window.chatbase=(...arguments)=>{
+                    if(!window.chatbase.q){window.chatbase.q=[]}
+                    window.chatbase.q.push(arguments)
+                };
+                window.chatbase=new Proxy(window.chatbase,{
+                    get(target,prop){
+                        if(prop==="q"){return target.q}
+                        return(...args)=>target(prop,...args)
+                    }
+                })
+            }
+            
+            // Load chatbase after page load to improve performance
+            const onLoad=function(){
+                setTimeout(() => {
+                    const script=document.createElement("script");
+                    script.src="https://www.chatbase.co/embed.min.js";
+                    script.id="EjoHCEogMfkkrVzIK6V07";
+                    script.domain="www.chatbase.co";
+                    script.async = true;
+                    script.defer = true;
+                    document.body.appendChild(script);
+                }, 2000); // Delay 2 seconds for better LCP
             };
-            window.chatbase=new Proxy(window.chatbase,{
-                get(target,prop){
-                    if(prop==="q"){return target.q}
-                    return(...args)=>target(prop,...args)
-                }
-            })
-        }
-        
-        // Load chatbase after page load to improve performance
-        const onLoad=function(){
-            // Rimuovi il setTimeout qui se vuoi che lo script si carichi prima per testare la soluzione JS in head
-            // Il delay di 2 secondi è pensato per ottimizzare LCP su desktop
-            setTimeout(() => { 
-                const script=document.createElement("script");
-                script.src="https://www.chatbase.co/embed.min.js";
-                script.id="EjoHCEogMfkkrVzIK6V07";
-                script.domain="www.chatbase.co";
-                script.async = true;
-                script.defer = true;
-                document.body.appendChild(script);
-            }, 2000); 
-        };
-        
-        if(document.readyState==="complete"){
-            onLoad()
-        }else{
-            window.addEventListener("load",onLoad)
+            
+            if(document.readyState==="complete"){
+                onLoad()
+            }else{
+                window.addEventListener("load",onLoad)
+            }
         }
     })();
     
