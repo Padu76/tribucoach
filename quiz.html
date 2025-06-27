@@ -1,47 +1,111 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Risultato Quiz - TribuCoach</title>
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #121212; color: #fff; text-align: center; margin: 0; padding: 20px; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #1f1f1f; border-radius: 10px; }
-    h1 { color: #ff7b00; }
-    .score { font-size: 20px; margin: 10px 0; color: #f0c040; }
-    .description { margin-bottom: 20px; }
-    .plan { text-align: left; background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-    .plan h2 { color: #ff7b00; }
-    .plan ul { list-style-type: none; padding: 0; }
-    .plan ul li::before { content: "✔️ "; margin-right: 8px; }
-    .button-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-    .button { background-color: #ff7b00; color: #fff; text-decoration: none; padding: 15px 25px; border-radius: 8px; font-weight: bold; display: inline-block; }
-    .button:hover { background-color: #e06d00; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Quiz Personalizzato - TribuCoach</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; }
+  .container { max-width: 700px; margin: auto; padding: 20px; background: #222; border-radius: 10px; }
+  h1, h2 { color: orange; }
+  .question { margin-bottom: 20px; }
+  .question p { margin: 10px 0; }
+  .hidden { display: none; }
+  button { padding: 12px 20px; margin: 10px 0; border: none; border-radius: 6px; background: orange; color: #000; font-weight: bold; cursor: pointer; }
+  button:hover { background: darkorange; }
+  .result { background: #333; padding: 20px; border-radius: 10px; margin-top: 20px; }
+</style>
 </head>
 <body>
   <div class="container">
-    <h1>🏆 Atleta Avanzato</h1>
-    <div class="score">Lead Score: 48/100</div>
-    <div class="description">
-      Sei un vero atleta con esperienza e dedizione. È tempo di perfezionare ogni dettaglio per raggiungere l'eccellenza.
-    </div>
-    <div class="plan">
-      <h2>🥅 Il tuo piano personalizzato:</h2>
-      <ul>
-        <li>Programmazione scientifica con periodizzazione avanzata</li>
-        <li>Protocolli di recupero e rigenerazione specifici</li>
-        <li>Ottimizzazione nutrizionale per performance di elite</li>
-        <li>Analisi biomeccanica e correzioni tecniche avanzate</li>
-        <li>Preparazione mentale e strategie di peak performance</li>
-      </ul>
+    <h1>Il tuo check-up personalizzato 🏋️‍♂️</h1>
+
+    <div id="quiz">
+      <div class="question">
+        <h2>Allenamento</h2>
+        <p>Quante volte ti alleni a settimana?</p>
+        <button onclick="next(2)">0-1</button>
+        <button onclick="next(2)">2-3</button>
+        <button onclick="next(2)">4 o più</button>
+      </div>
+
+      <div class="question hidden">
+        <p>Qual è il tuo obiettivo principale?</p>
+        <button onclick="next(3)">Forza</button>
+        <button onclick="next(3)">Dimagrimento</button>
+        <button onclick="next(3)">Performance</button>
+        <button onclick="next(3)">Salute generale</button>
+      </div>
+
+      <div class="question hidden">
+        <p>Hai un piano di allenamento?</p>
+        <button onclick="next(4)">Sì, dettagliato</button>
+        <button onclick="next(4)">No, vado a sensazione</button>
+      </div>
+
+      <div class="question hidden">
+        <h2>Alimentazione</h2>
+        <p>Come valuti la tua alimentazione (1-10)?</p>
+        <button onclick="next(5)">1-4</button>
+        <button onclick="next(5)">5-7</button>
+        <button onclick="next(5)">8-10</button>
+      </div>
+
+      <div class="question hidden">
+        <p>Segui un piano alimentare?</p>
+        <button onclick="next(6)">Sì</button>
+        <button onclick="next(6)">No</button>
+      </div>
+
+      <div class="question hidden">
+        <p>Qual è il tuo punto debole?</p>
+        <button onclick="next(7)">Snack</button>
+        <button onclick="next(7)">Porzioni</button>
+        <button onclick="next(7)">Orari</button>
+      </div>
+
+      <div class="question hidden">
+        <h2>Abitudini</h2>
+        <p>Quante ore dormi a notte?</p>
+        <button onclick="next(8)">Meno di 6</button>
+        <button onclick="next(8)">6-8</button>
+        <button onclick="next(8)">Più di 8</button>
+      </div>
+
+      <div class="question hidden">
+        <p>Hai tempo per il relax?</p>
+        <button onclick="next(9)">Sì</button>
+        <button onclick="next(9)">No</button>
+      </div>
+
+      <div class="question hidden">
+        <h2>Obiettivi</h2>
+        <p>Qual è il tuo obiettivo a 3 mesi?</p>
+        <button onclick="showResult()">Tonificare</button>
+        <button onclick="showResult()">Dimagrire</button>
+        <button onclick="showResult()">Performance</button>
+        <button onclick="showResult()">Benessere</button>
+      </div>
     </div>
 
-    <div class="button-container">
-      <a href="https://wa.me/3478881515?text=Ciao!%20Vorrei%20ricevere%20il%20mio%20piano%20completo%20dopo%20il%20quiz!" class="button complete-button">
-        🗨️ Ricevi il Piano Completo
-      </a>
+    <div id="result" class="result hidden">
+      <h2>Il tuo profilo personalizzato 💪</h2>
+      <p>Il tuo check-up evidenzia punti di forza e aree di miglioramento. Potresti rafforzare le tue abitudini alimentari e ottimizzare il recupero per sostenere meglio i tuoi obiettivi. La costanza e la pianificazione sono le chiavi per sbloccare il tuo potenziale: lavora su un piano personalizzato, dedica attenzione al sonno, segui una nutrizione bilanciata e mantieni alta la motivazione. Se vuoi un supporto dedicato, sono qui per aiutarti!</p>
+      <button onclick="window.location.href='https://wa.me/393478881515?text=Vorrei una consulenza personalizzata'">Richiedi una consulenza personalizzata</button>
     </div>
   </div>
+
+  <script>
+    function next(n) {
+      const questions = document.querySelectorAll('.question');
+      questions.forEach(q => q.classList.add('hidden'));
+      questions[n-1].classList.remove('hidden');
+    }
+
+    function showResult() {
+      document.getElementById('quiz').classList.add('hidden');
+      document.getElementById('result').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
