@@ -400,6 +400,5 @@ export {
     trackSession,
     trackEvent,
     updateBusinessMetrics,
-    handleChatbaseWebhook,
-    initializeTracking
+    handleChatbaseWebhook
 };
