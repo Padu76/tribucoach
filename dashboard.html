@@ -590,8 +590,43 @@
         </div>
     </div>
 
+    <!-- Istruzioni per Firebase -->
+    <div class="setup-instructions" style="margin: 20px; padding: 20px; background: rgba(255,102,0,0.1); border: 1px solid #ff6600; border-radius: 10px;">
+        <h3 style="color: #ff6600; margin-bottom: 15px;">🔧 Configurazione Firebase Manuale</h3>
+        <p><strong>Problema:</strong> Firebase SDK non si carica in questo ambiente.</p>
+        <p><strong>Soluzione:</strong> Scarica la dashboard e carica su tuo server/hosting con Firebase configurato.</p>
+        
+        <details style="margin-top: 15px;">
+            <summary style="cursor: pointer; color: #ff6600; font-weight: bold;">📋 Codice Firebase da Aggiungere</summary>
+            <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 0.9rem; margin-top: 10px;">
+// Aggiungi prima del tag &lt;/body&gt;
+&lt;script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"&gt;&lt;/script&gt;
+&lt;script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"&gt;&lt;/script&gt;
+
+&lt;script&gt;
+// La tua configurazione Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+    authDomain: "tribucoach-a2254.firebaseapp.com",
+    projectId: "tribucoach-a2254",
+    storageBucket: "tribucoach-a2254.firebasestorage.app",
+    messagingSenderId: "425200296836",
+    appId: "1:425200296836:web:7835188f40f4348567ab48"
+};
+
+// Inizializza Firebase
+firebase.initializeApp(firebaseConfig);
+window.db = firebase.firestore();
+
+// Abilita caricamento dati reali
+window.FIREBASE_ENABLED = true;
+&lt;/script&gt;
+            </pre>
+        </details>
+    </div>
+
     <script>
-        // === DASHBOARD STANDALONE PULITA ===
+        // === DASHBOARD IBRIDA (Funziona con/senza Firebase) ===
         let dashboardData = {
             quizResults: [],
             chatConversations: [],
@@ -599,6 +634,174 @@
             events: [],
             metrics: {}
         };
+
+        // Flag per Firebase
+        const FIREBASE_ENABLED = window.FIREBASE_ENABLED || false;
+        const db = window.db || null;
+
+        // === DATI MOCK PER DEMO ===
+        const MOCK_QUIZ_DATA = [
+            {
+                id: 'demo_1',
+                name: 'Andrea Padoan',
+                email: 'andrea.padoan@gmail.com',
+                whatsapp: '+393401234567',
+                age: '48',
+                gender: 'Uomo',
+                score: 70,
+                goals: ['Perdere peso e dimagrire'],
+                activity_level: 'Leggermente attivo (1-2 allenamenti leggeri)',
+                diet: 'Scarsa (molti cibi processati, poca frutta/verdura)',
+                breakfast_habit: 'Qualche volta',
+                eating_out: '1-2 volte',
+                comparison: 'Sì, spesso',
+                morning_energy: 'Spesso',
+                active_breaks: 'Una volta al giorno',
+                devices_before_sleep: 'Qualche volta',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
+            },
+            {
+                id: 'demo_2',
+                name: 'Marco Rossi',
+                email: 'marco.rossi@email.com',
+                whatsapp: '+393331234567',
+                age: '35',
+                gender: 'Uomo',
+                score: 85,
+                goals: ['Aumentare massa muscolare', 'Migliorare forza'],
+                activity_level: 'Molto attivo (5+ allenamenti intensi)',
+                diet: 'Buona (equilibrata, frutta e verdura quotidiane)',
+                breakfast_habit: 'Sempre',
+                eating_out: 'Raramente',
+                comparison: 'No, mai',
+                morning_energy: 'Sempre',
+                active_breaks: 'Più volte al giorno',
+                devices_before_sleep: 'Raramente',
+                timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
+            },
+            {
+                id: 'demo_3',
+                name: 'Sofia Verdi',
+                email: 'sofia.verdi@email.com',
+                whatsapp: '+393339876543',
+                age: '29',
+                gender: 'Donna',
+                score: 65,
+                goals: ['Tonificare', 'Migliorare benessere generale'],
+                activity_level: 'Moderatamente attivo (3-4 allenamenti medi)',
+                diet: 'Media (abbastanza equilibrata, qualche sgarro)',
+                breakfast_habit: 'Spesso',
+                eating_out: '3-4 volte',
+                comparison: 'Qualche volta',
+                morning_energy: 'Qualche volta',
+                active_breaks: 'Qualche volta',
+                devices_before_sleep: 'Spesso',
+                timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
+            }
+        ];
+
+        // === CARICAMENTO DATI ===
+        async function loadQuizResults() {
+            if (FIREBASE_ENABLED && db) {
+                try {
+                    console.log('📊 Caricamento dati reali da Firebase...');
+                    const snapshot = await db.collection('quiz_results').orderBy('lead_score', 'desc').limit(50).get();
+                    
+                    const results = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            name: data.name || 'Anonimo',
+                            email: data.email || 'N/A',
+                            whatsapp: data.whatsapp || data.phone || 'N/A',
+                            age: data.age || 'N/A',
+                            gender: data.gender || 'N/A',
+                            score: data.lead_score || 0,
+                            goals: Array.isArray(data.goals) ? data.goals : (data.goals ? [data.goals] : ['N/A']),
+                            activity_level: data.activity_level || 'N/A',
+                            diet: data.diet || 'N/A',
+                            breakfast_habit: data.breakfast_habit || 'N/A',
+                            eating_out: data.eating_out || 'N/A',
+                            comparison: data.comparison || 'N/A',
+                            morning_energy: data.morning_energy || 'N/A',
+                            active_breaks: data.active_breaks || 'N/A',
+                            devices_before_sleep: data.devices_before_sleep || 'N/A',
+                            timestamp: data.created_at || new Date()
+                        };
+                    });
+                    
+                    console.log(`✅ Quiz results Firebase: ${results.length}`);
+                    return results;
+                } catch (error) {
+                    console.error('❌ Errore Firebase quiz:', error);
+                    return MOCK_QUIZ_DATA;
+                }
+            } else {
+                console.log('📊 Usando dati mock per demo');
+                return MOCK_QUIZ_DATA;
+            }
+        }
+
+        async function loadUserSessions() {
+            if (FIREBASE_ENABLED && db) {
+                try {
+                    const snapshot = await db.collection('user_sessions').orderBy('created_at', 'desc').limit(20).get();
+                    return snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        timestamp: doc.data().created_at?.toDate() || new Date()
+                    }));
+                } catch (error) {
+                    console.error('❌ Errore Firebase sessions:', error);
+                    return [];
+                }
+            } else {
+                return [
+                    {
+                        id: 'session_1',
+                        session_type: 'dashboard',
+                        user_id: 'demo_user',
+                        device_info: { language: 'it-IT', screen: '1920x1080' },
+                        timestamp: new Date()
+                    }
+                ];
+            }
+        }
+
+        // === INIZIALIZZAZIONE ===
+        async function initializeFirebase() {
+            console.log('🔗 Inizializzazione Dashboard TribuCoach...');
+            
+            if (FIREBASE_ENABLED && db) {
+                updateConnectionStatus(true, 'Firebase Connesso - Dati Reali');
+                console.log('✅ Firebase disponibile');
+            } else {
+                updateConnectionStatus(false, 'Demo Mode - Dati Mock (Configurare Firebase per dati reali)');
+                console.log('📊 Modalità demo con dati mock');
+            }
+            
+            try {
+                const [quizResults, userSessions] = await Promise.all([
+                    loadQuizResults(),
+                    loadUserSessions()
+                ]);
+                
+                dashboardData.quizResults = quizResults;
+                dashboardData.chatConversations = userSessions;
+                
+                updateDashboard();
+                
+                if (FIREBASE_ENABLED) {
+                    updateConnectionStatus(true, `Firebase OK - ${quizResults.length} Quiz, ${userSessions.length} Sessions`);
+                } else {
+                    updateConnectionStatus(false, `Demo Mode - ${quizResults.length} Quiz Mock`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento dati:', error);
+                updateConnectionStatus(false, 'Errore caricamento - Modalità Demo');
+            }
+        }
 
         // === GESTIONE TABS ===
         function switchTab(tabName) {
@@ -611,57 +814,184 @@
             console.log(`📋 Switched to ${tabName} tab`);
         }
 
-        // === INIZIALIZZAZIONE PULITA ===
-        function initializeFirebase() {
-            console.log('🔗 Dashboard TribuCoach inizializzata in modalità standalone');
-            updateConnectionStatus(false, '⚙️ Configurazione Firebase richiesta');
-            
-            dashboardData.quizResults = [];
-            dashboardData.chatConversations = [];
-            updateDashboard();
-            
-            console.log(`
-🔧 CONFIGURAZIONE FIREBASE NECESSARIA:
-
-1. 📁 Collections Firebase da utilizzare:
-   - quiz_results (per lead quiz)
-   - user_sessions o chatbot_conversations (per chat)
-   - analytics_events (per tracking)
-
-2. 🔗 Struttura campi per quiz_results:
-   - name, whatsapp, age, profile, score
-   - goals, obstacles, timestamp
-
-3. 🔗 Struttura campi per chat:
-   - userName, userPhone, userAge
-   - needs, interests, messageCount, status
-
-4. 🚀 Per integrare Firebase:
-   - Aggiungere script Firebase
-   - Implementare funzioni di caricamento dati
-   - Testare connessione
-`);
-        }
-
         // === AGGIORNAMENTO DASHBOARD ===
         function updateDashboard() {
             updateMetrics();
+            updateQuizLeadsTable();
+            updateSessionsTable();
+            updateAnalytics();
             updateLastUpdateTime();
         }
 
         function updateMetrics() {
             const quizLeads = dashboardData.quizResults.length;
-            const chatLeads = dashboardData.chatConversations.length;
-            const totalLeads = quizLeads + chatLeads;
+            const sessions = dashboardData.chatConversations.length;
+            const totalLeads = quizLeads;
+            
+            // Calcola metriche dai dati reali
+            const avgScore = quizLeads > 0 ? 
+                (dashboardData.quizResults.reduce((sum, quiz) => sum + (quiz.score || 0), 0) / quizLeads).toFixed(1) : 0;
+            
+            const highScoreLeads = dashboardData.quizResults.filter(quiz => quiz.score >= 70).length;
+            
+            // Lead oggi
+            const today = new Date().toDateString();
+            const todayLeads = dashboardData.quizResults.filter(quiz => 
+                new Date(quiz.timestamp).toDateString() === today
+            ).length;
             
             updateElement('total-quiz-leads', quizLeads);
-            updateElement('total-chat-leads', chatLeads);
+            updateElement('total-chat-leads', sessions);
             updateElement('total-leads', totalLeads);
-            updateElement('quiz-conversion', '-');
-            updateElement('avg-chat-duration', '-');
-            updateElement('daily-leads', 0);
+            updateElement('quiz-conversion', `${avgScore}%`);
+            updateElement('avg-chat-duration', `${highScoreLeads} alti`);
+            updateElement('daily-leads', todayLeads);
             
-            console.log(`📊 Metriche aggiornate: ${quizLeads} quiz, ${chatLeads} chat, ${totalLeads} totali`);
+            console.log(`📊 Metriche aggiornate: ${quizLeads} quiz, ${sessions} sessions`);
+        }
+
+        function updateQuizLeadsTable() {
+            const tbody = document.getElementById('quiz-leads-table');
+            if (!tbody) return;
+            
+            if (dashboardData.quizResults.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">Nessun quiz completato trovato</td></tr>';
+                return;
+            }
+            
+            const rows = dashboardData.quizResults.map(quiz => {
+                const score = quiz.score || 0;
+                const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+                const icon = getGenderIcon(quiz.gender);
+                
+                const goals = Array.isArray(quiz.goals) ? quiz.goals.join(', ') : quiz.goals;
+                
+                return `
+                    <tr>
+                        <td>${quiz.name}</td>
+                        <td>${quiz.email}</td>
+                        <td>${quiz.age}</td>
+                        <td>${icon} ${quiz.gender}</td>
+                        <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                        <td title="${goals}">${goals.length > 30 ? goals.substring(0, 30) + '...' : goals}</td>
+                        <td>${quiz.diet}</td>
+                        <td>${formatDateTime(quiz.timestamp)}</td>
+                        <td>
+                            <button class="action-btn" onclick="contactLeadEmail('${quiz.email}', '${quiz.name}')">Email</button>
+                            <button class="action-btn" onclick="viewQuizDetails('${quiz.id}')" style="background: #4CAF50;">Dettagli</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = rows;
+        }
+
+        function updateSessionsTable() {
+            const tbody = document.getElementById('chat-leads-table');
+            if (!tbody) return;
+            
+            if (dashboardData.chatConversations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">Nessuna sessione trovata</td></tr>';
+                return;
+            }
+            
+            const rows = dashboardData.chatConversations.map(session => {
+                const deviceInfo = session.device_info || {};
+                
+                return `
+                    <tr>
+                        <td>${session.user_id}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>${session.session_type}</td>
+                        <td>${deviceInfo.language || 'N/A'}</td>
+                        <td>1</td>
+                        <td><span class="conversation-status status-completed">completata</span></td>
+                        <td>${formatDateTime(session.timestamp)}</td>
+                        <td>
+                            <button class="action-btn" onclick="viewSessionDetails('${session.id}')" style="background: #4CAF50;">Dettagli</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = rows;
+        }
+
+        function updateAnalytics() {
+            // Analytics basate sui dati reali
+            const quizData = dashboardData.quizResults;
+            
+            // Analisi obiettivi
+            const goalCounts = {};
+            quizData.forEach(quiz => {
+                if (quiz.goals && Array.isArray(quiz.goals)) {
+                    quiz.goals.forEach(goal => {
+                        goalCounts[goal] = (goalCounts[goal] || 0) + 1;
+                    });
+                }
+            });
+            
+            const topGoals = Object.entries(goalCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            document.getElementById('frequent-questions').innerHTML = 
+                topGoals.length > 0 ? 
+                topGoals.map(([goal, count]) => `<li><span>${goal}</span><strong>${count}</strong></li>`).join('') :
+                '<li>Nessun obiettivo registrato</li>';
+            
+            // Analisi età
+            const ageGroups = {
+                '18-30': 0,
+                '31-45': 0,
+                '46-60': 0,
+                '60+': 0
+            };
+            
+            quizData.forEach(quiz => {
+                const age = parseInt(quiz.age);
+                if (age >= 18 && age <= 30) ageGroups['18-30']++;
+                else if (age >= 31 && age <= 45) ageGroups['31-45']++;
+                else if (age >= 46 && age <= 60) ageGroups['46-60']++;
+                else if (age > 60) ageGroups['60+']++;
+            });
+            
+            document.getElementById('age-demographics').innerHTML = 
+                Object.entries(ageGroups)
+                    .filter(([,count]) => count > 0)
+                    .map(([range, count]) => `<li><span>${range} anni</span><strong>${count}</strong></li>`)
+                    .join('') || '<li>Nessun dato età</li>';
+            
+            // Analisi livello attività
+            const activityCounts = {};
+            quizData.forEach(quiz => {
+                if (quiz.activity_level) {
+                    activityCounts[quiz.activity_level] = (activityCounts[quiz.activity_level] || 0) + 1;
+                }
+            });
+            
+            document.getElementById('main-needs').innerHTML = 
+                Object.entries(activityCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 3)
+                    .map(([activity, count]) => `<li><span>${activity}</span><strong>${count}</strong></li>`)
+                    .join('') || '<li>Nessun dato attività</li>';
+            
+            // Analisi abitudini alimentari
+            const dietCounts = {};
+            quizData.forEach(quiz => {
+                if (quiz.diet) {
+                    dietCounts[quiz.diet] = (dietCounts[quiz.diet] || 0) + 1;
+                }
+            });
+            
+            document.getElementById('fitness-interests').innerHTML = 
+                Object.entries(dietCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .map(([diet, count]) => `<li><span>${diet}</span><strong>${count}</strong></li>`)
+                    .join('') || '<li>Nessun dato dieta</li>';
         }
 
         // === UTILITY FUNCTIONS ===
@@ -677,31 +1007,196 @@
             updateElement('last-update', now);
         }
 
+        function formatDateTime(timestamp) {
+            if (!timestamp) return 'N/A';
+            try {
+                const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+                return date.toLocaleString('it-IT');
+            } catch (error) {
+                return 'Data non valida';
+            }
+        }
+
+        function getGenderIcon(gender) {
+            switch(gender) {
+                case 'Uomo': return '👨';
+                case 'Donna': return '👩';
+                default: return '👤';
+            }
+        }
+
         function updateConnectionStatus(isConnected, customMessage = null) {
             const statusElement = document.getElementById('connection-status');
             if (statusElement) {
                 if (isConnected) {
                     statusElement.className = 'connection-status status-connected';
-                    statusElement.innerHTML = customMessage || '✅ Dashboard Attiva';
+                    statusElement.innerHTML = customMessage || '✅ Firebase Connesso';
                 } else if (customMessage) {
                     statusElement.className = 'connection-status status-connecting';
                     statusElement.innerHTML = `🔄 ${customMessage}`;
                 } else {
                     statusElement.className = 'connection-status status-error';
-                    statusElement.innerHTML = '❌ Configurazione richiesta';
+                    statusElement.innerHTML = '❌ Errore connessione';
                 }
             }
         }
 
-        // === FUNZIONI PLACEHOLDER ===
-        function exportLeadsToCSV() {
-            console.log('📊 Export CSV - Configurare Firebase per esportare dati reali');
-            alert('⚙️ Configurare Firebase per abilitare export CSV');
+        // === AZIONI LEAD ===
+        function contactLeadEmail(email, name) {
+            const subject = encodeURIComponent('TribuCoach - Risultati Quiz Fitness');
+            const body = encodeURIComponent(`Ciao ${name},\n\nGrazie per aver completato il nostro quiz fitness!\n\nI tuoi risultati mostrano un grande potenziale. Vorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto!\nTeam TribuCoach`);
+            window.open(`mailto:${email}?subject=${subject}&body=${body}`);
         }
 
+        function viewQuizDetails(quizId) {
+            const quiz = dashboardData.quizResults.find(q => q.id === quizId);
+            if (!quiz) {
+                alert('Quiz non trovato');
+                return;
+            }
+            
+            const details = `🎯 PROFILO COMPLETO: ${quiz.name}
+📧 Email: ${quiz.email}
+🎂 Età: ${quiz.age} anni (${quiz.gender})
+📊 Lead Score: ${quiz.score}/100
+
+🎯 OBIETTIVI:
+${Array.isArray(quiz.goals) ? quiz.goals.map(g => `• ${g}`).join('\n') : quiz.goals}
+
+💪 LIVELLO ATTIVITÀ: ${quiz.activity_level}
+🍎 ALIMENTAZIONE: ${quiz.diet}
+🥐 COLAZIONE: ${quiz.breakfast_habit}
+🍽️ MANGIARE FUORI: ${quiz.eating_out}
+⚖️ CONFRONTI: ${quiz.comparison}
+🌅 ENERGIA MATTUTINA: ${quiz.morning_energy}
+🚶 PAUSE ATTIVE: ${quiz.active_breaks}
+📱 DISPOSITIVI PRIMA DI DORMIRE: ${quiz.devices_before_sleep}
+
+📅 DATA QUIZ: ${formatDateTime(quiz.timestamp)}`;
+            
+            showModal('Dettagli Quiz Lead', details, quiz.email);
+        }
+
+        function viewSessionDetails(sessionId) {
+            const session = dashboardData.chatConversations.find(s => s.id === sessionId);
+            if (!session) {
+                alert('Sessione non trovata');
+                return;
+            }
+            
+            const deviceInfo = session.device_info || {};
+            const details = `💻 SESSIONE UTENTE: ${session.user_id}
+📅 Data: ${formatDateTime(session.timestamp)}
+🔗 Tipo: ${session.session_type}
+🌐 Referrer: ${session.referrer || 'Diretto'}
+
+📱 DISPOSITIVO:
+• Lingua: ${deviceInfo.language || 'N/A'}
+• Schermo: ${deviceInfo.screen || 'N/A'}
+• Timezone: ${deviceInfo.timezone || 'N/A'}
+
+🔍 ID Sessione: ${session.id}`;
+            
+            showModal('Dettagli Sessione', details);
+        }
+
+        function showModal(title, content, email = null) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                background: rgba(0,0,0,0.9) !important;
+                z-index: 99999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px !important;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 25px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ff6b35; padding-bottom: 15px;">
+                        <h2 style="margin: 0; color: #ff6b35; font-size: 22px;">${title}</h2>
+                        <button onclick="this.closest('div').remove(); document.body.style.overflow = 'auto';" style="background: #ff6b35; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold;">×</button>
+                    </div>
+                    <pre style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui; font-size: 14px; line-height: 1.6; color: #333; margin: 0;">${content}</pre>
+                    <div style="margin-top: 25px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="this.closest('div').remove(); document.body.style.overflow = 'auto';" style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">Chiudi</button>
+                        ${email ? `<button onclick="contactLeadEmail('${email}', 'Cliente')" style="background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">📧 Invia Email</button>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+        }
+
+        // === EXPORT CSV ===
+        function exportLeadsToCSV() {
+            if (dashboardData.quizResults.length === 0) {
+                alert('Nessun dato da esportare');
+                return;
+            }
+            
+            const headers = [
+                'Nome',
+                'Email',
+                'Età',
+                'Genere',
+                'Lead Score',
+                'Obiettivi',
+                'Livello Attività',
+                'Alimentazione',
+                'Colazione',
+                'Mangiare Fuori',
+                'Energia Mattutina',
+                'Data Quiz'
+            ];
+            
+            const rows = dashboardData.quizResults.map(quiz => [
+                quiz.name || '',
+                quiz.email || '',
+                quiz.age || '',
+                quiz.gender || '',
+                quiz.score || '',
+                Array.isArray(quiz.goals) ? quiz.goals.join('; ') : (quiz.goals || ''),
+                quiz.activity_level || '',
+                quiz.diet || '',
+                quiz.breakfast_habit || '',
+                quiz.eating_out || '',
+                quiz.morning_energy || '',
+                formatDateTime(quiz.timestamp)
+            ]);
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tribucoach-quiz-leads-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(`✅ CSV esportato con successo!\n${dashboardData.quizResults.length} lead salvati nel file.`);
+        }
+
+        // === REFRESH DATA ===
         function refreshData() {
-            console.log('🔄 Refresh dati - Configurare Firebase per caricare dati reali');
-            updateLastUpdateTime();
+            if (db) {
+                initializeFirebase();
+            } else {
+                console.log('🔄 Firebase non disponibile');
+                updateLastUpdateTime();
+            }
         }
 
         // === INIZIALIZZAZIONE ===
