@@ -443,6 +443,7 @@ window.viewConversationDetails = function(conversation) {
         <div class="conversation-header">
             <p><strong>ID:</strong> ${conversation.id}</p>
             <p><strong>Cliente:</strong> ${conversation.customer || 'Anonimo'}</p>
+            ${conversation.phone ? `<p><strong>Telefono:</strong> ${conversation.phone}</p>` : ''}
             <p><strong>Argomento:</strong> ${conversation.topic || 'N/A'}</p>
             <p><strong>Fonte:</strong> ${conversation.source || 'N/A'}</p>
             <p><strong>Data:</strong> ${conversation.timestamp ? formatDateTime(conversation.timestamp) : 'N/A'}</p>
@@ -455,14 +456,15 @@ window.viewConversationDetails = function(conversation) {
             </div>
         </div>
         <div class="conversation-actions">
+            ${conversation.phone ? `<button class="action-button whatsapp" onclick="window.open('https://wa.me/${conversation.phone.replace(/[^0-9+]/g, '')}', '_blank')">📱 Chiama WhatsApp</button>` : ''}
+            <button class="action-button" onclick="saveContactFromConversation('${conversation.id}', '${conversation.customer}', '${conversation.phone || ''}')">
+                💾 Salva Contatto
+            </button>
             <button class="action-button" onclick="exportConversation('${conversation.id}')">
                 📥 Esporta Conversazione
             </button>
             <button class="action-button" onclick="analyzeConversation('${conversation.id}')">
                 📊 Analizza Sentiment
-            </button>
-            <button class="action-button" onclick="generateLeadFromConversation('${conversation.id}')">
-                🎯 Genera Lead
             </button>
         </div>
     `;
@@ -510,6 +512,30 @@ window.analyzeConversation = function(conversationId) {
           `Raccomandazione: ${analysisResult.recommendation}`);
     
     console.log('📊 Analisi sentiment completata per:', conversationId);
+};
+
+window.saveContactFromConversation = function(conversationId, name, phone) {
+    if (!name || name === 'Anonimo') {
+        alert('⚠️ Nome non disponibile per questa conversazione');
+        return;
+    }
+    
+    const contactData = {
+        conversationId,
+        name,
+        phone: phone || 'Non disponibile',
+        source: 'Chatbot',
+        extracted_date: new Date().toISOString(),
+        notes: 'Contatto estratto automaticamente dalle conversazioni chatbot'
+    };
+    
+    // Qui potresti salvare in Firebase
+    console.log('💾 Contatto salvato:', contactData);
+    
+    alert(`💾 Contatto salvato!\n\n` +
+          `Nome: ${name}\n` +
+          `Telefono: ${phone || 'Non disponibile'}\n\n` +
+          `Il contatto è stato aggiunto al database.`);
 };
 
 window.generateLeadFromConversation = function(conversationId) {

@@ -193,17 +193,23 @@ export async function getChatbotConversationsFromAPI(filters = {}) {
         const data = await response.json();
         console.log('✅ Risposta API Chatbase:', data);
         
-        const transformedConversations = data.data?.map(conv => ({
-            id: conv.id,
-            lastMessageSnippet: conv.messages?.length > 0 
-                ? conv.messages[conv.messages.length - 1].content?.substring(0, 100) + '...'
-                : 'Nessun messaggio',
-            topic: extractTopicFromMessages(conv.messages) || 'Argomento generico',
-            timestamp: new Date(conv.created_at),
-            messages: conv.messages || [],
-            customer: conv.customer || 'Anonimo',
-            source: conv.source || 'API'
-        })) || [];
+        const transformedConversations = data.data?.map(conv => {
+            // 🔥 ESTRAI AUTOMATICAMENTE NOME E TELEFONO
+            const contactInfo = extractContactInfo(conv.messages);
+            
+            return {
+                id: conv.id,
+                lastMessageSnippet: conv.messages?.length > 0 
+                    ? conv.messages[conv.messages.length - 1].content?.substring(0, 100) + '...'
+                    : 'Nessun messaggio',
+                topic: extractTopicFromMessages(conv.messages) || 'Argomento generico',
+                timestamp: new Date(conv.created_at),
+                messages: conv.messages || [],
+                customer: contactInfo.name || conv.customer || 'Anonimo',
+                phone: contactInfo.phone || null, // 🔥 NUOVO CAMPO
+                source: conv.source || 'API'
+            };
+        }) || [];
 
         console.log(`🎉 Recuperate ${transformedConversations.length} conversazioni da Chatbase API`);
         return transformedConversations;
@@ -244,6 +250,69 @@ function extractTopicFromMessages(messages) {
     }
     
     return 'Generale';
+}
+
+/**
+ * 🔥 NUOVA: Estrae nome e telefono dai messaggi della conversazione
+ * @param {Array} messages - Array dei messaggi
+ * @returns {Object} {name: string, phone: string}
+ */
+function extractContactInfo(messages) {
+    if (!messages || messages.length === 0) return { name: null, phone: null };
+    
+    let extractedName = null;
+    let extractedPhone = null;
+    
+    // Cerca nei messaggi dell'utente
+    const userMessages = messages
+        .filter(msg => msg.role === 'user')
+        .map(msg => msg.content);
+    
+    for (const message of userMessages) {
+        // Pattern per nomi
+        const namePatterns = [
+            /(?:mi chiamo|sono|il mio nome è|nome)\s+([a-zA-ZÀ-ÿ\s]{2,30})/i,
+            /^([a-zA-ZÀ-ÿ]{2,20})\s*[,.]?\s*(?:qui|ciao|salve)/i,
+            /ciao\s+([a-zA-ZÀ-ÿ]{2,20})/i
+        ];
+        
+        for (const pattern of namePatterns) {
+            const match = message.match(pattern);
+            if (match && !extractedName) {
+                extractedName = match[1].trim();
+                // Pulisci il nome (rimuovi parole comuni)
+                extractedName = extractedName.replace(/\b(qui|ciao|salve|sono|io)\b/gi, '').trim();
+                if (extractedName.length < 2) extractedName = null;
+                break;
+            }
+        }
+        
+        // Pattern per telefoni
+        const phonePatterns = [
+            /(?:telefono|cellulare|numero|contatto|chiamami|tel)[:\s]*([+]?[0-9\s\-\.]{8,15})/i,
+            /([+]?39[\s\-]?[0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+            /([0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+            /([+][0-9]{1,3}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4})/
+        ];
+        
+        for (const pattern of phonePatterns) {
+            const match = message.match(pattern);
+            if (match && !extractedPhone) {
+                extractedPhone = match[1].replace(/[\s\-\.]/g, ''); // Rimuovi spazi e trattini
+                // Validazione base
+                if (extractedPhone.length >= 8 && extractedPhone.length <= 15) {
+                    break;
+                } else {
+                    extractedPhone = null;
+                }
+            }
+        }
+    }
+    
+    return { 
+        name: extractedName, 
+        phone: extractedPhone 
+    };
 }
 
 /**
