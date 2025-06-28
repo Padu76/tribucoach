@@ -215,37 +215,6 @@ class TribuCoachTracker {
         console.log('🖱️ Interaction tracking attivato');
     }
 
-    // === CHATBOT INTEGRATION ===
-    setupChatbotTracking() {
-        // Monitora iframe del chatbot se presente
-        const chatbotIframe = document.querySelector('iframe[src*="chatbase"]');
-        if (chatbotIframe) {
-            console.log('💬 Chatbot iframe rilevato');
-            
-            // Track chatbot view
-            trackEvent('chatbot_viewed', {
-                chatbot_url: chatbotIframe.src
-            }, this.currentSession?.userId);
-
-            // Setup postMessage listener per dati dal chatbot
-            window.addEventListener('message', (event) => {
-                if (event.origin.includes('chatbase.co')) {
-                    this.handleChatbotMessage(event.data);
-                }
-            });
-        }
-    }
-
-    handleChatbotMessage(data) {
-        console.log('📨 Messaggio dal chatbot:', data);
-        
-        // Track chatbot interaction
-        trackEvent('chatbot_interaction', {
-            action: data.action || 'message',
-            data: data
-        }, this.currentSession?.userId);
-    }
-
     // === USER IDENTIFICATION ===
     identifyUser(userData) {
         const userId = trackUser(userData);
@@ -335,7 +304,7 @@ class TribuCoachTracker {
 // === INIZIALIZZAZIONE AUTOMATICA ===
 let globalTracker = null;
 
-export function initializeTribuCoachTracking(config = TRACKING_CONFIG) {
+function initializeTribuCoachTracking(config = TRACKING_CONFIG) {
     if (globalTracker) {
         console.log('⚠️ Tracker già esistente');
         return globalTracker;
@@ -359,19 +328,19 @@ export function initializeTribuCoachTracking(config = TRACKING_CONFIG) {
 }
 
 // === FUNZIONI DI CONVENIENZA ===
-export function trackUserAction(action, data = {}) {
+function trackUserAction(action, data = {}) {
     if (globalTracker && globalTracker.isInitialized) {
         trackEvent(action, data, globalTracker.currentSession?.userId);
     }
 }
 
-export function identifyCurrentUser(userData) {
+function identifyCurrentUser(userData) {
     if (globalTracker) {
         return globalTracker.identifyUser(userData);
     }
 }
 
-export function getCurrentSession() {
+function getSessionData() {
     return globalTracker?.currentSession || null;
 }
 
@@ -385,11 +354,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // === EXPORT ===
-export {
-    TribuCoachTracker,
-    trackUserAction,
-    identifyCurrentUser,
-    getCurrentSession
-};
-
 export default initializeTribuCoachTracking;
+export { TribuCoachTracker, trackUserAction, identifyCurrentUser, getSessionData };
