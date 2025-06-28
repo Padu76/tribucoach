@@ -1,74 +1,856 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TribuCoach Dashboard - Business Intelligence</title>
-  <style>
-    * {margin:0; padding:0; box-sizing:border-box;}
-    body {
-      font-family: 'Arial', sans-serif;
-      background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
-      color: #fff; min-height: 100vh; margin-top: 50px;
-    }
-    .connection-status {
-      position: fixed; top:0; left:0; right:0; padding:10px;
-      text-align:center; font-weight:bold; font-size:0.9rem;
-      z-index:1000; transition:all 0.3s ease;
-    }
-    .status-connected {background:#4CAF50; color:white; animation:slideDown 0.5s ease;}
-    .status-connecting {background:#ff9800; color:white; animation:pulse 1.5s infinite;}
-    .status-error {background:#f44336; color:white; animation:shake 0.5s ease;}
-    @keyframes slideDown {from{transform:translateY(-100%);} to{transform:translateY(0);}}
-    @keyframes pulse {0%,100%{opacity:1;}50%{opacity:0.7;}}
-    @keyframes shake {0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
-    .header {background: rgba(255,102,0,0.1); padding:20px; border-bottom:2px solid #ff6600;}
-    .header h1 {color:#ff6600; font-size:2rem; margin-bottom:10px;}
-    .header p {color:#ccc; font-size:1rem;}
-    .dashboard {padding:30px; max-width:1400px; margin:0 auto;}
-    .metrics-grid {
-      display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap:20px; margin-bottom:30px;
-    }
-    .metric-card {
-      background-color:#1c1c1c; padding:25px; border-radius:10px;
-      box-shadow:0 4px 15px rgba(0,0,0,0.3); border-left:5px solid #ff6600;
-    }
-    .metric-card h3 {color:#ff9933; font-size:1.2rem; margin-bottom:10px;}
-    .metric-card .value {font-size:2.5rem; font-weight:bold; color:#ff6600; margin-bottom:5px;}
-    .metric-card .trend {font-size:0.9rem; color:#bbb; display:flex; align-items:center;}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TribuCoach Dashboard - Business Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            color: #fff;
+            min-height: 100vh;
+            margin-top: 50px;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .status-connected {
+            background: #4CAF50;
+            color: white;
+            animation: slideDown 0.5s ease;
+        }
+
+        .status-connecting {
+            background: #ff9800;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-error {
+            background: #f44336;
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .header {
+            background: rgba(255,102,0,0.1);
+            padding: 20px;
+            border-bottom: 2px solid #ff6600;
+        }
+
+        .header h1 {
+            color: #ff6600;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        .dashboard {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background-color: #1c1c1c;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-left: 5px solid #ff6600;
+        }
+
+        .metric-card h3 {
+            color: #ff9933;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .metric-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 5px;
+        }
+
+        .metric-card .trend {
+            font-size: 0.9rem;
+            color: #bbb;
+            display: flex;
+            align-items: center;
+        }
+
+        .metric-card .trend.positive {
+            color: #4CAF50;
+        }
+
+        .metric-card .trend.negative {
+            color: #F44336;
+        }
+
+        .metric-card .trend .icon {
+            margin-right: 5px;
+        }
+
+        .dashboard-section {
+            background-color: #1c1c1c;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .dashboard-section h2 {
+            color: #ff6600;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+            color: #eee;
+        }
+
+        .data-table th {
+            background-color: #2a2a2a;
+            color: #ff9933;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #2a2a2a;
+        }
+
+        .no-data {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+            padding: 20px;
+        }
+
+        .profile-icon {
+            margin-right: 8px;
+            font-size: 1.2em;
+        }
+
+        .lead-score {
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .lead-score.low {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .lead-score.medium {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        .lead-score.high {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .action-btn {
+            background-color: #ff6600;
+            color: #fff;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background-color: #e65c00;
+        }
+
+        .refresh-section {
+            text-align: right;
+            margin-bottom: 20px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: #ff6600;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: rotate(30deg);
+        }
+
+        .insight-card {
+            background: rgba(255,102,0,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255,102,0,0.2);
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .chart-label {
+            width: 120px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .chart-progress {
+            flex: 1;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+
+        .chart-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .chart-value {
+            width: 50px;
+            text-align: right;
+            font-weight: bold;
+            color: #ff6600;
+        }
+
+        .opportunity-card {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .opportunity-card h4 {
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+
+        .opportunity-card .priority {
+            background: #4CAF50;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .opportunity-card .priority.high {
+            background: #f44336;
+        }
+
+        .opportunity-card .priority.medium {
+            background: #ff9800;
+        }
+
+        .real-time-indicator {
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 15px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .data-table th, .data-table td {
+                padding: 8px 10px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="connection-status status-connecting" id="connection-status">
-    🔄 Connessione a Firebase...
-  </div>
-  <div class="header">
-    <h1>Dashboard Analitica TribuCoach</h1>
-    <p>Monitoraggio completo di quiz, chatbot e KPI in tempo reale.</p>
-  </div>
-  <div class="dashboard">
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <h3>Lead Totali</h3>
-        <div class="value" id="total-leads">-</div>
-      </div>
-      <div class="metric-card">
-        <h3>Quiz Completati</h3>
-        <div class="value" id="total-quizzes">-</div>
-      </div>
-      <div class="metric-card">
-        <h3>Conversazioni Chatbot</h3>
-        <div class="value" id="total-conversations">-</div>
-      </div>
+    <div class="connection-status status-connecting" id="connection-status">
+        🔄 Connessione a Firebase...
     </div>
-  </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const connStatus = document.getElementById('connection-status');
-      connStatus.className = 'connection-status status-connected';
-      connStatus.innerHTML = '✅ Firebase connesso (simulato)';
-    });
-  </script>
+
+    <div class="header">
+        <h1>Dashboard Analitica TribuCoach</h1>
+        <p>Monitora i tuoi lead, i risultati dei quiz, le conversazioni chatbot e le metriche chiave in tempo reale.</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="refresh-section">
+            <span class="real-time-indicator"></span>Live Data
+            Ultimo aggiornamento: <span id="last-update">Caricamento...</span>
+            <button class="refresh-btn" onclick="refreshData()">🔄</button>
+            <button class="action-btn" onclick="exportLeadsToCSV()" style="margin-left: 10px;">📊 Export CSV</button>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Lead Totali</h3>
+                <div class="value" id="total-leads">-</div>
+                <div class="trend positive" id="leads-trend">
+                    <span class="icon">📈</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Quiz Completati</h3>
+                <div class="value" id="total-quizzes">-</div>
+                <div class="trend positive" id="quizzes-trend">
+                    <span class="icon">📊</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Conversazioni Chatbot</h3>
+                <div class="value" id="total-conversations">-</div>
+                <div class="trend positive" id="conversations-trend">
+                    <span class="icon">💬</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Utenti Attivi Oggi</h3>
+                <div class="value" id="daily-active-users">-</div>
+                <div class="trend positive" id="active-users-trend">
+                    <span class="icon">👥</span><span class="percentage">0%</span> vs. Ieri
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Tasso di Conversione</h3>
+                <div class="value" id="conversion-rate">-</div>
+                <div class="trend positive" id="conversion-trend">
+                    <span class="icon">🎯</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Durata Media Chat</h3>
+                <div class="value" id="avg-conversation-duration">-</div>
+                <div class="trend positive" id="duration-trend">
+                    <span class="icon">⏱️</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>🎯 Gestione Lead</h2>
+            <table class="data-table leads-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>WhatsApp/Email</th>
+                        <th>Età</th>
+                        <th>Profilo</th>
+                        <th>Score</th>
+                        <th>Obiettivi</th>
+                        <th>Allenamento</th>
+                        <th>Ostacoli</th>
+                        <th>Livello</th>
+                        <th>Data</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="leads-table-body">
+                    <tr><td colspan="11" class="no-data">Caricamento lead...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>💼 Opportunità Business</h2>
+            <div id="business-opportunities"></div>
+        </div>
+    </div>
+
+    <script>
+        // === VARIABILI GLOBALI ===
+        let dashboardData = {
+            quizResults: [],
+            conversations: [],
+            users: [],
+            events: [],
+            metrics: {}
+        };
+        let firebaseAPI = null; // Sarà popolato dall'import dinamico
+
+        // === AGGIORNAMENTO DASHBOARD ===
+        function updateDashboard() {
+            updateMetrics();
+            updateLeadsTable();
+            updateBusinessOpportunities();
+            updateLastUpdateTime();
+        }
+
+        function updateMetrics() {
+            const totalQuizzes = dashboardData.quizResults.length;
+            const avgScore = totalQuizzes > 0 ?
+                (dashboardData.quizResults.reduce((sum, quiz) => sum + quiz.score, 0) / totalQuizzes).toFixed(1) : 0;
+            const highScoreLeads = dashboardData.quizResults.filter(quiz => quiz.score >= 70).length;
+
+            // Aggiorna metriche
+            updateElement('total-quizzes', totalQuizzes);
+            updateElement('total-leads', totalQuizzes); // Stesso valore per ora
+            updateElement('conversion-rate', `${avgScore}%`);
+            updateElement('daily-active-users', highScoreLeads);
+            updateElement('total-conversations', dashboardData.conversations.length);
+            // placeholder per avg-conversation-duration in attesa di dati reali
+            updateElement('avg-conversation-duration', 'N/D min');
+
+            console.log(`📊 Metriche aggiornate: ${totalQuizzes} quiz, ${avgScore}% avg score, ${dashboardData.conversations.length} conversazioni`);
+        }
+
+        function updateLeadsTable() {
+            const tbody = document.getElementById('leads-table-body');
+            if (!tbody) return;
+
+            if (dashboardData.quizResults.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="no-data">Nessun quiz completato ancora</td></tr>';
+                return;
+            }
+
+            const rows = dashboardData.quizResults.map(quiz => {
+                const score = quiz.score || 0;
+                const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+                const icon = getProfileIcon(quiz.profile);
+
+                const goals = Array.isArray(quiz.goals) ? quiz.goals.slice(0, 2).join(', ') : (quiz.goals || 'N/A');
+                const obstacles = Array.isArray(quiz.obstacles) ? quiz.obstacles.slice(0, 2).join(', ') : (quiz.obstacles || 'N/A');
+
+                return `
+                    <tr>
+                        <td>${quiz.name || 'N/A'}</td>
+                        <td>${quiz.whatsapp || quiz.email || 'N/A'}</td>
+                        <td>${quiz.age || 'N/A'}</td>
+                        <td>${icon} ${quiz.profile || 'N/A'}</td>
+                        <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                        <td title="${goals}">${goals.length > 30 ? goals.substring(0, 30) + '...' : goals}</td>
+                        <td>${quiz.training_style || 'N/A'}</td>
+                        <td title="${obstacles}">${obstacles.length > 20 ? obstacles.substring(0, 20) + '...' : obstacles}</td>
+                        <td>${quiz.activity_level || 'N/A'}</td>
+                        <td>${formatDateTime(quiz.timestamp)}</td>
+                        <td>
+                            <button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', '${quiz.profile}')">WhatsApp</button>
+                            <button class="action-btn" onclick="viewLeadDetails('${quiz.id}')" style="background: #4CAF50; margin-left: 5px;">Dettagli</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function updateBusinessOpportunities() {
+            const opportunities = [];
+
+            if (dashboardData.quizResults.length === 0) {
+                updateElement('business-opportunities', '<div class="no-data">Nessun dato sufficiente per analisi business</div>');
+                return;
+            }
+
+            // Lead ad alto punteggio
+            const highScoreLeads = dashboardData.quizResults.filter(quiz => quiz.score >= 70);
+            if (highScoreLeads.length > 0) {
+                opportunities.push({
+                    title: `🎯 ${highScoreLeads.length} Lead Premium Non Contattati`,
+                    description: `Lead con punteggio 70+ pronti per conversione immediata.`,
+                    priority: "high",
+                    action: "Contattare entro 24h con offerta personalizzata.",
+                    leads: highScoreLeads.map(l => l.name).join(', ')
+                });
+            }
+
+            // Obiettivi comuni
+            const goalsAnalysis = {};
+            dashboardData.quizResults.forEach(quiz => {
+                if (quiz.goals && Array.isArray(quiz.goals)) {
+                    quiz.goals.forEach(goal => {
+                        goalsAnalysis[goal] = (goalsAnalysis[goal] || 0) + 1;
+                    });
+                }
+            });
+
+            const topGoal = Object.entries(goalsAnalysis).sort(([,a], [,b]) => b - a)[0];
+            if (topGoal && topGoal[1] >= 2) {
+                opportunities.push({
+                    title: `💪 Programma Specializzato "${topGoal[0]}"`,
+                    description: `${topGoal[1]} persone interessate allo stesso obiettivo.`,
+                    priority: "medium",
+                    action: "Creare corso di gruppo o programma specifico.",
+                    leads: `${topGoal[1]} persone interessate`
+                });
+            }
+
+            const opportunitiesHTML = opportunities.map(opp => `
+                <div class="opportunity-card">
+                    <h4>${opp.title}<span class="priority ${opp.priority}">${opp.priority.toUpperCase()}</span></h4>
+                    <p>${opp.description}</p>
+                    <div style="margin-top: 10px;">
+                        <strong>Azione suggerita:</strong> ${opp.action}
+                    </div>
+                    ${opp.leads ? `<div style="margin-top: 5px;"><strong>Lead coinvolti:</strong> ${opp.leads}</div>` : ''}
+                </div>
+            `).join('');
+
+            updateElement('business-opportunities', opportunitiesHTML || '<div class="no-data">Analizzando opportunità business...</div>');
+        }
+
+        // === UTILITY FUNCTIONS ===
+        function updateElement(id, content) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.innerHTML = content;
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date().toLocaleTimeString('it-IT');
+            updateElement('last-update', now);
+        }
+
+        function formatDateTime(timestamp) {
+            if (!timestamp) return 'N/A';
+            try {
+                const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+                return date.toLocaleString('it-IT');
+            } catch (error) {
+                return 'Data non valida';
+            }
+        }
+
+        function getProfileIcon(profile) {
+            switch(profile) {
+                case 'Nuovo Esploratore': return '🌱';
+                case 'Guerriero': return '⚔️';
+                case 'Atleta': return '🏆';
+                default: return '👤';
+            }
+        }
+
+        // === EXPORT CSV ===
+        window.exportLeadsToCSV = function() {
+            console.log('📊 Esportazione CSV in corso...');
+
+            if (dashboardData.quizResults.length === 0) {
+                alert('Nessun dato da esportare');
+                return;
+            }
+
+            // Prepara header CSV
+            const headers = [
+                'Nome',
+                'Email',
+                'WhatsApp',
+                'Età',
+                'Profilo',
+                'Score',
+                'Obiettivi',
+                'Ostacoli',
+                'Stile Allenamento',
+                'Livello Attività',
+                'Dieta',
+                'Città',
+                'Data Iscrizione'
+            ];
+
+            // Prepara righe CSV
+            const rows = dashboardData.quizResults.map(lead => [
+                lead.name || '',
+                lead.email || '',
+                lead.whatsapp || '',
+                lead.age || '',
+                lead.profile || '',
+                lead.score || '',
+                Array.isArray(lead.goals) ? lead.goals.join('; ') : (lead.goals || ''),
+                Array.isArray(lead.obstacles) ? lead.obstacles.join('; ') : (lead.obstacles || ''),
+                lead.training_style || '',
+                lead.activity_level || '',
+                lead.diet || '',
+                lead.city || '',
+                formatDateTime(lead.timestamp)
+            ]);
+
+            // Crea contenuto CSV
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+
+            // Download file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tribucoach-leads-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log(`✅ CSV esportato: ${dashboardData.quizResults.length} lead`);
+            alert(`✅ CSV esportato con successo!\n${dashboardData.quizResults.length} lead salvati nel file.`);
+        };
+
+
+        async function loadFirebaseData() {
+            try {
+                console.log('📊 Caricamento dati Firebase...');
+                updateConnectionStatus(false, 'Caricamento dati Firebase...');
+
+                // Importa dinamicamente Firebase API
+                if (!firebaseAPI) {
+                    const firebaseModule = await import('./firebase-api.js');
+                    firebaseAPI = firebaseModule;
+                }
+
+                // Test connessione
+                const isConnected = await firebaseAPI.testConnection();
+
+                if (isConnected) {
+                    updateConnectionStatus(true, 'Firebase Connesso');
+
+                    // Carica dati reali
+                    const [quizResults, conversations, users] = await Promise.allSettled([
+                        firebaseAPI.getAllQuizResults(),
+                        firebaseAPI.getChatbotConversations(),
+                        firebaseAPI.getUsers()
+                    ]);
+
+                    // Aggiorna dati dashboard
+                    if (quizResults.status === 'fulfilled') {
+                        dashboardData.quizResults = quizResults.value || [];
+                    } else {
+                        console.error('❌ Errore caricamento quizResults:', quizResults.reason);
+                        dashboardData.quizResults = [];
+                    }
+                    if (conversations.status === 'fulfilled') {
+                        dashboardData.conversations = conversations.value || [];
+                    } else {
+                        console.error('❌ Errore caricamento conversations:', conversations.reason);
+                        dashboardData.conversations = [];
+                    }
+                    if (users.status === 'fulfilled') {
+                        dashboardData.users = users.value || [];
+                    } else {
+                        console.error('❌ Errore caricamento users:', users.reason);
+                        dashboardData.users = [];
+                    }
+
+                    updateDashboard();
+                    console.log(`✅ Dati Firebase caricati: ${dashboardData.quizResults.length} quiz, ${dashboardData.conversations.length} chat`);
+
+                } else {
+                    throw new Error('Test connessione Firebase fallito');
+                }
+
+            } catch (error) {
+                console.error('❌ Errore caricamento dati Firebase:', error);
+                updateConnectionStatus(false, 'Errore Caricamento Dati');
+                alert('⚠️ Impossibile caricare i dati da Firebase. Controlla la console per dettagli.');
+                // Non c'è più un fallback a mock data
+            }
+        }
+
+        // === REFRESH DATA ===
+        window.refreshData = async function() {
+            console.log('🔄 Refresh manuale dati...');
+            await loadFirebaseData(); // Sempre ricarica da Firebase
+            updateLastUpdateTime();
+        };
+
+        function updateConnectionStatus(isConnected, customMessage = null) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                if (isConnected) {
+                    statusElement.className = 'connection-status status-connected';
+                    statusElement.innerHTML = customMessage || '✅ Dashboard Attiva - Dati Caricati';
+                } else if (customMessage) {
+                    statusElement.className = 'connection-status status-connecting';
+                    statusElement.innerHTML = `🔄 ${customMessage}`;
+                } else {
+                    statusElement.className = 'connection-status status-error';
+                    statusElement.innerHTML = '❌ Errore connessione';
+                }
+            }
+        }
+
+        window.contactLeadWhatsApp = function(whatsapp, name, profile) {
+            if (whatsapp) {
+                const cleanNumber = whatsapp.replace(/[^\d\+]/g, '');
+                const message = encodeURIComponent(`Ciao ${name}! 👋\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${profile}" mostra un grande potenziale! 💪\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto! 🚀`);
+                window.open(`https://wa.me/${cleanNumber}?text=${message}`);
+                console.log('📱 Contatto WhatsApp:', { whatsapp: cleanNumber, name, profile });
+            } else {
+                alert('Numero WhatsApp non disponibile per questo lead');
+            }
+        };
+
+        // Mostra dettagli lead
+        window.viewLeadDetails = function(leadId) {
+            const lead = dashboardData.quizResults.find(l => l.id === leadId);
+            if (lead) {
+                const details = `🎯 PROFILO COMPLETO: ${lead.name}
+📱 WhatsApp: ${lead.whatsapp || lead.email || 'N/A'}
+📧 Email: ${lead.email || 'N/A'}
+🎂 Età: ${lead.age || 'N/A'} anni
+💪 Profilo: ${lead.profile || 'N/A'} (Score: ${lead.score || 0})
+💎 OBIETTIVI: ${Array.isArray(lead.goals) ? lead.goals.map(g => `\n   • ${g}`).join('') : 'N/A'}
+⏰ ALLENAMENTO = Stile: ${lead.training_style || 'N/A'} • Livello: ${lead.activity_level || 'N/A'}
+🍎 ALIMENTAZIONE = Qualità: ${lead.diet || 'N/A'}
+🚧 OSTACOLI: ${Array.isArray(lead.obstacles) ? lead.obstacles.map(o => `\n   • ${o}`).join('') : 'N/A'}
+🏠 CITTÀ: ${lead.city || 'N/A'}
+📝 NOTE: ${lead.notes || 'Nessuna nota aggiuntiva'}`;
+
+                // Crea la finestra modale più user-friendly
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    bottom: 0 !important;
+                    background: rgba(0,0,0,0.9) !important;
+                    z-index: 99999 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    padding: 20px !important;
+                `;
+                modal.className = 'modal-overlay';
+
+                modal.innerHTML = `
+                    <div style="background: white; border-radius: 15px; padding: 25px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ff6b35; padding-bottom: 15px;">
+                            <h2 style="margin: 0; color: #ff6b35; font-size: 22px;">🎯 Dettagli Lead Completi</h2>
+                            <button onclick="this.closest('.modal-overlay').remove()" style="background: #ff6b35; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold;">×</button>
+                        </div>
+                        <pre style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui; font-size: 14px; line-height: 1.6; color: #333; margin: 0;">${details}</pre>
+                        <div style="margin-top: 25px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+                            <button onclick="this.closest('.modal-overlay').remove()" style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">Chiudi</button>
+                            <button onclick="window.open('https://wa.me/${lead.whatsapp || lead.phone || ''}', '_blank')" style="background: #25d366; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500; display: ${lead.whatsapp || lead.phone ? 'inline-block' : 'none'};">📱 Contatta WhatsApp</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Previeni scroll del body quando modal è aperto
+                document.body.style.overflow = 'hidden';
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                        document.body.style.overflow = 'auto';
+                    }
+                };
+
+                // Chiudi con ESC
+                const closeOnEsc = (e) => {
+                    if (e.key === 'Escape') {
+                        modal.remove();
+                        document.body.style.overflow = 'auto';
+                        document.removeEventListener('keydown', closeOnEsc);
+                    }
+                };
+                document.addEventListener('keydown', closeOnEsc);
+
+                console.log('👁️ Dettagli lead visualizzati:', { leadId, name: lead.name });
+            } else {
+                alert('Lead non trovato');
+            }
+        };
+
+        // === INIZIALIZZAZIONE ===
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inizializzazione Dashboard TribuCoach...');
+            updateConnectionStatus(false, 'Connessione e caricamento dati...');
+            loadFirebaseData(); // Avvia direttamente il caricamento da Firebase
+
+            // Aggiorna l'ora dell'ultimo aggiornamento ogni 30 secondi
+            setInterval(() => {
+                updateLastUpdateTime();
+            }, 30000);
+
+            console.log('✅ Dashboard inizializzata, tentato caricamento dati Firebase');
+        });
+
+    </script>
 </body>
 </html>
