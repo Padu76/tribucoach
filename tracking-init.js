@@ -119,8 +119,8 @@ class TribuCoachTracker {
             }, this.currentSession?.userId);
         };
 
-        // Track ogni 30 secondi
-        const timeTracker = setInterval(trackTimeOnPage, this.config.trackingInterval);
+        // Track ogni 5 minuti invece di 30 secondi per ridurre spam
+        const timeTracker = setInterval(trackTimeOnPage, 5 * 60 * 1000); // 5 minuti
         this.trackingTimers.push(timeTracker);
 
         // Track before page unload

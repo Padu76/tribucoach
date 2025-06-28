@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+        window.showTrackingData = function() {
+            console.log('📊 Dati tracking correnti:');
+            console.log('Session:', window.tribuCoachTracker?.currentSession);
+            console.log('Dashboard Tracker:', window.tribuCoachTracker?.dashboardTracker);
+            console.log('User ID:', localStorage.getItem('tribucoach_user_id'));
+            alert('Dati tracking stampati in console');
+        };<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -620,12 +626,15 @@
             alert('Test user tracking eseguito - controlla console');
         };
 
-        window.showTrackingData = function() {
-            console.log('📊 Dati tracking correnti:');
-            console.log('Session:', window.tribuCoachTracker?.currentSession);
-            console.log('Dashboard Tracker:', window.tribuCoachTracker?.dashboardTracker);
-            console.log('User ID:', localStorage.getItem('tribucoach_user_id'));
-            alert('Dati tracking stampati in console');
+        window.contactLead = function(email, name, profile) {
+            if (email) {
+                const subject = encodeURIComponent(`Ciao ${name}, il tuo profilo TribuCoach`);
+                const body = encodeURIComponent(`Ciao ${name},\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${profile}" mostra un grande potenziale!\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto!`);
+                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                trackUserAction('lead_contact_attempted', { email, name, profile });
+            } else {
+                alert('Email non disponibile per questo lead');
+            }
         };
 
         function updateLastUpdateTime() {
