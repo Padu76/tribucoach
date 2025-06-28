@@ -2,14 +2,14 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, doc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
 
-// Configurazione Firebase
+// Configurazione Firebase (AGGIORNA CON LE TUE CREDENZIALI REALI)
 const firebaseConfig = {
-    apiKey: "AIzaSyD_YOUR_API_KEY_HERE",
-    authDomain: "tribucoach-PROJECT_ID.firebaseapp.com",
-    projectId: "tribucoach-PROJECT_ID",
-    storageBucket: "tribucoach-PROJECT_ID.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    apiKey: "AIzaSyD_YOUR_API_KEY_HERE", // 🔑 SOSTITUISCI CON LA TUA API KEY
+    authDomain: "tribucoach-PROJECT_ID.firebaseapp.com", // 🔑 SOSTITUISCI CON IL TUO DOMAIN
+    projectId: "tribucoach-PROJECT_ID", // 🔑 SOSTITUISCI CON IL TUO PROJECT ID
+    storageBucket: "tribucoach-PROJECT_ID.appspot.com", // 🔑 SOSTITUISCI CON IL TUO BUCKET
+    messagingSenderId: "123456789", // 🔑 SOSTITUISCI CON IL TUO SENDER ID
+    appId: "1:123456789:web:abcdef123456" // 🔑 SOSTITUISCI CON IL TUO APP ID
 };
 
 // Configurazione Chatbase API
