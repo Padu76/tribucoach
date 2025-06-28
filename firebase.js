@@ -1,16 +1,15 @@
-// firebase.js - Configurazione Firebase per TribuCoach
+// firebase.js - Configurazione Firebase per TribuCoach (PROGETTO CORRETTO)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-  authDomain: "tribucoach-9564b.firebaseapp.com",
-  projectId: "tribucoach-9564b",
-  storageBucket: "tribucoach-9564b.firebasestorage.app",
-  messagingSenderId: "476626832985",
-  appId: "1:476626832985:web:7835188f40f4348567ab48"
-  // RIMOSSO measurementId per evitare conflitti - Analytics non necessario per la dashboard
+  authDomain: "tribucoach-a2254.firebaseapp.com",  // ← CORRETTO
+  projectId: "tribucoach-a2254",                    // ← CORRETTO
+  storageBucket: "tribucoach-a2254.firebasestorage.app", // ← CORRETTO
+  messagingSenderId: "425200296836",                // ← CORRETTO (dal tuo screenshot)
+  appId: "1:425200296836:web:7835188f40f4348567ab48"  // ← AGGIORNATO con messagingSenderId corretto
 };
 
 // Inizializza Firebase
@@ -20,7 +19,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Test di connessione immediato
-console.log('🔥 Firebase inizializzato per TribuCoach');
+// Log per conferma
+console.log('🔥 Firebase inizializzato per progetto:', firebaseConfig.projectId);
 
 export default app;

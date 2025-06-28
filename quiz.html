@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz di Analisi Fitness - Scopri il Tuo Potenziale</title>
     <meta name="description" content="Quiz avanzato per analizzare il tuo profilo fitness completo e ricevere consigli personalizzati">
-
+    
     <style>
         * {
             margin: 0;
@@ -294,44 +294,72 @@
     </div>
 
     <script type="module">
-        // Importa le funzioni necessarie da firebase-functions.js
-        import { saveQuizResult, calculateLeadScore as calculateLeadScoreFromFunctions, getProfileIcon } from './firebase-functions.js';
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-        // Non è più necessario importare Firebase qui, poiché viene gestito da firebase.js e firebase-functions.js
+        // Configurazione Firebase CORRETTA per tribucoach-a2254
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
+        
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // Funzione per calcolare lead score - ora usa quella importata
-        // function calculateLeadScore(data) {
-        //     return data.score; // Il punteggio è già calcolato
-        // } // RIMOSSO, usa calculateLeadScoreFromFunctions
+        // Funzione per salvare i risultati del quiz
+        window.saveQuizResult = function(data) {
+            return addDoc(collection(db, 'quiz_results'), {
+                ...data,
+                timestamp: serverTimestamp(),
+                source: 'advanced_quiz_v2',
+                score: data.score,
+                lead_score: data.score
+            }).then((docRef) => {
+                console.log('✅ Quiz salvato con ID:', docRef.id);
+                return docRef.id;
+            }).catch((error) => {
+                console.error('❌ Errore salvataggio:', error);
+                throw error;
+            });
+        };        // Funzione per calcolare lead score
+        function calculateLeadScore(data) {
+            return data.score; // Il punteggio è già calcolato
+        }
 
-        // Funzione per ottenere l'icona del profilo - ora usa quella importata
-        // function getProfileIcon(profile) {
-        //     switch(profile) {
-        //         case 'Nuovo Esploratore': return '🌱';
-        //         case 'Guerriero': return '⚔️';
-        //         case 'Atleta': return '🏆';
-        //         default: return '🌟';
-        //     }
-        // } // RIMOSSO, usa getProfileIcon
+        // Funzione per ottenere l'icona del profilo
+        function getProfileIcon(profile) {
+            switch(profile) {
+                case 'Nuovo Esploratore': return '🌱';
+                case 'Guerriero': return '⚔️';
+                case 'Atleta': return '🏆';
+                default: return '🌟';
+            }
+        }
 
         // Funzione per determinare il profilo basato sui campi del quiz
         function determineProfile(responses, totalScore) {
             // Logica migliorata che considera sia il punteggio che le risposte specifiche
             let profileScore = totalScore;
-
+            
             // Aggiusta il punteggio basato su risposte specifiche
             if (responses.goals && responses.goals.includes('Preparazione atletica specifica')) {
                 profileScore += 10;
             }
-
+            
             if (responses.training_style === 'Con personal trainer') {
                 profileScore += 5;
             }
-
+            
             if (responses.activity_level === 'Molto attivo (5+ allenamenti intensi)') {
                 profileScore += 10;
             }
-
+            
             // Determina il profilo finale
             if (profileScore >= 80) return 'Atleta';
             else if (profileScore >= 40) return 'Guerriero';
@@ -346,7 +374,7 @@
             },
             {
                 q: "Qual è la tua email?",
-                type: "email",
+                type: "email", 
                 field: "email"
             },
             {
@@ -356,7 +384,7 @@
                 maxSelections: 3,
                 a: [
                     "Perdere peso e dimagrire",
-                    "Aumentare massa muscolare",
+                    "Aumentare massa muscolare", 
                     "Migliorare la forza",
                     "Migliorare la resistenza",
                     "Migliorare la postura",
@@ -532,7 +560,7 @@
 
             updateProgress();
             const q = questions[currentQ];
-
+            
             let html = `<div class='question-box'><h2>${currentQ + 1}. ${q.q}</h2>`;
 
             if (q.type === 'text' || q.type === 'email') {
@@ -571,7 +599,7 @@
             if (q.type === 'text' || q.type === 'email' || q.type === 'number' || q.type === 'textarea') {
                 const input = document.getElementById('textInput');
                 const btn = document.getElementById('continueBtn');
-
+                
                 input.addEventListener('input', function() {
                     if (q.type === 'email') {
                         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -592,7 +620,7 @@
             const checkbox = document.getElementById(`check${index}`);
             const option = checkbox.parentElement;
             const q = questions[currentQ];
-
+            
             if (checkbox.checked) {
                 checkbox.checked = false;
                 option.classList.remove('selected');
@@ -606,7 +634,7 @@
                 option.classList.add('selected');
                 selectedCheckboxes.push(answer);
             }
-
+            
             const btn = document.getElementById('continueBtn');
             btn.disabled = selectedCheckboxes.length === 0;
         }
@@ -615,15 +643,15 @@
             const input = document.getElementById('textInput');
             const value = input.value.trim();
             const q = questions[currentQ];
-
+            
             responses[q.field] = value;
-
+            
             // Aggiungi punti per alcune risposte specifiche
             if (q.field === 'age') {
                 const age = parseInt(value);
                 if (age >= 18 && age <= 35) score += 5;
             }
-
+            
             currentQ++;
             showQuestion();
         }
@@ -631,7 +659,7 @@
         function handleCheckboxes() {
             const q = questions[currentQ];
             responses[q.field] = [...selectedCheckboxes];
-
+            
             // Aggiungi punti per checkboxes specifiche
             if (q.field === 'goals') {
                 if (selectedCheckboxes.includes('Aumentare massa muscolare')) score += 10;
@@ -640,17 +668,17 @@
                 if (selectedCheckboxes.includes('Perdere peso e dimagrire')) score += 5;
                 if (selectedCheckboxes.includes('Definire il corpo')) score += 7;
             }
-
+            
             if (q.field === 'obstacles' && selectedCheckboxes.includes('Non ho ostacoli particolari')) {
                 score += 10;
             }
-
+            
             if (q.field === 'preferred_activities') {
                 if (selectedCheckboxes.length >= 3) score += 5;
                 if (selectedCheckboxes.includes('Palestra')) score += 3;
                 if (selectedCheckboxes.includes('Sport di squadra')) score += 3;
             }
-
+            
             currentQ++;
             showQuestion();
         }
@@ -663,11 +691,11 @@
             showQuestion();
         }
 
-        async function showResult() { // Reso asincrono per l'attesa di saveQuizResult
+        function showResult() {
             // Usa la nuova funzione che considera sia score che risposte
             const profile = determineProfile(responses, score);
-            const icon = getProfileIcon(profile); // Usa la funzione importata
-
+            const icon = getProfileIcon(profile);
+            
             const profiles = {
                 'Nuovo Esploratore': {
                     description: 'Sei all\'inizio del tuo viaggio nel mondo del fitness e questo è il momento più emozionante! Hai l\'energia e la motivazione per iniziare, ma potresti sentirti sopraffatto dalla quantità di informazioni disponibili. È normale sentirsi confusi su dove iniziare e quali strategie adottare. Il tuo profilo indica che hai un grande potenziale non ancora espresso e una mente aperta pronta ad assorbire nuove conoscenze. Questo è il momento perfetto per costruire solide fondamenta che ti accompagneranno per tutta la vita. La chiave del successo sarà la costanza piuttosto che l\'intensità: piccoli passi quotidiani ti porteranno molto più lontano di sforzi sporadici ed eccessivi. Non sottovalutare la tua posizione - molti esperti rimpiangono di non aver avuto la guida giusta fin dall\'inizio come puoi averla tu ora.',
@@ -704,33 +732,27 @@
                 }
             };
 
-            // Calcola il lead_score usando la funzione importata
-            const calculatedLeadScore = calculateLeadScoreFromFunctions(responses);
-
-            // Prepara i dati finali per il salvataggio
+            // Salva i risultati su Firebase con i campi corretti
             const finalData = {
                 ...responses,
-                score: score, // Il punteggio totale calcolato dal quiz
-                profile: profile, // Profilo determinato
-                lead_score: calculatedLeadScore, // Il lead score calcolato dalla funzione esterna
-                // Il timestamp verrà aggiunto automaticamente dalla funzione saveQuizResult
-                source: 'advanced_quiz_v2' // Puoi mantenere la sorgente o modificarla
+                score: score,                    // Campo score per compatibilità con firebase-functions.js
+                profile: profile,                // Profilo determinato
+                lead_score: score,              // Manteniamo anche questo per compatibilità
+                timestamp: new Date().toISOString()
             };
 
-            // Salva su Firebase usando la funzione importata (che include serverTimestamp)
-            try {
-                await saveQuizResult(finalData); // Ora è una Promise, quindi await
+            // Salva su Firebase nella collection corretta
+            window.saveQuizResult(finalData).then(() => {
                 console.log('✅ Dati salvati con successo su Firebase!');
-            } catch (error) {
+            }).catch((error) => {
                 console.error('❌ Errore nel salvataggio:', error);
-            }
-
+            });
 
             let resultHTML = `
                 <div class='result-container'>
                     <h2>🎉 Complimenti! Quiz Completato!</h2>
                     <p>Abbiamo analizzato le tue risposte e preparato il tuo profilo personalizzato.</p>
-
+                    
                     <div class='profile-card'>
                         <h3>${icon} Il tuo Profilo: ${profile}</h3>
                         <p>${profiles[profile].description}</p>
