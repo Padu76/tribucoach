@@ -294,7 +294,6 @@
     </div>
 
     <script type="module">
-        // Import Firebase
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
@@ -327,12 +326,13 @@
                 console.error('❌ Errore salvataggio:', error);
                 throw error;
             });
-        };        // Funzione per calcolare lead score
+        };
+
+        // Funzioni utility
         function calculateLeadScore(data) {
-            return data.score; // Il punteggio è già calcolato
+            return data.score;
         }
 
-        // Funzione per ottenere l'icona del profilo
         function getProfileIcon(profile) {
             switch(profile) {
                 case 'Nuovo Esploratore': return '🌱';
@@ -342,12 +342,9 @@
             }
         }
 
-        // Funzione per determinare il profilo basato sui campi del quiz
         function determineProfile(responses, totalScore) {
-            // Logica migliorata che considera sia il punteggio che le risposte specifiche
             let profileScore = totalScore;
             
-            // Aggiusta il punteggio basato su risposte specifiche
             if (responses.goals && responses.goals.includes('Preparazione atletica specifica')) {
                 profileScore += 10;
             }
@@ -360,7 +357,6 @@
                 profileScore += 10;
             }
             
-            // Determina il profilo finale
             if (profileScore >= 80) return 'Atleta';
             else if (profileScore >= 40) return 'Guerriero';
             else return 'Nuovo Esploratore';
@@ -616,29 +612,6 @@
             }
         }
 
-        function toggleCheckbox(index, answer) {
-            const checkbox = document.getElementById(`check${index}`);
-            const option = checkbox.parentElement;
-            const q = questions[currentQ];
-            
-            if (checkbox.checked) {
-                checkbox.checked = false;
-                option.classList.remove('selected');
-                selectedCheckboxes = selectedCheckboxes.filter(item => item !== answer);
-            } else {
-                if (q.maxSelections && selectedCheckboxes.length >= q.maxSelections) {
-                    alert(`Puoi selezionare massimo ${q.maxSelections} opzioni!`);
-                    return;
-                }
-                checkbox.checked = true;
-                option.classList.add('selected');
-                selectedCheckboxes.push(answer);
-            }
-            
-            const btn = document.getElementById('continueBtn');
-            btn.disabled = selectedCheckboxes.length === 0;
-        }
-
         function handleTextInput() {
             const input = document.getElementById('textInput');
             const value = input.value.trim();
@@ -646,7 +619,6 @@
             
             responses[q.field] = value;
             
-            // Aggiungi punti per alcune risposte specifiche
             if (q.field === 'age') {
                 const age = parseInt(value);
                 if (age >= 18 && age <= 35) score += 5;
@@ -660,7 +632,6 @@
             const q = questions[currentQ];
             responses[q.field] = [...selectedCheckboxes];
             
-            // Aggiungi punti per checkboxes specifiche
             if (q.field === 'goals') {
                 if (selectedCheckboxes.includes('Aumentare massa muscolare')) score += 10;
                 if (selectedCheckboxes.includes('Migliorare la forza')) score += 10;
@@ -691,8 +662,30 @@
             showQuestion();
         }
 
+        function toggleCheckbox(index, answer) {
+            const checkbox = document.getElementById(`check${index}`);
+            const option = checkbox.parentElement;
+            const q = questions[currentQ];
+            
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                option.classList.remove('selected');
+                selectedCheckboxes = selectedCheckboxes.filter(item => item !== answer);
+            } else {
+                if (q.maxSelections && selectedCheckboxes.length >= q.maxSelections) {
+                    alert(`Puoi selezionare massimo ${q.maxSelections} opzioni!`);
+                    return;
+                }
+                checkbox.checked = true;
+                option.classList.add('selected');
+                selectedCheckboxes.push(answer);
+            }
+            
+            const btn = document.getElementById('continueBtn');
+            btn.disabled = selectedCheckboxes.length === 0;
+        }
+
         function showResult() {
-            // Usa la nuova funzione che considera sia score che risposte
             const profile = determineProfile(responses, score);
             const icon = getProfileIcon(profile);
             
@@ -735,9 +728,9 @@
             // Salva i risultati su Firebase con i campi corretti
             const finalData = {
                 ...responses,
-                score: score,                    // Campo score per compatibilità con firebase-functions.js
-                profile: profile,                // Profilo determinato
-                lead_score: score,              // Manteniamo anche questo per compatibilità
+                score: score,
+                profile: profile,
+                lead_score: score,
                 timestamp: new Date().toISOString()
             };
 
@@ -781,6 +774,12 @@
             quizContainer.innerHTML = resultHTML;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Rendi le funzioni globali per gli onclick
+        window.handleTextInput = handleTextInput;
+        window.handleCheckboxes = handleCheckboxes;
+        window.answer = answer;
+        window.toggleCheckbox = toggleCheckbox;
 
         // Inizializza il quiz
         showQuestion();
