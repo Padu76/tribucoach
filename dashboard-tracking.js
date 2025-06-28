@@ -1,4 +1,17 @@
-// dashboard-tracking.js - Estensione dashboard per tracking completo
+    async getBusinessMetrics(days = 30) {
+        try {
+            const q = query(
+                collection(db, 'business_metrics'),
+                orderBy('created_at', 'desc'),
+                limit(days)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('❌ Errore recupero metrics:', error);
+            return [];
+        }
+    }// dashboard-tracking.js - Estensione dashboard per tracking completo
 import { db } from './firebase.js';
 import {
     collection,
@@ -41,21 +54,23 @@ export class DashboardTracker {
 
     // === CARICAMENTO DATI INIZIALI ===
     async loadInitialData() {
-        const [users, conversations, sessions, events, metrics] = await Promise.all([
+        const [users, conversations, sessions, events, metrics, quizResults] = await Promise.all([
             this.getUsers(),
             this.getChatbotConversations(),
             this.getUserSessions(),
             this.getAnalyticsEvents(),
-            this.getBusinessMetrics()
+            this.getBusinessMetrics(),
+            this.getQuizResults() // AGGIUNTO
         ]);
 
-        this.data = { users, conversations, sessions, events, metrics };
+        this.data = { users, conversations, sessions, events, metrics, quizResults }; // AGGIUNTO quizResults
         console.log('📊 Dati iniziali caricati:', {
             users: users.length,
             conversations: conversations.length,
             sessions: sessions.length,
             events: events.length,
-            metrics: metrics.length
+            metrics: metrics.length,
+            quizResults: quizResults.length // AGGIUNTO
         });
     }
 
@@ -120,17 +135,21 @@ export class DashboardTracker {
         }
     }
 
-    async getBusinessMetrics(days = 30) {
+    async getQuizResults(limit_count = 100) {
         try {
             const q = query(
-                collection(db, 'business_metrics'),
-                orderBy('created_at', 'desc'),
-                limit(days)
+                collection(db, 'quiz_results'),
+                orderBy('timestamp', 'desc'),
+                limit(limit_count)
             );
             const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            return snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date()
+            }));
         } catch (error) {
-            console.error('❌ Errore recupero metrics:', error);
+            console.error('❌ Errore recupero quiz results:', error);
             return [];
         }
     }
@@ -164,7 +183,19 @@ export class DashboardTracker {
             }
         );
 
-        this.listeners = [conversationsListener, usersListener, eventsListener];
+        // Listener per quiz results
+        const quizListener = onSnapshot(
+            query(collection(db, 'quiz_results'), orderBy('timestamp', 'desc'), limit(10)),
+            (snapshot) => {
+                console.log('📊 Quiz results aggiornati:', snapshot.size);
+                const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                this.data.quizResults = results;
+                this.updateLeadsDisplay(results); // Aggiorna tabella leads
+                this.updateDashboardMetrics();
+            }
+        );
+
+        this.listeners = [conversationsListener, usersListener, eventsListener, quizListener]; // AGGIUNTO quizListener
     }
 
     // === METRICHE DASHBOARD ===
@@ -174,10 +205,10 @@ export class DashboardTracker {
         // Aggiorna elementi DOM
         this.updateElement('total-users', metrics.totalUsers);
         this.updateElement('total-conversations', metrics.totalConversations);
+        this.updateElement('total-quizzes', metrics.totalQuizzes); // AGGIUNTO
         this.updateElement('avg-conversation-duration', `${metrics.avgConversationDuration} min`);
         this.updateElement('conversion-rate', `${metrics.conversionRate}%`);
         this.updateElement('daily-active-users', metrics.dailyActiveUsers);
-        this.updateElement('top-chatbot-topics', this.formatTopics(metrics.topTopics));
         
         // Aggiorna grafici
         this.updateConversationChart(metrics.conversationTrends);
@@ -193,6 +224,12 @@ export class DashboardTracker {
         
         const totalUsers = this.data.users.length;
         const totalConversations = this.data.conversations.length;
+        const totalQuizzes = this.data.quizResults?.length || 0; // AGGIUNTO
+        
+        // Quiz completati oggi
+        const todayQuizzes = this.data.quizResults?.filter(quiz => 
+            quiz.timestamp && quiz.timestamp >= today
+        ).length || 0; // AGGIUNTO
         
         // Conversazioni oggi
         const todayConversations = this.data.conversations.filter(conv => 
@@ -211,9 +248,9 @@ export class DashboardTracker {
         const avgConversationDuration = totalConversations > 0 ? 
             (this.data.conversations.reduce((sum, conv) => sum + (conv.duration_minutes || 0), 0) / totalConversations).toFixed(1) : 0;
         
-        // Conversion rate (utenti che hanno prenotato consulenza)
-        const consultationsBooked = this.data.users.filter(user => user.consultation_booked).length;
-        const conversionRate = totalUsers > 0 ? ((consultationsBooked / totalUsers) * 100).toFixed(1) : 0;
+        // Conversion rate (quiz completati che hanno prenotato consulenza)
+        const consultationsBooked = this.data.quizResults?.filter(quiz => quiz.consultation_booked).length || 0;
+        const conversionRate = totalQuizzes > 0 ? ((consultationsBooked / totalQuizzes) * 100).toFixed(1) : 0;
         
         // Topic più discussi
         const topicsCount = {};
@@ -232,6 +269,8 @@ export class DashboardTracker {
         return {
             totalUsers,
             totalConversations,
+            totalQuizzes, // AGGIUNTO
+            todayQuizzes, // AGGIUNTO
             dailyActiveUsers,
             avgConversationDuration,
             conversionRate,
@@ -318,27 +357,42 @@ export class DashboardTracker {
         tbody.innerHTML = rows;
     }
 
-    updateUsersDisplay(users) {
-        const tbody = document.getElementById('users-table-body');
+    updateLeadsDisplay(quizResults) {
+        const tbody = document.getElementById('leads-table-body');
         if (!tbody) return;
         
-        if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun utente tracciato ancora</td></tr>';
+        if (!quizResults || quizResults.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun quiz completato ancora</td></tr>';
             return;
         }
         
-        const rows = users.slice(0, 10).map(user => `
-            <tr>
-                <td>${user.name || 'N/A'}</td>
-                <td>${user.email || 'N/A'}</td>
-                <td>${user.source || 'N/A'}</td>
-                <td>${user.total_sessions || 0}</td>
-                <td>${user.quiz_completed ? '✅' : '❌'}</td>
-                <td>${this.formatDateTime(user.created_at)}</td>
-            </tr>
-        `).join('');
+        const rows = quizResults.slice(0, 10).map(quiz => {
+            const score = quiz.score || quiz.lead_score || 0;
+            const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+            const icon = this.getProfileIcon(quiz.profile);
+            
+            return `
+                <tr>
+                    <td>${quiz.name || 'N/A'}</td>
+                    <td>${quiz.whatsapp || quiz.email || 'N/A'}</td>
+                    <td>${icon} ${quiz.profile || 'N/A'}</td>
+                    <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                    <td>${this.formatDateTime(quiz.timestamp)}</td>
+                    <td><button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', '${quiz.profile}')">WhatsApp</button></td>
+                </tr>
+            `;
+        }).join('');
         
         tbody.innerHTML = rows;
+    }
+
+    getProfileIcon(profile) {
+        switch(profile) {
+            case 'Nuovo Esploratore': return '🌱';
+            case 'Guerriero': return '⚔️'; 
+            case 'Atleta': return '🏆';
+            default: return '👤';
+        }
     }
 
     updateEventsDisplay(events) {

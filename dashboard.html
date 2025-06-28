@@ -542,7 +542,7 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Email</th>
+                        <th>WhatsApp</th>
                         <th>Fonte</th>
                         <th>Sessioni</th>
                         <th>Quiz</th>
@@ -626,14 +626,15 @@
             alert('Test user tracking eseguito - controlla console');
         };
 
-        window.contactLead = function(email, name, profile) {
-            if (email) {
-                const subject = encodeURIComponent(`Ciao ${name}, il tuo profilo TribuCoach`);
-                const body = encodeURIComponent(`Ciao ${name},\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${profile}" mostra un grande potenziale!\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto!`);
-                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
-                trackUserAction('lead_contact_attempted', { email, name, profile });
+        window.contactLeadWhatsApp = function(whatsapp, name, profile) {
+            if (whatsapp) {
+                // Pulisce il numero per WhatsApp (rimuove spazi e caratteri speciali)
+                const cleanNumber = whatsapp.replace(/[^\d\+]/g, '');
+                const message = encodeURIComponent(`Ciao ${name}! 👋\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${profile}" mostra un grande potenziale! 💪\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto! 🚀`);
+                window.open(`https://wa.me/${cleanNumber}?text=${message}`);
+                trackUserAction('lead_whatsapp_contact', { whatsapp: cleanNumber, name, profile });
             } else {
-                alert('Email non disponibile per questo lead');
+                alert('Numero WhatsApp non disponibile per questo lead');
             }
         };
 

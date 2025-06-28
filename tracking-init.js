@@ -6,8 +6,8 @@ import { initializeDashboardTracking, testChatbotIntegration } from './dashboard
 const TRACKING_CONFIG = {
     autoTrack: true,
     enableRealtime: true,
-    debugMode: true,
-    trackingInterval: 30000, // 30 secondi
+    debugMode: false, // DISATTIVATO per ridurre eventi
+    trackingInterval: 10 * 60 * 1000, // 10 minuti invece di 30 secondi
     sessionTimeout: 1800000  // 30 minuti
 };
 
@@ -100,11 +100,10 @@ class TribuCoachTracker {
         let maxScroll = 0;
         const trackScroll = () => {
             const scrollPercent = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
-            if (scrollPercent > maxScroll) {
+            // Riduci tracking scroll - solo su milestone importanti
+            if (scrollPercent > maxScroll && (scrollPercent === 50 || scrollPercent === 100)) {
                 maxScroll = scrollPercent;
-                if (maxScroll >= 25 && maxScroll % 25 === 0) { // 25%, 50%, 75%, 100%
-                    trackEvent('scroll_depth', { percent: maxScroll }, this.currentSession?.userId);
-                }
+                trackEvent('scroll_depth', { percent: maxScroll }, this.currentSession?.userId);
             }
         };
         window.addEventListener('scroll', trackScroll);
@@ -119,8 +118,8 @@ class TribuCoachTracker {
             }, this.currentSession?.userId);
         };
 
-        // Track ogni 5 minuti invece di 30 secondi per ridurre spam
-        const timeTracker = setInterval(trackTimeOnPage, 5 * 60 * 1000); // 5 minuti
+        // Track ogni 10 minuti per ridurre carico Firebase
+        const timeTracker = setInterval(trackTimeOnPage, 10 * 60 * 1000); // 10 minuti
         this.trackingTimers.push(timeTracker);
 
         // Track before page unload

@@ -369,9 +369,9 @@
                 field: "name"
             },
             {
-                q: "Qual è la tua email?",
-                type: "email", 
-                field: "email"
+                q: "Qual è il tuo numero WhatsApp?",
+                type: "tel", 
+                field: "whatsapp"
             },
             {
                 q: "Quali sono i tuoi 3 obiettivi principali? (Max 3)",
@@ -559,8 +559,8 @@
             
             let html = `<div class='question-box'><h2>${currentQ + 1}. ${q.q}</h2>`;
 
-            if (q.type === 'text' || q.type === 'email') {
-                html += `<input type='${q.type}' class='text-input' id='textInput' placeholder='Inserisci ${q.type === 'email' ? 'la tua email' : 'il tuo nome'}' ${q.type === 'email' ? 'required' : ''}>`;
+            if (q.type === 'text' || q.type === 'tel') {
+                html += `<input type='${q.type}' class='text-input' id='textInput' placeholder='Inserisci ${q.type === 'tel' ? 'il tuo numero WhatsApp' : 'il tuo nome'}' ${q.type === 'tel' ? 'required' : ''}>`;
                 html += `<button class='continue-btn' onclick='handleTextInput()' disabled id='continueBtn'>Continua</button>`;
             } else if (q.type === 'number') {
                 html += `<input type='number' class='text-input' id='textInput' placeholder='Inserisci la tua età' min='12' max='99'>`;
@@ -592,14 +592,15 @@
             quizContainer.innerHTML = html;
 
             // Aggiungi event listener per input di testo
-            if (q.type === 'text' || q.type === 'email' || q.type === 'number' || q.type === 'textarea') {
+            if (q.type === 'text' || q.type === 'tel' || q.type === 'number' || q.type === 'textarea') {
                 const input = document.getElementById('textInput');
                 const btn = document.getElementById('continueBtn');
                 
                 input.addEventListener('input', function() {
-                    if (q.type === 'email') {
-                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                        btn.disabled = !emailRegex.test(this.value);
+                    if (q.type === 'tel') {
+                        // Validazione numero WhatsApp (almeno 8 cifre)
+                        const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/;
+                        btn.disabled = !phoneRegex.test(this.value);
                     } else if (q.type === 'number') {
                         const age = parseInt(this.value);
                         btn.disabled = !age || age < 12 || age > 99;
@@ -766,7 +767,7 @@
 
                     <div class='cta-buttons'>
                         <a href='https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07' target='_blank' class='cta-btn cta-primary'>Chatta con il tuo Assistant TribuCoach</a>
-                        <a href='https://wa.me/3478881515?text=${encodeURIComponent(`Ciao! Ho completato il Quiz TribuCoach. Il mio profilo è "${profile}" e vorrei richiedere una consulenza gratuita.`)}' target='_blank' class='cta-btn cta-secondary'>Richiedi Consulenza Gratuita</a>
+                        <a href='https://wa.me/3478881515?text=${encodeURIComponent(`Ciao! Ho completato il Quiz TribuCoach. Il mio profilo è "${profile}" e vorrei richiedere una consulenza gratuita. Il mio WhatsApp è: ${finalData.whatsapp || 'Non fornito'}`)}' target='_blank' class='cta-btn cta-secondary'>Richiedi Consulenza Gratuita</a>
                     </div>
                 </div>
             `;

@@ -21,8 +21,8 @@ import {
 COLLECTIONS PRINCIPALI:
 
 1. users
-   - id: user_id (hash email)
-   - email: string
+   - id: user_id (hash whatsapp)
+   - whatsapp: string
    - name: string
    - source: string ("quiz", "chatbot", "landing")
    - profile: string (dal quiz)
@@ -83,7 +83,7 @@ COLLECTIONS PRINCIPALI:
 // === USER TRACKING ===
 export async function trackUser(userData) {
     try {
-        const userId = generateUserId(userData.email);
+        const userId = generateUserId(userData.whatsapp || userData.email || userData.name);
         const userRef = doc(db, 'users', userId);
         const userDoc = await getDoc(userRef);
 
@@ -162,7 +162,7 @@ export async function trackEvent(eventType, eventData = {}, userId = null) {
             event_data: eventData,
             page_url: window.location.href,
             user_agent: navigator.userAgent,
-            ip_hash: generateIpHash(), // Ora è sincrono
+            ip_hash: generateIpHash(), // Privacy-safe
             created_at: serverTimestamp()
         });
         
@@ -255,9 +255,10 @@ export function initializeTracking() {
 }
 
 // === UTILITY FUNCTIONS ===
-function generateUserId(email) {
-    // Crea hash privacy-safe dell'email
-    return btoa(email.toLowerCase()).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+function generateUserId(identifier) {
+    // Crea hash privacy-safe dell'identificatore (whatsapp/email/nome)
+    if (!identifier) return 'anonymous_' + Math.random().toString(36).substring(2, 12);
+    return btoa(identifier.toLowerCase()).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
 }
 
 function generateIpHash() {
@@ -371,7 +372,7 @@ function analyzeSentiment(messages) {
 function checkLeadGeneration(messages) {
     if (!messages) return false;
     
-    const leadIndicators = ['consulenza', 'contatto', 'email', 'telefono', 'appuntamento'];
+    const leadIndicators = ['consulenza', 'contatto', 'whatsapp', 'telefono', 'appuntamento'];
     return messages.some(msg => 
         leadIndicators.some(indicator => 
             msg.content?.toLowerCase().includes(indicator)
