@@ -1,469 +1,415 @@
-// dashboard.js - Script principale per la Dashboard TribuCoach
-import { 
-    getAllQuizResults,
-    getLeads,
-    getMetrics,
-    setupQuizListener,
-    setupLeadsListener,
-    setupMetricsListener,
-    formatDateTime,
-    calculateTrend,
-    getProfileIcon,
-    calculateLeadScore,
-    testConnection
-} from './firebase-functions.js';
+// dashboard.js - Logica della Dashboard TribuCoach
 
-// Variabili globali
-let currentQuizData = [];
-let currentLeadsData = [];
-let currentMetricsData = [];
-let listeners = [];
+import { getAllQuizResults, getChatbotConversations, saveQuizResult, getQuizResultById } from './firebase-api.js';
 
-// === INIZIALIZZAZIONE ===
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
-    
-    // Test connessione Firebase
-    const isConnected = await testConnection();
-    updateConnectionStatus(isConnected);
-    
-    if (isConnected) {
-        // Carica dati iniziali
-        await loadInitialData();
-        
-        // Attiva listeners real-time
-        setupRealTimeListeners();
-        
-        // Aggiorna display
-        updateDashboard();
-    } else {
-        console.error('❌ Impossibile connettersi a Firebase');
-        updateConnectionStatus(false);
+// --- UTILITIES ---
+function formatDateTime(timestamp) {
+    if (!timestamp) return 'N/A';
+    // Firebase Timestamps hanno un metodo toDate()
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleString('it-IT', options);
+}
+
+function formatDuration(seconds) {
+    if (typeof seconds !== 'number' || isNaN(seconds)) return 'N/A';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+}
+
+function getProfileIcon(profile) {
+    switch (profile) {
+        case 'Guerriero': return '⚔️';
+        case 'Atleta': return '💪';
+        case 'Nuovo Esploratore': return '🧭';
+        default: return '👤';
     }
-});
+}
 
-// === CARICAMENTO DATI INIZIALI ===
-async function loadInitialData() {
-    console.log('📊 Caricamento dati iniziali...');
-    
+function updateConnectionStatus(status, message) {
+    const statusDiv = document.getElementById('connection-status');
+    statusDiv.textContent = message;
+    statusDiv.className = `connection-status status-${status}`; // status-connected, status-error, status-connecting
+}
+
+// --- RENDERING FUNCTIONS ---
+
+// 1️⃣ BLOCCO 1: Dati Quiz - Gestione Lead
+async function renderQuizData() {
+    console.log('📊 Caricamento dati quiz per BLOCCO 1...');
+    updateConnectionStatus('connecting', 'Caricamento dati Firebase...');
     try {
-        // Carica tutti i dati in parallelo
-        const [quizResults, leads, metrics] = await Promise.all([
-            getAllQuizResults(),
-            getLeads(),
-            getMetrics()
-        ]);
-        
-        currentQuizData = quizResults || [];
-        currentLeadsData = leads || [];
-        currentMetricsData = metrics || [];
-        
-        console.log(`📊 Dati caricati: ${currentQuizData.length} quiz, ${currentLeadsData.length} leads, ${currentMetricsData.length} metrics`);
-        
-        updateLastUpdateTime();
-        
-    } catch (error) {
-        console.error('❌ Errore caricamento dati iniziali:', error);
-    }
-}
+        const quizResults = await getAllQuizResults();
+        const quizTableBody = document.querySelector('#quiz-results-table-body');
+        quizTableBody.innerHTML = ''; // Pulisce la tabella
 
-// === LISTENERS REAL-TIME ===
-function setupRealTimeListeners() {
-    console.log('🔄 Configurazione listeners real-time...');
-    
-    // Listener Quiz
-    const quizListener = setupQuizListener((results) => {
-        console.log(`📊 Quiz aggiornati: ${results.length} documenti`);
-        currentQuizData = results;
-        updateQuizTable();
-        updateMetrics();
-        updateCharts();
-    });
-    
-    // Listener Leads
-    const leadsListener = setupLeadsListener((results) => {
-        console.log(`👥 Leads aggiornati: ${results.length} documenti`);
-        currentLeadsData = results;
-        updateLeadsTable();
-        updateMetrics();
-        updateCharts();
-    });
-    
-    // Listener Metrics
-    const metricsListener = setupMetricsListener((results) => {
-        console.log(`📈 Metrics aggiornati: ${results.length} documenti`);
-        currentMetricsData = results;
-        updateMetrics();
-    });
-    
-    // Salva listeners per cleanup
-    listeners = [quizListener, leadsListener, metricsListener];
-    
-    console.log('✅ Listeners real-time attivi');
-}
+        let totalScore = 0;
+        let validQuizzesCount = 0;
 
-// === AGGIORNAMENTO DASHBOARD ===
-function updateDashboard() {
-    console.log('🔄 Aggiornamento dashboard...');
-    updateMetrics();
-    updateQuizTable();
-    updateLeadsTable();
-    updateCharts();
-    updateBusinessOpportunities();
-}
+        if (quizResults.length > 0) {
+            quizResults.forEach(quiz => {
+                const row = quizTableBody.insertRow();
+                row.insertCell().textContent = quiz.name || 'N/A';
+                row.insertCell().textContent = quiz.age || 'N/A';
+                row.insertCell().textContent = quiz.email || 'N/A'; // Email, o Telefono/WhatsApp se hai il campo
+                row.insertCell().textContent = quiz.city || 'N/A';
+                row.insertCell().textContent = quiz.gender || 'N/A';
+                row.insertCell().innerHTML = `${getProfileIcon(quiz.profile)} ${quiz.profile || 'N/A'}`;
+                row.insertCell().textContent = (quiz.goals && quiz.goals.length > 0) ? quiz.goals.join(', ') : 'N/A';
+                row.insertCell().textContent = quiz.activity_level || 'N/A'; // Tipo di allenamento / Livello attività
+                row.insertCell().textContent = (quiz.obstacles && quiz.obstacles.length > 0) ? quiz.obstacles.join(', ') : 'N/A';
+                row.insertCell().textContent = quiz.lead_score ? `${quiz.lead_score}%` : '0%';
 
-// === AGGIORNAMENTO METRICHE ===
-function updateMetrics() {
-    // Calcola metriche principali
-    const totalQuizzes = currentQuizData.length;
-    const totalLeads = currentLeadsData.length;
-    const avgLeadScore = currentQuizData.length > 0 ? 
-        (currentQuizData.reduce((sum, quiz) => sum + (quiz.score || quiz.lead_score || 0), 0) / currentQuizData.length).toFixed(1) : 0;
-    
-    // Nuovi lead oggi
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const newLeadsToday = currentQuizData.filter(quiz => {
-        const quizDate = quiz.timestamp || new Date();
-        return quizDate >= today;
-    }).length;
-    
-    // Aggiorna DOM
-    updateElement('total-quizzes', totalQuizzes);
-    updateElement('total-leads', totalLeads);
-    updateElement('avg-lead-score', avgLeadScore);
-    updateElement('new-leads-today', newLeadsToday);
-    
-    console.log(`📊 Metriche aggiornate: ${totalQuizzes} quiz, ${totalLeads} leads, ${avgLeadScore} avg score, ${newLeadsToday} oggi`);
-}
+                const dateCell = row.insertCell();
+                dateCell.textContent = quiz.timestamp ? formatDateTime(quiz.timestamp) : 'N/A';
 
-// === AGGIORNAMENTO TABELLA QUIZ ===
-function updateQuizTable() {
-    const tbody = document.getElementById('quizzes-table-body');
-    if (!tbody) return;
-    
-    if (currentQuizData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun quiz completato ancora</td></tr>';
-        return;
-    }
-    
-    const rows = currentQuizData.slice(0, 20).map(quiz => {
-        const score = quiz.score || quiz.lead_score || 0;
-        const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
-        const icon = getProfileIcon(quiz.profile);
-        
-        return `
-            <tr>
-                <td>${quiz.name || 'N/A'}</td>
-                <td>${quiz.email || 'N/A'}</td>
-                <td>${icon} ${quiz.profile || 'N/A'}</td>
-                <td><span class="lead-score ${scoreClass}">${score}</span></td>
-                <td>${formatDateTime(quiz.timestamp)}</td>
-                <td><button class="action-btn" onclick="viewQuizDetails('${quiz.id}')">Dettagli</button></td>
-            </tr>
-        `;
-    }).join('');
-    
-    tbody.innerHTML = rows;
-}
+                const actionsCell = row.insertCell();
+                const viewBtn = document.createElement('button');
+                viewBtn.textContent = 'Dettagli';
+                viewBtn.className = 'action-button';
+                viewBtn.onclick = () => viewQuizDetails(quiz.id);
+                actionsCell.appendChild(viewBtn);
 
-// === AGGIORNAMENTO TABELLA LEADS ===
-function updateLeadsTable() {
-    const tbody = document.getElementById('leads-table-body');
-    if (!tbody) return;
-    
-    if (currentLeadsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Nessun lead ancora</td></tr>';
-        return;
-    }
-    
-    const rows = currentLeadsData.slice(0, 20).map(lead => {
-        const score = calculateLeadScore(lead);
-        const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
-        const icon = getProfileIcon(lead.profile);
-        
-        return `
-            <tr>
-                <td>${lead.name || 'N/A'}</td>
-                <td>${lead.email || 'N/A'}</td>
-                <td>${lead.city || 'N/A'}</td>
-                <td>${Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'N/A')}</td>
-                <td>${icon} ${lead.profile || 'N/A'}</td>
-                <td><span class="lead-score ${scoreClass}">${score}</span></td>
-                <td>${formatDateTime(lead.timestamp)}</td>
-                <td><button class="action-btn" onclick="contactLead('${lead.id}')">Contatta</button></td>
-            </tr>
-        `;
-    }).join('');
-    
-    tbody.innerHTML = rows;
-}
-
-// === AGGIORNAMENTO GRAFICI ===
-function updateCharts() {
-    updateGoalsChart();
-    updateChallengesChart();
-    updateBudgetAnalysis();
-    updateTimeAnalysis();
-    updateFrequencyAnalysis();
-    updateLocationAnalysis();
-}
-
-function updateGoalsChart() {
-    const goalsCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        if (quiz.goals && Array.isArray(quiz.goals)) {
-            quiz.goals.forEach(goal => {
-                goalsCount[goal] = (goalsCount[goal] || 0) + 1;
+                if (quiz.lead_score) {
+                    totalScore += quiz.lead_score;
+                    validQuizzesCount++;
+                }
             });
-        }
-    });
-    
-    const sortedGoals = Object.entries(goalsCount)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5);
-    
-    const maxCount = sortedGoals.length > 0 ? sortedGoals[0][1] : 1;
-    
-    const chartHTML = sortedGoals.map(([goal, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${goal}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / maxCount) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('goals-chart', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-function updateChallengesChart() {
-    const challengesCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        if (quiz.obstacles && Array.isArray(quiz.obstacles)) {
-            quiz.obstacles.forEach(obstacle => {
-                challengesCount[obstacle] = (challengesCount[obstacle] || 0) + 1;
-            });
-        }
-    });
-    
-    const sortedChallenges = Object.entries(challengesCount)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 5);
-    
-    const maxCount = sortedChallenges.length > 0 ? sortedChallenges[0][1] : 1;
-    
-    const chartHTML = sortedChallenges.map(([challenge, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${challenge}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / maxCount) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('challenges-chart', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-function updateBudgetAnalysis() {
-    const budgetCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        const budget = quiz.budget || 'Non specificato';
-        budgetCount[budget] = (budgetCount[budget] || 0) + 1;
-    });
-    
-    const chartHTML = Object.entries(budgetCount).map(([budget, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${budget}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(budgetCount))) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('budget-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-function updateTimeAnalysis() {
-    const timeCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        const time = quiz.timeAvailability || quiz.workout_duration || 'Non specificato';
-        timeCount[time] = (timeCount[time] || 0) + 1;
-    });
-    
-    const chartHTML = Object.entries(timeCount).map(([time, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${time}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(timeCount))) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('time-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-function updateFrequencyAnalysis() {
-    const freqCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        const freq = quiz.activity_level || quiz.frequency || 'Non specificato';
-        freqCount[freq] = (freqCount[freq] || 0) + 1;
-    });
-    
-    const chartHTML = Object.entries(freqCount).map(([freq, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${freq}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(freqCount))) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('frequency-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-function updateLocationAnalysis() {
-    const locationCount = {};
-    
-    currentQuizData.forEach(quiz => {
-        const location = quiz.city || quiz.location || 'Non specificato';
-        locationCount[location] = (locationCount[location] || 0) + 1;
-    });
-    
-    const chartHTML = Object.entries(locationCount).map(([location, count]) => `
-        <div class="chart-bar">
-            <div class="chart-label">${location}</div>
-            <div class="chart-progress">
-                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(locationCount))) * 100}%"></div>
-            </div>
-            <div class="chart-value">${count}</div>
-        </div>
-    `).join('');
-    
-    updateElement('location-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
-}
-
-// === OPPORTUNITÀ BUSINESS ===
-function updateBusinessOpportunities() {
-    const opportunities = [];
-    
-    // Analizza lead ad alto punteggio
-    const highScoreLeads = currentQuizData.filter(quiz => (quiz.score || quiz.lead_score || 0) >= 70);
-    if (highScoreLeads.length > 0) {
-        opportunities.push({
-            title: `${highScoreLeads.length} Lead ad Alto Potenziale`,
-            description: 'Lead con punteggio superiore a 70 - pronti per il contatto',
-            priority: 'high'
-        });
-    }
-    
-    // Analizza obiettivi comuni
-    const commonGoals = {};
-    currentQuizData.forEach(quiz => {
-        if (quiz.goals && Array.isArray(quiz.goals)) {
-            quiz.goals.forEach(goal => {
-                commonGoals[goal] = (commonGoals[goal] || 0) + 1;
-            });
-        }
-    });
-    
-    const topGoal = Object.entries(commonGoals).sort(([,a], [,b]) => b - a)[0];
-    if (topGoal && topGoal[1] > 3) {
-        opportunities.push({
-            title: `Focus su "${topGoal[0]}"`,
-            description: `${topGoal[1]} clienti interessati - opportunità per programma specializzato`,
-            priority: 'medium'
-        });
-    }
-    
-    const opportunitiesHTML = opportunities.map(opp => `
-        <div class="opportunity-card">
-            <h4>${opp.title}<span class="priority ${opp.priority}">${opp.priority.toUpperCase()}</span></h4>
-            <p>${opp.description}</p>
-        </div>
-    `).join('');
-    
-    updateElement('business-opportunities', opportunitiesHTML || '<div class="no-data">Nessuna opportunità identificata</div>');
-}
-
-// === UTILITY FUNCTIONS ===
-function updateElement(id, content) {
-    const element = document.getElementById(id);
-    if (element) {
-        element.innerHTML = content;
-    }
-}
-
-function updateConnectionStatus(isConnected) {
-    const statusElement = document.getElementById('connection-status');
-    if (statusElement) {
-        if (isConnected) {
-            statusElement.className = 'connection-status status-connected';
-            statusElement.innerHTML = '✅ Connesso a Firebase';
+            updateConnectionStatus('connected', `✅ Dati caricati: ${quizResults.length} quiz`);
         } else {
-            statusElement.className = 'connection-status status-error';
-            statusElement.innerHTML = '❌ Errore connessione Firebase';
+            const row = quizTableBody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 12;
+            cell.className = 'no-data';
+            cell.textContent = 'Nessun risultato quiz trovato.';
+            updateConnectionStatus('connected', '✅ Dati caricati: Nessun quiz trovato');
         }
+
+        document.getElementById('totalQuizzes').textContent = quizResults.length;
+        document.getElementById('avgQuizScore').textContent = validQuizzesCount > 0 ? `${(totalScore / validQuizzesCount).toFixed(1)}%` : '0%';
+        document.getElementById('kpiTotalQuizzes').textContent = quizResults.length; // Per BLOCCO 3
+
+        return quizResults; // Restituisce i dati per altre funzioni
+    } catch (error) {
+        console.error('❌ Errore caricamento dati quiz:', error);
+        updateConnectionStatus('error', '🔴 Errore caricamento quiz');
+        return []; // Restituisce un array vuoto in caso di errore
     }
 }
 
-function updateLastUpdateTime() {
-    const now = new Date().toLocaleTimeString('it-IT');
-    updateElement('last-update', now);
+
+// 2️⃣ BLOCCO 2: Dati Chatbot - Analisi Interazioni
+async function renderChatbotData(allQuizResults) {
+    console.log('💬 Caricamento dati chatbot per BLOCCO 2...');
+    try {
+        const conversations = await getChatbotConversations();
+        const chatTableBody = document.querySelector('#chatbot-conversations-table-body');
+        chatTableBody.innerHTML = '';
+
+        let totalDuration = 0;
+        const topicCounts = {};
+        const outcomeCounts = {};
+        const uniqueChatUsers = new Set(); // Per il tasso di conversione
+
+        if (conversations.length > 0) {
+            conversations.forEach(chat => {
+                const row = chatTableBody.insertRow();
+                row.insertCell().textContent = chat.conversationId ? (chat.conversationId.substring(0, 8) + '...') : 'N/A';
+                row.insertCell().textContent = chat.userId || 'N/A';
+                row.insertCell().textContent = chat.startTime ? formatDateTime(chat.startTime) : 'N/A';
+                row.insertCell().textContent = chat.endTime ? formatDateTime(chat.endTime) : 'N/A';
+                row.insertCell().textContent = chat.duration ? formatDuration(chat.duration) : 'N/A';
+                row.insertCell().textContent = chat.messageCount || 'N/A';
+                row.insertCell().textContent = chat.lastMessageSnippet || 'N/A';
+                row.insertCell().textContent = chat.topic || 'N/A';
+                row.insertCell().textContent = chat.outcome || 'N/A';
+
+                const actionsCell = row.insertCell();
+                const viewBtn = document.createElement('button');
+                viewBtn.textContent = 'Dettagli';
+                viewBtn.className = 'action-button';
+                viewBtn.onclick = () => viewConversationDetails(chat.id); // Funzione da implementare se necessaria
+                actionsCell.appendChild(viewBtn);
+
+                if (chat.duration) totalDuration += chat.duration;
+                if (chat.topic) topicCounts[chat.topic] = (topicCounts[chat.topic] || 0) + 1;
+                if (chat.outcome) outcomeCounts[chat.outcome] = (outcomeCounts[chat.outcome] || 0) + 1;
+                if (chat.userId) uniqueChatUsers.add(chat.userId);
+            });
+        } else {
+            const row = chatTableBody.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 10;
+            cell.className = 'no-data';
+            cell.textContent = 'Nessuna conversazione chatbot trovata.';
+        }
+
+        // Aggiorna KPI di riepilogo chatbot
+        document.getElementById('chatbotTotalConversations').textContent = conversations.length;
+        document.getElementById('totalConversations').textContent = conversations.length; // KPI generale
+        document.getElementById('kpiTotalChats').textContent = conversations.length; // Per BLOCCO 3
+        
+        const avgDuration = conversations.length > 0 ? (totalDuration / conversations.length) : 0;
+        document.getElementById('chatbotAvgDuration').textContent = formatDuration(Math.round(avgDuration));
+
+        // Popola Interessi Emersi (Top Topics)
+        const sortedTopics = Object.entries(topicCounts).sort(([, a], [, b]) => b - a);
+        const topTopicsDiv = document.getElementById('topTopics');
+        topTopicsDiv.innerHTML = '';
+        if (sortedTopics.length > 0) {
+            sortedTopics.slice(0, 5).forEach(([topic, count]) => { // Mostra i top 5
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = `${topic} (${count})`;
+                topTopicsDiv.appendChild(tag);
+            });
+        } else {
+            topTopicsDiv.textContent = 'N/A';
+        }
+
+        // Popola Esigenze Più Comuni (Top Outcomes)
+        const sortedOutcomes = Object.entries(outcomeCounts).sort(([, a], [, b]) => b - a);
+        const topOutcomesDiv = document.getElementById('topOutcomes');
+        topOutcomesDiv.innerHTML = '';
+        if (sortedOutcomes.length > 0) {
+            sortedOutcomes.slice(0, 5).forEach(([outcome, count]) => { // Mostra i top 5
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = `${outcome} (${count})`;
+                topOutcomesDiv.appendChild(tag);
+            });
+        } else {
+            topOutcomesDiv.textContent = 'N/A';
+        }
+
+        return { conversations, uniqueChatUsers }; // Restituisce i dati per altre funzioni
+    } catch (error) {
+        console.error('❌ Errore caricamento dati chatbot:', error);
+        return { conversations: [], uniqueChatUsers: new Set() };
+    }
 }
 
-// === FUNZIONI GLOBALI ===
-window.refreshData = async function() {
-    console.log('🔄 Refresh manuale dati...');
-    await loadInitialData();
-    updateDashboard();
-    updateLastUpdateTime();
-};
 
-window.viewQuizDetails = function(quizId) {
-    const quiz = currentQuizData.find(q => q.id === quizId);
-    if (quiz) {
-        const details = `
-Profilo: ${quiz.profile || 'N/A'}
-Punteggio: ${quiz.score || quiz.lead_score || 0}
-Obiettivi: ${Array.isArray(quiz.goals) ? quiz.goals.join(', ') : (quiz.goals || 'N/A')}
-Livello Attività: ${quiz.activity_level || 'N/A'}
-Alimentazione: ${quiz.diet || 'N/A'}
-Ostacoli: ${Array.isArray(quiz.obstacles) ? quiz.obstacles.join(', ') : (quiz.obstacles || 'N/A')}
-        `;
-        alert(`Dettagli Quiz - ${quiz.name}\n\n${details}`);
-    }
-};
+// 3️⃣ BLOCCO 3: Riepilogo Attività & Performance
+function renderActivitySummary(allQuizResults, uniqueChatUsers) {
+    console.log('📈 Calcolo riepilogo attività per BLOCCO 3...');
 
-window.contactLead = function(leadId) {
-    const lead = currentLeadsData.find(l => l.id === leadId);
-    if (lead && lead.email) {
-        const subject = encodeURIComponent(`Ciao ${lead.name}, il tuo profilo TribuCoach`);
-        const body = encodeURIComponent(`Ciao ${lead.name},\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${lead.profile}" mostra un grande potenziale!\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto!`);
-        window.open(`mailto:${lead.email}?subject=${subject}&body=${body}`);
-    } else {
-        alert('Email non disponibile per questo lead');
-    }
-};
-
-// === CLEANUP ===
-window.addEventListener('beforeunload', function() {
-    // Disconnetti i listeners quando la pagina viene chiusa
-    listeners.forEach(unsubscribe => {
-        if (typeof unsubscribe === 'function') {
-            unsubscribe();
+    // Distribuzione Geografica Lead
+    const geoDistribution = {};
+    const highScoreLeadsByCity = {}; // Per analisi geografica lead caldi
+    allQuizResults.forEach(quiz => {
+        if (quiz.city) {
+            geoDistribution[quiz.city] = (geoDistribution[quiz.city] || 0) + 1;
+            if (quiz.lead_score && quiz.lead_score > 70) { // Lead caldi (score > 70%)
+                highScoreLeadsByCity[quiz.city] = (highScoreLeadsByCity[quiz.city] || 0) + 1;
+            }
         }
     });
-});
 
-console.log('📊 Dashboard script caricato');
+    const geoList = document.getElementById('geo-list');
+    geoList.innerHTML = '';
+    const sortedGeo = Object.entries(geoDistribution).sort(([, a], [, b]) => b - a);
+    if (sortedGeo.length > 0) {
+        sortedGeo.forEach(([city, count]) => {
+            const li = document.createElement('li');
+            li.textContent = `${city}: ${count} lead`;
+            geoList.appendChild(li);
+        });
+    } else {
+        geoList.innerHTML = '<li class="no-data">Nessun dato geografico disponibile.</li>';
+    }
+
+    // Tasso di Conversione Quiz -> Chat
+    let convertedLeadsCount = 0;
+    const uniqueQuizUsers = new Set();
+
+    allQuizResults.forEach(quiz => {
+        // Usa l'email (o un altro identificatore univoco) per collegare quiz e chat
+        if (quiz.email) {
+            uniqueQuizUsers.add(quiz.email);
+            if (uniqueChatUsers.has(quiz.email)) { // Assumendo che userId in chat sia l'email
+                convertedLeadsCount++;
+            }
+        }
+    });
+
+    const quizUsersCount = uniqueQuizUsers.size;
+    const conversionRate = quizUsersCount > 0 ? (convertedLeadsCount / quizUsersCount) * 100 : 0;
+    document.getElementById('kpiQuizToChatConversion').textContent = `${conversionRate.toFixed(1)}%`;
+
+
+    // Per BLOCCO 4: Analisi Geografica Lead Caldi
+    const hotGeoAreasList = document.getElementById('hotGeoAreas');
+    hotGeoAreasList.innerHTML = '';
+    const sortedHotGeo = Object.entries(highScoreLeadsByCity).sort(([, a], [, b]) => b - a);
+    if (sortedHotGeo.length > 0) {
+        sortedHotGeo.slice(0, 3).forEach(([city, count]) => { // Mostra le top 3 aree
+            const li = document.createElement('li');
+            li.textContent = `${city}: ${count} lead ad alto punteggio`;
+            hotGeoAreasList.appendChild(li);
+        });
+    } else {
+        hotGeoAreasList.innerHTML = '<li>Nessuna area calda identificata.</li>';
+    }
+}
+
+
+// 4️⃣ BLOCCO 4: Opportunità Business & Insights
+function renderBusinessOpportunities(allQuizResults, allChatConversations) {
+    console.log('💰 Calcolo opportunità business per BLOCCO 4...');
+
+    // Lead ad alto punteggio non ancora contattati (semplificato)
+    const highScoreLeads = allQuizResults.filter(quiz => quiz.lead_score && quiz.lead_score > 70);
+    const highScoreLeadsCountElem = document.getElementById('highScoreLeadsCount');
+    highScoreLeadsCountElem.textContent = highScoreLeads.length;
+
+    const highScoreLeadsListElem = document.getElementById('highScoreLeadsList');
+    highScoreLeadsListElem.innerHTML = '';
+    if (highScoreLeads.length > 0) {
+        highScoreLeads.slice(0, 5).forEach(lead => { // Mostra i top 5
+            const li = document.createElement('li');
+            li.textContent = `${lead.name || 'N/A'} (${lead.city || 'N/A'}) - Score: ${lead.lead_score}%`;
+            highScoreLeadsListElem.appendChild(li);
+        });
+    } else {
+        highScoreLeadsListElem.innerHTML = '<li>Nessun lead ad alto punteggio trovato.</li>';
+    }
+
+
+    // Segmentazione per obiettivi comuni (Dai Quiz)
+    const goalCounts = {};
+    allQuizResults.forEach(quiz => {
+        if (quiz.goals && Array.isArray(quiz.goals)) {
+            quiz.goals.forEach(goal => {
+                goalCounts[goal] = (goalCounts[goal] || 0) + 1;
+            });
+        }
+    });
+    const sortedGoals = Object.entries(goalCounts).sort(([, a], [, b]) => b - a);
+    const commonGoalsDiv = document.getElementById('commonGoals');
+    commonGoalsDiv.innerHTML = '';
+    if (sortedGoals.length > 0) {
+        sortedGoals.slice(0, 5).forEach(([goal, count]) => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = `${goal} (${count})`;
+            commonGoalsDiv.appendChild(tag);
+        });
+    } else {
+        commonGoalsDiv.textContent = 'N/A';
+    }
+
+    // Trend dalle chat (Richieste frequenti per argomento)
+    const chatTopicCounts = {};
+    allChatConversations.forEach(chat => {
+        if (chat.topic) {
+            chatTopicCounts[chat.topic] = (chatTopicCounts[chat.topic] || 0) + 1;
+        }
+    });
+    const sortedChatTopics = Object.entries(chatTopicCounts).sort(([, a], [, b]) => b - a);
+    const chatTrendsDiv = document.getElementById('chatTrends');
+    chatTrendsDiv.innerHTML = '';
+    if (sortedChatTopics.length > 0) {
+        sortedChatTopics.slice(0, 5).forEach(([topic, count]) => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = `${topic} (${count})`;
+            chatTrendsDiv.appendChild(tag);
+        });
+    } else {
+        chatTrendsDiv.textContent = 'N/A';
+    }
+
+    // Raccomandazioni Automatiche (Esempio descrittivo) - Gestito in HTML
+}
+
+
+// --- DETAIL MODALS (PLACEHOLDERS) ---
+window.viewQuizDetails = async function(quizId) {
+    console.log('Visualizzazione dettagli quiz:', quizId);
+    try {
+        const quiz = await getQuizResultById(quizId);
+        if (quiz) {
+            const modalContent = `
+                <h3>Dettagli Quiz Lead: ${quiz.name || 'N/A'}</h3>
+                <p><strong>ID:</strong> ${quiz.id}</p>
+                <p><strong>Email:</strong> ${quiz.email || 'N/A'}</p>
+                <p><strong>Età:</strong> ${quiz.age || 'N/A'}</p>
+                <p><strong>Città:</strong> ${quiz.city || 'N/A'}</p>
+                <p><strong>Genere:</strong> ${quiz.gender || 'N/A'}</p>
+                <p><strong>Profilo:</strong> ${getProfileIcon(quiz.profile)} ${quiz.profile || 'N/A'}</p>
+                <p><strong>Obiettivi:</strong> ${(quiz.goals && quiz.goals.length > 0) ? quiz.goals.join(', ') : 'N/A'}</p>
+                <p><strong>Tipo di Allenamento:</strong> ${quiz.activity_level || 'N/A'}</p>
+                <p><strong>Ostacoli:</strong> ${(quiz.obstacles && quiz.obstacles.length > 0) ? quiz.obstacles.join(', ') : 'N/A'}</p>
+                <p><strong>Score Lead:</strong> ${quiz.lead_score ? `${quiz.lead_score}%` : '0%'}</p>
+                <p><strong>Data Completamento:</strong> ${quiz.timestamp ? formatDateTime(quiz.timestamp) : 'N/A'}</p>
+            `;
+            showModal(modalContent);
+        } else {
+            alert('Dettagli quiz non trovati.');
+        }
+    } catch (error) {
+        console.error('Errore nel recupero dettagli quiz:', error);
+        alert('Impossibile caricare i dettagli del quiz.');
+    }
+};
+
+window.viewConversationDetails = function(conversationId) {
+    console.log('Visualizzazione dettagli conversazione:', conversationId);
+    // Qui potresti implementare una funzione simile a viewQuizDetails
+    // per caricare e mostrare i dettagli completi di una conversazione specifica.
+    alert('Funzione per dettagli conversazione da implementare. ID: ' + conversationId);
+};
+
+
+function showModal(content) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
+        z-index: 1000;
+    `;
+    modal.innerHTML = `
+        <div style="background: #2a2a2a; padding: 30px; border-radius: 10px; max-width: 600px;
+                    width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.5); color: white;
+                    border: 1px solid #ff6600;">
+            <button style="float: right; background: none; border: none; color: #ff6600;
+                           font-size: 1.5rem; cursor: pointer;">&times;</button>
+            ${content}
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden'; // Impedisce lo scrolling del body
+
+    modal.querySelector('button').onclick = () => {
+        modal.remove();
+        document.body.style.overflow = 'auto';
+    };
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            modal.remove();
+            document.body.style.overflow = 'auto';
+        }
+    };
+}
+
+
+// --- INITIALIZATION ---
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
+    updateConnectionStatus('connecting', 'Caricamento dati Firebase...');
+
+    try {
+        const quizResults = await renderQuizData(); // Carica e renderizza i dati del quiz
+        const { conversations, uniqueChatUsers } = await renderChatbotData(quizResults); // Carica e renderizza i dati del chatbot
+
+        renderActivitySummary(quizResults, uniqueChatUsers); // Renderizza BLOCCO 3
+        renderBusinessOpportunities(quizResults, conversations); // Renderizza BLOCCO 4
+
+        updateConnectionStatus('connected', `✅ Dashboard inizializzata e dati caricati. Ultimo aggiornamento: ${new Date().toLocaleTimeString('it-IT')}`);
+    } catch (error) {
+        console.error('Errore critico durante l\'inizializzazione della dashboard:', error);
+        updateConnectionStatus('error', '🔴 Errore durante il caricamento dei dati.');
+    }
+});
