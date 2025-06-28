@@ -19,7 +19,6 @@
             margin-top: 50px;
         }
 
-        /* Connection Status */
         .connection-status {
             position: fixed;
             top: 0;
@@ -153,6 +152,40 @@
             padding-bottom: 10px;
         }
 
+        .lead-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .lead-tab {
+            background: none;
+            border: none;
+            color: #ccc;
+            padding: 15px 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .lead-tab.active {
+            color: #ff6600;
+            border-bottom-color: #ff6600;
+        }
+
+        .lead-tab:hover {
+            color: #ff9933;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -183,11 +216,6 @@
             font-style: italic;
             color: #888;
             padding: 20px;
-        }
-
-        .profile-icon {
-            margin-right: 8px;
-            font-size: 1.2em;
         }
 
         .lead-score {
@@ -223,6 +251,7 @@
             cursor: pointer;
             font-size: 0.9rem;
             transition: background-color 0.3s ease;
+            margin-right: 5px;
         }
 
         .action-btn:hover {
@@ -250,46 +279,57 @@
             transform: rotate(30deg);
         }
 
-        .insight-card {
-            background: rgba(255,102,0,0.1);
+        .chat-analytics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .analytics-card {
+            background: rgba(255,102,0,0.05);
+            border: 1px solid rgba(255,102,0,0.2);
             border-radius: 10px;
             padding: 20px;
-            border: 1px solid rgba(255,102,0,0.2);
         }
 
-        .chart-bar {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .chart-label {
-            width: 120px;
-            font-size: 0.9rem;
-            color: #ccc;
-        }
-
-        .chart-progress {
-            flex: 1;
-            height: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            margin: 0 10px;
-            overflow: hidden;
-        }
-
-        .chart-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-            border-radius: 10px;
-            transition: width 0.8s ease;
-        }
-
-        .chart-value {
-            width: 50px;
-            text-align: right;
-            font-weight: bold;
+        .analytics-card h4 {
             color: #ff6600;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .analytics-list {
+            list-style: none;
+        }
+
+        .analytics-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .conversation-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .status-ongoing {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-abandoned {
+            background: #f44336;
+            color: white;
         }
 
         .opportunity-card {
@@ -345,17 +385,25 @@
                 padding: 8px 10px;
                 font-size: 0.8rem;
             }
+
+            .lead-tabs {
+                flex-direction: column;
+            }
+
+            .chat-analytics {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="connection-status status-connecting" id="connection-status">
-        🔄 Connessione a Firebase...
+        🔄 Inizializzazione Dashboard...
     </div>
 
     <div class="header">
         <h1>Dashboard Analitica TribuCoach</h1>
-        <p>Monitora i tuoi lead, i risultati dei quiz, le conversazioni chatbot e le metriche chiave in tempo reale.</p>
+        <p>Monitora i tuoi lead quiz, conversazioni chatbot e metriche chiave in tempo reale.</p>
     </div>
 
     <div class="dashboard">
@@ -363,12 +411,25 @@
             <span class="real-time-indicator"></span>Live Data
             Ultimo aggiornamento: <span id="last-update">Caricamento...</span>
             <button class="refresh-btn" onclick="refreshData()">🔄</button>
-            <button class="action-btn" onclick="exportLeadsToCSV()" style="margin-left: 10px;">📊 Export CSV</button>
-            <button class="action-btn" onclick="switchToFirebase()" style="margin-left: 10px; background: #4CAF50;">🔗 Connetti Firebase</button>
+            <button class="action-btn" onclick="exportLeadsToCSV()">📊 Export CSV</button>
         </div>
 
         <!-- Metriche Principali -->
         <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Quiz Lead</h3>
+                <div class="value" id="total-quiz-leads">-</div>
+                <div class="trend positive" id="quiz-leads-trend">
+                    <span class="icon">🎯</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Chat Lead</h3>
+                <div class="value" id="total-chat-leads">-</div>
+                <div class="trend positive" id="chat-leads-trend">
+                    <span class="icon">💬</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
             <div class="metric-card">
                 <h3>Lead Totali</h3>
                 <div class="value" id="total-leads">-</div>
@@ -377,65 +438,114 @@
                 </div>
             </div>
             <div class="metric-card">
-                <h3>Quiz Completati</h3>
-                <div class="value" id="total-quizzes">-</div>
-                <div class="trend positive" id="quizzes-trend">
-                    <span class="icon">📊</span><span class="percentage">0%</span> vs. Settimana scorsa
-                </div>
-            </div>
-            <div class="metric-card">
-                <h3>Conversazioni Chatbot</h3>
-                <div class="value" id="total-conversations">-</div>
-                <div class="trend positive" id="conversations-trend">
-                    <span class="icon">💬</span><span class="percentage">0%</span> vs. Settimana scorsa
-                </div>
-            </div>
-            <div class="metric-card">
-                <h3>Utenti Attivi Oggi</h3>
-                <div class="value" id="daily-active-users">-</div>
-                <div class="trend positive" id="active-users-trend">
-                    <span class="icon">👥</span><span class="percentage">0%</span> vs. Ieri
-                </div>
-            </div>
-            <div class="metric-card">
-                <h3>Tasso di Conversione</h3>
-                <div class="value" id="conversion-rate">-</div>
-                <div class="trend positive" id="conversion-trend">
-                    <span class="icon">🎯</span><span class="percentage">0%</span> vs. Settimana scorsa
+                <h3>Conversioni Quiz</h3>
+                <div class="value" id="quiz-conversion">-</div>
+                <div class="trend positive" id="quiz-conversion-trend">
+                    <span class="icon">🎯</span><span class="percentage">0%</span> Score medio
                 </div>
             </div>
             <div class="metric-card">
                 <h3>Durata Media Chat</h3>
-                <div class="value" id="avg-conversation-duration">-</div>
-                <div class="trend positive" id="duration-trend">
-                    <span class="icon">⏱️</span><span class="percentage">0%</span> vs. Settimana scorsa
+                <div class="value" id="avg-chat-duration">-</div>
+                <div class="trend positive" id="chat-duration-trend">
+                    <span class="icon">⏱️</span><span class="percentage">0</span> messaggi medi
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Lead Oggi</h3>
+                <div class="value" id="daily-leads">-</div>
+                <div class="trend positive" id="daily-leads-trend">
+                    <span class="icon">📅</span><span class="percentage">0</span> nelle ultime 24h
                 </div>
             </div>
         </div>
 
-        <!-- Gestione Lead (Quiz) -->
+        <!-- Gestione Lead con Tabs -->
         <div class="dashboard-section">
-            <h2>🎯 Gestione Lead</h2>
-            <table class="data-table leads-table">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>WhatsApp/Email</th>
-                        <th>Età</th>
-                        <th>Profilo</th>
-                        <th>Score</th>
-                        <th>Obiettivi</th>
-                        <th>Allenamento</th>
-                        <th>Ostacoli</th>
-                        <th>Livello</th>
-                        <th>Data</th>
-                        <th>Azioni</th>
-                    </tr>
-                </thead>
-                <tbody id="leads-table-body">
-                    <tr><td colspan="11" class="no-data">Caricamento lead...</td></tr>
-                </tbody>
-            </table>
+            <h2>📊 Gestione Lead Completa</h2>
+            
+            <div class="lead-tabs">
+                <button class="lead-tab active" onclick="switchTab('quiz')">🎯 Quiz Lead</button>
+                <button class="lead-tab" onclick="switchTab('chat')">💬 Chat Lead</button>
+                <button class="lead-tab" onclick="switchTab('analytics')">📈 Analytics Chat</button>
+            </div>
+
+            <!-- Tab Quiz Lead -->
+            <div id="quiz-tab" class="tab-content active">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>WhatsApp/Email</th>
+                            <th>Età</th>
+                            <th>Profilo</th>
+                            <th>Score</th>
+                            <th>Obiettivi</th>
+                            <th>Ostacoli</th>
+                            <th>Data</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quiz-leads-table">
+                        <tr><td colspan="9" class="no-data">Caricamento quiz lead...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab Chat Lead -->
+            <div id="chat-tab" class="tab-content">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>WhatsApp</th>
+                            <th>Età</th>
+                            <th>Esigenze</th>
+                            <th>Interessi</th>
+                            <th>Messaggi</th>
+                            <th>Stato</th>
+                            <th>Data</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chat-leads-table">
+                        <tr><td colspan="9" class="no-data">Caricamento chat lead...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab Analytics Chat -->
+            <div id="analytics-tab" class="tab-content">
+                <div class="chat-analytics">
+                    <div class="analytics-card">
+                        <h4>🔥 Domande Più Frequenti</h4>
+                        <ul class="analytics-list" id="frequent-questions">
+                            <li>Caricamento...</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4>🎯 Esigenze Principali</h4>
+                        <ul class="analytics-list" id="main-needs">
+                            <li>Caricamento...</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4>👥 Demografia Età</h4>
+                        <ul class="analytics-list" id="age-demographics">
+                            <li>Caricamento...</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h4>💪 Interessi Fitness</h4>
+                        <ul class="analytics-list" id="fitness-interests">
+                            <li>Caricamento...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Opportunità Business -->
@@ -446,22 +556,33 @@
     </div>
 
     <script>
-        // === TRACKING E DASHBOARD COMBINATI ===
-        
-        // Dati dashboard mock (in memoria)
+        // === DATI DASHBOARD ===
         let dashboardData = {
             quizResults: [],
-            conversations: [],
+            chatConversations: [],
             users: [],
             events: [],
             metrics: {}
         };
 
+        // === GESTIONE TABS ===
+        function switchTab(tabName) {
+            // Rimuovi classe active da tutti i tab
+            document.querySelectorAll('.lead-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Attiva tab corrente
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            console.log(`📋 Switched to ${tabName} tab`);
+        }
+
         // === CARICAMENTO DATI MOCK ===
         function loadMockData() {
-            console.log('📊 Caricamento dati mock...');
+            console.log('📊 Caricamento dati mock per demo...');
             
-            // Mock quiz results - DATASET ESPANSO
+            // Mock quiz results
             dashboardData.quizResults = [
                 {
                     id: 'quiz_1',
@@ -475,8 +596,6 @@
                     obstacles: ['Poco tempo', 'Stress lavoro'],
                     training_style: 'Con personal trainer',
                     activity_level: 'Molto attivo',
-                    diet: 'Buona',
-                    city: 'Milano',
                     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
                 },
                 {
@@ -491,8 +610,6 @@
                     obstacles: ['Motivazione', 'Dieta'],
                     training_style: 'Mi alleno da solo',
                     activity_level: 'Poco attivo',
-                    diet: 'Da migliorare',
-                    city: 'Roma',
                     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000)
                 },
                 {
@@ -507,131 +624,106 @@
                     obstacles: ['Infortuni passati'],
                     training_style: 'Con personal trainer',
                     activity_level: 'Molto attivo',
-                    diet: 'Eccellente',
-                    city: 'Torino',
                     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
-                },
-                {
-                    id: 'quiz_4',
-                    name: 'Sofia Ferrari',
-                    email: 'sofia@email.com',
-                    whatsapp: '+393347777888',
-                    age: 26,
-                    profile: 'Guerriero',
-                    score: 78,
-                    goals: ['Tonificare', 'Aumentare energia'],
-                    obstacles: ['Orari di lavoro', 'Motivazione'],
-                    training_style: 'Mi alleno da solo',
-                    activity_level: 'Attivo',
-                    diet: 'Buona',
-                    city: 'Napoli',
-                    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
-                },
-                {
-                    id: 'quiz_5',
-                    name: 'Alessandro Neri',
-                    email: 'alex@email.com',
-                    whatsapp: '+393356669999',
-                    age: 35,
-                    profile: 'Nuovo Esploratore',
-                    score: 38,
-                    goals: ['Perdere peso', 'Migliorare salute'],
-                    obstacles: ['Poco tempo', 'Famiglia'],
-                    training_style: 'Mi alleno da solo',
-                    activity_level: 'Poco attivo',
-                    diet: 'Da migliorare',
-                    city: 'Firenze',
-                    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000)
-                },
-                {
-                    id: 'quiz_6',
-                    name: 'Giulia Marino',
-                    email: 'giulia@email.com',
-                    whatsapp: '+393368881111',
-                    age: 29,
-                    profile: 'Atleta',
-                    score: 88,
-                    goals: ['Performance atletica', 'Forza funzionale'],
-                    obstacles: ['Recupero'],
-                    training_style: 'Con personal trainer',
-                    activity_level: 'Molto attivo',
-                    diet: 'Eccellente',
-                    city: 'Bologna',
-                    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
-                },
-                {
-                    id: 'quiz_7',
-                    name: 'Roberto Silva',
-                    email: 'roberto@email.com',
-                    whatsapp: '+393377773333',
-                    age: 42,
-                    profile: 'Guerriero',
-                    score: 65,
-                    goals: ['Mantenersi in forma', 'Resistenza'],
-                    obstacles: ['Stress', 'Viaggi di lavoro'],
-                    training_style: 'Ibrido',
-                    activity_level: 'Moderatamente attivo',
-                    diet: 'Buona',
-                    city: 'Palermo',
-                    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
-                },
-                {
-                    id: 'quiz_8',
-                    name: 'Chiara Conte',
-                    email: 'chiara@email.com',
-                    whatsapp: '+393385554444',
-                    age: 24,
-                    profile: 'Nuovo Esploratore',
-                    score: 52,
-                    goals: ['Iniziare attività fisica', 'Benessere'],
-                    obstacles: ['Inesperienza', 'Timidezza'],
-                    training_style: 'Mi alleno da solo',
-                    activity_level: 'Poco attivo',
-                    diet: 'Media',
-                    city: 'Verona',
-                    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
                 }
             ];
 
-            // Ordina per timestamp più recente
-            dashboardData.quizResults.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            // Mock chat conversations
+            dashboardData.chatConversations = [
+                {
+                    id: 'chat_1',
+                    userName: 'Luigi Bianchi',
+                    userPhone: '+393334567890',
+                    userAge: 30,
+                    needs: 'Perdere peso e tonificare',
+                    interests: 'Palestra, Crossfit, Nuoto',
+                    messageCount: 15,
+                    status: 'ongoing',
+                    duration: '12 min',
+                    frequentQuestions: ['Quanto costa?', 'Che orari avete?'],
+                    fullConversation: 'Utente: Ciao, vorrei info sui vostri programmi\nBot: Ciao! Che obiettivi hai?\nUtente: Vorrei perdere peso...\n[conversazione continua]',
+                    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
+                },
+                {
+                    id: 'chat_2',
+                    userName: 'Sara Romano',
+                    userPhone: '+393357778899',
+                    userAge: 25,
+                    needs: 'Aumentare massa muscolare',
+                    interests: 'Bodybuilding, Powerlifting',
+                    messageCount: 8,
+                    status: 'completed',
+                    duration: '8 min',
+                    frequentQuestions: ['Avete personal trainer?', 'Che attrezzature avete?'],
+                    fullConversation: 'Utente: Ciao, cerco una palestra seria\nBot: Perfetto! Che tipo di allenamento preferisci?\n[conversazione continua]',
+                    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
+                },
+                {
+                    id: 'chat_3',
+                    userName: 'Mario Verdi',
+                    userPhone: '+393368881122',
+                    userAge: 35,
+                    needs: 'Mantenersi in forma',
+                    interests: 'Fitness generale, Yoga',
+                    messageCount: 12,
+                    status: 'abandoned',
+                    duration: '5 min',
+                    frequentQuestions: ['Quanto costa?', 'Posso venire a vedere?'],
+                    fullConversation: 'Utente: Salve, che servizi offrite?\nBot: Ciao! Abbiamo vari programmi fitness...\nUtente: Ok grazie\n[conversazione interrotta]',
+                    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
+                }
+            ];
             
             updateDashboard();
-            updateConnectionStatus(true);
-            console.log('✅ Dati mock caricati successfully');
+            updateConnectionStatus(true, 'Demo Mode - Dati Mock Attivi');
+            console.log('✅ Dati mock caricati per demo');
         }
 
         // === AGGIORNAMENTO DASHBOARD ===
         function updateDashboard() {
             updateMetrics();
-            updateLeadsTable();
+            updateQuizLeadsTable();
+            updateChatLeadsTable();
+            updateChatAnalytics();
             updateBusinessOpportunities();
             updateLastUpdateTime();
         }
 
         function updateMetrics() {
-            const totalQuizzes = dashboardData.quizResults.length;
-            const avgScore = totalQuizzes > 0 ? 
-                (dashboardData.quizResults.reduce((sum, quiz) => sum + quiz.score, 0) / totalQuizzes).toFixed(1) : 0;
-            const highScoreLeads = dashboardData.quizResults.filter(quiz => quiz.score >= 70).length;
+            const quizLeads = dashboardData.quizResults.length;
+            const chatLeads = dashboardData.chatConversations.length;
+            const totalLeads = quizLeads + chatLeads;
             
-            // Aggiorna metriche
-            updateElement('total-quizzes', totalQuizzes);
-            updateElement('total-leads', totalQuizzes); // Stesso valore per ora
-            updateElement('conversion-rate', `${avgScore}%`);
-            updateElement('daily-active-users', highScoreLeads);
-            updateElement('total-conversations', '0'); 
-            updateElement('avg-conversation-duration', '0 min');
+            // Quiz metrics
+            const avgScore = quizLeads > 0 ? 
+                (dashboardData.quizResults.reduce((sum, quiz) => sum + (quiz.score || 0), 0) / quizLeads).toFixed(1) : 0;
             
-            console.log(`📊 Metriche aggiornate: ${totalQuizzes} quiz, ${avgScore}% avg score`);
+            // Chat metrics
+            const avgChatDuration = chatLeads > 0 ?
+                (dashboardData.chatConversations.reduce((sum, chat) => sum + (chat.messageCount || 0), 0) / chatLeads).toFixed(0) : 0;
+            
+            // Oggi
+            const today = new Date().toDateString();
+            const todayLeads = [...dashboardData.quizResults, ...dashboardData.chatConversations]
+                .filter(item => new Date(item.timestamp).toDateString() === today).length;
+            
+            // Aggiorna DOM
+            updateElement('total-quiz-leads', quizLeads);
+            updateElement('total-chat-leads', chatLeads);
+            updateElement('total-leads', totalLeads);
+            updateElement('quiz-conversion', `${avgScore}%`);
+            updateElement('avg-chat-duration', `${avgChatDuration}m`);
+            updateElement('daily-leads', todayLeads);
+            
+            console.log(`📊 Metriche aggiornate: ${quizLeads} quiz, ${chatLeads} chat, ${totalLeads} totali`);
         }
 
-        function updateLeadsTable() {
-            const tbody = document.getElementById('leads-table-body');
+        function updateQuizLeadsTable() {
+            const tbody = document.getElementById('quiz-leads-table');
             if (!tbody) return;
             
             if (dashboardData.quizResults.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" class="no-data">Nessun quiz completato ancora</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">Nessun quiz completato</td></tr>';
                 return;
             }
             
@@ -651,13 +743,11 @@
                         <td>${icon} ${quiz.profile || 'N/A'}</td>
                         <td><span class="lead-score ${scoreClass}">${score}</span></td>
                         <td title="${goals}">${goals.length > 30 ? goals.substring(0, 30) + '...' : goals}</td>
-                        <td>${quiz.training_style || 'N/A'}</td>
                         <td title="${obstacles}">${obstacles.length > 20 ? obstacles.substring(0, 20) + '...' : obstacles}</td>
-                        <td>${quiz.activity_level || 'N/A'}</td>
                         <td>${formatDateTime(quiz.timestamp)}</td>
                         <td>
-                            <button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', '${quiz.profile}')">WhatsApp</button>
-                            <button class="action-btn" onclick="viewLeadDetails('${quiz.id}')" style="background: #4CAF50; margin-left: 5px;">Dettagli</button>
+                            <button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', 'quiz')">WhatsApp</button>
+                            <button class="action-btn" onclick="viewQuizDetails('${quiz.id}')" style="background: #4CAF50;">Dettagli</button>
                         </td>
                     </tr>
                 `;
@@ -666,47 +756,181 @@
             tbody.innerHTML = rows;
         }
 
-        function updateBusinessOpportunities() {
-            const opportunities = [];
+        function updateChatLeadsTable() {
+            const tbody = document.getElementById('chat-leads-table');
+            if (!tbody) return;
             
-            if (dashboardData.quizResults.length === 0) {
-                updateElement('business-opportunities', '<div class="no-data">Nessun dato sufficiente per analisi business</div>');
+            if (dashboardData.chatConversations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">Nessuna conversazione chat</td></tr>';
                 return;
             }
             
-            // Lead ad alto punteggio
-            const highScoreLeads = dashboardData.quizResults.filter(quiz => quiz.score >= 70);
-            if (highScoreLeads.length > 0) {
-                opportunities.push({
-                    title: `🎯 ${highScoreLeads.length} Lead Premium Non Contattati`,
-                    description: `Lead con punteggio 70+ pronti per conversione immediata.`,
-                    priority: "high",
-                    action: "Contattare entro 24h con offerta personalizzata.",
-                    leads: highScoreLeads.map(l => l.name).join(', ')
-                });
-            }
+            const rows = dashboardData.chatConversations.map(chat => {
+                const status = chat.status || 'ongoing';
+                const statusClass = status === 'completed' ? 'status-completed' : 
+                                 status === 'abandoned' ? 'status-abandoned' : 'status-ongoing';
+                
+                return `
+                    <tr>
+                        <td>${chat.userName || 'Anonimo'}</td>
+                        <td>${chat.userPhone || 'N/A'}</td>
+                        <td>${chat.userAge || 'N/A'}</td>
+                        <td title="${chat.needs || 'N/A'}">${(chat.needs || 'N/A').substring(0, 20)}${chat.needs && chat.needs.length > 20 ? '...' : ''}</td>
+                        <td title="${chat.interests || 'N/A'}">${(chat.interests || 'N/A').substring(0, 20)}${chat.interests && chat.interests.length > 20 ? '...' : ''}</td>
+                        <td>${chat.messageCount || 0}</td>
+                        <td><span class="conversation-status ${statusClass}">${status}</span></td>
+                        <td>${formatDateTime(chat.timestamp)}</td>
+                        <td>
+                            <button class="action-btn" onclick="contactLeadWhatsApp('${chat.userPhone}', '${chat.userName}', 'chat')">WhatsApp</button>
+                            <button class="action-btn" onclick="viewChatDetails('${chat.id}')" style="background: #4CAF50;">Chat</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
             
-            // Obiettivi comuni
-            const goalsAnalysis = {};
-            dashboardData.quizResults.forEach(quiz => {
-                if (quiz.goals && Array.isArray(quiz.goals)) {
-                    quiz.goals.forEach(goal => {
-                        goalsAnalysis[goal] = (goalsAnalysis[goal] || 0) + 1;
+            tbody.innerHTML = rows;
+        }
+
+        function updateChatAnalytics() {
+            if (dashboardData.chatConversations.length === 0) {
+                document.getElementById('frequent-questions').innerHTML = '<li>Nessun dato disponibile</li>';
+                document.getElementById('main-needs').innerHTML = '<li>Nessun dato disponibile</li>';
+                document.getElementById('age-demographics').innerHTML = '<li>Nessun dato disponibile</li>';
+                document.getElementById('fitness-interests').innerHTML = '<li>Nessun dato disponibile</li>';
+                return;
+            }
+
+            // Analisi domande frequenti
+            const questions = {};
+            dashboardData.chatConversations.forEach(chat => {
+                if (chat.frequentQuestions && Array.isArray(chat.frequentQuestions)) {
+                    chat.frequentQuestions.forEach(q => {
+                        questions[q] = (questions[q] || 0) + 1;
                     });
                 }
             });
             
-            const topGoal = Object.entries(goalsAnalysis).sort(([,a], [,b]) => b - a)[0];
-            if (topGoal && topGoal[1] >= 2) {
+            const topQuestions = Object.entries(questions)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            document.getElementById('frequent-questions').innerHTML = 
+                topQuestions.length > 0 ? 
+                topQuestions.map(([q, count]) => `<li><span>${q}</span><strong>${count}x</strong></li>`).join('') :
+                '<li>Nessuna domanda registrata</li>';
+
+            // Analisi esigenze
+            const needs = {};
+            dashboardData.chatConversations.forEach(chat => {
+                if (chat.needs) {
+                    needs[chat.needs] = (needs[chat.needs] || 0) + 1;
+                }
+            });
+            
+            const topNeeds = Object.entries(needs)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            document.getElementById('main-needs').innerHTML = 
+                topNeeds.length > 0 ? 
+                topNeeds.map(([need, count]) => `<li><span>${need}</span><strong>${count}</strong></li>`).join('') :
+                '<li>Nessuna esigenza registrata</li>';
+
+            // Demografia età
+            const ageGroups = {
+                '18-25': 0,
+                '26-35': 0,
+                '36-45': 0,
+                '46+': 0
+            };
+            
+            dashboardData.chatConversations.forEach(chat => {
+                const age = parseInt(chat.userAge);
+                if (age >= 18 && age <= 25) ageGroups['18-25']++;
+                else if (age >= 26 && age <= 35) ageGroups['26-35']++;
+                else if (age >= 36 && age <= 45) ageGroups['36-45']++;
+                else if (age >= 46) ageGroups['46+']++;
+            });
+            
+            document.getElementById('age-demographics').innerHTML = 
+                Object.entries(ageGroups)
+                    .filter(([,count]) => count > 0)
+                    .map(([range, count]) => `<li><span>${range} anni</span><strong>${count}</strong></li>`)
+                    .join('') || '<li>Nessun dato età</li>';
+
+            // Interessi fitness
+            const interests = {};
+            dashboardData.chatConversations.forEach(chat => {
+                if (chat.interests) {
+                    chat.interests.split(',').forEach(interest => {
+                        const clean = interest.trim();
+                        if (clean) interests[clean] = (interests[clean] || 0) + 1;
+                    });
+                }
+            });
+            
+            const topInterests = Object.entries(interests)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5);
+            
+            document.getElementById('fitness-interests').innerHTML = 
+                topInterests.length > 0 ? 
+                topInterests.map(([interest, count]) => `<li><span>${interest}</span><strong>${count}</strong></li>`).join('') :
+                '<li>Nessun interesse registrato</li>';
+        }
+
+        function updateBusinessOpportunities() {
+            const opportunities = [];
+            
+            // Analisi lead quiz ad alto punteggio
+            const highScoreQuiz = dashboardData.quizResults.filter(quiz => quiz.score >= 70);
+            if (highScoreQuiz.length > 0) {
                 opportunities.push({
-                    title: `💪 Programma Specializzato "${topGoal[0]}"`,
-                    description: `${topGoal[1]} persone interessate allo stesso obiettivo.`,
-                    priority: "medium",
-                    action: "Creare corso di gruppo o programma specifico.",
-                    leads: `${topGoal[1]} persone interessate`
+                    title: `🎯 ${highScoreQuiz.length} Lead Quiz Premium Non Contattati`,
+                    description: `Lead con punteggio 70+ pronti per conversione immediata.`,
+                    priority: "high",
+                    action: "Contattare entro 24h con offerta personalizzata.",
+                    leads: highScoreQuiz.map(l => l.name).join(', ')
                 });
             }
-            
+
+            // Analisi conversazioni chat attive
+            const activeChats = dashboardData.chatConversations.filter(chat => chat.status === 'ongoing');
+            if (activeChats.length > 0) {
+                opportunities.push({
+                    title: `💬 ${activeChats.length} Conversazioni Chat in Corso`,
+                    description: `Utenti attualmente in conversazione con interesse attivo.`,
+                    priority: "high",
+                    action: "Follow-up immediato per convertire interesse in vendita.",
+                    leads: activeChats.map(c => c.userName || 'Anonimo').join(', ')
+                });
+            }
+
+            // Analisi esigenze comuni
+            const allNeeds = [...dashboardData.quizResults, ...dashboardData.chatConversations];
+            const needsAnalysis = {};
+            allNeeds.forEach(item => {
+                const needs = item.goals || item.needs || '';
+                if (typeof needs === 'string' && needs.length > 0) {
+                    needsAnalysis[needs] = (needsAnalysis[needs] || 0) + 1;
+                } else if (Array.isArray(needs)) {
+                    needs.forEach(need => {
+                        needsAnalysis[need] = (needsAnalysis[need] || 0) + 1;
+                    });
+                }
+            });
+
+            const topNeed = Object.entries(needsAnalysis).sort(([,a], [,b]) => b - a)[0];
+            if (topNeed && topNeed[1] >= 3) {
+                opportunities.push({
+                    title: `💪 Programma Specializzato "${topNeed[0]}"`,
+                    description: `${topNeed[1]} persone interessate allo stesso obiettivo.`,
+                    priority: "medium",
+                    action: "Creare corso di gruppo o programma specifico.",
+                    leads: `${topNeed[1]} persone interessate`
+                });
+            }
+
             const opportunitiesHTML = opportunities.map(opp => `
                 <div class="opportunity-card">
                     <h4>${opp.title}<span class="priority ${opp.priority}">${opp.priority.toUpperCase()}</span></h4>
@@ -753,166 +977,6 @@
             }
         }
 
-        // === EXPORT CSV ===
-        window.exportLeadsToCSV = function() {
-            console.log('📊 Esportazione CSV in corso...');
-            
-            if (dashboardData.quizResults.length === 0) {
-                alert('Nessun dato da esportare');
-                return;
-            }
-            
-            // Prepara header CSV
-            const headers = [
-                'Nome',
-                'Email',
-                'WhatsApp',
-                'Età',
-                'Profilo',
-                'Score',
-                'Obiettivi',
-                'Ostacoli',
-                'Stile Allenamento',
-                'Livello Attività',
-                'Dieta',
-                'Città',
-                'Data Iscrizione'
-            ];
-            
-            // Prepara righe CSV
-            const rows = dashboardData.quizResults.map(lead => [
-                lead.name || '',
-                lead.email || '',
-                lead.whatsapp || '',
-                lead.age || '',
-                lead.profile || '',
-                lead.score || '',
-                Array.isArray(lead.goals) ? lead.goals.join('; ') : (lead.goals || ''),
-                Array.isArray(lead.obstacles) ? lead.obstacles.join('; ') : (lead.obstacles || ''),
-                lead.training_style || '',
-                lead.activity_level || '',
-                lead.diet || '',
-                lead.city || '',
-                formatDateTime(lead.timestamp)
-            ]);
-            
-            // Crea contenuto CSV
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
-            ].join('\n');
-            
-            // Download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `tribucoach-leads-${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            console.log(`✅ CSV esportato: ${dashboardData.quizResults.length} lead`);
-            alert(`✅ CSV esportato con successo!\n${dashboardData.quizResults.length} lead salvati nel file.`);
-        };
-
-        // === CONNESSIONE FIREBASE ===
-        let firebaseMode = false;
-        let firebaseAPI = null;
-
-        window.switchToFirebase = async function() {
-            if (firebaseMode) {
-                // Torna a mock mode
-                firebaseMode = false;
-                dashboardData.quizResults = [];
-                loadMockData();
-                updateConnectionStatus(true, 'Modalità Mock - Dati di Test');
-                document.querySelector('[onclick="switchToFirebase()"]').innerHTML = '🔗 Connetti Firebase';
-                document.querySelector('[onclick="switchToFirebase()"]').style.background = '#4CAF50';
-                console.log('🔄 Tornato a modalità mock');
-                return;
-            }
-
-            try {
-                console.log('🔗 Tentativo connessione Firebase...');
-                updateConnectionStatus(false, 'Connessione Firebase...');
-                
-                // Importa dinamicamente Firebase API
-                const firebaseModule = await import('./firebase-api.js');
-                firebaseAPI = firebaseModule;
-                
-                // Test connessione
-                const isConnected = await firebaseAPI.testConnection();
-                
-                if (isConnected) {
-                    firebaseMode = true;
-                    updateConnectionStatus(true, 'Firebase Connesso');
-                    document.querySelector('[onclick="switchToFirebase()"]').innerHTML = '📊 Modalità Mock';
-                    document.querySelector('[onclick="switchToFirebase()"]').style.background = '#ff9800';
-                    
-                    // Carica dati reali
-                    await loadFirebaseData();
-                    console.log('✅ Firebase connesso e dati caricati');
-                } else {
-                    throw new Error('Test connessione fallito');
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore connessione Firebase:', error);
-                updateConnectionStatus(false, 'Errore Firebase - Modalità Mock Attiva');
-                alert('⚠️ Impossibile connettersi a Firebase.\nContinuo con dati mock.');
-            }
-        };
-
-        async function loadFirebaseData() {
-            try {
-                console.log('📊 Caricamento dati Firebase...');
-                
-                // Carica dati da Firebase con gestione errori
-                const [quizResults, conversations, users] = await Promise.allSettled([
-                    firebaseAPI.getAllQuizResults(),
-                    firebaseAPI.getChatbotConversations(),
-                    firebaseAPI.getUsers()
-                ]);
-                
-                // Aggiorna dati dashboard
-                if (quizResults.status === 'fulfilled') {
-                    dashboardData.quizResults = quizResults.value || [];
-                }
-                if (conversations.status === 'fulfilled') {
-                    dashboardData.conversations = conversations.value || [];
-                }
-                if (users.status === 'fulfilled') {
-                    dashboardData.users = users.value || [];
-                }
-                
-                updateDashboard();
-                console.log(`✅ Dati Firebase caricati: ${dashboardData.quizResults.length} quiz, ${dashboardData.conversations.length} chat`);
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento Firebase:', error);
-                // Fallback ai dati mock
-                loadMockData();
-            }
-        }
-
-        // === REFRESH DATA ===
-        window.refreshData = async function() {
-            console.log('🔄 Refresh manuale dati...');
-            
-            if (firebaseMode && firebaseAPI) {
-                // Pulisci cache e ricarica da Firebase
-                firebaseAPI.clearCache();
-                await loadFirebaseData();
-            } else {
-                // Ricarica dati mock
-                loadMockData();
-            }
-            
-            updateLastUpdateTime();
-        };
-
         function updateConnectionStatus(isConnected, customMessage = null) {
             const statusElement = document.getElementById('connection-status');
             if (statusElement) {
@@ -929,108 +993,234 @@
             }
         }
 
-        window.contactLeadWhatsApp = function(whatsapp, name, profile) {
-            if (whatsapp) {
-                const cleanNumber = whatsapp.replace(/[^\d\+]/g, '');
-                const message = encodeURIComponent(`Ciao ${name}! 👋\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${profile}" mostra un grande potenziale! 💪\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto! 🚀`);
+        // === AZIONI LEAD ===
+        function contactLeadWhatsApp(contact, name, type) {
+            if (contact && contact !== 'N/A') {
+                const cleanNumber = contact.replace(/[^\d\+]/g, '');
+                let message = '';
+                
+                if (type === 'quiz') {
+                    message = encodeURIComponent(`Ciao ${name}! 👋\n\nHo visto che hai completato il nostro quiz fitness. I tuoi risultati mostrano un grande potenziale! 💪\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto! 🚀`);
+                } else {
+                    message = encodeURIComponent(`Ciao ${name}! 👋\n\nGrazie per aver chattato con il nostro bot. Ho visto che sei interessato al fitness! 💪\n\nVorresti parlare direttamente con me per i tuoi obiettivi?\n\nA presto! 🚀`);
+                }
+                
                 window.open(`https://wa.me/${cleanNumber}?text=${message}`);
-                console.log('📱 Contatto WhatsApp:', { whatsapp: cleanNumber, name, profile });
+                console.log('📱 Contatto WhatsApp:', { contact: cleanNumber, name, type });
             } else {
                 alert('Numero WhatsApp non disponibile per questo lead');
             }
-        };
+        }
 
-        // Mostra dettagli lead
-        window.viewLeadDetails = function(leadId) {
+        function viewQuizDetails(leadId) {
             const lead = dashboardData.quizResults.find(l => l.id === leadId);
             if (lead) {
-                const details = `🎯 PROFILO COMPLETO: ${lead.name}
-📱 WhatsApp: ${lead.whatsapp || lead.email || 'N/A'}
-📧 Email: ${lead.email || 'N/A'}
-🎂 Età: ${lead.age || 'N/A'} anni
-💪 Profilo: ${lead.profile || 'N/A'} (Score: ${lead.score || 0})
-💎 OBIETTIVI: ${Array.isArray(lead.goals) ? lead.goals.map(g => `\n   • ${g}`).join('') : 'N/A'}
-⏰ ALLENAMENTO = Stile: ${lead.training_style || 'N/A'} • Livello: ${lead.activity_level || 'N/A'}
-🍎 ALIMENTAZIONE = Qualità: ${lead.diet || 'N/A'}
-🚧 OSTACOLI: ${Array.isArray(lead.obstacles) ? lead.obstacles.map(o => `\n   • ${o}`).join('') : 'N/A'}
-🏠 CITTÀ: ${lead.city || 'N/A'}
-📝 NOTE: ${lead.notes || 'Nessuna nota aggiuntiva'}`;
-                
-                // Crea la finestra modale più user-friendly
-                const modal = document.createElement('div');
-                modal.style.cssText = `
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    bottom: 0 !important;
-                    background: rgba(0,0,0,0.9) !important;
-                    z-index: 99999 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    padding: 20px !important;
-                `;
-                modal.className = 'modal-overlay';
-                
-                modal.innerHTML = `
-                    <div style="background: white; border-radius: 15px; padding: 25px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ff6b35; padding-bottom: 15px;">
-                            <h2 style="margin: 0; color: #ff6b35; font-size: 22px;">🎯 Dettagli Lead Completi</h2>
-                            <button onclick="this.closest('.modal-overlay').remove()" style="background: #ff6b35; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold;">×</button>
-                        </div>
-                        <pre style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui; font-size: 14px; line-height: 1.6; color: #333; margin: 0;">${details}</pre>
-                        <div style="margin-top: 25px; text-align: center; display: flex; gap: 15px; justify-content: center;">
-                            <button onclick="this.closest('.modal-overlay').remove()" style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">Chiudi</button>
-                            <button onclick="window.open('https://wa.me/${lead.whatsapp || lead.phone || ''}', '_blank')" style="background: #25d366; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500; display: ${lead.whatsapp || lead.phone ? 'inline-block' : 'none'};">📱 Contatta WhatsApp</button>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(modal);
-                
-                // Previeni scroll del body quando modal è aperto
-                document.body.style.overflow = 'hidden';
-                modal.onclick = (e) => { 
-                    if (e.target === modal) { 
-                        modal.remove(); 
-                        document.body.style.overflow = 'auto'; 
-                    } 
-                };
-                
-                // Chiudi con ESC
-                const closeOnEsc = (e) => { 
-                    if (e.key === 'Escape') { 
-                        modal.remove(); 
-                        document.body.style.overflow = 'auto'; 
-                        document.removeEventListener('keydown', closeOnEsc); 
-                    } 
-                };
-                document.addEventListener('keydown', closeOnEsc);
-                
-                console.log('👁️ Dettagli lead visualizzati:', { leadId, name: lead.name });
+                showLeadModal(lead, 'quiz');
             } else {
                 alert('Lead non trovato');
             }
-        };
+        }
+
+        function viewChatDetails(chatId) {
+            const chat = dashboardData.chatConversations.find(c => c.id === chatId);
+            if (chat) {
+                showLeadModal(chat, 'chat');
+            } else {
+                alert('Conversazione non trovata');
+            }
+        }
+
+        function showLeadModal(data, type) {
+            let content = '';
+            
+            if (type === 'quiz') {
+                content = `🎯 PROFILO QUIZ: ${data.name}
+📱 WhatsApp: ${data.whatsapp || data.email || 'N/A'}
+📧 Email: ${data.email || 'N/A'}
+🎂 Età: ${data.age || 'N/A'} anni
+💪 Profilo: ${data.profile || 'N/A'} (Score: ${data.score || 0})
+🎯 OBIETTIVI: ${Array.isArray(data.goals) ? data.goals.map(g => `\n   • ${g}`).join('') : data.goals || 'N/A'}
+⏰ ALLENAMENTO: Stile: ${data.training_style || 'N/A'} • Livello: ${data.activity_level || 'N/A'}
+🚧 OSTACOLI: ${Array.isArray(data.obstacles) ? data.obstacles.map(o => `\n   • ${o}`).join('') : data.obstacles || 'N/A'}
+📅 DATA: ${formatDateTime(data.timestamp)}`;
+            } else {
+                content = `💬 CONVERSAZIONE CHAT: ${data.userName || 'Anonimo'}
+📱 WhatsApp: ${data.userPhone || 'N/A'}
+🎂 Età: ${data.userAge || 'N/A'} anni
+💭 ESIGENZE: ${data.needs || 'N/A'}
+🎯 INTERESSI: ${data.interests || 'N/A'}
+💬 MESSAGGI: ${data.messageCount || 0}
+📊 STATO: ${data.status || 'ongoing'}
+🕒 DURATA: ${data.duration || 'N/A'}
+📅 INIZIATA: ${formatDateTime(data.timestamp)}
+
+🗨️ CONVERSAZIONE COMPLETA:
+${data.fullConversation || 'Conversazione non disponibile'}`;
+            }
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                background: rgba(0,0,0,0.9) !important;
+                z-index: 99999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 20px !important;
+            `;
+            modal.className = 'modal-overlay';
+            
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 15px; padding: 25px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #ff6b35; padding-bottom: 15px;">
+                        <h2 style="margin: 0; color: #ff6b35; font-size: 22px;">${type === 'quiz' ? '🎯 Dettagli Quiz Lead' : '💬 Dettagli Chat Lead'}</h2>
+                        <button onclick="this.closest('.modal-overlay').remove(); document.body.style.overflow = 'auto';" style="background: #ff6b35; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; font-size: 18px; font-weight: bold;">×</button>
+                    </div>
+                    <pre style="white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui; font-size: 14px; line-height: 1.6; color: #333; margin: 0;">${content}</pre>
+                    <div style="margin-top: 25px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+                        <button onclick="this.closest('.modal-overlay').remove(); document.body.style.overflow = 'auto';" style="background: #6c757d; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500;">Chiudi</button>
+                        <button onclick="window.open('https://wa.me/${(data.whatsapp || data.userPhone || '').replace(/[^\d\+]/g, '')}', '_blank')" style="background: #25d366; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 500; display: ${data.whatsapp || data.userPhone ? 'inline-block' : 'none'};">📱 Contatta WhatsApp</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+            
+            modal.onclick = (e) => { 
+                if (e.target === modal) { 
+                    modal.remove(); 
+                    document.body.style.overflow = 'auto'; 
+                } 
+            };
+            
+            const closeOnEsc = (e) => { 
+                if (e.key === 'Escape') { 
+                    modal.remove(); 
+                    document.body.style.overflow = 'auto'; 
+                    document.removeEventListener('keydown', closeOnEsc); 
+                } 
+            };
+            document.addEventListener('keydown', closeOnEsc);
+        }
+
+        // === EXPORT CSV ===
+        function exportLeadsToCSV() {
+            console.log('📊 Esportazione CSV in corso...');
+            
+            if (dashboardData.quizResults.length === 0 && dashboardData.chatConversations.length === 0) {
+                alert('Nessun dato da esportare');
+                return;
+            }
+            
+            const headers = [
+                'Tipo',
+                'Nome',
+                'Email/WhatsApp',
+                'Età',
+                'Profilo/Stato',
+                'Score/Messaggi',
+                'Obiettivi/Esigenze',
+                'Ostacoli/Interessi',
+                'Dettagli Extra',
+                'Data'
+            ];
+            
+            const rows = [];
+            
+            // Aggiungi quiz results
+            dashboardData.quizResults.forEach(quiz => {
+                rows.push([
+                    'Quiz',
+                    quiz.name || '',
+                    quiz.whatsapp || quiz.email || '',
+                    quiz.age || '',
+                    quiz.profile || '',
+                    quiz.score || '',
+                    Array.isArray(quiz.goals) ? quiz.goals.join('; ') : (quiz.goals || ''),
+                    Array.isArray(quiz.obstacles) ? quiz.obstacles.join('; ') : (quiz.obstacles || ''),
+                    `Allenamento: ${quiz.training_style || 'N/A'} | Livello: ${quiz.activity_level || 'N/A'}`,
+                    formatDateTime(quiz.timestamp)
+                ]);
+            });
+            
+            // Aggiungi chat conversations
+            dashboardData.chatConversations.forEach(chat => {
+                rows.push([
+                    'Chat',
+                    chat.userName || '',
+                    chat.userPhone || '',
+                    chat.userAge || '',
+                    chat.status || '',
+                    chat.messageCount || '',
+                    chat.needs || '',
+                    chat.interests || '',
+                    `Durata: ${chat.duration || 'N/A'}`,
+                    formatDateTime(chat.timestamp)
+                ]);
+            });
+            
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `tribucoach-all-leads-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            const totalLeads = dashboardData.quizResults.length + dashboardData.chatConversations.length;
+            console.log(`✅ CSV esportato: ${totalLeads} lead totali`);
+            alert(`✅ CSV esportato con successo!\n${totalLeads} lead salvati nel file.`);
+        }
+
+        // === REFRESH DATA ===
+        function refreshData() {
+            console.log('🔄 Refresh manuale dati...');
+            updateConnectionStatus(false, 'Aggiornamento dati...');
+            
+            // Per ora ricarica i mock data
+            // In futuro qui ci sarà la chiamata a Firebase
+            setTimeout(() => {
+                loadMockData();
+                updateConnectionStatus(true, 'Dati aggiornati');
+                updateLastUpdateTime();
+            }, 1000);
+        }
 
         // === INIZIALIZZAZIONE ===
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inizializzazione Dashboard TribuCoach...');
             
-            // Simula caricamento
-            updateConnectionStatus(false);
             setTimeout(() => {
                 loadMockData();
-            }, 1500);
+            }, 1000);
             
-            // Aggiorna ogni 30 secondi
+            // Aggiorna timestamp ogni 30 secondi
             setInterval(() => {
                 updateLastUpdateTime();
             }, 30000);
             
             console.log('✅ Dashboard inizializzata');
         });
+
+        // Rendi le funzioni globali per onclick
+        window.switchTab = switchTab;
+        window.contactLeadWhatsApp = contactLeadWhatsApp;
+        window.viewQuizDetails = viewQuizDetails;
+        window.viewChatDetails = viewChatDetails;
+        window.exportLeadsToCSV = exportLeadsToCSV;
+        window.refreshData = refreshData;
 
     </script>
 </body>
