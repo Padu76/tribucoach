@@ -1,209 +1,469 @@
-import { auth, db } from './firebase.js';
-// TUTTI GLI IMPORT DA GSTATIC DEVONO USARE LA STESSA VERSIONE (es. 9.23.0)
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-import { collection, query, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+// dashboard.js - Script principale per la Dashboard TribuCoach
+import { 
+    getAllQuizResults,
+    getLeads,
+    getMetrics,
+    setupQuizListener,
+    setupLeadsListener,
+    setupMetricsListener,
+    formatDateTime,
+    calculateTrend,
+    getProfileIcon,
+    calculateLeadScore,
+    testConnection
+} from './firebase-functions.js';
 
-// Funzione per aggiornare lo stato della connessione
+// Variabili globali
+let currentQuizData = [];
+let currentLeadsData = [];
+let currentMetricsData = [];
+let listeners = [];
+
+// === INIZIALIZZAZIONE ===
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
+    
+    // Test connessione Firebase
+    const isConnected = await testConnection();
+    updateConnectionStatus(isConnected);
+    
+    if (isConnected) {
+        // Carica dati iniziali
+        await loadInitialData();
+        
+        // Attiva listeners real-time
+        setupRealTimeListeners();
+        
+        // Aggiorna display
+        updateDashboard();
+    } else {
+        console.error('❌ Impossibile connettersi a Firebase');
+        updateConnectionStatus(false);
+    }
+});
+
+// === CARICAMENTO DATI INIZIALI ===
+async function loadInitialData() {
+    console.log('📊 Caricamento dati iniziali...');
+    
+    try {
+        // Carica tutti i dati in parallelo
+        const [quizResults, leads, metrics] = await Promise.all([
+            getAllQuizResults(),
+            getLeads(),
+            getMetrics()
+        ]);
+        
+        currentQuizData = quizResults || [];
+        currentLeadsData = leads || [];
+        currentMetricsData = metrics || [];
+        
+        console.log(`📊 Dati caricati: ${currentQuizData.length} quiz, ${currentLeadsData.length} leads, ${currentMetricsData.length} metrics`);
+        
+        updateLastUpdateTime();
+        
+    } catch (error) {
+        console.error('❌ Errore caricamento dati iniziali:', error);
+    }
+}
+
+// === LISTENERS REAL-TIME ===
+function setupRealTimeListeners() {
+    console.log('🔄 Configurazione listeners real-time...');
+    
+    // Listener Quiz
+    const quizListener = setupQuizListener((results) => {
+        console.log(`📊 Quiz aggiornati: ${results.length} documenti`);
+        currentQuizData = results;
+        updateQuizTable();
+        updateMetrics();
+        updateCharts();
+    });
+    
+    // Listener Leads
+    const leadsListener = setupLeadsListener((results) => {
+        console.log(`👥 Leads aggiornati: ${results.length} documenti`);
+        currentLeadsData = results;
+        updateLeadsTable();
+        updateMetrics();
+        updateCharts();
+    });
+    
+    // Listener Metrics
+    const metricsListener = setupMetricsListener((results) => {
+        console.log(`📈 Metrics aggiornati: ${results.length} documenti`);
+        currentMetricsData = results;
+        updateMetrics();
+    });
+    
+    // Salva listeners per cleanup
+    listeners = [quizListener, leadsListener, metricsListener];
+    
+    console.log('✅ Listeners real-time attivi');
+}
+
+// === AGGIORNAMENTO DASHBOARD ===
+function updateDashboard() {
+    console.log('🔄 Aggiornamento dashboard...');
+    updateMetrics();
+    updateQuizTable();
+    updateLeadsTable();
+    updateCharts();
+    updateBusinessOpportunities();
+}
+
+// === AGGIORNAMENTO METRICHE ===
+function updateMetrics() {
+    // Calcola metriche principali
+    const totalQuizzes = currentQuizData.length;
+    const totalLeads = currentLeadsData.length;
+    const avgLeadScore = currentQuizData.length > 0 ? 
+        (currentQuizData.reduce((sum, quiz) => sum + (quiz.score || quiz.lead_score || 0), 0) / currentQuizData.length).toFixed(1) : 0;
+    
+    // Nuovi lead oggi
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newLeadsToday = currentQuizData.filter(quiz => {
+        const quizDate = quiz.timestamp || new Date();
+        return quizDate >= today;
+    }).length;
+    
+    // Aggiorna DOM
+    updateElement('total-quizzes', totalQuizzes);
+    updateElement('total-leads', totalLeads);
+    updateElement('avg-lead-score', avgLeadScore);
+    updateElement('new-leads-today', newLeadsToday);
+    
+    console.log(`📊 Metriche aggiornate: ${totalQuizzes} quiz, ${totalLeads} leads, ${avgLeadScore} avg score, ${newLeadsToday} oggi`);
+}
+
+// === AGGIORNAMENTO TABELLA QUIZ ===
+function updateQuizTable() {
+    const tbody = document.getElementById('quizzes-table-body');
+    if (!tbody) return;
+    
+    if (currentQuizData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun quiz completato ancora</td></tr>';
+        return;
+    }
+    
+    const rows = currentQuizData.slice(0, 20).map(quiz => {
+        const score = quiz.score || quiz.lead_score || 0;
+        const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+        const icon = getProfileIcon(quiz.profile);
+        
+        return `
+            <tr>
+                <td>${quiz.name || 'N/A'}</td>
+                <td>${quiz.email || 'N/A'}</td>
+                <td>${icon} ${quiz.profile || 'N/A'}</td>
+                <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                <td>${formatDateTime(quiz.timestamp)}</td>
+                <td><button class="action-btn" onclick="viewQuizDetails('${quiz.id}')">Dettagli</button></td>
+            </tr>
+        `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+}
+
+// === AGGIORNAMENTO TABELLA LEADS ===
+function updateLeadsTable() {
+    const tbody = document.getElementById('leads-table-body');
+    if (!tbody) return;
+    
+    if (currentLeadsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Nessun lead ancora</td></tr>';
+        return;
+    }
+    
+    const rows = currentLeadsData.slice(0, 20).map(lead => {
+        const score = calculateLeadScore(lead);
+        const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
+        const icon = getProfileIcon(lead.profile);
+        
+        return `
+            <tr>
+                <td>${lead.name || 'N/A'}</td>
+                <td>${lead.email || 'N/A'}</td>
+                <td>${lead.city || 'N/A'}</td>
+                <td>${Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'N/A')}</td>
+                <td>${icon} ${lead.profile || 'N/A'}</td>
+                <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                <td>${formatDateTime(lead.timestamp)}</td>
+                <td><button class="action-btn" onclick="contactLead('${lead.id}')">Contatta</button></td>
+            </tr>
+        `;
+    }).join('');
+    
+    tbody.innerHTML = rows;
+}
+
+// === AGGIORNAMENTO GRAFICI ===
+function updateCharts() {
+    updateGoalsChart();
+    updateChallengesChart();
+    updateBudgetAnalysis();
+    updateTimeAnalysis();
+    updateFrequencyAnalysis();
+    updateLocationAnalysis();
+}
+
+function updateGoalsChart() {
+    const goalsCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        if (quiz.goals && Array.isArray(quiz.goals)) {
+            quiz.goals.forEach(goal => {
+                goalsCount[goal] = (goalsCount[goal] || 0) + 1;
+            });
+        }
+    });
+    
+    const sortedGoals = Object.entries(goalsCount)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5);
+    
+    const maxCount = sortedGoals.length > 0 ? sortedGoals[0][1] : 1;
+    
+    const chartHTML = sortedGoals.map(([goal, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${goal}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / maxCount) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('goals-chart', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+function updateChallengesChart() {
+    const challengesCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        if (quiz.obstacles && Array.isArray(quiz.obstacles)) {
+            quiz.obstacles.forEach(obstacle => {
+                challengesCount[obstacle] = (challengesCount[obstacle] || 0) + 1;
+            });
+        }
+    });
+    
+    const sortedChallenges = Object.entries(challengesCount)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5);
+    
+    const maxCount = sortedChallenges.length > 0 ? sortedChallenges[0][1] : 1;
+    
+    const chartHTML = sortedChallenges.map(([challenge, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${challenge}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / maxCount) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('challenges-chart', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+function updateBudgetAnalysis() {
+    const budgetCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        const budget = quiz.budget || 'Non specificato';
+        budgetCount[budget] = (budgetCount[budget] || 0) + 1;
+    });
+    
+    const chartHTML = Object.entries(budgetCount).map(([budget, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${budget}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(budgetCount))) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('budget-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+function updateTimeAnalysis() {
+    const timeCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        const time = quiz.timeAvailability || quiz.workout_duration || 'Non specificato';
+        timeCount[time] = (timeCount[time] || 0) + 1;
+    });
+    
+    const chartHTML = Object.entries(timeCount).map(([time, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${time}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(timeCount))) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('time-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+function updateFrequencyAnalysis() {
+    const freqCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        const freq = quiz.activity_level || quiz.frequency || 'Non specificato';
+        freqCount[freq] = (freqCount[freq] || 0) + 1;
+    });
+    
+    const chartHTML = Object.entries(freqCount).map(([freq, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${freq}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(freqCount))) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('frequency-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+function updateLocationAnalysis() {
+    const locationCount = {};
+    
+    currentQuizData.forEach(quiz => {
+        const location = quiz.city || quiz.location || 'Non specificato';
+        locationCount[location] = (locationCount[location] || 0) + 1;
+    });
+    
+    const chartHTML = Object.entries(locationCount).map(([location, count]) => `
+        <div class="chart-bar">
+            <div class="chart-label">${location}</div>
+            <div class="chart-progress">
+                <div class="chart-fill" style="width: ${(count / Math.max(...Object.values(locationCount))) * 100}%"></div>
+            </div>
+            <div class="chart-value">${count}</div>
+        </div>
+    `).join('');
+    
+    updateElement('location-analysis', chartHTML || '<div class="no-data">Nessun dato disponibile</div>');
+}
+
+// === OPPORTUNITÀ BUSINESS ===
+function updateBusinessOpportunities() {
+    const opportunities = [];
+    
+    // Analizza lead ad alto punteggio
+    const highScoreLeads = currentQuizData.filter(quiz => (quiz.score || quiz.lead_score || 0) >= 70);
+    if (highScoreLeads.length > 0) {
+        opportunities.push({
+            title: `${highScoreLeads.length} Lead ad Alto Potenziale`,
+            description: 'Lead con punteggio superiore a 70 - pronti per il contatto',
+            priority: 'high'
+        });
+    }
+    
+    // Analizza obiettivi comuni
+    const commonGoals = {};
+    currentQuizData.forEach(quiz => {
+        if (quiz.goals && Array.isArray(quiz.goals)) {
+            quiz.goals.forEach(goal => {
+                commonGoals[goal] = (commonGoals[goal] || 0) + 1;
+            });
+        }
+    });
+    
+    const topGoal = Object.entries(commonGoals).sort(([,a], [,b]) => b - a)[0];
+    if (topGoal && topGoal[1] > 3) {
+        opportunities.push({
+            title: `Focus su "${topGoal[0]}"`,
+            description: `${topGoal[1]} clienti interessati - opportunità per programma specializzato`,
+            priority: 'medium'
+        });
+    }
+    
+    const opportunitiesHTML = opportunities.map(opp => `
+        <div class="opportunity-card">
+            <h4>${opp.title}<span class="priority ${opp.priority}">${opp.priority.toUpperCase()}</span></h4>
+            <p>${opp.description}</p>
+        </div>
+    `).join('');
+    
+    updateElement('business-opportunities', opportunitiesHTML || '<div class="no-data">Nessuna opportunità identificata</div>');
+}
+
+// === UTILITY FUNCTIONS ===
+function updateElement(id, content) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.innerHTML = content;
+    }
+}
+
 function updateConnectionStatus(isConnected) {
     const statusElement = document.getElementById('connection-status');
     if (statusElement) {
         if (isConnected) {
             statusElement.className = 'connection-status status-connected';
-            statusElement.textContent = '✅ Connesso a Firebase!';
-            setTimeout(() => {
-                statusElement.style.display = 'none';
-            }, 3000); // Nasconde dopo 3 secondi
+            statusElement.innerHTML = '✅ Connesso a Firebase';
         } else {
             statusElement.className = 'connection-status status-error';
-            statusElement.textContent = '❌ Errore di connessione a Firebase.';
-            statusElement.style.display = 'block';
+            statusElement.innerHTML = '❌ Errore connessione Firebase';
         }
     }
 }
 
-// Listener per lo stato di autenticazione Firebase (opzionale, se serve autenticazione)
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        console.log("Utente Firebase autenticato:", user.uid);
-        updateConnectionStatus(true);
-        // Avvia i listener del database solo dopo l'autenticazione riuscita
-        initFirebaseListeners();
-    } else {
-        console.log("Nessun utente Firebase autenticato.");
-        updateConnectionStatus(false);
-        // Reindirizza o mostra messaggio di accesso se necessario
-    }
-});
-
-
-// --- Funzioni di Rendering per i Dati ---
-
-// Renderizza i risultati dei quiz
-function renderQuizResults(docs) {
-    const quizTableBody = document.querySelector('#quizzes-table-body');
-    if (!quizTableBody) {
-        console.error("Elemento #quizzes-table-body non trovato!");
-        return;
-    }
-    quizTableBody.innerHTML = ''; // Pulisci la tabella
-
-    if (docs.length === 0) {
-        quizTableBody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun dato quiz disponibile.</td></tr>';
-        return;
-    }
-
-    docs.forEach(doc => {
-        const data = doc.data();
-        const row = quizTableBody.insertRow();
-        row.innerHTML = `
-            <td>${data.name || 'N/A'}</td>
-            <td>${data.email || 'N/A'}</td>
-            <td>${data.profile || 'N/A'}</td>
-            <td><span class="lead-score ${getLeadScoreClass(data.leadScore)}">${data.leadScore || 'N/A'}</span></td>
-            <td>${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
-            <td><button class="action-btn" onclick="viewQuizDetails('${doc.id}')">Dettagli</button></td>
-        `;
-    });
-    updateLastUpdateTimestamp();
-    console.log(`📊 Dati quiz ricevuti: ${docs.length} documenti`);
+function updateLastUpdateTime() {
+    const now = new Date().toLocaleTimeString('it-IT');
+    updateElement('last-update', now);
 }
 
-// Renderizza i dati dei lead
-function renderLeads(docs) {
-    const leadsTableBody = document.querySelector('#leads-table-body');
-    if (!leadsTableBody) {
-        console.error("Elemento #leads-table-body non trovato!");
-        return;
-    }
-    leadsTableBody.innerHTML = ''; // Pulisci la tabella
+// === FUNZIONI GLOBALI ===
+window.refreshData = async function() {
+    console.log('🔄 Refresh manuale dati...');
+    await loadInitialData();
+    updateDashboard();
+    updateLastUpdateTime();
+};
 
-    if (docs.length === 0) {
-        leadsTableBody.innerHTML = '<tr><td colspan="8" class="no-data">Nessun lead disponibile.</td></tr>';
-        return;
-    }
-
-    docs.forEach(doc => {
-        const data = doc.data();
-        const row = leadsTableBody.insertRow();
-        row.innerHTML = `
-            <td><span class="profile-icon">👤</span>${data.name || 'N/A'}</td>
-            <td>${data.email || 'N/A'}</td>
-            <td>${data.city || 'N/A'}</td>
-            <td>${data.goals ? data.goals.join(', ') : 'N/A'}</td>
-            <td>${data.profile || 'N/A'}</td>
-            <td><span class="lead-score ${getLeadScoreClass(data.leadScore)}">${data.leadScore || 'N/A'}</span></td>
-            <td>${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
-            <td><button class="action-btn" onclick="contactLead('${doc.id}')">Contatta</button></td>
-        `;
-    });
-    updateLastUpdateTimestamp();
-    console.log(`👥 Dati leads ricevuti: ${docs.length} documenti`);
-}
-
-// Renderizza i dati delle metriche chiave
-function renderMetrics(docs) {
-    const metrics = docs.reduce((acc, doc) => {
-        const data = doc.data();
-        acc[data.id] = data.value;
-        return acc;
-    }, {});
-
-    const totalLeadsElement = document.getElementById('total-leads');
-    const totalQuizzesElement = document.getElementById('total-quizzes');
-    const avgLeadScoreElement = document.getElementById('avg-lead-score');
-    const newLeadsTodayElement = document.getElementById('new-leads-today');
-
-    if (totalLeadsElement) totalLeadsElement.innerHTML = metrics['totalLeads'] !== undefined ? metrics['totalLeads'] : '-';
-    if (totalQuizzesElement) totalQuizzesElement.innerHTML = metrics['totalQuizzes'] !== undefined ? metrics['totalQuizzes'] : '-';
-    if (avgLeadScoreElement) avgLeadScoreElement.innerHTML = metrics['avgLeadScore'] !== undefined ? metrics['avgLeadScore'].toFixed(1) : '-';
-    if (newLeadsTodayElement) newLeadsTodayElement.innerHTML = metrics['newLeadsToday'] !== undefined ? metrics['newLeadsToday'] : '-';
-
-    const leadsTrendElement = document.getElementById('leads-trend');
-    if (leadsTrendElement) leadsTrendElement.querySelector('.percentage').textContent = '+5%';
-    const quizzesTrendElement = document.getElementById('quizzes-trend');
-    if (quizzesTrendElement) quizzesTrendElement.querySelector('.percentage').textContent = '+8%';
-    const scoreTrendElement = document.getElementById('score-trend');
-    if (scoreTrendElement) scoreTrendElement.querySelector('.percentage').textContent = '+1.2%';
-    const newLeadsTrendElement = document.getElementById('new-leads-trend');
-    if (newLeadsTrendElement) newLeadsTrendElement.querySelector('.percentage').textContent = '+15%';
-
-
-    updateLastUpdateTimestamp();
-    console.log(`📈 Dati metrics ricevuti: ${docs.length} documenti`);
-}
-
-
-// Funzione helper per la classe CSS del punteggio lead
-function getLeadScoreClass(score) {
-    if (score >= 80) return 'high';
-    if (score >= 50) return 'medium';
-    return 'low';
-}
-
-// Aggiorna il timestamp dell'ultimo aggiornamento
-function updateLastUpdateTimestamp() {
-    const lastUpdateElement = document.getElementById('last-update');
-    if (lastUpdateElement) {
-        lastUpdateElement.textContent = new Date().toLocaleString();
-    }
-}
-
-// Funzione placeholder per i dettagli del quiz (da implementare)
 window.viewQuizDetails = function(quizId) {
-    alert('Visualizza dettagli quiz per ID: ' + quizId);
+    const quiz = currentQuizData.find(q => q.id === quizId);
+    if (quiz) {
+        const details = `
+Profilo: ${quiz.profile || 'N/A'}
+Punteggio: ${quiz.score || quiz.lead_score || 0}
+Obiettivi: ${Array.isArray(quiz.goals) ? quiz.goals.join(', ') : (quiz.goals || 'N/A')}
+Livello Attività: ${quiz.activity_level || 'N/A'}
+Alimentazione: ${quiz.diet || 'N/A'}
+Ostacoli: ${Array.isArray(quiz.obstacles) ? quiz.obstacles.join(', ') : (quiz.obstacles || 'N/A')}
+        `;
+        alert(`Dettagli Quiz - ${quiz.name}\n\n${details}`);
+    }
 };
 
-// Funzione placeholder per contattare il lead (da implementare)
 window.contactLead = function(leadId) {
-    alert('Contatta lead con ID: ' + leadId);
+    const lead = currentLeadsData.find(l => l.id === leadId);
+    if (lead && lead.email) {
+        const subject = encodeURIComponent(`Ciao ${lead.name}, il tuo profilo TribuCoach`);
+        const body = encodeURIComponent(`Ciao ${lead.name},\n\nHo visto che hai completato il nostro quiz fitness. Il tuo profilo "${lead.profile}" mostra un grande potenziale!\n\nVorresti una consulenza gratuita per parlare dei tuoi obiettivi?\n\nA presto!`);
+        window.open(`mailto:${lead.email}?subject=${subject}&body=${body}`);
+    } else {
+        alert('Email non disponibile per questo lead');
+    }
 };
 
-// Funzione per il refresh dei dati
-window.refreshData = function() {
-    console.log("Ricaricando i dati...");
-    updateLastUpdateTimestamp();
-};
-
-// --- Inizializzazione Listener Firebase ---
-function initFirebaseListeners() {
-    console.log("Attivazione listener Firebase...");
-
-    // Listener per 'quiz_results'
-    const quizResultsCol = collection(db, 'quiz_results');
-    const qQuiz = query(quizResultsCol, orderBy('timestamp', 'desc'), limit(10));
-    onSnapshot(qQuiz, (snapshot) => {
-        renderQuizResults(snapshot.docs);
-        console.log("🔄 Attivando listener per quiz_results...");
-    }, (error) => {
-        console.error("Errore nel listener quiz_results:", error);
-        updateConnectionStatus(false);
+// === CLEANUP ===
+window.addEventListener('beforeunload', function() {
+    // Disconnetti i listeners quando la pagina viene chiusa
+    listeners.forEach(unsubscribe => {
+        if (typeof unsubscribe === 'function') {
+            unsubscribe();
+        }
     });
-
-    // Listener per 'leads'
-    const leadsCol = collection(db, 'leads');
-    const qLeads = query(leadsCol, orderBy('timestamp', 'desc'), limit(20));
-    onSnapshot(qLeads, (snapshot) => {
-        renderLeads(snapshot.docs);
-        console.log("🔄 Attivando listener per leads...");
-    }, (error) => {
-        console.error("Errore nel listener leads:", error);
-        updateConnectionStatus(false);
-    });
-
-    // Listener per 'metrics'
-    const metricsCol = collection(db, 'metrics');
-    onSnapshot(metricsCol, (snapshot) => {
-        renderMetrics(snapshot.docs);
-        console.log("🔄 Attivando listener per metrics...");
-    }, (error) => {
-        console.error("Errore nel listener metrics:", error);
-        updateConnectionStatus(false);
-    });
-}
-
-// Avvia i listener una volta che il DOM è completamente caricato
-document.addEventListener('DOMContentLoaded', () => {
-    // initFirebaseListeners è ora chiamato dopo l'autenticazione in onAuthStateChanged
-    // Se non usi l'autenticazione, puoi chiamarlo direttamente qui:
-    initFirebaseListeners(); // Rimosso il commento qui, assumendo che tu voglia avviare i listener subito
 });
+
+console.log('📊 Dashboard script caricato');
