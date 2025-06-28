@@ -159,11 +159,11 @@ async function renderChatbotData() {
     try {
         let conversations = [];
         
-        // 🔥 PROVA PRIMA L'API CHATBASE
+        // 🔥 PROVA PRIMA L'API CHATBASE (SENZA FILTRI DATA PER DEBUG)
         try {
+            console.log('🔄 Tentativo API Chatbase senza filtri data...');
             conversations = await getChatbotConversationsFromAPI({
-                startDate: getDateDaysAgo(30),
-                size: 50
+                size: 20 // Solo limit, senza date
             });
             console.log('✅ Conversazioni caricate da Chatbase API');
         } catch (apiError) {
