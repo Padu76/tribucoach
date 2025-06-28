@@ -1,13 +1,13 @@
 // firebase-api.js - API Firebase + Chatbase per TribuCoach Dashboard
 
-// Configurazione Firebase (AGGIORNA CON LE TUE CREDENZIALI REALI)
+// Configurazione Firebase - CREDENZIALI REALI TRIBUCOACH
 const firebaseConfig = {
-    apiKey: "AIzaSyD_YOUR_API_KEY_HERE", // 🔑 SOSTITUISCI CON LA TUA API KEY
-    authDomain: "tribucoach-PROJECT_ID.firebaseapp.com", // 🔑 SOSTITUISCI CON IL TUO DOMAIN
-    projectId: "tribucoach-PROJECT_ID", // 🔑 SOSTITUISCI CON IL TUO PROJECT ID
-    storageBucket: "tribucoach-PROJECT_ID.appspot.com", // 🔑 SOSTITUISCI CON IL TUO BUCKET
-    messagingSenderId: "123456789", // 🔑 SOSTITUISCI CON IL TUO SENDER ID
-    appId: "1:123456789:web:abcdef123456" // 🔑 SOSTITUISCI CON IL TUO APP ID
+    apiKey: "AIzaSyDTJgM-2FQBSjqTMQ-Ioxf1lM1eSJq1f0I",
+    authDomain: "tribucoach-a2254.firebaseapp.com",
+    projectId: "tribucoach-a2254",
+    storageBucket: "tribucoach-a2254.firebasestorage.app",
+    messagingSenderId: "425200296836",
+    appId: "1:425200296836:web:af4f3e79f612604ee2b3d1"
 };
 
 // Configurazione Chatbase API
@@ -22,18 +22,16 @@ let db;
 // Inizializza Firebase quando il modulo viene caricato
 async function initializeFirebase() {
     try {
-        // Aspetta che Firebase sia disponibile
-        while (!window.firebase) {
-            console.log('⏳ Aspettando Firebase SDK...');
-            await new Promise(resolve => setTimeout(resolve, 100));
+        // Usa Firebase compat
+        if (typeof firebase !== 'undefined') {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase inizializzato con compat SDK');
+            return true;
+        } else {
+            console.error('❌ Firebase SDK non disponibile');
+            return false;
         }
-        
-        const { initializeApp, getFirestore } = window.firebase;
-        app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        
-        console.log('✅ Firebase inizializzato con successo');
-        return true;
     } catch (error) {
         console.error('❌ Errore inizializzazione Firebase:', error);
         return false;
@@ -51,12 +49,13 @@ export async function testConnection() {
             if (!initialized) return false;
         }
         
-        // Test di connessione semplice
-        console.log('🔍 Test connessione Firebase...');
+        console.log('🔍 Test connessione Firebase reale...');
         
-        // Per ora ritorna true se Firebase è inizializzato
-        // In futuro potresti fare una query di test reale
-        console.log('✅ Test connessione Firebase completato');
+        // Test di connessione reale con il database
+        const testCollection = db.collection('quiz_results');
+        await testCollection.limit(1).get();
+        
+        console.log('✅ Connessione Firebase REALE stabilita!');
         return true;
     } catch (error) {
         console.error('❌ Errore test connessione Firebase:', error);
@@ -74,42 +73,21 @@ export async function getAllQuizResults() {
             await initializeFirebase();
         }
         
-        // Per ora restituisce dati di test
-        console.log('📊 Generando dati quiz di test...');
+        console.log('📊 Recuperando dati quiz REALI da Firebase...');
         
-        const testQuizResults = [
-            {
-                id: 'test-1',
-                name: 'Mario Rossi',
-                age: 35,
-                email: 'mario.rossi@email.com',
-                whatsapp_number: '+393331234567',
-                gender: 'M',
-                profile: 'Guerriero della Forza',
-                goals: ['Aumentare massa muscolare', 'Migliorare forza'],
-                activity_level: 'Intermedio',
-                obstacles: ['Poco tempo', 'Stress lavoro'],
-                lead_score: 85,
-                timestamp: new Date()
-            },
-            {
-                id: 'test-2',
-                name: 'Laura Bianchi',
-                age: 28,
-                email: 'laura.bianchi@email.com',
-                whatsapp_number: '+393337654321',
-                gender: 'F',
-                profile: 'Scolpitore del Corpo',
-                goals: ['Tonificare', 'Perdere peso'],
-                activity_level: 'Principiante',
-                obstacles: ['Motivazione', 'Palestra costosa'],
-                lead_score: 92,
-                timestamp: new Date()
-            }
-        ];
+        const querySnapshot = await db.collection('quiz_results').get();
+        const results = [];
         
-        console.log(`📊 Recuperati ${testQuizResults.length} risultati quiz (test)`);
-        return testQuizResults;
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            results.push({
+                id: doc.id,
+                ...data
+            });
+        });
+        
+        console.log(`📊 Recuperati ${results.length} risultati quiz REALI da Firebase`);
+        return results;
     } catch (error) {
         console.error('❌ Errore recupero quiz results:', error);
         return [];
@@ -123,11 +101,21 @@ export async function getAllQuizResults() {
  */
 export async function getQuizResultById(quizId) {
     try {
-        const allQuizzes = await getAllQuizResults();
-        const quiz = allQuizzes.find(q => q.id === quizId);
+        if (!db) {
+            await initializeFirebase();
+        }
         
-        if (quiz) {
-            return quiz;
+        console.log('🔍 Recuperando quiz ID:', quizId);
+        
+        const docRef = db.collection('quiz_results').doc(quizId);
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data
+            };
         } else {
             console.log('❌ Quiz non trovato:', quizId);
             return null;
@@ -144,39 +132,30 @@ export async function getQuizResultById(quizId) {
  */
 export async function getChatbotConversations() {
     try {
-        console.log('💬 Generando conversazioni di test...');
+        if (!db) {
+            await initializeFirebase();
+        }
         
-        const testConversations = [
-            {
-                id: 'conv-test-1',
-                lastMessageSnippet: 'Ciao! Vorrei informazioni sui tuoi programmi di allenamento...',
-                topic: 'Allenamento',
-                timestamp: new Date(),
-                messages: [
-                    { role: 'user', content: 'Ciao! Vorrei informazioni sui tuoi programmi di allenamento' },
-                    { role: 'assistant', content: 'Ciao! Sarò felice di aiutarti. Che tipo di allenamento ti interessa?' },
-                    { role: 'user', content: 'Vorrei aumentare la massa muscolare' },
-                    { role: 'assistant', content: 'Perfetto! Abbiamo programmi specifici per l\'ipertrofia muscolare...' }
-                ],
-                customer: 'Utente Test 1',
-                source: 'Firebase'
-            },
-            {
-                id: 'conv-test-2',
-                lastMessageSnippet: 'Quali sono i prezzi per una consulenza personalizzata?',
-                topic: 'Prezzi',
-                timestamp: new Date(),
-                messages: [
-                    { role: 'user', content: 'Quali sono i prezzi per una consulenza personalizzata?' },
-                    { role: 'assistant', content: 'Le nostre consulenze partono da 50€ per una sessione singola...' }
-                ],
-                customer: 'Utente Test 2',
-                source: 'Firebase'
-            }
-        ];
+        console.log('💬 Recuperando conversazioni REALI da Firebase...');
         
-        console.log(`💬 Recuperate ${testConversations.length} conversazioni da Firebase (test)`);
-        return testConversations;
+        const querySnapshot = await db.collection('chatbot_conversations').get();
+        const conversations = [];
+        
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            conversations.push({
+                id: doc.id,
+                lastMessageSnippet: data.last_message?.substring(0, 100) + '...' || 'N/A',
+                topic: data.topic || 'Generale',
+                timestamp: data.timestamp || new Date(),
+                messages: data.messages || [],
+                customer: data.customer_name || 'Anonimo',
+                source: data.source || 'Firebase'
+            });
+        });
+        
+        console.log(`💬 Recuperate ${conversations.length} conversazioni REALI da Firebase`);
+        return conversations;
     } catch (error) {
         console.error('❌ Errore recupero conversazioni Firebase:', error);
         return [];
