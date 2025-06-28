@@ -260,12 +260,11 @@ function generateUserId(email) {
     return btoa(email.toLowerCase()).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
 }
 
-async function generateIpHash() {
-    // Privacy-safe IP hashing (non salviamo IP reali)
-    // Rimuoviamo la chiamata esterna per evitare CORS e rate limiting
+function generateIpHash() {
+    // Privacy-safe browser fingerprint (sincrono)
     try {
         // Genera un hash basato su dati del browser per privacy
-        const browserFingerprint = navigator.userAgent + navigator.language + screen.width + screen.height;
+        const browserFingerprint = navigator.userAgent + navigator.language + screen.width + screen.height + Date.now();
         const hash = btoa(browserFingerprint).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
         return hash;
     } catch {
