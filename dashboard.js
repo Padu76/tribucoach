@@ -167,7 +167,8 @@ async function renderChatbotData() {
             });
             console.log('✅ Conversazioni caricate da Chatbase API');
         } catch (apiError) {
-            console.warn('⚠️ API Chatbase non disponibile, uso Firebase:', apiError.message);
+            console.warn('⚠️ API Chatbase temporaneamente non disponibile:', apiError.message);
+            console.log('🔄 Uso dati Firebase come backup...');
             conversations = await getChatbotConversations();
         }
 
