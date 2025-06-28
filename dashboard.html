@@ -1,4 +1,31 @@
-<!DOCTYPE html>
+    // === REFRESH DATA ===
+    window.refreshData = async function() {
+        console.log('🔄 Refresh manuale dati...');
+        
+        if (firebaseMode && firebaseAPI) {
+            // Pulisci cache e ricarica da Firebase
+            firebaseAPI.clearCache();
+            await loadFirebaseData();
+        } else {
+            // Ricarica dati mock
+            loadMockData();
+        }
+        
+        updateLastUpdateTime();
+    };
+
+    function updateConnectionStatus(isConnected, customMessage = null) {
+        const statusElement = document.getElementById('connection-status');
+        if (statusElement) {
+            if (isConnected) {
+                statusElement.className = 'connection-status status-connected';
+                statusElement.innerHTML = customMessage || '✅ Dashboard Attiva - Dati Caricati';
+            } else if (customMessage) {
+                statusElement.className = 'connection-status status-connecting';
+                statusElement.innerHTML = `🔄 ${customMessage}`;
+            } else {
+                statusElement.className = 'connection-status status-error';
+                statusElement.innerHTML = '❌ Errore conn<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -417,6 +444,8 @@
             <span class="real-time-indicator"></span>Live Data
             Ultimo aggiornamento: <span id="last-update">Caricamento...</span>
             <button class="refresh-btn" onclick="refreshData()">🔄</button>
+            <button class="action-btn" onclick="exportLeadsToCSV()" style="margin-left: 10px;">📊 Export CSV</button>
+            <button class="action-btn" onclick="switchToFirebase()" style="margin-left: 10px; background: #4CAF50;">🔗 Connetti Firebase</button>
         </div>
 
         <!-- Test Section (solo in debug mode) -->
@@ -597,7 +626,7 @@
     function loadMockData() {
         console.log('📊 Caricamento dati mock...');
         
-        // Mock quiz results
+        // Mock quiz results - DATASET ESPANSO
         dashboardData.quizResults = [
             {
                 id: 'quiz_1',
@@ -612,7 +641,8 @@
                 training_style: 'Con personal trainer',
                 activity_level: 'Molto attivo',
                 diet: 'Buona',
-                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000) // 2 ore fa
+                city: 'Milano',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
             },
             {
                 id: 'quiz_2', 
@@ -627,7 +657,8 @@
                 training_style: 'Mi alleno da solo',
                 activity_level: 'Poco attivo',
                 diet: 'Da migliorare',
-                timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000) // 6 ore fa
+                city: 'Roma',
+                timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000)
             },
             {
                 id: 'quiz_3',
@@ -642,7 +673,88 @@
                 training_style: 'Con personal trainer',
                 activity_level: 'Molto attivo',
                 diet: 'Eccellente',
-                timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000) // 1 ora fa
+                city: 'Torino',
+                timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000)
+            },
+            {
+                id: 'quiz_4',
+                name: 'Sofia Ferrari',
+                email: 'sofia@email.com',
+                whatsapp: '+393347777888',
+                age: 26,
+                profile: 'Guerriero',
+                score: 78,
+                goals: ['Tonificare', 'Aumentare energia'],
+                obstacles: ['Orari di lavoro', 'Motivazione'],
+                training_style: 'Mi alleno da solo',
+                activity_level: 'Attivo',
+                diet: 'Buona',
+                city: 'Napoli',
+                timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000)
+            },
+            {
+                id: 'quiz_5',
+                name: 'Alessandro Neri',
+                email: 'alex@email.com',
+                whatsapp: '+393356669999',
+                age: 35,
+                profile: 'Nuovo Esploratore',
+                score: 38,
+                goals: ['Perdere peso', 'Migliorare salute'],
+                obstacles: ['Poco tempo', 'Famiglia'],
+                training_style: 'Mi alleno da solo',
+                activity_level: 'Poco attivo',
+                diet: 'Da migliorare',
+                city: 'Firenze',
+                timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000)
+            },
+            {
+                id: 'quiz_6',
+                name: 'Giulia Marino',
+                email: 'giulia@email.com',
+                whatsapp: '+393368881111',
+                age: 29,
+                profile: 'Atleta',
+                score: 88,
+                goals: ['Performance atletica', 'Forza funzionale'],
+                obstacles: ['Recupero'],
+                training_style: 'Con personal trainer',
+                activity_level: 'Molto attivo',
+                diet: 'Eccellente',
+                city: 'Bologna',
+                timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000)
+            },
+            {
+                id: 'quiz_7',
+                name: 'Roberto Silva',
+                email: 'roberto@email.com',
+                whatsapp: '+393377773333',
+                age: 42,
+                profile: 'Guerriero',
+                score: 65,
+                goals: ['Mantenersi in forma', 'Resistenza'],
+                obstacles: ['Stress', 'Viaggi di lavoro'],
+                training_style: 'Ibrido',
+                activity_level: 'Moderatamente attivo',
+                diet: 'Buona',
+                city: 'Palermo',
+                timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000)
+            },
+            {
+                id: 'quiz_8',
+                name: 'Chiara Conte',
+                email: 'chiara@email.com',
+                whatsapp: '+393385554444',
+                age: 24,
+                profile: 'Nuovo Esploratore',
+                score: 52,
+                goals: ['Iniziare attività fisica', 'Benessere'],
+                obstacles: ['Inesperienza', 'Timidezza'],
+                training_style: 'Mi alleno da solo',
+                activity_level: 'Poco attivo',
+                diet: 'Media',
+                city: 'Verona',
+                timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000)
             }
         ];
 
@@ -819,11 +931,176 @@
         }
     }
 
-    // === FUNZIONI GLOBALI ===
-    window.refreshData = function() {
-        console.log('🔄 Refresh manuale dati...');
-        loadMockData();
+    // === EXPORT CSV ===
+    window.exportLeadsToCSV = function() {
+        console.log('📊 Esportazione CSV in corso...');
+        
+        if (dashboardData.quizResults.length === 0) {
+            alert('Nessun dato da esportare');
+            return;
+        }
+        
+        // Prepara header CSV
+        const headers = [
+            'Nome',
+            'Email',
+            'WhatsApp',
+            'Età',
+            'Profilo',
+            'Score',
+            'Obiettivi',
+            'Ostacoli',
+            'Stile Allenamento',
+            'Livello Attività',
+            'Dieta',
+            'Città',
+            'Data Iscrizione'
+        ];
+        
+        // Prepara righe CSV
+        const rows = dashboardData.quizResults.map(lead => [
+            lead.name || '',
+            lead.email || '',
+            lead.whatsapp || '',
+            lead.age || '',
+            lead.profile || '',
+            lead.score || '',
+            Array.isArray(lead.goals) ? lead.goals.join('; ') : (lead.goals || ''),
+            Array.isArray(lead.obstacles) ? lead.obstacles.join('; ') : (lead.obstacles || ''),
+            lead.training_style || '',
+            lead.activity_level || '',
+            lead.diet || '',
+            lead.city || '',
+            formatDateTime(lead.timestamp)
+        ]);
+        
+        // Crea contenuto CSV
+        const csvContent = [
+            headers.join(','),
+            ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+        
+        // Download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `tribucoach-leads-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log(`✅ CSV esportato: ${dashboardData.quizResults.length} lead`);
+        alert(`✅ CSV esportato con successo!\n${dashboardData.quizResults.length} lead salvati nel file.`);
     };
+
+    // === CONNESSIONE FIREBASE ===
+    let firebaseMode = false;
+    let firebaseAPI = null;
+
+    window.switchToFirebase = async function() {
+        if (firebaseMode) {
+            // Torna a mock mode
+            firebaseMode = false;
+            dashboardData.quizResults = []; // Reset dati
+            loadMockData();
+            updateElement('connection-status', '📊 Modalità Mock - Dati di Test');
+            document.querySelector('[onclick="switchToFirebase()"]').innerHTML = '🔗 Connetti Firebase';
+            document.querySelector('[onclick="switchToFirebase()"]').style.background = '#4CAF50';
+            console.log('🔄 Tornato a modalità mock');
+            return;
+        }
+
+        try {
+            console.log('🔗 Tentativo connessione Firebase...');
+            updateConnectionStatus(false, 'Connessione Firebase...');
+            
+            // Importa dinamicamente Firebase API
+            const firebaseModule = await import('./firebase-api.js');
+            firebaseAPI = firebaseModule;
+            
+            // Test connessione
+            const isConnected = await firebaseAPI.testConnection();
+            
+            if (isConnected) {
+                firebaseMode = true;
+                updateConnectionStatus(true, 'Firebase Connesso');
+                document.querySelector('[onclick="switchToFirebase()"]').innerHTML = '📊 Modalità Mock';
+                document.querySelector('[onclick="switchToFirebase()"]').style.background = '#ff9800';
+                
+                // Carica dati reali
+                await loadFirebaseData();
+                console.log('✅ Firebase connesso e dati caricati');
+            } else {
+                throw new Error('Test connessione fallito');
+            }
+            
+        } catch (error) {
+            console.error('❌ Errore connessione Firebase:', error);
+            updateConnectionStatus(false, 'Errore Firebase - Modalità Mock Attiva');
+            alert('⚠️ Impossibile connettersi a Firebase.\nContinuo con dati mock.');
+        }
+    };
+
+    async function loadFirebaseData() {
+        try {
+            console.log('📊 Caricamento dati Firebase...');
+            
+            // Carica dati da Firebase con gestione errori
+            const [quizResults, conversations, users] = await Promise.allSettled([
+                firebaseAPI.getAllQuizResults(),
+                firebaseAPI.getChatbotConversations(),
+                firebaseAPI.getUsers()
+            ]);
+            
+            // Aggiorna dati dashboard
+            if (quizResults.status === 'fulfilled') {
+                dashboardData.quizResults = quizResults.value || [];
+            }
+            if (conversations.status === 'fulfilled') {
+                dashboardData.conversations = conversations.value || [];
+            }
+            if (users.status === 'fulfilled') {
+                dashboardData.users = users.value || [];
+            }
+            
+            updateDashboard();
+            console.log(`✅ Dati Firebase caricati: ${dashboardData.quizResults.length} quiz, ${dashboardData.conversations.length} chat`);
+            
+        } catch (error) {
+            console.error('❌ Errore caricamento Firebase:', error);
+    // === REFRESH DATA ===
+    window.refreshData = async function() {
+        console.log('🔄 Refresh manuale dati...');
+        
+        if (firebaseMode && firebaseAPI) {
+            // Pulisci cache e ricarica da Firebase
+            firebaseAPI.clearCache();
+            await loadFirebaseData();
+        } else {
+            // Ricarica dati mock
+            loadMockData();
+        }
+        
+        updateLastUpdateTime();
+    };
+
+    function updateConnectionStatus(isConnected, customMessage = null) {
+        const statusElement = document.getElementById('connection-status');
+        if (statusElement) {
+            if (isConnected) {
+                statusElement.className = 'connection-status status-connected';
+                statusElement.innerHTML = customMessage || '✅ Dashboard Attiva - Dati Caricati';
+            } else if (customMessage) {
+                statusElement.className = 'connection-status status-connecting';
+                statusElement.innerHTML = `🔄 ${customMessage}`;
+            } else {
+                statusElement.className = 'connection-status status-error';
+                statusElement.innerHTML = '❌ Errore connessione';
+            }
+        }
+    }
 
     window.contactLeadWhatsApp = function(whatsapp, name, profile) {
         if (whatsapp) {
