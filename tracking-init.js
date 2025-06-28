@@ -387,8 +387,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // === EXPORT ===
 export {
     TribuCoachTracker,
-    initializeTribuCoachTracking as default,
     trackUserAction,
     identifyCurrentUser,
     getCurrentSession
 };
+
+export default initializeTribuCoachTracking;
