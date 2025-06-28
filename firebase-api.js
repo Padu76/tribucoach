@@ -1,4 +1,6 @@
 // firebase-api.js - API Firebase + Chatbase per TribuCoach Dashboard
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
 
 // Configurazione Firebase - CREDENZIALI REALI TRIBUCOACH
 const firebaseConfig = {
@@ -15,28 +17,9 @@ const CHATBASE_API_BASE = 'https://www.chatbase.co/api/v1';
 const CHATBASE_SECRET_KEY = '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo'; // 🔑 TUA SECRET KEY
 const CHATBOT_ID = 'EjoHCEogMfkkrVzIK6V07'; // 🔑 IL TUO CHATBOT ID
 
-// Variabili globali per Firebase
-let app;
-let db;
-
-// Inizializza Firebase quando il modulo viene caricato
-async function initializeFirebase() {
-    try {
-        // Usa Firebase compat
-        if (typeof firebase !== 'undefined') {
-            app = firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            console.log('✅ Firebase inizializzato con compat SDK');
-            return true;
-        } else {
-            console.error('❌ Firebase SDK non disponibile');
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Errore inizializzazione Firebase:', error);
-        return false;
-    }
-}
+// Inizializza Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 /**
  * Testa la connessione a Firebase
@@ -44,21 +27,12 @@ async function initializeFirebase() {
  */
 export async function testConnection() {
     try {
-        if (!db) {
-            const initialized = await initializeFirebase();
-            if (!initialized) return false;
-        }
-        
-        console.log('🔍 Test connessione Firebase reale...');
-        
-        // Test di connessione reale con il database
-        const testCollection = db.collection('quiz_results');
-        await testCollection.limit(1).get();
-        
-        console.log('✅ Connessione Firebase REALE stabilita!');
+        const testCollection = collection(db, 'quiz_results');
+        await getDocs(testCollection);
+        console.log('✅ Connessione Firebase stabilita');
         return true;
     } catch (error) {
-        console.error('❌ Errore test connessione Firebase:', error);
+        console.error('❌ Errore connessione Firebase:', error);
         return false;
     }
 }
@@ -69,13 +43,7 @@ export async function testConnection() {
  */
 export async function getAllQuizResults() {
     try {
-        if (!db) {
-            await initializeFirebase();
-        }
-        
-        console.log('📊 Recuperando dati quiz REALI da Firebase...');
-        
-        const querySnapshot = await db.collection('quiz_results').get();
+        const querySnapshot = await getDocs(collection(db, 'quiz_results'));
         const results = [];
         
         querySnapshot.forEach((doc) => {
@@ -86,7 +54,7 @@ export async function getAllQuizResults() {
             });
         });
         
-        console.log(`📊 Recuperati ${results.length} risultati quiz REALI da Firebase`);
+        console.log(`📊 Recuperati ${results.length} risultati quiz`);
         return results;
     } catch (error) {
         console.error('❌ Errore recupero quiz results:', error);
@@ -101,20 +69,13 @@ export async function getAllQuizResults() {
  */
 export async function getQuizResultById(quizId) {
     try {
-        if (!db) {
-            await initializeFirebase();
-        }
+        const docRef = doc(db, 'quiz_results', quizId);
+        const docSnap = await getDoc(docRef);
         
-        console.log('🔍 Recuperando quiz ID:', quizId);
-        
-        const docRef = db.collection('quiz_results').doc(quizId);
-        const doc = await docRef.get();
-        
-        if (doc.exists) {
-            const data = doc.data();
+        if (docSnap.exists()) {
             return {
-                id: doc.id,
-                ...data
+                id: docSnap.id,
+                ...docSnap.data()
             };
         } else {
             console.log('❌ Quiz non trovato:', quizId);
@@ -132,13 +93,7 @@ export async function getQuizResultById(quizId) {
  */
 export async function getChatbotConversations() {
     try {
-        if (!db) {
-            await initializeFirebase();
-        }
-        
-        console.log('💬 Recuperando conversazioni REALI da Firebase...');
-        
-        const querySnapshot = await db.collection('chatbot_conversations').get();
+        const querySnapshot = await getDocs(collection(db, 'chatbot_conversations'));
         const conversations = [];
         
         querySnapshot.forEach((doc) => {
@@ -147,14 +102,14 @@ export async function getChatbotConversations() {
                 id: doc.id,
                 lastMessageSnippet: data.last_message?.substring(0, 100) + '...' || 'N/A',
                 topic: data.topic || 'Generale',
-                timestamp: data.timestamp || new Date(),
+                timestamp: data.timestamp || Timestamp.now(),
                 messages: data.messages || [],
                 customer: data.customer_name || 'Anonimo',
                 source: data.source || 'Firebase'
             });
         });
         
-        console.log(`💬 Recuperate ${conversations.length} conversazioni REALI da Firebase`);
+        console.log(`💬 Recuperate ${conversations.length} conversazioni da Firebase`);
         return conversations;
     } catch (error) {
         console.error('❌ Errore recupero conversazioni Firebase:', error);
@@ -255,93 +210,22 @@ function extractTopicFromMessages(messages) {
 }
 
 /**
- * 📊 Ottiene statistiche aggregate dalle conversazioni
- * @returns {Object} Statistiche delle conversazioni
+ * 💾 Salva una nuova conversazione chatbot in Firebase
+ * @param {Object} conversationData - Dati della conversazione
+ * @returns {string} ID del documento salvato
  */
-export async function getChatbotStats() {
+export async function saveChatbotConversation(conversationData) {
     try {
-        // Prova prima con l'API Chatbase
-        try {
-            const conversations = await getChatbotConversationsFromAPI({
-                startDate: getDateDaysAgo(30),
-                size: 1000
-            });
-            
-            return {
-                totalConversations: conversations.length,
-                topicsDistribution: getTopicsDistribution(conversations),
-                averageMessageLength: calculateAverageMessageLength(conversations),
-                mostActiveHours: getMostActiveHours(conversations)
-            };
-        } catch (apiError) {
-            // Fallback a Firebase
-            const conversations = await getChatbotConversations();
-            return {
-                totalConversations: conversations.length,
-                topicsDistribution: getTopicsDistribution(conversations),
-                averageMessageLength: calculateAverageMessageLength(conversations),
-                mostActiveHours: getMostActiveHours(conversations)
-            };
-        }
-    } catch (error) {
-        console.error('❌ Errore recupero statistiche chatbot:', error);
-        return {
-            totalConversations: 0,
-            topicsDistribution: {},
-            averageMessageLength: 0,
-            mostActiveHours: []
-        };
-    }
-}
-
-/**
- * 📈 Calcola la distribuzione degli argomenti
- */
-function getTopicsDistribution(conversations) {
-    const distribution = {};
-    conversations.forEach(conv => {
-        const topic = conv.topic || 'Generale';
-        distribution[topic] = (distribution[topic] || 0) + 1;
-    });
-    return distribution;
-}
-
-/**
- * 📏 Calcola la lunghezza media dei messaggi
- */
-function calculateAverageMessageLength(conversations) {
-    let totalLength = 0;
-    let messageCount = 0;
-    
-    conversations.forEach(conv => {
-        conv.messages?.forEach(msg => {
-            if (msg.role === 'user') {
-                totalLength += msg.content.length;
-                messageCount++;
-            }
+        const docRef = await addDoc(collection(db, 'chatbot_conversations'), {
+            ...conversationData,
+            timestamp: Timestamp.now()
         });
-    });
-    
-    return messageCount > 0 ? Math.round(totalLength / messageCount) : 0;
-}
-
-/**
- * ⏰ Trova le ore più attive
- */
-function getMostActiveHours(conversations) {
-    const hourCounts = {};
-    
-    conversations.forEach(conv => {
-        if (conv.timestamp) {
-            const hour = conv.timestamp.getHours();
-            hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-        }
-    });
-    
-    return Object.entries(hourCounts)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 3)
-        .map(([hour, count]) => ({ hour: parseInt(hour), count }));
+        console.log('✅ Conversazione salvata con ID:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ Errore salvataggio conversazione:', error);
+        throw error;
+    }
 }
 
 /**
@@ -362,10 +246,7 @@ export const config = {
 };
 
 console.log('🔧 Firebase API inizializzato:', {
-    firebase: '⏳ Inizializzazione in corso...',
+    firebase: '✅',
     chatbase: config.hasValidChatbaseConfig ? '✅' : '⚠️ Configura le credenziali',
     chatbotId: CHATBOT_ID
 });
-
-// Inizializza Firebase automaticamente quando il modulo viene caricato
-initializeFirebase();
