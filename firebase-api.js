@@ -366,3 +366,6 @@ console.log('🔧 Firebase API inizializzato:', {
     chatbase: config.hasValidChatbaseConfig ? '✅' : '⚠️ Configura le credenziali',
     chatbotId: CHATBOT_ID
 });
+
+// Inizializza Firebase automaticamente quando il modulo viene caricato
+initializeFirebase();
