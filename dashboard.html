@@ -594,110 +594,32 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     
     <!-- Firebase CDN -->
-    <script type="module">
-        // Import Firebase
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, getDocs, doc, getDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-        
-        // Rendi Firebase disponibile globalmente
-        window.firebase = {
-            initializeApp,
-            getFirestore,
-            collection,
-            getDocs,
-            doc,
-            getDoc,
-            addDoc,
-            Timestamp
-        };
-        
-        console.log('✅ Firebase SDK caricato e pronto');
-        
-        // Ora carica dashboard.js dopo un breve delay
-        setTimeout(() => {
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.src = 'dashboard.js';
-            script.onload = () => {
-                console.log('✅ Dashboard.js caricato dopo Firebase');
-            };
-            script.onerror = (error) => {
-                console.error('❌ Errore caricamento dashboard.js:', error);
-            };
-            document.head.appendChild(script);
-        }, 200);
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
-    <!-- Debug Script -->
+    <!-- Dashboard Script -->
     <script>
-        // Log di debug per verificare il caricamento
         console.log('🚀 TribuCoach Dashboard HTML caricato');
         
-        // Aspetta che Chart.js sia caricato prima di procedere
-        function waitForChart() {
-            if (typeof Chart !== 'undefined') {
-                console.log('📊 Chart.js caricato:', Chart.version || 'version sconosciuta');
-                console.log('✅ Chart.js pronto');
-                return true;
-            } else {
-                console.log('⏳ Aspettando Chart.js...');
-                return false;
-            }
-        }
-        
-        // Prova il caricamento quando la pagina è pronta
-        let attempts = 0;
-        function tryLoad() {
-            attempts++;
-            if (waitForChart()) {
-                console.log(`✅ Chart.js caricato al tentativo ${attempts}`);
-            } else if (attempts < 50) {
-                setTimeout(tryLoad, 100);
-            } else {
-                console.error('❌ Timeout: Chart.js non si è caricato dopo 5 secondi');
-            }
-        }
-        
-        // Avvia il controllo dopo il caricamento del DOM
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', tryLoad);
-        } else {
-            tryLoad();
-        }
-        
-        // Verifica che tutti gli elementi necessari siano presenti
-        function verifyElements() {
-            const requiredElements = [
-                'connection-status',
-                'totalQuizzes',
-                'avgQuizScore', 
-                'totalChatConversations',
-                'last-update',
-                'quiz-results-table-body',
-                'chatbot-conversations-table-body',
-                'profileChart',
-                'goalChart',
-                'chatTopicChart',
-                'detailsModal'
-            ];
+        // Aspetta che tutto sia caricato
+        window.addEventListener('load', function() {
+            console.log('📊 Chart.js disponibile:', typeof Chart !== 'undefined' ? '✅' : '❌');
+            console.log('🔥 Firebase disponibile:', typeof firebase !== 'undefined' ? '✅' : '❌');
             
-            requiredElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (!element) {
-                    console.error(`❌ Elemento mancante: ${id}`);
-                } else {
-                    console.log(`✅ Elemento trovato: ${id}`);
-                }
-            });
-            
-            console.log('🎯 Elementi DOM verificati');
-        }
-        
-        // Verifica elementi dopo che Chart.js è caricato
-        setTimeout(verifyElements, 500);
+            // Carica dashboard.js
+            setTimeout(() => {
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'dashboard.js';
+                script.onload = () => console.log('✅ Dashboard.js caricato');
+                script.onerror = (e) => console.error('❌ Errore dashboard.js:', e);
+                document.head.appendChild(script);
+            }, 500);
+        });
     </script>
 </body>
 </html>
