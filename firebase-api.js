@@ -489,5 +489,38 @@ window.debugFirestore = {
     listCollections: debugListCollections,
     chatbotData: debugChatbotData, 
     chatbaseAPI: debugChatbaseAPI,
-    everything: debugEverything
+    everything: debugEverything,
+    // 🔥 NUOVA: Funzione per aggiungere conversazione di test
+    addTestConversation: async function() {
+        try {
+            if (!db) {
+                await initFirebase();
+            }
+            
+            const testConversation = {
+                conversationId: 'test_real_conv',
+                customer_name: 'Mario Rossi',
+                last_message: 'Grazie per le informazioni, il mio numero è 333-123-4567',
+                topic: 'Prezzi',
+                timestamp: new Date(),
+                source: 'Test',
+                messages: [
+                    { role: 'user', content: 'Ciao, mi chiamo Mario Rossi' },
+                    { role: 'assistant', content: 'Ciao Mario! Come posso aiutarti?' },
+                    { role: 'user', content: 'Vorrei informazioni sui prezzi delle consulenze' },
+                    { role: 'assistant', content: 'Le nostre consulenze partono da 50€...' },
+                    { role: 'user', content: 'Interessante! Il mio numero è 333-123-4567 per contattarmi' },
+                    { role: 'assistant', content: 'Perfetto Mario, ti contatteremo presto!' }
+                ]
+            };
+            
+            const docRef = await db.collection('chatbot_conversations').add(testConversation);
+            console.log('✅ Conversazione di test aggiunta con ID:', docRef.id);
+            console.log('🔄 Ricarica la dashboard per vedere la nuova conversazione!');
+            
+            return docRef.id;
+        } catch (error) {
+            console.error('❌ Errore aggiunta conversazione test:', error);
+        }
+    }
 };
