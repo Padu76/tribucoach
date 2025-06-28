@@ -1,39 +1,60 @@
-// dashboard.js - Logica della Dashboard TribuCoach
+// dashboard.js - Logica della Dashboard
+import {
+    getAllQuizResults,
+    getQuizResultById, // Assicurati sia importata per la funzione viewQuizDetails
+    getChatbotConversations,
+    testConnection
+} from './firebase-api.js';
 
-import { getAllQuizResults, getChatbotConversations, saveQuizResult, getQuizResultById } from './firebase-api.js';
-
-// --- UTILITIES ---
+// Utilità per la formattazione e icone
 function formatDateTime(timestamp) {
-    if (!timestamp) return 'N/A';
-    // Firebase Timestamps hanno un metodo toDate()
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-    return date.toLocaleString('it-IT', options);
-}
-
-function formatDuration(seconds) {
-    if (typeof seconds !== 'number' || isNaN(seconds)) return 'N/A';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
+    if (!timestamp || !timestamp.toDate) return 'N/A';
+    const date = timestamp.toDate();
+    return date.toLocaleDateString('it-IT', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 function getProfileIcon(profile) {
-    switch (profile) {
-        case 'Guerriero': return '⚔️';
-        case 'Atleta': return '💪';
-        case 'Nuovo Esploratore': return '🧭';
-        default: return '👤';
+    const icons = {
+        "Guerriero della Forza": '💪',
+        "Scolpitore del Corpo": '✨',
+        "Esploratore della Resistenza": '🏃‍♂️',
+        "Maestro dell'Equilibrio": '🧘‍♀️'
+    };
+    return icons[profile] || '❓';
+}
+
+// Stato della connessione Firebase
+function updateConnectionStatus(status, message) {
+    const statusDiv = document.getElementById('connection-status');
+    statusDiv.className = 'connection-status'; // Reset classes
+    statusDiv.textContent = message;
+
+    if (status === 'connected') {
+        statusDiv.classList.add('status-connected');
+    } else if (status === 'connecting') {
+        statusDiv.classList.add('status-connecting');
+    } else if (status === 'error') {
+        statusDiv.classList.add('status-error');
+    }
+    // Rimuovi lo status dopo un po' se è "connected"
+    if (status === 'connected') {
+        setTimeout(() => {
+            if (statusDiv.classList.contains('status-connected')) { // Evita di rimuovere se è cambiato stato
+                statusDiv.textContent = '';
+                statusDiv.className = 'connection-status';
+            }
+        }, 3000); // Rimuovi il messaggio dopo 3 secondi
     }
 }
 
-function updateConnectionStatus(status, message) {
-    const statusDiv = document.getElementById('connection-status');
-    statusDiv.textContent = message;
-    statusDiv.className = `connection-status status-${status}`; // status-connected, status-error, status-connecting
-}
-
-// --- RENDERING FUNCTIONS ---
+// 0️⃣ BLOCCO 0: Panoramica KPI (Aggiornato tramite renderQuizData)
+// Questi KPI vengono aggiornati quando renderQuizData e renderChatbotData vengono chiamate
 
 // 1️⃣ BLOCCO 1: Dati Quiz - Gestione Lead
 async function renderQuizData() {
@@ -46,18 +67,24 @@ async function renderQuizData() {
 
         let totalScore = 0;
         let validQuizzesCount = 0;
+        let highScoreLeadsCount = 0; // Contatore per lead ad alto punteggio
+
+        const profileCounts = {};
+        const goalCounts = {};
+        const obstacleCounts = {};
+        // const cityCounts = {}; // Rimosso o non usato più per città
 
         if (quizResults.length > 0) {
             quizResults.forEach(quiz => {
                 const row = quizTableBody.insertRow();
                 row.insertCell().textContent = quiz.name || 'N/A';
                 row.insertCell().textContent = quiz.age || 'N/A';
-                row.insertCell().textContent = quiz.email || 'N/A'; // Email, o Telefono/WhatsApp se hai il campo
-                row.insertCell().textContent = quiz.city || 'N/A';
+                row.insertCell().textContent = quiz.email || 'N/A';
+                row.insertCell().textContent = quiz.whatsapp_number || 'N/A'; // *** QUI: Cambiato da quiz.city a quiz.whatsapp_number ***
                 row.insertCell().textContent = quiz.gender || 'N/A';
                 row.insertCell().innerHTML = `${getProfileIcon(quiz.profile)} ${quiz.profile || 'N/A'}`;
                 row.insertCell().textContent = (quiz.goals && quiz.goals.length > 0) ? quiz.goals.join(', ') : 'N/A';
-                row.insertCell().textContent = quiz.activity_level || 'N/A'; // Tipo di allenamento / Livello attività
+                row.insertCell().textContent = quiz.activity_level || 'N/A';
                 row.insertCell().textContent = (quiz.obstacles && quiz.obstacles.length > 0) ? quiz.obstacles.join(', ') : 'N/A';
                 row.insertCell().textContent = quiz.lead_score ? `${quiz.lead_score}%` : '0%';
 
@@ -71,10 +98,38 @@ async function renderQuizData() {
                 viewBtn.onclick = () => viewQuizDetails(quiz.id);
                 actionsCell.appendChild(viewBtn);
 
+                // *** NUOVO: Aggiungi pulsante WhatsApp se il numero è disponibile ***
+                if (quiz.whatsapp_number) {
+                    const whatsappBtn = document.createElement('button');
+                    whatsappBtn.textContent = 'WhatsApp';
+                    whatsappBtn.className = 'action-button whatsapp'; // Aggiungi una classe 'whatsapp' per lo stile
+                    whatsappBtn.onclick = () => window.open(`https://wa.me/${quiz.whatsapp_number}`, '_blank');
+                    actionsCell.appendChild(whatsappBtn);
+                }
+
                 if (quiz.lead_score) {
                     totalScore += quiz.lead_score;
                     validQuizzesCount++;
+                    if (quiz.lead_score >= 70) {
+                        highScoreLeadsCount++; // Incrementa contatore lead alto punteggio
+                    }
                 }
+
+                // Per i grafici di distribuzione
+                if (quiz.profile) {
+                    profileCounts[quiz.profile] = (profileCounts[quiz.profile] || 0) + 1;
+                }
+                if (quiz.goals) {
+                    quiz.goals.forEach(goal => {
+                        goalCounts[goal] = (goalCounts[goal] || 0) + 1;
+                    });
+                }
+                if (quiz.obstacles) {
+                    quiz.obstacles.forEach(obstacle => {
+                        obstacleCounts[obstacle] = (obstacleCounts[obstacle] || 0) + 1;
+                    });
+                }
+                // Rimosso l'uso di cityCounts
             });
             updateConnectionStatus('connected', `✅ Dati caricati: ${quizResults.length} quiz`);
         } else {
@@ -88,244 +143,238 @@ async function renderQuizData() {
 
         document.getElementById('totalQuizzes').textContent = quizResults.length;
         document.getElementById('avgQuizScore').textContent = validQuizzesCount > 0 ? `${(totalScore / validQuizzesCount).toFixed(1)}%` : '0%';
-        document.getElementById('kpiTotalQuizzes').textContent = quizResults.length; // Per BLOCCO 3
+        document.getElementById('kpiTotalQuizzes').textContent = quizResults.length;
+        document.getElementById('highScoreLeads').textContent = highScoreLeadsCount; // Aggiorna KPI lead alto punteggio
+
+        renderProfileChart(profileCounts);
+        renderGoalChart(goalCounts);
+        renderInsights(goalCounts, obstacleCounts); // Passa i conteggi agli insight
 
         return quizResults; // Restituisce i dati per altre funzioni
     } catch (error) {
         console.error('❌ Errore caricamento dati quiz:', error);
         updateConnectionStatus('error', '🔴 Errore caricamento quiz');
-        return []; // Restituisce un array vuoto in caso di errore
+        return [];
     }
 }
 
-
-// 2️⃣ BLOCCO 2: Dati Chatbot - Analisi Interazioni
-async function renderChatbotData(allQuizResults) {
+// 2️⃣ BLOCCO 2: Dati Chatbot - Interazioni Clienti
+async function renderChatbotData() {
     console.log('💬 Caricamento dati chatbot per BLOCCO 2...');
+    updateConnectionStatus('connecting', 'Caricamento conversazioni chatbot...');
     try {
         const conversations = await getChatbotConversations();
         const chatTableBody = document.querySelector('#chatbot-conversations-table-body');
-        chatTableBody.innerHTML = '';
+        chatTableBody.innerHTML = ''; // Pulisce la tabella
 
-        let totalDuration = 0;
         const topicCounts = {};
-        const outcomeCounts = {};
-        const uniqueChatUsers = new Set(); // Per il tasso di conversione
 
         if (conversations.length > 0) {
-            conversations.forEach(chat => {
+            conversations.forEach(conv => {
                 const row = chatTableBody.insertRow();
-                row.insertCell().textContent = chat.conversationId ? (chat.conversationId.substring(0, 8) + '...') : 'N/A';
-                row.insertCell().textContent = chat.userId || 'N/A';
-                row.insertCell().textContent = chat.startTime ? formatDateTime(chat.startTime) : 'N/A';
-                row.insertCell().textContent = chat.endTime ? formatDateTime(chat.endTime) : 'N/A';
-                row.insertCell().textContent = chat.duration ? formatDuration(chat.duration) : 'N/A';
-                row.insertCell().textContent = chat.messageCount || 'N/A';
-                row.insertCell().textContent = chat.lastMessageSnippet || 'N/A';
-                row.insertCell().textContent = chat.topic || 'N/A';
-                row.insertCell().textContent = chat.outcome || 'N/A';
+                row.insertCell().textContent = conv.id ? conv.id.substring(0, 8) + '...' : 'N/A';
+                row.insertCell().textContent = conv.lastMessageSnippet || 'N/A';
+                row.insertCell().textContent = conv.topic || 'N/A';
+                row.insertCell().textContent = conv.timestamp ? formatDateTime(conv.timestamp) : 'N/A';
 
                 const actionsCell = row.insertCell();
                 const viewBtn = document.createElement('button');
-                viewBtn.textContent = 'Dettagli';
+                viewBtn.textContent = 'Vedi Conversazione';
                 viewBtn.className = 'action-button';
-                viewBtn.onclick = () => viewConversationDetails(chat.id); // Funzione da implementare se necessaria
+                viewBtn.onclick = () => alert('Funzione "Vedi Conversazione" non implementata per il chatbot.'); // Placeholder
                 actionsCell.appendChild(viewBtn);
 
-                if (chat.duration) totalDuration += chat.duration;
-                if (chat.topic) topicCounts[chat.topic] = (topicCounts[chat.topic] || 0) + 1;
-                if (chat.outcome) outcomeCounts[chat.outcome] = (outcomeCounts[chat.outcome] || 0) + 1;
-                if (chat.userId) uniqueChatUsers.add(chat.userId);
+                if (conv.topic) {
+                    topicCounts[conv.topic] = (topicCounts[conv.topic] || 0) + 1;
+                }
             });
+            updateConnectionStatus('connected', `✅ Conversazioni caricate: ${conversations.length}`);
         } else {
             const row = chatTableBody.insertRow();
             const cell = row.insertCell();
-            cell.colSpan = 10;
+            cell.colSpan = 5;
             cell.className = 'no-data';
             cell.textContent = 'Nessuna conversazione chatbot trovata.';
+            updateConnectionStatus('connected', '✅ Conversazioni caricate: Nessuna trovata');
         }
-
-        // Aggiorna KPI di riepilogo chatbot
-        document.getElementById('chatbotTotalConversations').textContent = conversations.length;
-        document.getElementById('totalConversations').textContent = conversations.length; // KPI generale
-        document.getElementById('kpiTotalChats').textContent = conversations.length; // Per BLOCCO 3
-        
-        const avgDuration = conversations.length > 0 ? (totalDuration / conversations.length) : 0;
-        document.getElementById('chatbotAvgDuration').textContent = formatDuration(Math.round(avgDuration));
-
-        // Popola Interessi Emersi (Top Topics)
-        const sortedTopics = Object.entries(topicCounts).sort(([, a], [, b]) => b - a);
-        const topTopicsDiv = document.getElementById('topTopics');
-        topTopicsDiv.innerHTML = '';
-        if (sortedTopics.length > 0) {
-            sortedTopics.slice(0, 5).forEach(([topic, count]) => { // Mostra i top 5
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.textContent = `${topic} (${count})`;
-                topTopicsDiv.appendChild(tag);
-            });
-        } else {
-            topTopicsDiv.textContent = 'N/A';
-        }
-
-        // Popola Esigenze Più Comuni (Top Outcomes)
-        const sortedOutcomes = Object.entries(outcomeCounts).sort(([, a], [, b]) => b - a);
-        const topOutcomesDiv = document.getElementById('topOutcomes');
-        topOutcomesDiv.innerHTML = '';
-        if (sortedOutcomes.length > 0) {
-            sortedOutcomes.slice(0, 5).forEach(([outcome, count]) => { // Mostra i top 5
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.textContent = `${outcome} (${count})`;
-                topOutcomesDiv.appendChild(tag);
-            });
-        } else {
-            topOutcomesDiv.textContent = 'N/A';
-        }
-
-        return { conversations, uniqueChatUsers }; // Restituisce i dati per altre funzioni
+        document.getElementById('totalChatConversations').textContent = conversations.length;
+        document.getElementById('kpiTotalChatConversations').textContent = conversations.length;
+        renderChatTopicChart(topicCounts);
+        return conversations;
     } catch (error) {
         console.error('❌ Errore caricamento dati chatbot:', error);
-        return { conversations: [], uniqueChatUsers: new Set() };
+        updateConnectionStatus('error', '🔴 Errore caricamento conversazioni');
+        return [];
     }
 }
 
-
-// 3️⃣ BLOCCO 3: Riepilogo Attività & Performance
-function renderActivitySummary(allQuizResults, uniqueChatUsers) {
-    console.log('📈 Calcolo riepilogo attività per BLOCCO 3...');
-
-    // Distribuzione Geografica Lead
-    const geoDistribution = {};
-    const highScoreLeadsByCity = {}; // Per analisi geografica lead caldi
-    allQuizResults.forEach(quiz => {
-        if (quiz.city) {
-            geoDistribution[quiz.city] = (geoDistribution[quiz.city] || 0) + 1;
-            if (quiz.lead_score && quiz.lead_score > 70) { // Lead caldi (score > 70%)
-                highScoreLeadsByCity[quiz.city] = (highScoreLeadsByCity[quiz.city] || 0) + 1;
+// 3️⃣ BLOCCO 3: Riepilogo Attività & Performance - Funzioni Grafici
+let profileChartInstance = null;
+function renderProfileChart(profileCounts) {
+    if (profileChartInstance) {
+        profileChartInstance.destroy();
+    }
+    const ctx = document.getElementById('profileChart').getContext('2d');
+    profileChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: Object.keys(profileCounts),
+            datasets: [{
+                data: Object.values(profileCounts),
+                backgroundColor: ['#ff6600', '#ff9933', '#ffa500', '#cc5200', '#b34700'],
+                borderColor: '#2a2a2a',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#fff'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Distribuzione Profili Fitness',
+                    color: '#ff6600'
+                }
             }
         }
     });
-
-    const geoList = document.getElementById('geo-list');
-    geoList.innerHTML = '';
-    const sortedGeo = Object.entries(geoDistribution).sort(([, a], [, b]) => b - a);
-    if (sortedGeo.length > 0) {
-        sortedGeo.forEach(([city, count]) => {
-            const li = document.createElement('li');
-            li.textContent = `${city}: ${count} lead`;
-            geoList.appendChild(li);
-        });
-    } else {
-        geoList.innerHTML = '<li class="no-data">Nessun dato geografico disponibile.</li>';
-    }
-
-    // Tasso di Conversione Quiz -> Chat
-    let convertedLeadsCount = 0;
-    const uniqueQuizUsers = new Set();
-
-    allQuizResults.forEach(quiz => {
-        // Usa l'email (o un altro identificatore univoco) per collegare quiz e chat
-        if (quiz.email) {
-            uniqueQuizUsers.add(quiz.email);
-            if (uniqueChatUsers.has(quiz.email)) { // Assumendo che userId in chat sia l'email
-                convertedLeadsCount++;
-            }
-        }
-    });
-
-    const quizUsersCount = uniqueQuizUsers.size;
-    const conversionRate = quizUsersCount > 0 ? (convertedLeadsCount / quizUsersCount) * 100 : 0;
-    document.getElementById('kpiQuizToChatConversion').textContent = `${conversionRate.toFixed(1)}%`;
-
-
-    // Per BLOCCO 4: Analisi Geografica Lead Caldi
-    const hotGeoAreasList = document.getElementById('hotGeoAreas');
-    hotGeoAreasList.innerHTML = '';
-    const sortedHotGeo = Object.entries(highScoreLeadsByCity).sort(([, a], [, b]) => b - a);
-    if (sortedHotGeo.length > 0) {
-        sortedHotGeo.slice(0, 3).forEach(([city, count]) => { // Mostra le top 3 aree
-            const li = document.createElement('li');
-            li.textContent = `${city}: ${count} lead ad alto punteggio`;
-            hotGeoAreasList.appendChild(li);
-        });
-    } else {
-        hotGeoAreasList.innerHTML = '<li>Nessuna area calda identificata.</li>';
-    }
 }
 
+let goalChartInstance = null;
+function renderGoalChart(goalCounts) {
+    if (goalChartInstance) {
+        goalChartInstance.destroy();
+    }
+    const ctx = document.getElementById('goalChart').getContext('2d');
+    goalChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(goalCounts),
+            datasets: [{
+                label: 'Numero di Leads',
+                data: Object.values(goalCounts),
+                backgroundColor: '#ff6600',
+                borderColor: '#ff9933',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#fff'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Obiettivi Principali',
+                    color: '#ff6600'
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: '#444'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#fff'
+                    },
+                    grid: {
+                        color: '#444'
+                    }
+                }
+            }
+        }
+    });
+}
+
+let chatTopicChartInstance = null;
+function renderChatTopicChart(topicCounts) {
+    if (chatTopicChartInstance) {
+        chatTopicChartInstance.destroy();
+    }
+    const ctx = document.getElementById('chatTopicChart').getContext('2d');
+    chatTopicChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(topicCounts),
+            datasets: [{
+                data: Object.values(topicCounts),
+                backgroundColor: ['#25D366', '#34B7F1', '#FFC107', '#00BCD4', '#8BC34A'], // Colori diversi
+                borderColor: '#2a2a2a',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#fff'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Argomenti Chatbot',
+                    color: '#ff6600'
+                }
+            }
+        }
+    });
+}
 
 // 4️⃣ BLOCCO 4: Opportunità Business & Insights
-function renderBusinessOpportunities(allQuizResults, allChatConversations) {
-    console.log('💰 Calcolo opportunità business per BLOCCO 4...');
+function renderInsights(goalCounts, obstacleCounts) {
+    const mostPopularGoalEl = document.getElementById('mostPopularGoal');
+    const mostCommonObstacleEl = document.getElementById('mostCommonObstacle');
 
-    // Lead ad alto punteggio non ancora contattati (semplificato)
-    const highScoreLeads = allQuizResults.filter(quiz => quiz.lead_score && quiz.lead_score > 70);
-    const highScoreLeadsCountElem = document.getElementById('highScoreLeadsCount');
-    highScoreLeadsCountElem.textContent = highScoreLeads.length;
-
-    const highScoreLeadsListElem = document.getElementById('highScoreLeadsList');
-    highScoreLeadsListElem.innerHTML = '';
-    if (highScoreLeads.length > 0) {
-        highScoreLeads.slice(0, 5).forEach(lead => { // Mostra i top 5
-            const li = document.createElement('li');
-            li.textContent = `${lead.name || 'N/A'} (${lead.city || 'N/A'}) - Score: ${lead.lead_score}%`;
-            highScoreLeadsListElem.appendChild(li);
-        });
-    } else {
-        highScoreLeadsListElem.innerHTML = '<li>Nessun lead ad alto punteggio trovato.</li>';
-    }
-
-
-    // Segmentazione per obiettivi comuni (Dai Quiz)
-    const goalCounts = {};
-    allQuizResults.forEach(quiz => {
-        if (quiz.goals && Array.isArray(quiz.goals)) {
-            quiz.goals.forEach(goal => {
-                goalCounts[goal] = (goalCounts[goal] || 0) + 1;
-            });
-        }
-    });
+    // Obiettivo più popolare
     const sortedGoals = Object.entries(goalCounts).sort(([, a], [, b]) => b - a);
-    const commonGoalsDiv = document.getElementById('commonGoals');
-    commonGoalsDiv.innerHTML = '';
     if (sortedGoals.length > 0) {
-        sortedGoals.slice(0, 5).forEach(([goal, count]) => {
-            const tag = document.createElement('span');
-            tag.className = 'tag';
-            tag.textContent = `${goal} (${count})`;
-            commonGoalsDiv.appendChild(tag);
-        });
+        mostPopularGoalEl.textContent = sortedGoals[0][0];
     } else {
-        commonGoalsDiv.textContent = 'N/A';
+        mostPopularGoalEl.textContent = 'N/A';
     }
 
-    // Trend dalle chat (Richieste frequenti per argomento)
-    const chatTopicCounts = {};
-    allChatConversations.forEach(chat => {
-        if (chat.topic) {
-            chatTopicCounts[chat.topic] = (chatTopicCounts[chat.topic] || 0) + 1;
-        }
-    });
-    const sortedChatTopics = Object.entries(chatTopicCounts).sort(([, a], [, b]) => b - a);
-    const chatTrendsDiv = document.getElementById('chatTrends');
-    chatTrendsDiv.innerHTML = '';
-    if (sortedChatTopics.length > 0) {
-        sortedChatTopics.slice(0, 5).forEach(([topic, count]) => {
-            const tag = document.createElement('span');
-            tag.className = 'tag';
-            tag.textContent = `${topic} (${count})`;
-            chatTrendsDiv.appendChild(tag);
-        });
+    // Ostacolo più comune
+    const sortedObstacles = Object.entries(obstacleCounts).sort(([, a], [, b]) => b - a);
+    if (sortedObstacles.length > 0) {
+        mostCommonObstacleEl.textContent = sortedObstacles[0][0];
     } else {
-        chatTrendsDiv.textContent = 'N/A';
+        mostCommonObstacleEl.textContent = 'N/A';
     }
-
-    // Raccomandazioni Automatiche (Esempio descrittivo) - Gestito in HTML
 }
 
+// === Modal Functions ===
+function showModal(content) {
+    const modal = document.getElementById('detailsModal');
+    const modalBody = document.getElementById('modal-body-content');
+    modalBody.innerHTML = content;
+    modal.style.display = 'flex'; // Usa flex per centrare
+    document.body.style.overflow = 'hidden'; // Impedisce lo scroll del body
+}
 
-// --- DETAIL MODALS (PLACEHOLDERS) ---
+window.closeModal = function() {
+    const modal = document.getElementById('detailsModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto'; // Ripristina lo scroll del body
+}
+
+// Funzione per visualizzare i dettagli del quiz nel modal (AGGIORNATA per WhatsApp)
 window.viewQuizDetails = async function(quizId) {
     console.log('Visualizzazione dettagli quiz:', quizId);
     try {
@@ -335,8 +384,7 @@ window.viewQuizDetails = async function(quizId) {
                 <h3>Dettagli Quiz Lead: ${quiz.name || 'N/A'}</h3>
                 <p><strong>ID:</strong> ${quiz.id}</p>
                 <p><strong>Email:</strong> ${quiz.email || 'N/A'}</p>
-                <p><strong>Età:</strong> ${quiz.age || 'N/A'}</p>
-                <p><strong>Città:</strong> ${quiz.city || 'N/A'}</p>
+                <p><strong>WhatsApp:</strong> ${quiz.whatsapp_number || 'N/A'}</p> <p><strong>Età:</strong> ${quiz.age || 'N/A'}</p>
                 <p><strong>Genere:</strong> ${quiz.gender || 'N/A'}</p>
                 <p><strong>Profilo:</strong> ${getProfileIcon(quiz.profile)} ${quiz.profile || 'N/A'}</p>
                 <p><strong>Obiettivi:</strong> ${(quiz.goals && quiz.goals.length > 0) ? quiz.goals.join(', ') : 'N/A'}</p>
@@ -344,6 +392,7 @@ window.viewQuizDetails = async function(quizId) {
                 <p><strong>Ostacoli:</strong> ${(quiz.obstacles && quiz.obstacles.length > 0) ? quiz.obstacles.join(', ') : 'N/A'}</p>
                 <p><strong>Score Lead:</strong> ${quiz.lead_score ? `${quiz.lead_score}%` : '0%'}</p>
                 <p><strong>Data Completamento:</strong> ${quiz.timestamp ? formatDateTime(quiz.timestamp) : 'N/A'}</p>
+                ${quiz.whatsapp_number ? `<p><a href="https://wa.me/${quiz.whatsapp_number}" target="_blank" style="display:inline-block; margin-top:15px; padding:10px 20px; background-color:#25D366; color:white; text-decoration:none; border-radius:5px;">Chatta su WhatsApp</a></p>` : ''}
             `;
             showModal(modalContent);
         } else {
@@ -355,61 +404,34 @@ window.viewQuizDetails = async function(quizId) {
     }
 };
 
-window.viewConversationDetails = function(conversationId) {
-    console.log('Visualizzazione dettagli conversazione:', conversationId);
-    // Qui potresti implementare una funzione simile a viewQuizDetails
-    // per caricare e mostrare i dettagli completi di una conversazione specifica.
-    alert('Funzione per dettagli conversazione da implementare. ID: ' + conversationId);
-};
 
-
-function showModal(content) {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
-        z-index: 1000;
-    `;
-    modal.innerHTML = `
-        <div style="background: #2a2a2a; padding: 30px; border-radius: 10px; max-width: 600px;
-                    width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.5); color: white;
-                    border: 1px solid #ff6600;">
-            <button style="float: right; background: none; border: none; color: #ff6600;
-                           font-size: 1.5rem; cursor: pointer;">&times;</button>
-            ${content}
-        </div>
-    `;
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden'; // Impedisce lo scrolling del body
-
-    modal.querySelector('button').onclick = () => {
-        modal.remove();
-        document.body.style.overflow = 'auto';
-    };
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            modal.remove();
-            document.body.style.overflow = 'auto';
+// === Inizializzazione Dashboard ===
+async function initDashboard() {
+    updateConnectionStatus('connecting', 'Connessione e caricamento dati...');
+    try {
+        const connectionOK = await testConnection();
+        if (connectionOK) {
+            console.log('Connessione Firebase stabilita.');
+            // Carica tutti i dati in parallelo
+            await Promise.all([
+                renderQuizData(),
+                renderChatbotData()
+            ]);
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('it-IT'); // Aggiorna l'ora dell'ultimo aggiornamento
+            updateConnectionStatus('connected', '✅ Dati Dashboard aggiornati!');
+        } else {
+            console.error('Connessione Firebase fallita.');
+            updateConnectionStatus('error', '🔴 Errore connessione Firebase!');
         }
-    };
+    } catch (error) {
+        console.error('Errore durante l\'inizializzazione della dashboard:', error);
+        updateConnectionStatus('error', '🔴 Errore durante l\'inizializzazione!');
+    }
 }
 
-
-// --- INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
-    updateConnectionStatus('connecting', 'Caricamento dati Firebase...');
-
-    try {
-        const quizResults = await renderQuizData(); // Carica e renderizza i dati del quiz
-        const { conversations, uniqueChatUsers } = await renderChatbotData(quizResults); // Carica e renderizza i dati del chatbot
-
-        renderActivitySummary(quizResults, uniqueChatUsers); // Renderizza BLOCCO 3
-        renderBusinessOpportunities(quizResults, conversations); // Renderizza BLOCCO 4
-
-        updateConnectionStatus('connected', `✅ Dashboard inizializzata e dati caricati. Ultimo aggiornamento: ${new Date().toLocaleTimeString('it-IT')}`);
-    } catch (error) {
-        console.error('Errore critico durante l\'inizializzazione della dashboard:', error);
-        updateConnectionStatus('error', '🔴 Errore durante il caricamento dei dati.');
-    }
+// Carica la dashboard all'apertura della pagina
+document.addEventListener('DOMContentLoaded', () => {
+    initDashboard();
+    // Imposta un intervallo per ricaricare i dati ogni 5 minuti (300000 ms)
+    setInterval(initDashboard, 300000);
 });
