@@ -128,7 +128,7 @@
         }
 
         .action-button.whatsapp {
-            background-color: #25D366; /* WhatsApp Green */
+            background-color: #25D366;
         }
 
         .action-button.whatsapp:hover {
@@ -183,7 +183,7 @@
             background-color: #1a1a1a;
             padding: 20px;
             border-radius: 8px;
-            height: 300px; /* Altezza fissa per i grafici */
+            height: 300px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -192,7 +192,7 @@
         }
 
         #profileDistribution, #goalDistribution, #chatTopics {
-            position: relative; /* Necessario per Chart.js */
+            position: relative;
         }
 
         .insights-list {
@@ -234,7 +234,9 @@
             border: 1px solid #444;
             border-radius: 10px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
             position: relative;
             animation: fadeIn 0.3s ease-out;
@@ -278,6 +280,138 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* 🔥 NUOVI STILI PER LE CONVERSAZIONI */
+        .conversation-header {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .conversation-header p {
+            margin: 5px 0;
+            color: #eee;
+        }
+
+        .conversation-messages {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .conversation-messages h4 {
+            color: #ff9933;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .messages-container {
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+
+        .message-bubble {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: #ff6600;
+            color: white;
+            margin-left: auto;
+            margin-right: 0;
+        }
+
+        .assistant-message {
+            background-color: #444;
+            color: #eee;
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .message-icon {
+            font-size: 1rem;
+        }
+
+        .message-role {
+            font-weight: bold;
+        }
+
+        .message-time {
+            margin-left: auto;
+            font-size: 0.75rem;
+        }
+
+        .message-content {
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: #aaa;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        .conversation-actions {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #444;
+            text-align: center;
+        }
+
+        .conversation-actions .action-button {
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+
+        /* Scrollbar personalizzata per i messaggi */
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #ff6600;
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #ff8533;
+        }
+
+        /* Modal scrollbar */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #ff6600;
+            border-radius: 4px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard {
@@ -295,6 +429,14 @@
             }
             .metric-card p {
                 font-size: 2rem;
+            }
+            .modal-content {
+                width: 95%;
+                max-width: none;
+                margin: 10px;
+            }
+            .message-bubble {
+                max-width: 95%;
             }
         }
     </style>
@@ -336,7 +478,8 @@
                         <th>Nome</th>
                         <th>Età</th>
                         <th>Email</th>
-                        <th>WhatsApp</th> <th>Genere</th>
+                        <th>WhatsApp</th>
+                        <th>Genere</th>
                         <th>Profilo</th>
                         <th>Obiettivi</th>
                         <th>Tipo Allenamento</th>
@@ -381,7 +524,7 @@
                     <h3>Totale Conversazioni Bot</h3>
                     <p id="kpiTotalChatConversations">0</p>
                 </div>
-                 <div class="metric-card">
+                <div class="metric-card">
                     <h3>Leads ad Alto Punteggio (>= 70%)</h3>
                     <p id="highScoreLeads">0</p>
                 </div>
@@ -402,7 +545,7 @@
                 <canvas id="chatTopicChart"></canvas>
             </div>
 
-            <h3>Distribuzione Geografica Lead (Ora da altri dati o rimossa)</h3>
+            <h3>Distribuzione Geografica Lead</h3>
             <div id="geoDistribution" class="chart-container">
                 <p class="no-data">Il dato "Città" non è più acquisito dal quiz. Questa sezione potrebbe essere aggiornata con altre fonti.</p>
                 <ul id="geo-list"></ul>
@@ -422,19 +565,27 @@
                     <strong>Ostacoli Comuni:</strong> <span id="mostCommonObstacle">N/A</span>. Sviluppa soluzioni o risorse che affrontino queste sfide.
                 </li>
                 <li>
-                    <strong>Analisi Geografica Lead Caldi:</strong>
-                    <ul id="hotGeoAreas">
-                        <li>Il dato "Città" non è più acquisito dal quiz. Questa analisi non è più disponibile direttamente da qui.</li>
-                    </ul>
+                    <strong>Analisi Conversazioni Chatbot:</strong> Le conversazioni sono ora visualizzabili con dettagli completi. Usa il pulsante "Vedi Conversazione" per analizzare ogni interazione.
                 </li>
                 <li>
                     <strong>Trend Interazioni Chatbot:</strong> Monitora i picchi di attività nella chat per capire l'engagement e le esigenze emergenti.
+                </li>
+                <li>
+                    <strong>🔥 Nuove Funzionalità:</strong> 
+                    <ul style="margin-top: 10px;">
+                        <li>• Visualizzazione completa conversazioni chatbot</li>
+                        <li>• Analisi automatica argomenti dalle chat</li>
+                        <li>• Export conversazioni in formato JSON</li>
+                        <li>• Generazione lead dalle conversazioni</li>
+                        <li>• Integrazione API Chatbase in tempo reale</li>
+                    </ul>
                 </li>
             </ul>
         </div>
 
     </div>
 
+    <!-- Modal per i dettagli -->
     <div id="detailsModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
@@ -442,8 +593,66 @@
         </div>
     </div>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module" src="dashboard.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    
+    <!-- Debug Script -->
+    <script>
+        // Log di debug per verificare il caricamento
+        console.log('🚀 TribuCoach Dashboard HTML caricato');
+        
+        // Aspetta che Chart.js sia caricato prima di procedere
+        function waitForChart() {
+            if (typeof Chart !== 'undefined') {
+                console.log('📊 Chart.js version:', Chart.version);
+                console.log('✅ Chart.js caricato correttamente');
+                
+                // Ora carica il dashboard.js
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = 'dashboard.js';
+                script.onload = () => console.log('✅ Dashboard.js caricato');
+                script.onerror = () => console.error('❌ Errore caricamento dashboard.js');
+                document.head.appendChild(script);
+            } else {
+                console.log('⏳ Aspettando Chart.js...');
+                setTimeout(waitForChart, 100);
+            }
+        }
+        
+        // Avvia il controllo dopo il caricamento del DOM
+        document.addEventListener('DOMContentLoaded', waitForChart);
+        
+        // Verifica che tutti gli elementi necessari siano presenti
+        function verifyElements() {
+            const requiredElements = [
+                'connection-status',
+                'totalQuizzes',
+                'avgQuizScore', 
+                'totalChatConversations',
+                'last-update',
+                'quiz-results-table-body',
+                'chatbot-conversations-table-body',
+                'profileChart',
+                'goalChart',
+                'chatTopicChart',
+                'detailsModal'
+            ];
+            
+            requiredElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) {
+                    console.error(`❌ Elemento mancante: ${id}`);
+                } else {
+                    console.log(`✅ Elemento trovato: ${id}`);
+                }
+            });
+            
+            console.log('🎯 Elementi DOM verificati');
+        }
+        
+        // Verifica elementi dopo che Chart.js è caricato
+        setTimeout(verifyElements, 500);
+    </script>
 </body>
 </html>
