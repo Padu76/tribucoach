@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TribuCoach Dashboard - Business Intelligence</title>
     <style>
-        /* CSS styles here (copia tutto il CSS dal tuo file attuale) */
         * {
             margin: 0;
             padding: 0;
@@ -17,6 +16,55 @@
             background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
             color: #fff;
             min-height: 100vh;
+            margin-top: 50px;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .status-connected {
+            background: #4CAF50;
+            color: white;
+            animation: slideDown 0.5s ease;
+        }
+
+        .status-connecting {
+            background: #ff9800;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-error {
+            background: #f44336;
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .header {
@@ -274,19 +322,68 @@
             background: #ff9800;
         }
 
-        .status-connected {
+        /* Tracking-specific styles */
+        .sentiment-positive { color: #4CAF50; font-weight: bold; }
+        .sentiment-neutral { color: #FF9800; font-weight: bold; }
+        .sentiment-negative { color: #f44336; font-weight: bold; }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .event-type {
+            font-weight: bold;
+            color: #ff6600;
+        }
+
+        .event-time {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .real-time-indicator {
+            width: 8px;
+            height: 8px;
             background: #4CAF50;
-            color: white;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
         }
 
-        .status-connecting {
-            background: #ff9800;
-            color: white;
+        .chart-container {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
         }
 
-        .status-error {
-            background: #f44336;
-            color: white;
+        .test-section {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid #FFC107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .test-btn {
+            background: #FFC107;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .test-btn:hover {
+            background: #FFB300;
         }
 
         @media (max-width: 768px) {
@@ -312,15 +409,25 @@
 
     <div class="header">
         <h1>Dashboard Analitica TribuCoach</h1>
-        <p>Monitora i tuoi lead, i risultati dei quiz e le metriche chiave in tempo reale.</p>
+        <p>Monitora i tuoi lead, i risultati dei quiz, le conversazioni chatbot e le metriche chiave in tempo reale.</p>
     </div>
 
     <div class="dashboard">
         <div class="refresh-section">
+            <span class="real-time-indicator"></span>Live Data
             Ultimo aggiornamento: <span id="last-update">Caricamento...</span>
             <button class="refresh-btn" onclick="refreshData()">🔄</button>
         </div>
 
+        <!-- Test Section (solo in debug mode) -->
+        <div class="test-section" id="test-section" style="display: none;">
+            <h3 style="color: #FFC107; margin-bottom: 10px;">🧪 Test & Debug</h3>
+            <button class="test-btn" onclick="testChatbotIntegration()">Test Chatbot Integration</button>
+            <button class="test-btn" onclick="testUserTracking()">Test User Tracking</button>
+            <button class="test-btn" onclick="showTrackingData()">Show Tracking Data</button>
+        </div>
+
+        <!-- Metriche Principali -->
         <div class="metrics-grid">
             <div class="metric-card">
                 <h3>Lead Totali</h3>
@@ -337,62 +444,112 @@
                 </div>
             </div>
             <div class="metric-card">
-                <h3>Punteggio Medio Lead</h3>
-                <div class="value" id="avg-lead-score">-</div>
-                <div class="trend positive" id="score-trend">
-                    <span class="icon">⭐</span><span class="percentage">0%</span> vs. Settimana scorsa
+                <h3>Conversazioni Chatbot</h3>
+                <div class="value" id="total-conversations">-</div>
+                <div class="trend positive" id="conversations-trend">
+                    <span class="icon">💬</span><span class="percentage">0%</span> vs. Settimana scorsa
                 </div>
             </div>
             <div class="metric-card">
-                <h3>Nuovi Iscritti Oggi</h3>
-                <div class="value" id="new-leads-today">-</div>
-                <div class="trend positive" id="new-leads-trend">
-                    <span class="icon">🆕</span><span class="percentage">0%</span> vs. Ieri
+                <h3>Utenti Attivi Oggi</h3>
+                <div class="value" id="daily-active-users">-</div>
+                <div class="trend positive" id="active-users-trend">
+                    <span class="icon">👥</span><span class="percentage">0%</span> vs. Ieri
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Tasso di Conversione</h3>
+                <div class="value" id="conversion-rate">-</div>
+                <div class="trend positive" id="conversion-trend">
+                    <span class="icon">🎯</span><span class="percentage">0%</span> vs. Settimana scorsa
+                </div>
+            </div>
+            <div class="metric-card">
+                <h3>Durata Media Chat</h3>
+                <div class="value" id="avg-conversation-duration">-</div>
+                <div class="trend positive" id="duration-trend">
+                    <span class="icon">⏱️</span><span class="percentage">0%</span> vs. Settimana scorsa
                 </div>
             </div>
         </div>
 
+        <!-- Grafici Trend -->
         <div class="dashboard-section">
-            <h2>🎯 Obiettivi dei Clienti</h2>
+            <h2>📊 Trend Attività</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="chart-container">
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Conversazioni Giornaliere</h3>
+                    <div id="conversation-chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Utenti Attivi</h3>
+                    <div id="user-activity-chart"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic Analysis -->
+        <div class="dashboard-section">
+            <h2>🎯 Analisi Argomenti Chatbot</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
                 <div>
-                    <h3 style="color: #ff9933; margin-bottom: 15px;">Top Obiettivi</h3>
-                    <div id="goals-chart"></div>
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Topic Più Discussi</h3>
+                    <div id="topics-chart"></div>
                 </div>
                 <div>
-                    <h3 style="color: #ff9933; margin-bottom: 15px;">Sfide Principali</h3>
-                    <div id="challenges-chart"></div>
+                    <h3 style="color: #ff9933; margin-bottom: 15px;">Sentiment Analysis</h3>
+                    <div id="sentiment-chart"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Eventi Recenti -->
         <div class="dashboard-section">
-            <h2>💡 Insights sui Clienti</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <div class="insight-card">
-                    <h4 style="color: #ff6600; margin-bottom: 10px;">📊 Distribuzione Budget</h4>
-                    <div id="budget-analysis"></div>
-                </div>
-                <div class="insight-card">
-                    <h4 style="color: #ff6600; margin-bottom: 10px;">⏰ Disponibilità Tempo</h4>
-                    <div id="time-analysis"></div>
-                </div>
-                <div class="insight-card">
-                    <h4 style="color: #ff6600; margin-bottom: 10px;">🏋️ Frequenza Allenamento</h4>
-                    <div id="frequency-analysis"></div>
-                </div>
-                <div class="insight-card">
-                    <h4 style="color: #ff6600; margin-bottom: 10px;">📍 Distribuzione Geografica</h4>
-                    <div id="location-analysis"></div>
-                </div>
-            </div>
+            <h2>⚡ Eventi Recenti</h2>
+            <div id="recent-events"></div>
         </div>
 
+        <!-- Gestione Conversazioni Chatbot -->
         <div class="dashboard-section">
-            <h2>💼 Opportunità Business</h2>
-            <div id="business-opportunities"></div>
+            <h2>💬 Conversazioni Chatbot</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Utente</th>
+                        <th>Messaggi</th>
+                        <th>Durata</th>
+                        <th>Argomenti</th>
+                        <th>Sentiment</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+                <tbody id="conversations-table-body">
+                    <tr><td colspan="6" class="no-data">Caricamento conversazioni...</td></tr>
+                </tbody>
+            </table>
         </div>
 
+        <!-- Gestione Utenti -->
+        <div class="dashboard-section">
+            <h2>👥 Gestione Utenti</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Fonte</th>
+                        <th>Sessioni</th>
+                        <th>Quiz</th>
+                        <th>Registrazione</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <tr><td colspan="6" class="no-data">Caricamento utenti...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Gestione Lead (Quiz) -->
         <div class="dashboard-section">
             <h2>🎯 Gestione Lead</h2>
             <table class="data-table leads-table">
@@ -400,8 +557,6 @@
                     <tr>
                         <th>Nome</th>
                         <th>Email</th>
-                        <th>Città</th>
-                        <th>Obiettivi</th>
                         <th>Profilo</th>
                         <th>Punteggio Lead</th>
                         <th>Data Iscrizione</th>
@@ -409,31 +564,108 @@
                     </tr>
                 </thead>
                 <tbody id="leads-table-body">
-                    <tr><td colspan="8" class="no-data">Caricamento lead...</td></tr>
+                    <tr><td colspan="6" class="no-data">Caricamento lead...</td></tr>
                 </tbody>
             </table>
         </div>
 
+        <!-- Opportunità Business -->
         <div class="dashboard-section">
-            <h2>📊 Ultimi Risultati Quiz</h2>
-            <table class="data-table quizzes-table">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Email</th>
-                        <th>Profilo</th>
-                        <th>Punteggio Lead</th>
-                        <th>Data Completamento</th>
-                        <th>Dettagli</th>
-                    </tr>
-                </thead>
-                <tbody id="quizzes-table-body">
-                    <tr><td colspan="6" class="no-data">Caricamento quiz...</td></tr>
-                </tbody>
-            </table>
+            <h2>💼 Opportunità Business</h2>
+            <div id="business-opportunities"></div>
         </div>
     </div>
 
-    <script type="module" src="dashboard.js"></script>
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeTribuCoachTracking, trackUserAction } from './tracking-init.js';
+        import { testChatbotIntegration } from './dashboard-tracking.js';
+
+        // Inizializza il tracking completo
+        const tracker = initializeTribuCoachTracking({
+            autoTrack: true,
+            enableRealtime: true,
+            debugMode: true // Cambia a false in produzione
+        });
+
+        // Mostra sezione test solo in debug mode
+        if (tracker.config.debugMode) {
+            document.getElementById('test-section').style.display = 'block';
+        }
+
+        // Funzioni globali per la dashboard
+        window.refreshData = function() {
+            console.log('🔄 Refresh manuale dati...');
+            trackUserAction('manual_refresh');
+            if (window.tribuCoachTracker?.dashboardTracker) {
+                window.tribuCoachTracker.dashboardTracker.updateDashboardMetrics();
+            }
+            updateLastUpdateTime();
+        };
+
+        window.testChatbotIntegration = function() {
+            console.log('🧪 Test integrazione chatbot...');
+            trackUserAction('test_chatbot_integration');
+            if (typeof testChatbotIntegration === 'function') {
+                testChatbotIntegration();
+            }
+        };
+
+        window.testUserTracking = function() {
+            console.log('🧪 Test user tracking...');
+            trackUserAction('test_user_tracking', {
+                test_data: 'sample_user_data',
+                timestamp: new Date().toISOString()
+            });
+            alert('Test user tracking eseguito - controlla console');
+        };
+
+        window.showTrackingData = function() {
+            console.log('📊 Dati tracking correnti:');
+            console.log('Session:', window.tribuCoachTracker?.currentSession);
+            console.log('Dashboard Tracker:', window.tribuCoachTracker?.dashboardTracker);
+            console.log('User ID:', localStorage.getItem('tribucoach_user_id'));
+            alert('Dati tracking stampati in console');
+        };
+
+        function updateLastUpdateTime() {
+            const now = new Date().toLocaleTimeString('it-IT');
+            const element = document.getElementById('last-update');
+            if (element) {
+                element.textContent = now;
+            }
+        }
+
+        function updateConnectionStatus(isConnected) {
+            const statusElement = document.getElementById('connection-status');
+            if (statusElement) {
+                if (isConnected) {
+                    statusElement.className = 'connection-status status-connected';
+                    statusElement.innerHTML = '✅ Connesso a Firebase - Tracking Attivo';
+                } else {
+                    statusElement.className = 'connection-status status-error';
+                    statusElement.innerHTML = '❌ Errore connessione Firebase';
+                }
+            }
+        }
+
+        // Verifica connessione dopo inizializzazione
+        setTimeout(() => {
+            const isConnected = window.tribuCoachTracker?.isInitialized || false;
+            updateConnectionStatus(isConnected);
+            updateLastUpdateTime();
+        }, 2000);
+
+        // Aggiorna connection status ogni 30 secondi
+        setInterval(() => {
+            const isConnected = window.tribuCoachTracker?.isInitialized || false;
+            updateConnectionStatus(isConnected);
+            if (isConnected) {
+                updateLastUpdateTime();
+            }
+        }, 30000);
+
+        console.log('🚀 Dashboard inizializzata con tracking completo');
+    </script>
 </body>
 </html>
