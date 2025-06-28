@@ -196,6 +196,64 @@ export async function updateBusinessMetrics() {
     }
 }
 
+// === WEBHOOK HANDLERS (per Chatbase) ===
+export async function handleChatbaseWebhook(webhookData) {
+    try {
+        const conversationData = {
+            user_id: webhookData.user_id || null,
+            session_id: webhookData.conversation_id,
+            messages_count: webhookData.messages?.length || 0,
+            duration_minutes: calculateDuration(webhookData.start_time, webhookData.end_time),
+            topics_discussed: extractTopics(webhookData.messages),
+            sentiment: analyzeSentiment(webhookData.messages),
+            satisfaction_rating: webhookData.rating || null,
+            lead_generated: checkLeadGeneration(webhookData.messages)
+        };
+        
+        await trackChatbotConversation(conversationData);
+        await trackEvent('chatbot_conversation_completed', conversationData, conversationData.user_id);
+        
+        return { success: true };
+    } catch (error) {
+        console.error('❌ Errore webhook handler:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// === AUTO-TRACKING INIZIALIZZAZIONE ===
+export function initializeTracking() {
+    console.log('🔍 Inizializzazione tracking TribuCoach...');
+    
+    // Auto-track page views
+    trackEvent('page_view', {
+        page: window.location.pathname,
+        referrer: document.referrer,
+        title: document.title
+    });
+    
+    // Auto-track quiz completion (se nella pagina quiz)
+    if (window.location.pathname.includes('quiz')) {
+        // Il tracking del quiz è già implementato nel quiz.html
+        console.log('📊 Quiz tracking attivo');
+    }
+    
+    // Auto-track session start
+    const sessionData = {
+        session_type: getSessionType(),
+        user_id: getUserIdFromStorage(),
+        device_info: {
+            screen: `${screen.width}x${screen.height}`,
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        },
+        referrer: document.referrer
+    };
+    
+    trackSession(sessionData);
+    
+    console.log('✅ Tracking inizializzato');
+}
+
 // === UTILITY FUNCTIONS ===
 function generateUserId(email) {
     // Crea hash privacy-safe dell'email
@@ -254,30 +312,6 @@ async function calculateDailyMetrics() {
     } catch (error) {
         console.error('❌ Errore calculating metrics:', error);
         return {};
-    }
-}
-
-// === WEBHOOK HANDLERS (per Chatbase) ===
-export async function handleChatbaseWebhook(webhookData) {
-    try {
-        const conversationData = {
-            user_id: webhookData.user_id || null,
-            session_id: webhookData.conversation_id,
-            messages_count: webhookData.messages?.length || 0,
-            duration_minutes: calculateDuration(webhookData.start_time, webhookData.end_time),
-            topics_discussed: extractTopics(webhookData.messages),
-            sentiment: analyzeSentiment(webhookData.messages),
-            satisfaction_rating: webhookData.rating || null,
-            lead_generated: checkLeadGeneration(webhookData.messages)
-        };
-        
-        await trackChatbotConversation(conversationData);
-        await trackEvent('chatbot_conversation_completed', conversationData, conversationData.user_id);
-        
-        return { success: true };
-    } catch (error) {
-        console.error('❌ Errore webhook handler:', error);
-        return { success: false, error: error.message };
     }
 }
 
@@ -344,40 +378,6 @@ function checkLeadGeneration(messages) {
     );
 }
 
-// === AUTO-TRACKING INIZIALIZZAZIONE ===
-export function initializeTracking() {
-    console.log('🔍 Inizializzazione tracking TribuCoach...');
-    
-    // Auto-track page views
-    trackEvent('page_view', {
-        page: window.location.pathname,
-        referrer: document.referrer,
-        title: document.title
-    });
-    
-    // Auto-track quiz completion (se nella pagina quiz)
-    if (window.location.pathname.includes('quiz')) {
-        // Il tracking del quiz è già implementato nel quiz.html
-        console.log('📊 Quiz tracking attivo');
-    }
-    
-    // Auto-track session start
-    const sessionData = {
-        session_type: getSessionType(),
-        user_id: getUserIdFromStorage(),
-        device_info: {
-            screen: `${screen.width}x${screen.height}`,
-            language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        },
-        referrer: document.referrer
-    };
-    
-    trackSession(sessionData);
-    
-    console.log('✅ Tracking inizializzato');
-}
-
 function getSessionType() {
     const path = window.location.pathname.toLowerCase();
     if (path.includes('quiz')) return 'quiz';
@@ -392,13 +392,3 @@ function getUserIdFromStorage() {
            sessionStorage.getItem('tribucoach_user_id') || 
            null;
 }
-
-// === EXPORT DELLE FUNZIONI PRINCIPALI ===
-export {
-    trackUser,
-    trackChatbotConversation,
-    trackSession,
-    trackEvent,
-    updateBusinessMetrics,
-    handleChatbaseWebhook
-};
