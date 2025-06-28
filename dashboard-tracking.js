@@ -1,17 +1,4 @@
-    async getBusinessMetrics(days = 30) {
-        try {
-            const q = query(
-                collection(db, 'business_metrics'),
-                orderBy('created_at', 'desc'),
-                limit(days)
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error('❌ Errore recupero metrics:', error);
-            return [];
-        }
-    }// dashboard-tracking.js - Estensione dashboard per tracking completo
+// dashboard-tracking.js - Estensione dashboard per tracking completo
 import { db } from './firebase.js';
 import {
     collection,
@@ -33,7 +20,8 @@ export class DashboardTracker {
             conversations: [],
             sessions: [],
             events: [],
-            metrics: []
+            metrics: [],
+            quizResults: []
         };
     }
 
@@ -60,17 +48,17 @@ export class DashboardTracker {
             this.getUserSessions(),
             this.getAnalyticsEvents(),
             this.getBusinessMetrics(),
-            this.getQuizResults() // AGGIUNTO
+            this.getQuizResults()
         ]);
 
-        this.data = { users, conversations, sessions, events, metrics, quizResults }; // AGGIUNTO quizResults
+        this.data = { users, conversations, sessions, events, metrics, quizResults };
         console.log('📊 Dati iniziali caricati:', {
             users: users.length,
             conversations: conversations.length,
             sessions: sessions.length,
             events: events.length,
             metrics: metrics.length,
-            quizResults: quizResults.length // AGGIUNTO
+            quizResults: quizResults.length
         });
     }
 
@@ -154,6 +142,21 @@ export class DashboardTracker {
         }
     }
 
+    async getBusinessMetrics(days = 30) {
+        try {
+            const q = query(
+                collection(db, 'business_metrics'),
+                orderBy('created_at', 'desc'),
+                limit(days)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            console.error('❌ Errore recupero metrics:', error);
+            return [];
+        }
+    }
+
     // === LISTENERS REAL-TIME ===
     setupRealtimeListeners() {
         // Listener per nuove conversazioni chatbot
@@ -190,12 +193,12 @@ export class DashboardTracker {
                 console.log('📊 Quiz results aggiornati:', snapshot.size);
                 const results = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 this.data.quizResults = results;
-                this.updateLeadsDisplay(results); // Aggiorna tabella leads
+                this.updateLeadsDisplay(results);
                 this.updateDashboardMetrics();
             }
         );
 
-        this.listeners = [conversationsListener, usersListener, eventsListener, quizListener]; // AGGIUNTO quizListener
+        this.listeners = [conversationsListener, usersListener, eventsListener, quizListener];
     }
 
     // === METRICHE DASHBOARD ===
@@ -205,7 +208,7 @@ export class DashboardTracker {
         // Aggiorna elementi DOM
         this.updateElement('total-users', metrics.totalUsers);
         this.updateElement('total-conversations', metrics.totalConversations);
-        this.updateElement('total-quizzes', metrics.totalQuizzes); // AGGIUNTO
+        this.updateElement('total-quizzes', metrics.totalQuizzes);
         this.updateElement('avg-conversation-duration', `${metrics.avgConversationDuration} min`);
         this.updateElement('conversion-rate', `${metrics.conversionRate}%`);
         this.updateElement('daily-active-users', metrics.dailyActiveUsers);
@@ -224,12 +227,12 @@ export class DashboardTracker {
         
         const totalUsers = this.data.users.length;
         const totalConversations = this.data.conversations.length;
-        const totalQuizzes = this.data.quizResults?.length || 0; // AGGIUNTO
+        const totalQuizzes = this.data.quizResults?.length || 0;
         
         // Quiz completati oggi
         const todayQuizzes = this.data.quizResults?.filter(quiz => 
             quiz.timestamp && quiz.timestamp >= today
-        ).length || 0; // AGGIUNTO
+        ).length || 0;
         
         // Conversazioni oggi
         const todayConversations = this.data.conversations.filter(conv => 
@@ -269,8 +272,8 @@ export class DashboardTracker {
         return {
             totalUsers,
             totalConversations,
-            totalQuizzes, // AGGIUNTO
-            todayQuizzes, // AGGIUNTO
+            totalQuizzes,
+            todayQuizzes,
             dailyActiveUsers,
             avgConversationDuration,
             conversionRate,
@@ -357,6 +360,29 @@ export class DashboardTracker {
         tbody.innerHTML = rows;
     }
 
+    updateUsersDisplay(users) {
+        const tbody = document.getElementById('users-table-body');
+        if (!tbody) return;
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun utente tracciato ancora</td></tr>';
+            return;
+        }
+        
+        const rows = users.slice(0, 10).map(user => `
+            <tr>
+                <td>${user.name || 'N/A'}</td>
+                <td>${user.whatsapp || user.email || 'N/A'}</td>
+                <td>${user.source || 'N/A'}</td>
+                <td>${user.total_sessions || 0}</td>
+                <td>${user.quiz_completed ? '✅' : '❌'}</td>
+                <td>${this.formatDateTime(user.created_at)}</td>
+            </tr>
+        `).join('');
+        
+        tbody.innerHTML = rows;
+    }
+
     updateLeadsDisplay(quizResults) {
         const tbody = document.getElementById('leads-table-body');
         if (!tbody) return;
@@ -384,15 +410,6 @@ export class DashboardTracker {
         }).join('');
         
         tbody.innerHTML = rows;
-    }
-
-    getProfileIcon(profile) {
-        switch(profile) {
-            case 'Nuovo Esploratore': return '🌱';
-            case 'Guerriero': return '⚔️'; 
-            case 'Atleta': return '🏆';
-            default: return '👤';
-        }
     }
 
     updateEventsDisplay(events) {
@@ -491,8 +508,13 @@ export class DashboardTracker {
         }
     }
 
-    formatTopics(topics) {
-        return topics.map(([topic, count]) => `${topic} (${count})`).join(', ') || 'Nessun topic';
+    getProfileIcon(profile) {
+        switch(profile) {
+            case 'Nuovo Esploratore': return '🌱';
+            case 'Guerriero': return '⚔️'; 
+            case 'Atleta': return '🏆';
+            default: return '👤';
+        }
     }
 
     // === CLEANUP ===
@@ -515,10 +537,8 @@ export class WebhookHandler {
     }
 
     setupWebhookSimulator() {
-        // Simula dati webhook per testing
         console.log('🔗 Webhook handler configurato');
         
-        // In produzione, questo sarà sostituito da vero endpoint
         window.simulateChatbotWebhook = (data) => {
             this.handleChatbaseWebhook(data);
         };
@@ -528,7 +548,6 @@ export class WebhookHandler {
         try {
             console.log('📥 Webhook ricevuto:', webhookData);
             
-            // Trasforma dati webhook in formato Firebase
             const conversationData = {
                 user_id: webhookData.user_id || null,
                 session_id: webhookData.conversation_id || `sim_${Date.now()}`,
@@ -540,10 +559,7 @@ export class WebhookHandler {
                 lead_generated: webhookData.lead_generated || Math.random() > 0.7
             };
 
-            // Salva in Firebase
             await this.tracker.trackChatbotConversation(conversationData);
-            
-            // Aggiorna dashboard
             this.tracker.updateDashboardMetrics();
             
             console.log('✅ Webhook processato con successo');
@@ -574,15 +590,12 @@ export function initializeDashboardTracking() {
     const tracker = new DashboardTracker();
     const webhookHandler = new WebhookHandler(tracker);
     
-    // Inizializza tracking
     tracker.initialize();
     
-    // Aggiorna metriche ogni 5 minuti
     setInterval(() => {
         tracker.updateDashboardMetrics();
     }, 5 * 60 * 1000);
     
-    // Rendi disponibili globalmente per debug
     window.dashboardTracker = tracker;
     window.webhookHandler = webhookHandler;
     
@@ -594,7 +607,6 @@ export function initializeDashboardTracking() {
 export function testChatbotIntegration() {
     console.log('🧪 Test integrazione chatbot...');
     
-    // Simula diverse conversazioni
     const testConversations = [
         {
             user_id: 'test_user_1',
@@ -615,95 +627,15 @@ export function testChatbotIntegration() {
             sentiment: 'neutral',
             rating: 4,
             lead_generated: false
-        },
-        {
-            user_id: null, // Utente anonimo
-            conversation_id: 'conv_003',
-            messages: ['Info palestra'],
-            duration: 3,
-            topics: ['fitness'],
-            sentiment: 'neutral',
-            rating: 3,
-            lead_generated: false
         }
     ];
     
-    // Simula webhooks
     testConversations.forEach((conv, index) => {
         setTimeout(() => {
             window.simulateChatbotWebhook(conv);
             console.log(`✅ Test conversation ${index + 1} simulata`);
-        }, index * 2000); // 2 secondi tra ogni test
+        }, index * 2000);
     });
     
     console.log('🧪 Test avviati - controlla la dashboard per gli aggiornamenti');
 }
-
-// === CSS AGGIUNTIVO PER NUOVE SEZIONI ===
-export const additionalCSS = `
-/* CSS per nuove sezioni tracking */
-.sentiment-positive { color: #4CAF50; font-weight: bold; }
-.sentiment-neutral { color: #FF9800; font-weight: bold; }
-.sentiment-negative { color: #f44336; font-weight: bold; }
-
-.event-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 6px;
-    margin-bottom: 8px;
-}
-
-.event-type {
-    font-weight: bold;
-    color: #ff6600;
-}
-
-.event-time {
-    color: #ccc;
-    font-size: 0.9rem;
-}
-
-.metric-trend {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.trend-up { color: #4CAF50; }
-.trend-down { color: #f44336; }
-.trend-neutral { color: #ccc; }
-
-.chart-container {
-    background: rgba(255,255,255,0.05);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
-}
-
-.real-time-indicator {
-    width: 8px;
-    height: 8px;
-    background: #4CAF50;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-`;
-
-// === EXPORT FINALE ===
-export default {
-    DashboardTracker,
-    WebhookHandler,
-    initializeDashboardTracking,
-    testChatbotIntegration,
-    additionalCSS
-};
