@@ -162,7 +162,7 @@ export async function trackEvent(eventType, eventData = {}, userId = null) {
             event_data: eventData,
             page_url: window.location.href,
             user_agent: navigator.userAgent,
-            ip_hash: await generateIpHash(), // Privacy-safe
+            ip_hash: generateIpHash(), // Ora è sincrono
             created_at: serverTimestamp()
         });
         
@@ -262,12 +262,14 @@ function generateUserId(email) {
 
 async function generateIpHash() {
     // Privacy-safe IP hashing (non salviamo IP reali)
+    // Rimuoviamo la chiamata esterna per evitare CORS e rate limiting
     try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return btoa(data.ip).substring(0, 10); // Hash parziale per privacy
+        // Genera un hash basato su dati del browser per privacy
+        const browserFingerprint = navigator.userAgent + navigator.language + screen.width + screen.height;
+        const hash = btoa(browserFingerprint).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+        return hash;
     } catch {
-        return 'unknown';
+        return 'unknown_' + Math.random().toString(36).substring(2, 8);
     }
 }
 
