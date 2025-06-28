@@ -218,6 +218,9 @@ export class DashboardTracker {
         this.updateUserActivityChart(metrics.userActivity);
         this.updateTopicsChart(metrics.topTopics);
         
+        // Aggiorna opportunità business
+        this.updateBusinessOpportunities();
+        
         console.log('📈 Metriche dashboard aggiornate:', metrics);
     }
 
@@ -360,6 +363,144 @@ export class DashboardTracker {
         tbody.innerHTML = rows;
     }
 
+    // === NUOVA SEZIONE: BUSINESS OPPORTUNITIES ANALYSIS ===
+    updateBusinessOpportunities() {
+        const container = document.getElementById('business-opportunities');
+        if (!container) return;
+        
+        const opportunities = this.analyzeBusinessOpportunities();
+        
+        const opportunitiesHTML = opportunities.map(opp => `
+            <div class="opportunity-card">
+                <h4>${opp.title}<span class="priority ${opp.priority}">${opp.priority.toUpperCase()}</span></h4>
+                <p>${opp.description}</p>
+                <div style="margin-top: 10px;">
+                    <strong>Azione suggerita:</strong> ${opp.action}
+                </div>
+                ${opp.leads ? `<div style="margin-top: 5px;"><strong>Lead coinvolti:</strong> ${opp.leads}</div>` : ''}
+            </div>
+        `).join('');
+        
+        container.innerHTML = opportunitiesHTML || '<div class="no-data">Analizzando opportunità business...</div>';
+    }
+
+    analyzeBusinessOpportunities() {
+        const opportunities = [];
+        
+        if (!this.data.quizResults || this.data.quizResults.length === 0) {
+            return [{
+                title: "📊 Dati Insufficienti",
+                description: "Serve più tempo per raccogliere dati e identificare pattern.",
+                priority: "low",
+                action: "Continuare a raccogliere quiz per almeno una settimana."
+            }];
+        }
+        
+        // Analisi 1: Lead ad alto punteggio non contattati
+        const highScoreLeads = this.data.quizResults.filter(quiz => {
+            const score = quiz.score || quiz.lead_score || 0;
+            return score >= 70 && !quiz.contacted;
+        });
+        
+        if (highScoreLeads.length > 0) {
+            opportunities.push({
+                title: `🎯 ${highScoreLeads.length} Lead Premium Non Contattati`,
+                description: `Lead con punteggio 70+ pronti per conversione immediata.`,
+                priority: "high",
+                action: "Contattare entro 24h con offerta personalizzata.",
+                leads: highScoreLeads.map(l => l.name).join(', ')
+            });
+        }
+        
+        // Analisi 2: Obiettivi più comuni = opportunità di gruppo
+        const goalsAnalysis = {};
+        this.data.quizResults.forEach(quiz => {
+            if (quiz.goals && Array.isArray(quiz.goals)) {
+                quiz.goals.forEach(goal => {
+                    goalsAnalysis[goal] = (goalsAnalysis[goal] || 0) + 1;
+                });
+            }
+        });
+        
+        const topGoal = Object.entries(goalsAnalysis).sort(([,a], [,b]) => b - a)[0];
+        if (topGoal && topGoal[1] >= 3) {
+            opportunities.push({
+                title: `💪 Programma Specializzato "${topGoal[0]}"`,
+                description: `${topGoal[1]} persone interessate allo stesso obiettivo.`,
+                priority: "medium",
+                action: "Creare corso di gruppo o programma specifico.",
+                leads: `${topGoal[1]} persone interessate`
+            });
+        }
+        
+        // Analisi 3: Ostacoli comuni = soluzioni mirate
+        const obstaclesAnalysis = {};
+        this.data.quizResults.forEach(quiz => {
+            if (quiz.obstacles && Array.isArray(quiz.obstacles)) {
+                quiz.obstacles.forEach(obstacle => {
+                    obstaclesAnalysis[obstacle] = (obstaclesAnalysis[obstacle] || 0) + 1;
+                });
+            }
+        });
+        
+        const topObstacle = Object.entries(obstaclesAnalysis).sort(([,a], [,b]) => b - a)[0];
+        if (topObstacle && topObstacle[1] >= 2) {
+            opportunities.push({
+                title: `🔧 Soluzione per "${topObstacle[0]}"`,
+                description: `${topObstacle[1]} persone hanno lo stesso problema.`,
+                priority: "medium",
+                action: "Creare contenuto/servizio che risolve questo ostacolo specifico.",
+                leads: `${topObstacle[1]} persone con questo problema`
+            });
+        }
+        
+        // Analisi 4: Preferenze allenamento
+        const trainingAnalysis = {};
+        this.data.quizResults.forEach(quiz => {
+            const training = quiz.training_style || quiz.personalTrainerUsage;
+            if (training) {
+                trainingAnalysis[training] = (trainingAnalysis[training] || 0) + 1;
+            }
+        });
+        
+        const soloTrainers = trainingAnalysis['Mi alleno da solo'] || 0;
+        const withPT = trainingAnalysis['Con personal trainer'] || 0;
+        
+        if (soloTrainers > withPT && soloTrainers >= 2) {
+            opportunities.push({
+                title: `🏃‍♂️ Mercato "Self-Trainers"`,
+                description: `${soloTrainers} persone si allenano da sole - opportunità coaching online.`,
+                priority: "medium",
+                action: "Sviluppare programmi di coaching a distanza o app.",
+                leads: `${soloTrainers} self-trainers`
+            });
+        }
+        
+        // Analisi 5: Fasce d'età
+        const ageAnalysis = {};
+        this.data.quizResults.forEach(quiz => {
+            if (quiz.age) {
+                const ageGroup = quiz.age < 25 ? '18-25' : 
+                              quiz.age < 35 ? '25-35' : 
+                              quiz.age < 45 ? '35-45' : '45+';
+                ageAnalysis[ageGroup] = (ageAnalysis[ageGroup] || 0) + 1;
+            }
+        });
+        
+        const dominantAge = Object.entries(ageAnalysis).sort(([,a], [,b]) => b - a)[0];
+        if (dominantAge && dominantAge[1] >= 3) {
+            opportunities.push({
+                title: `👥 Target Demografico ${dominantAge[0]} anni`,
+                description: `${dominantAge[1]} lead nella fascia ${dominantAge[0]} - segmento dominante.`,
+                priority: "low",
+                action: "Personalizzare marketing e contenuti per questa fascia d'età.",
+                leads: `${dominantAge[1]} persone ${dominantAge[0]} anni`
+            });
+        }
+        
+        return opportunities.slice(0, 5); // Max 5 opportunità
+    }
+
     updateUsersDisplay(users) {
         const tbody = document.getElementById('users-table-body');
         if (!tbody) return;
@@ -388,23 +529,37 @@ export class DashboardTracker {
         if (!tbody) return;
         
         if (!quizResults || quizResults.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="no-data">Nessun quiz completato ancora</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="no-data">Nessun quiz completato ancora</td></tr>';
             return;
         }
         
-        const rows = quizResults.slice(0, 10).map(quiz => {
+        const rows = quizResults.slice(0, 20).map(quiz => {
             const score = quiz.score || quiz.lead_score || 0;
             const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
             const icon = this.getProfileIcon(quiz.profile);
+            
+            // Estrai dati utili dal quiz
+            const goals = Array.isArray(quiz.goals) ? quiz.goals.slice(0, 2).join(', ') : (quiz.goals || 'N/A');
+            const obstacles = Array.isArray(quiz.obstacles) ? quiz.obstacles.slice(0, 2).join(', ') : (quiz.obstacles || 'N/A');
+            const trainingStyle = quiz.training_style || quiz.personalTrainerUsage || 'N/A';
+            const activityLevel = quiz.activity_level || quiz.frequency || 'N/A';
             
             return `
                 <tr>
                     <td>${quiz.name || 'N/A'}</td>
                     <td>${quiz.whatsapp || quiz.email || 'N/A'}</td>
+                    <td>${quiz.age || 'N/A'}</td>
                     <td>${icon} ${quiz.profile || 'N/A'}</td>
                     <td><span class="lead-score ${scoreClass}">${score}</span></td>
+                    <td title="${goals}">${goals.length > 30 ? goals.substring(0, 30) + '...' : goals}</td>
+                    <td>${trainingStyle}</td>
+                    <td title="${obstacles}">${obstacles.length > 20 ? obstacles.substring(0, 20) + '...' : obstacles}</td>
+                    <td>${activityLevel}</td>
                     <td>${this.formatDateTime(quiz.timestamp)}</td>
-                    <td><button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', '${quiz.profile}')">WhatsApp</button></td>
+                    <td>
+                        <button class="action-btn" onclick="contactLeadWhatsApp('${quiz.whatsapp || quiz.email}', '${quiz.name}', '${quiz.profile}')">WhatsApp</button>
+                        <button class="action-btn" onclick="viewLeadDetails('${quiz.id}')" style="background: #4CAF50; margin-left: 5px;">Dettagli</button>
+                    </td>
                 </tr>
             `;
         }).join('');
@@ -416,14 +571,67 @@ export class DashboardTracker {
         const container = document.getElementById('recent-events');
         if (!container) return;
         
-        const eventsHTML = events.slice(0, 5).map(event => `
-            <div class="event-item">
-                <span class="event-type">${event.event_type}</span>
-                <span class="event-time">${this.formatDateTime(event.created_at)}</span>
-            </div>
-        `).join('');
+        // Filtra eventi più interessanti per business
+        const businessEvents = events.filter(event => {
+            const relevantTypes = [
+                'quiz_completed',
+                'page_view', 
+                'session_start',
+                'form_field_focus',
+                'user_interaction',
+                'chatbot_conversation_completed',
+                'lead_whatsapp_contact'
+            ];
+            return relevantTypes.includes(event.event_type);
+        });
         
-        container.innerHTML = eventsHTML || '<div class="no-data">Nessun evento recente</div>';
+        const eventsHTML = businessEvents.slice(0, 8).map(event => {
+            let description = '';
+            let icon = '📊';
+            
+            switch(event.event_type) {
+                case 'quiz_completed':
+                    description = `Quiz completato - Profilo: ${event.event_data?.profile || 'N/A'}`;
+                    icon = '🎯';
+                    break;
+                case 'page_view':
+                    description = `Visita pagina: ${event.event_data?.page || event.page_url?.split('/').pop() || 'Home'}`;
+                    icon = '👁️';
+                    break;
+                case 'session_start':
+                    description = `Nuova sessione da: ${event.event_data?.referrer ? new URL(event.event_data.referrer).hostname : 'Diretto'}`;
+                    icon = '🚀';
+                    break;
+                case 'form_field_focus':
+                    description = `Interesse form: ${event.event_data?.field_name || 'Campo contatto'}`;
+                    icon = '✏️';
+                    break;
+                case 'user_interaction':
+                    description = `Click: ${event.event_data?.element || event.event_data?.type || 'Elemento UI'}`;
+                    icon = '👆';
+                    break;
+                case 'chatbot_conversation_completed':
+                    description = `Chat completata - Sentiment: ${event.event_data?.sentiment || 'neutrale'}`;
+                    icon = '💬';
+                    break;
+                case 'lead_whatsapp_contact':
+                    description = `Contatto WhatsApp: ${event.event_data?.name || 'Lead'}`;
+                    icon = '📱';
+                    break;
+                default:
+                    description = event.event_type.replace(/_/g, ' ');
+                    break;
+            }
+            
+            return `
+                <div class="event-item">
+                    <span class="event-type">${icon} ${description}</span>
+                    <span class="event-time">${this.formatDateTime(event.created_at)}</span>
+                </div>
+            `;
+        }).join('');
+        
+        container.innerHTML = eventsHTML || '<div class="no-data">Nessun evento business recente</div>';
     }
 
     // === GRAFICI ===

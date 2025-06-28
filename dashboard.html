@@ -1,4 +1,82 @@
-        window.showTrackingData = function() {
+        window.viewLeadDetails = function(leadId) {
+            const lead = window.dashboardTracker?.data?.quizResults?.find(l => l.id === leadId);
+            if (lead) {
+                const details = `
+🎯 PROFILO COMPLETO: ${lead.name}
+
+📱 WhatsApp: ${lead.whatsapp || lead.email || 'N/A'}
+👤 Età: ${lead.age || 'N/A'} anni
+🏆 Profilo: ${lead.profile || 'N/A'} (Score: ${lead.score || lead.lead_score || 0})
+
+🎯 OBIETTIVI:
+${Array.isArray(lead.goals) ? lead.goals.map(g => `• ${g}`).join('\n') : (lead.goals || 'N/A')}
+
+🏋️ ALLENAMENTO:
+• Stile: ${lead.training_style || lead.personalTrainerUsage || 'N/A'}
+• Livello attività: ${lead.activity_level || lead.frequency || 'N/A'}
+• Durata: ${lead.workout_duration || 'N/A'}
+
+🍎 ALIMENTAZIONE:
+• Qualità: ${lead.diet || 'N/A'}
+• Colazione: ${lead.breakfast_habit || 'N/A'}
+• Fuori casa: ${lead.eating_out || 'N/A'}
+
+🚧 OSTACOLI:
+${Array.isArray(lead.obstacles) ? lead.obstacles.map(o => `• ${o}`).join('\n') : (lead.obstacles || 'N/A')}
+
+💤 LIFESTYLE:
+• Sonno: ${lead.sleep || 'N/A'}
+• Stress: ${lead.stress_management || 'N/A'}
+• Equilibrio: ${lead.work_life_balance || 'N/A'}
+
+🎨 PREFERENZE:
+• Sport: ${Array.isArray(lead.preferred_activities) ? lead.preferred_activities.join(', ') : (lead.preferred_activities || 'N/A')}
+• Motivazione: ${lead.motivation_source || 'N/A'}
+
+📝 NOTE: ${lead.notes || 'Nessuna nota aggiuntiva'}
+                `;
+                
+                // Crea una finestra modale più user-friendly
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.8); z-index: 10000;
+                    display: flex; align-items: center; justify-content: center;
+                `;
+                
+                modal.innerHTML = `
+                    <div style="
+                        background: #1c1c1c; color: white; padding: 30px; 
+                        border-radius: 12px; max-width: 600px; max-height: 80vh;
+                        overflow-y: auto; border: 2px solid #ff6600;
+                        box-shadow: 0 0 30px rgba(255,102,0,0.3);
+                    ">
+                        <h2 style="color: #ff6600; margin-bottom: 20px;">Dettagli Lead Completi</h2>
+                        <pre style="white-space: pre-wrap; line-height: 1.6; font-family: Arial;">${details}</pre>
+                        <div style="margin-top: 20px; text-align: center;">
+                            <button onclick="this.closest('div').remove()" style="
+                                background: #ff6600; color: white; border: none; 
+                                padding: 10px 20px; border-radius: 6px; cursor: pointer;
+                                margin-right: 10px;
+                            ">Chiudi</button>
+                            <button onclick="contactLeadWhatsApp('${lead.whatsapp || lead.email}', '${lead.name}', '${lead.profile}')" style="
+                                background: #25D366; color: white; border: none; 
+                                padding: 10px 20px; border-radius: 6px; cursor: pointer;
+                            ">Contatta WhatsApp</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.onclick = (e) => {
+                    if (e.target === modal) modal.remove();
+                };
+                
+                trackUserAction('lead_details_viewed', { leadId, name: lead.name });
+            } else {
+                alert('Lead non trovato');
+            }
+        };        window.showTrackingData = function() {
             console.log('📊 Dati tracking correnti:');
             console.log('Session:', window.tribuCoachTracker?.currentSession);
             console.log('Dashboard Tracker:', window.tribuCoachTracker?.dashboardTracker);
