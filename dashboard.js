@@ -11,18 +11,17 @@ class ChatbotDashboard {
     async init() {
         console.log('🚀 Inizializzazione Dashboard...');
         
-        // Aspetta che Firebase sia pronto - usa la variabile corretta
-        this.firebaseAPI = window.firebase;
+        // 🔥 ASPETTA CHE FIREBASEAPI SIA PRONTO
+        await this.waitForFirebaseAPI();
         
         if (!this.firebaseAPI || !this.firebaseAPI.getAllConversations) {
-            console.error('❌ Firebase API non trovata o metodo getAllConversations mancante');
-            console.log('🔍 Firebase disponibile:', this.firebaseAPI);
-            console.log('🔍 Metodi disponibili:', this.firebaseAPI ? Object.keys(this.firebaseAPI) : 'N/A');
+            console.error('❌ FirebaseAPI non trovato o metodo getAllConversations mancante');
+            console.log('🔍 Window keys:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
             this.showError('Firebase API non disponibile');
             return;
         }
         
-        console.log('✅ Firebase API trovata:', this.firebaseAPI);
+        console.log('✅ Firebase API trovata con getAllConversations');
 
         // Carica le conversazioni
         await this.loadConversations();
@@ -33,12 +32,29 @@ class ChatbotDashboard {
         console.log('✅ Dashboard inizializzata');
     }
 
+    // 🔥 NUOVA FUNZIONE: Aspetta che firebaseAPI sia pronto
+    async waitForFirebaseAPI(maxAttempts = 50) {
+        for (let i = 0; i < maxAttempts; i++) {
+            if (window.firebaseAPI && typeof window.firebaseAPI.getAllConversations === 'function') {
+                this.firebaseAPI = window.firebaseAPI;
+                console.log('✅ FirebaseAPI trovato al tentativo', i + 1);
+                return true;
+            }
+            
+            console.log(`⏳ Tentativo ${i + 1}/${maxAttempts} - Aspetto firebaseAPI...`);
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        console.error('❌ Timeout: firebaseAPI non trovato dopo', maxAttempts, 'tentavi');
+        return false;
+    }
+
     async loadConversations() {
         try {
             console.log('📡 Caricamento conversazioni...');
             this.showLoading(true);
             
-            // Usa l'API Firebase trovata
+            // Usa l'API Firebase
             this.conversations = await this.firebaseAPI.getAllConversations();
             
             console.log(`💬 Caricate ${this.conversations.length} conversazioni`);
