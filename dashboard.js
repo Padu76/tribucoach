@@ -543,23 +543,48 @@ class ChatbotDashboard {
     }
 
     updateEngagementInsights(qualifiedCount, mostPopularGoal, goalCounts) {
-        // Chat insights
-        document.getElementById('totalChatCount').textContent = this.chatConversations.length;
+        // 🔥 NUOVE METRICHE CHATBOT GIORNALIERE
         
+        // 1. CHAT OGGI E UTENTI ATTIVI
+        const today = new Date().toDateString();
+        const chatsToday = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity).toDateString() : null;
+            return chatDate === today;
+        }).length;
+        document.getElementById('chatsToday').textContent = chatsToday;
+
+        // Utenti attivi oggi (conversazioni uniche per customer)
+        const activeUsersToday = new Set(
+            this.chatConversations
+                .filter(conv => {
+                    const chatDate = conv.lastActivity ? new Date(conv.lastActivity).toDateString() : null;
+                    return chatDate === today;
+                })
+                .map(conv => conv.customerName || conv.id)
+        ).size;
+        document.getElementById('activeUsersToday').textContent = activeUsersToday;
+
+        // 2. DURATA MEDIA SESSIONE (basata sui messaggi)
         const avgMessages = this.chatConversations.length > 0
             ? Math.round(this.chatConversations.reduce((sum, conv) => sum + (conv.messages?.length || 0), 0) / this.chatConversations.length)
             : 0;
         document.getElementById('avgMessagesPerChat').textContent = avgMessages;
+        
+        // Stima durata sessione (1 messaggio ≈ 1-2 minuti)
+        const avgSessionDuration = Math.round(avgMessages * 1.5);
+        document.getElementById('avgSessionDuration').textContent = `${avgSessionDuration} min`;
 
-        // Ultima attività chat
+        // 3. ULTIMA ATTIVITÀ
         const lastActivity = this.chatConversations.length > 0
             ? Math.max(...this.chatConversations.map(conv => new Date(conv.lastActivity || 0)))
             : null;
         document.getElementById('lastChatActivity').textContent = lastActivity 
-            ? new Date(lastActivity).toLocaleDateString('it-IT')
+            ? new Date(lastActivity).toLocaleString('it-IT', { 
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
+            })
             : 'N/A';
 
-        // Quality scores
+        // 4. QUALITY SCORES
         const avgScore = this.quizResults.length > 0
             ? Math.round(this.quizResults.reduce((sum, q) => sum + calculateLeadScore(q), 0) / this.quizResults.length)
             : 0;
@@ -569,21 +594,24 @@ class ChatbotDashboard {
         document.getElementById('premiumLeads').textContent = premiumLeads;
         document.getElementById('qualifiedLeadsInsight').textContent = qualifiedCount;
 
-        // Timing insights
-        const today = new Date().toDateString();
+        // 5. TASSO CONVERSIONE CHAT (chat che hanno portato a un contatto)
+        const chatsWithContact = this.chatConversations.filter(conv => 
+            conv.phone && conv.phone !== 'N/A' || 
+            (conv.customerName && conv.customerName !== 'Cliente Anonimo')
+        ).length;
+        const conversionRate = this.chatConversations.length > 0 
+            ? Math.round((chatsWithContact / this.chatConversations.length) * 100)
+            : 0;
+        document.getElementById('chatConversionRate').textContent = `${conversionRate}%`;
+
+        // 6. QUIZ OGGI
         const quizzesToday = this.quizResults.filter(q => {
             const quizDate = q.timestamp ? new Date(q.timestamp).toDateString() : null;
             return quizDate === today;
         }).length;
         document.getElementById('quizzesToday').textContent = quizzesToday;
 
-        const chatsToday = this.chatConversations.filter(conv => {
-            const chatDate = conv.lastActivity ? new Date(conv.lastActivity).toDateString() : null;
-            return chatDate === today;
-        }).length;
-        document.getElementById('chatsToday').textContent = chatsToday;
-
-        // Picco attività (ora del giorno più frequente per le chat)
+        // 7. PICCO ATTIVITÀ (ora del giorno più frequente)
         const chatHours = this.chatConversations
             .map(conv => conv.lastActivity ? new Date(conv.lastActivity).getHours() : null)
             .filter(hour => hour !== null);
@@ -594,13 +622,24 @@ class ChatbotDashboard {
                 return acc;
             }, {});
             const peakHour = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b);
-            document.getElementById('peakActivity').textContent = `${peakHour}:00 - ${parseInt(peakHour) + 1}:00`;
+            document.getElementById('peakActivity').textContent = `${peakHour}:00-${parseInt(peakHour) + 1}:00`;
         } else {
             document.getElementById('peakActivity').textContent = 'N/A';
         }
 
-        // Top insights
-        document.getElementById('topQuizGoal').textContent = mostPopularGoal;
+        // 8. CHAT QUESTA SETTIMANA
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const chatsThisWeek = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity) : null;
+            return chatDate && chatDate >= oneWeekAgo;
+        }).length;
+        document.getElementById('chatsThisWeek').textContent = chatsThisWeek;
+
+        // 9. TOP INSIGHTS
+        document.getElementById('topQuizGoal').textContent = mostPopularGoal.length > 25 
+            ? mostPopularGoal.substring(0, 25) + '...' 
+            : mostPopularGoal;
 
         // Top chat topic
         const chatTopics = this.chatConversations.map(conv => conv.topic).filter(Boolean);
@@ -613,13 +652,13 @@ class ChatbotDashboard {
             : 'N/A';
         document.getElementById('topChatTopic').textContent = topChatTopic;
 
-        // Trend emergente (goal con crescita recente)
+        // 10. TREND EMERGENTE (goal/topic con crescita recente)
         const recentQuizzes = this.quizResults.filter(q => {
             if (!q.timestamp) return false;
             const quizDate = new Date(q.timestamp);
-            const weekAgo = new Date();
-            weekAgo.setDate(weekAgo.getDate() - 7);
-            return quizDate >= weekAgo;
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            return quizDate >= threeDaysAgo;
         });
 
         if (recentQuizzes.length > 0) {
@@ -631,10 +670,27 @@ class ChatbotDashboard {
             const emergingTrend = Object.keys(recentGoalCounts).length > 0
                 ? Object.keys(recentGoalCounts).reduce((a, b) => recentGoalCounts[a] > recentGoalCounts[b] ? a : b)
                 : 'N/A';
-            document.getElementById('emergingTrend').textContent = emergingTrend;
+            const trendText = emergingTrend.length > 20 ? emergingTrend.substring(0, 20) + '...' : emergingTrend;
+            document.getElementById('emergingTrend').textContent = trendText;
         } else {
             document.getElementById('emergingTrend').textContent = 'Pochi dati recenti';
         }
+
+        // 11. CRESCITA SETTIMANALE
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        const chatsLastWeek = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity) : null;
+            return chatDate && chatDate >= twoWeeksAgo && chatDate < oneWeekAgo;
+        }).length;
+        
+        const weeklyGrowth = chatsLastWeek > 0 
+            ? Math.round(((chatsThisWeek - chatsLastWeek) / chatsLastWeek) * 100)
+            : chatsThisWeek > 0 ? 100 : 0;
+        
+        const growthText = weeklyGrowth > 0 ? `+${weeklyGrowth}%` : `${weeklyGrowth}%`;
+        document.getElementById('weeklyGrowth').textContent = growthText;
+        document.getElementById('weeklyGrowth').style.color = weeklyGrowth >= 0 ? '#4CAF50' : '#f44336';
     }
 
     updateConnectionStatus(status) {
