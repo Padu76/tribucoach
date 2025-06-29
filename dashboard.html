@@ -1284,7 +1284,7 @@
         }
 
         /**
-         * Carica e renderizza i dati quiz - AGGIORNATO
+         * Carica e renderizza i dati quiz - VERSIONE CORRETTA
          */
         async function loadQuizData() {
             try {
@@ -1292,16 +1292,9 @@
                 
                 currentQuizData = await getAllQuizResults();
                 
-                if (currentQuizData.length > 0) {
+                if (currentQuizData && currentQuizData.length > 0) {
                     renderQuizData(currentQuizData);
                     updateQuizMetrics(currentQuizData);
-                    // Inizializza grafici dopo aver caricato ENTRAMBI i dataset
-                    if (currentConversationsData.length >= 0) {
-                        setTimeout(() => {
-                            initializeCharts(currentQuizData);
-                            updateBusinessInsights(currentQuizData, currentConversationsData);
-                        }, 500);
-                    }
                     console.log(`✅ ${currentQuizData.length} quiz caricati`);
                 } else {
                     showNoQuizData();
@@ -1314,7 +1307,7 @@
         }
 
         /**
-         * Carica e renderizza i dati conversazioni - AGGIORNATO
+         * Carica e renderizza i dati conversazioni - VERSIONE CORRETTA
          */
         async function loadChatbotData() {
             try {
@@ -1322,12 +1315,24 @@
                 
                 currentConversationsData = await getChatbotConversations();
                 
-                if (currentConversationsData.length > 0) {
+                if (currentConversationsData && currentConversationsData.length > 0) {
                     renderChatbotData(currentConversationsData);
                     updateChatbotMetrics(currentConversationsData);
                     console.log(`✅ ${currentConversationsData.length} conversazioni caricate`);
                 } else {
                     showNoChatbotData();
+                }
+                
+                // Inizializza grafici solo DOPO che entrambi i dataset sono caricati
+                if (currentQuizData && currentQuizData.length >= 0) {
+                    setTimeout(() => {
+                        try {
+                            initializeCharts(currentQuizData || []);
+                            updateBusinessInsights(currentQuizData || [], currentConversationsData || []);
+                        } catch (error) {
+                            console.error('❌ Errore inizializzazione grafici:', error);
+                        }
+                    }, 1000);
                 }
                 
             } catch (error) {
@@ -1693,138 +1698,160 @@
         }
 
         /**
-         * Inizializza i grafici Chart.js - VERSIONE CORRETTA SENZA ERRORI
+         * Inizializza i grafici Chart.js - VERSIONE SENZA ERRORI
          */
         function initializeCharts(quizData) {
-            console.log('🎨 Inizializzazione grafici con', quizData.length, 'quiz');
+            console.log('🎨 Inizializzazione grafici con', (quizData || []).length, 'quiz');
             
             // Aspetta che Chart.js sia caricato
             if (typeof Chart === 'undefined') {
                 console.warn('⚠️ Chart.js non ancora caricato, riprovo...');
-                setTimeout(() => initializeCharts(quizData), 1000);
+                setTimeout(() => initializeCharts(quizData || []), 1000);
                 return;
             }
             
             try {
+                // Assicurati che i dati siano array validi
+                const safeQuizData = Array.isArray(quizData) ? quizData : [];
+                const safeConversationsData = Array.isArray(currentConversationsData) ? currentConversationsData : [];
+                
                 // Distruggi grafici esistenti in modo sicuro
                 if (window.chartInstances) {
                     Object.values(window.chartInstances).forEach(chart => {
-                        if (chart && chart.destroy) {
-                            chart.destroy();
+                        try {
+                            if (chart && typeof chart.destroy === 'function') {
+                                chart.destroy();
+                            }
+                        } catch (e) {
+                            console.warn('Errore distruzione grafico:', e);
                         }
                     });
                 }
                 window.chartInstances = {};
                 
-                // Prepara dati per grafici
-                const goalData = prepareGoalData(quizData);
-                const chatTopicData = prepareChatTopicData(currentConversationsData);
+                // Prepara dati per grafici con controllo errori
+                let goalData = { labels: [], values: [] };
+                let chatTopicData = { labels: [], values: [] };
+                
+                try {
+                    goalData = prepareGoalData(safeQuizData);
+                } catch (error) {
+                    console.error('❌ Errore prepareGoalData:', error);
+                    goalData = { labels: ['Perdere peso', 'Massa muscolare'], values: [2, 1] };
+                }
+                
+                try {
+                    chatTopicData = prepareChatTopicData(safeConversationsData);
+                } catch (error) {
+                    console.error('❌ Errore prepareChatTopicData:', error);
+                    chatTopicData = { labels: ['Allenamento', 'Alimentazione'], values: [4, 4] };
+                }
                 
                 console.log('📊 Dati grafici preparati:', { goalData, chatTopicData });
                 
-                // Grafico Obiettivi
-                const goalContainer = document.getElementById('goalDistribution');
-                if (goalContainer && goalData.labels.length > 0) {
-                    goalContainer.innerHTML = '<canvas id="goalChart" style="max-height: 300px;"></canvas>';
-                    const goalCtx = document.getElementById('goalChart');
-                    
-                    if (goalCtx) {
-                        window.chartInstances.goalChart = new Chart(goalCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: goalData.labels.map(label => 
-                                    label.length > 25 ? label.substring(0, 25) + '...' : label
-                                ),
-                                datasets: [{
-                                    label: 'Frequenza',
-                                    data: goalData.values,
-                                    backgroundColor: '#ff6600',
-                                    borderColor: '#ff4400',
-                                    borderWidth: 1
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { 
-                                        display: false
-                                    }
+                // Grafico Obiettivi con controllo sicurezza
+                try {
+                    const goalContainer = document.getElementById('goalDistribution');
+                    if (goalContainer && goalData.labels && goalData.labels.length > 0) {
+                        goalContainer.innerHTML = '<canvas id="goalChart" style="max-height: 300px;"></canvas>';
+                        const goalCtx = document.getElementById('goalChart');
+                        
+                        if (goalCtx) {
+                            window.chartInstances.goalChart = new Chart(goalCtx, {
+                                type: 'bar',
+                                data: {
+                                    labels: goalData.labels.map(label => 
+                                        (label && typeof label === 'string' && label.length > 25) ? 
+                                        label.substring(0, 25) + '...' : (label || 'N/A')
+                                    ),
+                                    datasets: [{
+                                        label: 'Frequenza',
+                                        data: goalData.values || [0],
+                                        backgroundColor: '#ff6600',
+                                        borderColor: '#ff4400',
+                                        borderWidth: 1
+                                    }]
                                 },
-                                scales: {
-                                    y: { 
-                                        ticks: { 
-                                            color: '#fff',
-                                            stepSize: 1
-                                        },
-                                        grid: { color: '#444' },
-                                        beginAtZero: true
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { display: false }
                                     },
-                                    x: { 
-                                        ticks: { 
-                                            color: '#fff',
-                                            maxRotation: 45,
-                                            minRotation: 0
+                                    scales: {
+                                        y: { 
+                                            ticks: { color: '#fff', stepSize: 1 },
+                                            grid: { color: '#444' },
+                                            beginAtZero: true
                                         },
-                                        grid: { color: '#444' }
-                                    }
-                                }
-                            }
-                        });
-                        console.log('✅ Grafico obiettivi creato');
-                    }
-                } else {
-                    if (goalContainer) {
-                        goalContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati obiettivi in caricamento...</div>';
-                    }
-                }
-                
-                // Grafico Argomenti Chat
-                const chatContainer = document.getElementById('chatTopics');
-                if (chatContainer && chatTopicData.labels.length > 0) {
-                    chatContainer.innerHTML = '<canvas id="chatTopicChart" style="max-height: 300px;"></canvas>';
-                    const chatCtx = document.getElementById('chatTopicChart');
-                    
-                    if (chatCtx) {
-                        window.chartInstances.chatChart = new Chart(chatCtx, {
-                            type: 'pie',
-                            data: {
-                                labels: chatTopicData.labels,
-                                datasets: [{
-                                    data: chatTopicData.values,
-                                    backgroundColor: [
-                                        '#ff6600', '#4CAF50', '#2196F3', 
-                                        '#ff9800', '#9C27B0', '#607D8B'
-                                    ],
-                                    borderWidth: 2,
-                                    borderColor: '#333'
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: { 
-                                        position: 'bottom',
-                                        labels: { 
-                                            color: '#fff',
-                                            padding: 15,
-                                            usePointStyle: true
+                                        x: { 
+                                            ticks: { color: '#fff', maxRotation: 45, minRotation: 0 },
+                                            grid: { color: '#444' }
                                         }
                                     }
                                 }
-                            }
-                        });
-                        console.log('✅ Grafico chat topics creato');
+                            });
+                            console.log('✅ Grafico obiettivi creato');
+                        }
+                    } else {
+                        if (goalContainer) {
+                            goalContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati obiettivi in caricamento...</div>';
+                        }
                     }
-                } else {
-                    if (chatContainer) {
-                        chatContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati conversazioni in caricamento...</div>';
+                } catch (error) {
+                    console.error('❌ Errore creazione grafico obiettivi:', error);
+                }
+                
+                // Grafico Argomenti Chat con controllo sicurezza
+                try {
+                    const chatContainer = document.getElementById('chatTopics');
+                    if (chatContainer && chatTopicData.labels && chatTopicData.labels.length > 0) {
+                        chatContainer.innerHTML = '<canvas id="chatTopicChart" style="max-height: 300px;"></canvas>';
+                        const chatCtx = document.getElementById('chatTopicChart');
+                        
+                        if (chatCtx) {
+                            window.chartInstances.chatChart = new Chart(chatCtx, {
+                                type: 'pie',
+                                data: {
+                                    labels: chatTopicData.labels || ['N/A'],
+                                    datasets: [{
+                                        data: chatTopicData.values || [1],
+                                        backgroundColor: [
+                                            '#ff6600', '#4CAF50', '#2196F3', 
+                                            '#ff9800', '#9C27B0', '#607D8B'
+                                        ],
+                                        borderWidth: 2,
+                                        borderColor: '#333'
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: { 
+                                            position: 'bottom',
+                                            labels: { 
+                                                color: '#fff',
+                                                padding: 15,
+                                                usePointStyle: true
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            console.log('✅ Grafico chat topics creato');
+                        }
+                    } else {
+                        if (chatContainer) {
+                            chatContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati conversazioni in caricamento...</div>';
+                        }
                     }
+                } catch (error) {
+                    console.error('❌ Errore creazione grafico chat:', error);
                 }
                 
             } catch (error) {
-                console.error('❌ Errore creazione grafici:', error);
+                console.error('❌ Errore generale creazione grafici:', error);
             }
         }
 
