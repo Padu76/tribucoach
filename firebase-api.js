@@ -1,4 +1,5 @@
 // firebase-api.js - API Firebase + Chatbase per TribuCoach Dashboard
+// Versione browser-compatible
 
 // 🔥 SOLUZIONE: Aspetta che Firebase sia disponibile dal CDN
 function waitForFirebase() {
@@ -51,7 +52,7 @@ async function initFirebase() {
  * Testa la connessione a Firebase
  * @returns {boolean} True se connesso
  */
-export async function testConnection() {
+async function testConnection() {
     try {
         if (!db) {
             await initFirebase();
@@ -71,7 +72,7 @@ export async function testConnection() {
  * Recupera tutti i risultati del quiz da Firebase
  * @returns {Array} Array dei risultati quiz
  */
-export async function getAllQuizResults() {
+async function getAllQuizResults() {
     try {
         if (!db) {
             await initFirebase();
@@ -101,7 +102,7 @@ export async function getAllQuizResults() {
  * @param {string} quizId - ID del quiz
  * @returns {Object|null} Dati del quiz
  */
-export async function getQuizResultById(quizId) {
+async function getQuizResultById(quizId) {
     try {
         if (!db) {
             await initFirebase();
@@ -129,13 +130,12 @@ export async function getQuizResultById(quizId) {
  * Recupera le conversazioni chatbot da Firebase (fallback)
  * @returns {Array} Array delle conversazioni
  */
-export async function getChatbotConversations() {
+async function getChatbotConversations() {
     try {
         if (!db) {
             await initFirebase();
         }
         
-        // 🔥 FIX: Cambiato da 'chatbot_conversations' a 'conversations'
         const querySnapshot = await db.collection('conversations').get();
         const conversations = [];
         
@@ -147,14 +147,15 @@ export async function getChatbotConversations() {
             
             conversations.push({
                 id: doc.id,
-                lastMessageSnippet: firstUserMessage.substring(0, 100) + '...',
-                topic: data.topic || 'Non classificato',
-                timestamp: data.dateCreated || data.lastMessageAt || new Date(),
+                customerName: data.customerName || 'Cliente Anonimo',
+                phone: data.customerPhone || 'N/A',
+                topic: data.topic || extractTopicFromMessages(data.messages) || 'Non classificato',
+                lastActivity: data.lastMessageAt || data.dateCreated || new Date().toISOString(),
+                createdAt: data.dateCreated || new Date().toISOString(),
                 messages: data.messages || [],
-                customer: data.customerName || 'Cliente Anonimo',
-                phone: data.customerPhone || null,
+                lastMessageSnippet: firstUserMessage.substring(0, 100) + '...',
                 sentiment: data.sentiment || 'Neutro',
-                source: data.source || 'Firebase'
+                source: 'Firebase'
             });
         });
         
@@ -171,7 +172,7 @@ export async function getChatbotConversations() {
  * @param {Object} filters - Filtri opzionali
  * @returns {Array} Lista delle conversazioni
  */
-export async function getChatbotConversationsFromAPI(filters = {}) {
+async function getChatbotConversationsFromAPI(filters = {}) {
     try {
         const params = new URLSearchParams({
             chatbotId: CHATBOT_ID,
@@ -201,20 +202,20 @@ export async function getChatbotConversationsFromAPI(filters = {}) {
         console.log('✅ Risposta API Chatbase:', data);
         
         const transformedConversations = data.data?.map(conv => {
-            // 🔥 ESTRAI AUTOMATICAMENTE NOME E TELEFONO
             const contactInfo = extractContactInfo(conv.messages);
             
             return {
                 id: conv.id,
+                customerName: contactInfo.name || conv.customer || 'Cliente Anonimo',
+                phone: contactInfo.phone || 'N/A',
+                topic: extractTopicFromMessages(conv.messages) || 'Argomento generico',
+                lastActivity: conv.updated_at || conv.created_at,
+                createdAt: conv.created_at,
+                messages: conv.messages || [],
                 lastMessageSnippet: conv.messages?.length > 0 
                     ? conv.messages[conv.messages.length - 1].content?.substring(0, 100) + '...'
                     : 'Nessun messaggio',
-                topic: extractTopicFromMessages(conv.messages) || 'Argomento generico',
-                timestamp: new Date(conv.created_at),
-                messages: conv.messages || [],
-                customer: contactInfo.name || conv.customer || 'Anonimo',
-                phone: contactInfo.phone || null, // 🔥 NUOVO CAMPO
-                source: conv.source || 'API'
+                source: 'Chatbase API'
             };
         }) || [];
 
@@ -228,6 +229,51 @@ export async function getChatbotConversationsFromAPI(filters = {}) {
 }
 
 /**
+ * 🚀 FUNZIONE PRINCIPALE: Recupera tutte le conversazioni (Firebase + API)
+ * @returns {Array} Array combinato delle conversazioni
+ */
+async function getAllConversations() {
+    try {
+        console.log('🔄 Recupero conversazioni da tutte le fonti...');
+        
+        let allConversations = [];
+        
+        // Prova prima con Firebase
+        try {
+            const firebaseConversations = await getChatbotConversations();
+            allConversations = [...firebaseConversations];
+            console.log(`📊 Firebase: ${firebaseConversations.length} conversazioni`);
+        } catch (firebaseError) {
+            console.warn('⚠️ Firebase non disponibile:', firebaseError.message);
+        }
+        
+        // Poi prova con Chatbase API
+        try {
+            const apiConversations = await getChatbotConversationsFromAPI();
+            allConversations = [...allConversations, ...apiConversations];
+            console.log(`🌐 API: ${apiConversations.length} conversazioni`);
+        } catch (apiError) {
+            console.warn('⚠️ API Chatbase non disponibile:', apiError.message);
+        }
+        
+        // Rimuovi duplicati basati su ID
+        const uniqueConversations = allConversations.reduce((acc, conv) => {
+            if (!acc.find(existing => existing.id === conv.id)) {
+                acc.push(conv);
+            }
+            return acc;
+        }, []);
+        
+        console.log(`✅ Totale conversazioni uniche: ${uniqueConversations.length}`);
+        return uniqueConversations;
+        
+    } catch (error) {
+        console.error('❌ Errore nel recupero conversazioni:', error);
+        return [];
+    }
+}
+
+/**
  * 🧠 Estrae l'argomento principale dai messaggi
  * @param {Array} messages - Array dei messaggi
  * @returns {string} Argomento rilevato
@@ -236,8 +282,8 @@ function extractTopicFromMessages(messages) {
     if (!messages || messages.length === 0) return null;
     
     const allText = messages
-        .filter(msg => msg.role === 'user')
-        .map(msg => msg.content.toLowerCase())
+        .filter(msg => msg.role === 'user' || msg.sender === 'user')
+        .map(msg => (msg.content || msg.message || msg.text || '').toLowerCase())
         .join(' ');
     
     const topics = {
@@ -272,8 +318,8 @@ function extractContactInfo(messages) {
     
     // Cerca nei messaggi dell'utente
     const userMessages = messages
-        .filter(msg => msg.role === 'user')
-        .map(msg => msg.content);
+        .filter(msg => msg.role === 'user' || msg.sender === 'user')
+        .map(msg => msg.content || msg.message || msg.text || '');
     
     for (const message of userMessages) {
         // Pattern per nomi
@@ -287,7 +333,6 @@ function extractContactInfo(messages) {
             const match = message.match(pattern);
             if (match && !extractedName) {
                 extractedName = match[1].trim();
-                // Pulisci il nome (rimuovi parole comuni)
                 extractedName = extractedName.replace(/\b(qui|ciao|salve|sono|io)\b/gi, '').trim();
                 if (extractedName.length < 2) extractedName = null;
                 break;
@@ -305,8 +350,7 @@ function extractContactInfo(messages) {
         for (const pattern of phonePatterns) {
             const match = message.match(pattern);
             if (match && !extractedPhone) {
-                extractedPhone = match[1].replace(/[\s\-\.]/g, ''); // Rimuovi spazi e trattini
-                // Validazione base
+                extractedPhone = match[1].replace(/[\s\-\.]/g, '');
                 if (extractedPhone.length >= 8 && extractedPhone.length <= 15) {
                     break;
                 } else {
@@ -332,15 +376,41 @@ function getDateDaysAgo(days) {
 }
 
 // Export delle configurazioni per debug
-export const config = {
+const config = {
     firebaseConfig,
     chatbaseApiBase: CHATBASE_API_BASE,
     chatbotId: CHATBOT_ID,
     hasValidChatbaseConfig: CHATBASE_SECRET_KEY !== 'TUA_CHATBASE_SECRET_KEY' && CHATBOT_ID !== 'TUO_CHATBOT_ID'
 };
 
+// 🚀 ESPONI LE FUNZIONI GLOBALMENTE PER IL BROWSER
+window.firebaseAPI = {
+    testConnection,
+    getAllQuizResults,
+    getQuizResultById,
+    getChatbotConversations,
+    getChatbotConversationsFromAPI,
+    getAllConversations, // 🎯 QUESTA È LA FUNZIONE PRINCIPALE!
+    extractTopicFromMessages,
+    extractContactInfo,
+    config,
+    // Auto-inizializzazione
+    init: initFirebase
+};
+
+// Auto-inizializzazione quando il script viene caricato
+(async () => {
+    try {
+        await initFirebase();
+        console.log('🎉 FirebaseAPI pronto per l\'uso!');
+    } catch (error) {
+        console.error('❌ Errore inizializzazione automatica:', error);
+    }
+})();
+
 console.log('🔧 Firebase API inizializzato:', {
     firebase: '✅',
     chatbase: config.hasValidChatbaseConfig ? '✅' : '⚠️ Configura le credenziali',
-    chatbotId: CHATBOT_ID
+    chatbotId: CHATBOT_ID,
+    methodsAvailable: Object.keys(window.firebaseAPI || {})
 });
