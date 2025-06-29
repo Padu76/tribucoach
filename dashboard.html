@@ -18,6 +18,42 @@
             min-height: 100vh;
         }
 
+        /* 🔐 Stili per controllo autenticazione */
+        .auth-required {
+            display: none;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            z-index: 1001;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+
+        .session-info {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background: rgba(42, 42, 42, 0.9);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #ccc;
+            z-index: 1001;
+        }
+
         .header {
             background: rgba(255,102,0,0.1);
             padding: 20px;
@@ -440,8 +476,16 @@
         }
     </style>
 </head>
-<body>
+<body class="auth-required">
     <div class="connection-status" id="connection-status">Connessione...</div>
+
+    <!-- 🔐 Controlli autenticazione -->
+    <button class="logout-btn" onclick="logout()" title="Logout">
+        🚪 Logout
+    </button>
+    <div class="session-info" id="sessionInfo">
+        👤 Sessione attiva
+    </div>
 
     <header class="header">
         <h1>📈 TribuCoach Dashboard BI</h1>
@@ -637,6 +681,110 @@
     <!-- Firebase CDN - Versione Compat -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- 🔐 Script di autenticazione -->
+    <script>
+        // Controllo autenticazione all'avvio
+        document.addEventListener('DOMContentLoaded', () => {
+            const isAuthenticated = sessionStorage.getItem('tribucoach_auth') === 'true';
+            const loginTime = sessionStorage.getItem('login_time');
+            
+            if (!isAuthenticated) {
+                // Reindirizza alla pagina di login
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Verifica se la sessione è scaduta (2 ore)
+            if (loginTime) {
+                const sessionAge = Date.now() - parseInt(loginTime);
+                const maxSessionTime = 2 * 60 * 60 * 1000; // 2 ore
+                
+                if (sessionAge > maxSessionTime) {
+                    logout();
+                    return;
+                }
+            }
+            
+            // Mostra dashboard se autenticato
+            document.body.style.display = 'block';
+            document.body.classList.remove('auth-required');
+            
+            // Aggiorna info sessione
+            updateSessionInfo();
+        });
+        
+        function logout() {
+            const hasRemembered = localStorage.getItem('tribucoach_remember') === 'true';
+            
+            if (hasRemembered) {
+                const keepCredentials = confirm(
+                    '🔐 Logout Confermato\n\n' +
+                    '💾 Hai credenziali salvate su questo dispositivo.\n\n' +
+                    'Vuoi mantenerle per il prossimo accesso?\n\n' +
+                    '• SI = Logout veloce (credenziali mantenute)\n' +
+                    '• NO = Logout completo (credenziali cancellate)'
+                );
+                
+                if (!keepCredentials) {
+                    // Rimuovi credenziali salvate
+                    localStorage.removeItem('tribucoach_saved_creds');
+                    localStorage.removeItem('tribucoach_remember');
+                }
+            }
+            
+            // Rimuovi sempre la sessione corrente
+            sessionStorage.removeItem('tribucoach_auth');
+            sessionStorage.removeItem('login_time');
+            
+            // Cleanup dashboard se esistente
+            if (window.chatbotDashboard) {
+                window.chatbotDashboard.destroy();
+            }
+            
+            // Reindirizza al login
+            window.location.href = 'login.html';
+        }
+        
+        function updateSessionInfo() {
+            const loginTime = sessionStorage.getItem('login_time');
+            if (loginTime) {
+                const sessionStart = new Date(parseInt(loginTime));
+                const timeString = sessionStart.toLocaleTimeString('it-IT', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                document.getElementById('sessionInfo').textContent = `👤 Login: ${timeString}`;
+            }
+        }
+        
+        // Logout automatico su chiusura tab/browser
+        window.addEventListener('beforeunload', () => {
+            // Mantieni la sessione solo se specificato
+            const keepSession = sessionStorage.getItem('keep_session') === 'true';
+            if (!keepSession) {
+                sessionStorage.removeItem('tribucoach_auth');
+                sessionStorage.removeItem('login_time');
+            }
+        });
+        
+        // Auto-logout per inattività (2 ore)
+        let inactivityTimer;
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                alert('⏰ Sessione scaduta per inattività. Verrai reindirizzato al login.');
+                logout();
+            }, 2 * 60 * 60 * 1000); // 2 ore
+        }
+        
+        // Reset timer su attività utente
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, true);
+        });
+        
+        resetInactivityTimer();
+    </script>
     
     <!-- 🔥 AGGIUNTO: Carica firebase-api.js PRIMA del dashboard -->
     <script src="firebase-api.js"></script>
