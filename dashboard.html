@@ -128,11 +128,17 @@
             margin-top: 20px;
         }
 
+        /* Migliora layout tabella quiz */
         .data-table th, .data-table td {
-            padding: 12px 15px;
+            padding: 10px 8px;
             text-align: left;
             border-bottom: 1px solid #333;
             color: #eee;
+            font-size: 0.85rem;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .data-table th {
@@ -140,6 +146,58 @@
             color: #ff9933;
             font-weight: bold;
             text-transform: uppercase;
+            font-size: 0.8rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td:hover {
+            white-space: normal;
+            word-wrap: break-word;
+            max-width: none;
+        }
+
+        /* Colonne specifiche */
+        .data-table th:nth-child(1), .data-table td:nth-child(1) { min-width: 80px; } /* Nome */
+        .data-table th:nth-child(2), .data-table td:nth-child(2) { min-width: 50px; } /* Età */
+        .data-table th:nth-child(3), .data-table td:nth-child(3) { min-width: 180px; } /* Email */
+        .data-table th:nth-child(4), .data-table td:nth-child(4) { min-width: 100px; } /* WhatsApp */
+        .data-table th:nth-child(5), .data-table td:nth-child(5) { min-width: 70px; } /* Genere */
+        .data-table th:nth-child(6), .data-table td:nth-child(6) { min-width: 120px; } /* Profilo */
+        .data-table th:nth-child(7), .data-table td:nth-child(7) { min-width: 200px; } /* Obiettivi */
+        .data-table th:nth-child(8), .data-table td:nth-child(8) { min-width: 120px; } /* Tipo Allenamento */
+        .data-table th:nth-child(9), .data-table td:nth-child(9) { min-width: 150px; } /* Ostacoli */
+        .data-table th:nth-child(10), .data-table td:nth-child(10) { min-width: 70px; text-align: center; } /* Score */
+        .data-table th:nth-child(11), .data-table td:nth-child(11) { min-width: 100px; } /* Data */
+        .data-table th:nth-child(12), .data-table td:nth-child(12) { min-width: 120px; text-align: center; } /* Azioni */
+
+        /* Scroll orizzontale per tabelle */
+        .table-responsive {
+            overflow-x: auto;
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            border-radius: 8px;
+        }
+
+        /* Chart containers migliorati */
+        .chart-container {
+            margin-top: 20px;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            height: 350px;
+            border: 1px solid #333;
+        }
+
+        .chart-container canvas {
+            max-height: 300px !important;
+        }
+
+        /* Badge score migliorati */
+        .score-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
             font-size: 0.9rem;
         }
 
@@ -1154,7 +1212,7 @@
         }
 
         /**
-         * Carica e renderizza i dati quiz
+         * Carica e renderizza i dati quiz - AGGIORNATO
          */
         async function loadQuizData() {
             try {
@@ -1165,6 +1223,13 @@
                 if (currentQuizData.length > 0) {
                     renderQuizData(currentQuizData);
                     updateQuizMetrics(currentQuizData);
+                    // Inizializza grafici dopo aver caricato ENTRAMBI i dataset
+                    if (currentConversationsData.length >= 0) {
+                        setTimeout(() => {
+                            initializeCharts(currentQuizData);
+                            updateBusinessInsights(currentQuizData, currentConversationsData);
+                        }, 500);
+                    }
                     console.log(`✅ ${currentQuizData.length} quiz caricati`);
                 } else {
                     showNoQuizData();
@@ -1177,7 +1242,7 @@
         }
 
         /**
-         * Carica e renderizza i dati conversazioni
+         * Carica e renderizza i dati conversazioni - AGGIORNATO
          */
         async function loadChatbotData() {
             try {
@@ -1248,7 +1313,7 @@
                     <td>${getObiettiviField()}</td>
                     <td>${getTipoAllenamentoField()}</td>
                     <td>${getOstacoliField()}</td>
-                    <td><span style="color: ${getScoreColor(score)}; font-weight: bold;">${score}%</span></td>
+                    <td><span class="score-badge" style="background-color: ${getScoreColor(score)}; color: white;">${score}%</span></td>
                     <td>${formattedDate}</td>
                     <td>
                         <button class="action-button" onclick="viewQuizDetails('${quiz.id}')">
@@ -1558,24 +1623,44 @@
         }
 
         /**
-         * Inizializza i grafici Chart.js
+         * Inizializza i grafici Chart.js - VERSIONE CORRETTA
          */
         function initializeCharts(quizData) {
+            console.log('🎨 Inizializzazione grafici con', quizData.length, 'quiz');
+            
+            // Aspetta che Chart.js sia caricato
+            if (typeof Chart === 'undefined') {
+                console.warn('⚠️ Chart.js non ancora caricato, riprovo...');
+                setTimeout(() => initializeCharts(quizData), 1000);
+                return;
+            }
+            
+            // Distruggi grafici esistenti
+            Chart.helpers.each(Chart.instances, function(instance) {
+                instance.destroy();
+            });
+            
             // Prepara dati per grafici
             const profileData = prepareProfileData(quizData);
             const goalData = prepareGoalData(quizData);
             const chatTopicData = prepareChatTopicData(currentConversationsData);
             
+            console.log('📊 Dati grafici preparati:', { profileData, goalData, chatTopicData });
+            
             // Grafico Profili Fitness
             const profileCtx = document.getElementById('profileChart');
             if (profileCtx && profileData.labels.length > 0) {
-                new Chart(profileCtx, {
+                profileCtx.style.display = 'block';
+                profileCtx.parentElement.innerHTML = '<canvas id="profileChart"></canvas>';
+                const newProfileCtx = document.getElementById('profileChart');
+                
+                new Chart(newProfileCtx, {
                     type: 'doughnut',
                     data: {
                         labels: profileData.labels,
                         datasets: [{
                             data: profileData.values,
-                            backgroundColor: ['#ff6600', '#ff9933', '#ffcc66', '#4CAF50', '#2196F3'],
+                            backgroundColor: ['#ff6600', '#ff9933', '#ffcc66', '#4CAF50', '#2196F3', '#9C27B0'],
                             borderWidth: 2,
                             borderColor: '#333'
                         }]
@@ -1585,20 +1670,31 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                labels: { color: '#fff' }
+                                position: 'bottom',
+                                labels: { 
+                                    color: '#fff',
+                                    padding: 20
+                                }
                             }
                         }
                     }
                 });
+                console.log('✅ Grafico profili creato');
+            } else {
+                document.getElementById('profileDistribution').innerHTML = '<div style="text-align: center; color: #666; padding: 50px;">Nessun dato profilo disponibile</div>';
             }
             
             // Grafico Obiettivi
             const goalCtx = document.getElementById('goalChart');
             if (goalCtx && goalData.labels.length > 0) {
-                new Chart(goalCtx, {
+                goalCtx.style.display = 'block';
+                goalCtx.parentElement.innerHTML = '<canvas id="goalChart"></canvas>';
+                const newGoalCtx = document.getElementById('goalChart');
+                
+                new Chart(newGoalCtx, {
                     type: 'bar',
                     data: {
-                        labels: goalData.labels,
+                        labels: goalData.labels.map(label => label.length > 20 ? label.substring(0, 20) + '...' : label),
                         datasets: [{
                             label: 'Frequenza',
                             data: goalData.values,
@@ -1611,32 +1707,47 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { labels: { color: '#fff' } }
+                            legend: { 
+                                labels: { color: '#fff' },
+                                display: false
+                            }
                         },
                         scales: {
                             y: { 
                                 ticks: { color: '#fff' },
-                                grid: { color: '#444' }
+                                grid: { color: '#444' },
+                                beginAtZero: true
                             },
                             x: { 
-                                ticks: { color: '#fff' },
+                                ticks: { 
+                                    color: '#fff',
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                },
                                 grid: { color: '#444' }
                             }
                         }
                     }
                 });
+                console.log('✅ Grafico obiettivi creato');
+            } else {
+                document.getElementById('goalDistribution').innerHTML = '<div style="text-align: center; color: #666; padding: 50px;">Nessun dato obiettivi disponibile</div>';
             }
             
             // Grafico Argomenti Chat
             const chatCtx = document.getElementById('chatTopicChart');
             if (chatCtx && chatTopicData.labels.length > 0) {
-                new Chart(chatCtx, {
+                chatCtx.style.display = 'block';
+                chatCtx.parentElement.innerHTML = '<canvas id="chatTopicChart"></canvas>';
+                const newChatCtx = document.getElementById('chatTopicChart');
+                
+                new Chart(newChatCtx, {
                     type: 'pie',
                     data: {
                         labels: chatTopicData.labels,
                         datasets: [{
                             data: chatTopicData.values,
-                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#9C27B0', '#ff6600'],
+                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#9C27B0', '#ff6600', '#607D8B'],
                             borderWidth: 2,
                             borderColor: '#333'
                         }]
@@ -1645,23 +1756,36 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { labels: { color: '#fff' } }
+                            legend: { 
+                                position: 'bottom',
+                                labels: { 
+                                    color: '#fff',
+                                    padding: 15
+                                }
+                            }
                         }
                     }
                 });
+                console.log('✅ Grafico chat topics creato');
+            } else {
+                document.getElementById('chatTopics').innerHTML = '<div style="text-align: center; color: #666; padding: 50px;">Nessun dato conversazioni disponibile</div>';
             }
         }
 
         /**
-         * Prepara dati profili per grafico
+         * Prepara dati profili per grafico - MIGLIORATO
          */
         function prepareProfileData(quizData) {
             const profiles = {};
             
             quizData.forEach(quiz => {
-                const profile = quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza || 'Non specificato';
+                // Cerca in diversi campi possibili
+                const profile = quiz.profilo || quiz.profile || quiz.livelloFitness || 
+                               quiz.esperienza || quiz.livello || 'Non specificato';
                 profiles[profile] = (profiles[profile] || 0) + 1;
             });
+            
+            console.log('📊 Profili trovati:', profiles);
             
             return {
                 labels: Object.keys(profiles),
@@ -1670,19 +1794,154 @@
         }
 
         /**
-         * Prepara dati obiettivi per grafico
+         * Prepara dati obiettivi per grafico - MIGLIORATO
          */
         function prepareGoalData(quizData) {
             const goals = {};
             
             quizData.forEach(quiz => {
-                const goal = quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || 'Non specificato';
-                goals[goal] = (goals[goal] || 0) + 1;
+                // Cerca in diversi campi e splitta obiettivi multipli
+                let goalString = quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || '';
+                
+                // Se è un array, uniscilo
+                if (Array.isArray(goalString)) {
+                    goalString = goalString.join(', ');
+                }
+                
+                // Splitta se ci sono virgole o "e"
+                const goalList = goalString.split(/[,;]|(?:\s+e\s+)/)
+                    .map(g => g.trim())
+                    .filter(g => g.length > 0);
+                
+                if (goalList.length === 0) {
+                    goals['Non specificato'] = (goals['Non specificato'] || 0) + 1;
+                } else {
+                    goalList.forEach(goal => {
+                        goals[goal] = (goals[goal] || 0) + 1;
+                    });
+                }
             });
+            
+            console.log('🎯 Obiettivi trovati:', goals);
             
             return {
                 labels: Object.keys(goals),
                 values: Object.values(goals)
+            };
+        }
+
+        /**
+         * Aggiorna insights business con DATI REALI
+         */
+        function updateBusinessInsights(quizData, conversationsData) {
+            console.log('💡 Aggiornamento business insights...');
+            
+            // Analizza i dati reali
+            const analysis = analyzeBusinessData(quizData, conversationsData);
+            
+            // Aggiorna insights con dati reali
+            document.getElementById('qualifiedLeadsCount').textContent = analysis.qualifiedLeads;
+            document.getElementById('mostPopularGoal').textContent = analysis.topGoal;
+            document.getElementById('mostCommonObstacle').textContent = analysis.topObstacle;
+            
+            // Aggiungi insight aggiuntivi basati sui dati
+            const insightsList = document.querySelector('.insights-list');
+            if (insightsList) {
+                // Rimuovi insights statici e aggiungi dinamici
+                insightsList.innerHTML = `
+                    <li>
+                        <strong>Lead Qualificati:</strong> <span>${analysis.qualifiedLeads}</span> lead con uno score superiore al 70%. 
+                        ${analysis.qualifiedLeads > 0 ? 'Concentrati su questi per un contatto rapido!' : 'Lavora sulla qualità dei lead.'}
+                    </li>
+                    <li>
+                        <strong>Obiettivo Top:</strong> <span>"${analysis.topGoal}"</span> è il più richiesto (${analysis.topGoalCount} persone). 
+                        Crea contenuti specifici per questo obiettivo.
+                    </li>
+                    <li>
+                        <strong>Ostacolo Principale:</strong> <span>"${analysis.topObstacle}"</span> è la sfida più comune. 
+                        Sviluppa soluzioni dedicate per superare questo problema.
+                    </li>
+                    <li>
+                        <strong>🔥 Profilo Target:</strong> <span>"${analysis.topProfile}"</span> è il profilo più comune. 
+                        Personalizza i tuoi servizi per questo segmento.
+                    </li>
+                    <li>
+                        <strong>📊 Tasso Conversione:</strong> ${analysis.conversionRate}% dei quiz si trasformano in chat. 
+                        ${analysis.conversionRate > 15 ? 'Ottimo tasso!' : 'C\'è margine di miglioramento.'}
+                    </li>
+                    <li>
+                        <strong>🎯 Insight Genere:</strong> ${analysis.genderSplit} - Adatta marketing e comunicazione di conseguenza.
+                    </li>
+                    <li>
+                        <strong>⏰ Timing Perfetto:</strong> ${analysis.peakDay} è il giorno con più attività. 
+                        Pianifica contenuti e campagne in questo momento.
+                    </li>
+                `;
+            }
+        }
+
+        /**
+         * Analizza dati business per insights reali
+         */
+        function analyzeBusinessData(quizData, conversationsData) {
+            // Lead qualificati (score >= 70%)
+            const scores = quizData.map(quiz => calculateQuizScore(quiz));
+            const qualifiedLeads = scores.filter(score => score >= 70).length;
+            
+            // Obiettivo più popolare
+            const goals = quizData.map(quiz => 
+                quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal
+            ).filter(Boolean);
+            const topGoal = getMostFrequent(goals) || 'Non specificato';
+            const topGoalCount = goals.filter(g => g === topGoal).length;
+            
+            // Ostacolo più comune
+            const obstacles = quizData.map(quiz => 
+                quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi
+            ).filter(Boolean);
+            const topObstacle = getMostFrequent(obstacles) || 'Non specificato';
+            
+            // Profilo più comune
+            const profiles = quizData.map(quiz => 
+                quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza
+            ).filter(Boolean);
+            const topProfile = getMostFrequent(profiles) || 'Non specificato';
+            
+            // Analisi genere
+            const genders = quizData.map(quiz => 
+                quiz.genere || quiz.gender || quiz.sesso
+            ).filter(Boolean);
+            const femmine = genders.filter(g => g.toLowerCase().includes('donn') || g.toLowerCase().includes('f')).length;
+            const maschi = genders.filter(g => g.toLowerCase().includes('uom') || g.toLowerCase().includes('m')).length;
+            const genderSplit = `${Math.round(femmine/genders.length*100)}% donne, ${Math.round(maschi/genders.length*100)}% uomini`;
+            
+            // Tasso conversione (quiz -> chat)
+            const conversionRate = quizData.length > 0 ? 
+                Math.round((conversationsData.length / quizData.length) * 100) : 0;
+            
+            // Giorno con più attività
+            const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+            const dayActivity = {};
+            
+            [...quizData, ...conversationsData].forEach(item => {
+                const date = item.timestamp ? new Date(item.timestamp.seconds ? item.timestamp.seconds * 1000 : item.timestamp) : new Date();
+                const day = days[date.getDay()];
+                dayActivity[day] = (dayActivity[day] || 0) + 1;
+            });
+            
+            const peakDay = Object.keys(dayActivity).reduce((a, b) => 
+                dayActivity[a] > dayActivity[b] ? a : b, 'N/A'
+            );
+            
+            return {
+                qualifiedLeads,
+                topGoal,
+                topGoalCount,
+                topObstacle,
+                topProfile,
+                genderSplit,
+                conversionRate,
+                peakDay
             };
         }
 
