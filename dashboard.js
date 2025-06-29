@@ -1,26 +1,18 @@
-// dashboard.js
 import * as firebaseAPI from './firebase-api.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   console.log("🚀 Inizializzazione Dashboard TribuCoach...");
-  const connStatus = document.getElementById('connection-status');
   updateConnectionStatus('🔄 Connessione a Firebase...', 'status-connecting');
 
   try {
-    // Carica i quiz
-    console.log("📡 Caricamento dati quiz...");
+    // Carica quiz
+    console.log("📡 Caricamento quiz...");
     const quizResults = await firebaseAPI.getAllQuizResults();
     console.log(`📊 Quiz caricati: ${quizResults.length}`);
     updateMetric('total-quizzes', quizResults.length);
     populateQuizTable(quizResults);
 
-    // Carica i leads
-    console.log("📡 Caricamento dati leads...");
-    const leads = await firebaseAPI.getUsers();
-    console.log(`👥 Leads caricati: ${leads.length}`);
-    updateMetric('total-leads', leads.length);
-
-    // Carica le conversazioni chatbot
+    // Carica conversazioni chatbot
     console.log("📡 Caricamento conversazioni chatbot...");
     const conversations = await firebaseAPI.getChatbotConversations();
     console.log(`💬 Conversazioni caricate: ${conversations.length}`);
@@ -28,28 +20,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateChatbotTable(conversations);
 
     updateConnectionStatus('✅ Connessione stabilita', 'status-connected');
-
   } catch (error) {
     console.error("❌ Errore durante il caricamento dati:", error);
     updateConnectionStatus('❌ Errore connessione Firebase', 'status-error');
   }
 });
 
-// Aggiorna connessione
 function updateConnectionStatus(message, className) {
   const el = document.getElementById('connection-status');
-  if (!el) return;
-  el.className = `connection-status ${className}`;
-  el.textContent = message;
+  if (el) {
+    el.className = `connection-status ${className}`;
+    el.textContent = message;
+  }
 }
 
-// Aggiorna metrica numerica
 function updateMetric(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
 }
 
-// Popola tabella quiz
 function populateQuizTable(quizResults) {
   const tbody = document.querySelector('.dashboard-section:nth-of-type(1) tbody');
   if (!tbody) return;
@@ -71,7 +60,6 @@ function populateQuizTable(quizResults) {
   `).join('');
 }
 
-// Popola tabella chatbot
 function populateChatbotTable(conversations) {
   const tbody = document.querySelector('.dashboard-section:nth-of-type(2) tbody');
   if (!tbody) return;
@@ -90,7 +78,6 @@ function populateChatbotTable(conversations) {
   `).join('');
 }
 
-// Format timestamp
 function formatDate(ts) {
   if (!ts) return '-';
   const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
