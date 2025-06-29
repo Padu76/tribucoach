@@ -1,19 +1,4 @@
-/**
- * 📅 Utility: Ottiene una data N giorni fa in formato YYYY-MM-DD
- */
-function getDateDaysAgo(days) {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString().split('T')[0];
-}
-
-// 🚀 ESPONI LE FUNZIONI GLOBALMENTE PER IL BROWSER
-window.firebaseAPI = {
-    testConnection,
-    getAllQuizResults,
-    getQuizResultById,
-    getChatbotConversations,
-    getChatbotConversationsFrom// firebase-api.js - API Firebase + Chatbase per TribuCoach Dashboard
+// firebase-api.js - API Firebase + Chatbase per TribuCoach Dashboard
 // Versione browser-compatible
 
 // 🔥 SOLUZIONE: Aspetta che Firebase sia disponibile dal CDN
@@ -226,21 +211,9 @@ async function getChatbotConversationsFromAPI(filters = {}) {
                 topic: extractTopicFromMessages(conv.messages) || 'Argomento generico',
                 lastActivity: conv.updated_at || conv.created_at,
                 createdAt: conv.created_at,
-                messages: (conv.messages || []).map((msg, index) => ({
-                    ...msg,
-                    // 🔧 FIX: Usa timestamp originale del messaggio, non la data corrente
-                    timestamp: msg.created_at || msg.timestamp || conv.created_at,
-                    // Assicurati che role/sender siano consistenti
-                    role: msg.role || (msg.type === 'user' ? 'user' : 'assistant'),
-                    sender: msg.sender || msg.role || (msg.type === 'user' ? 'user' : 'assistant'),
-                    // Normalizza il contenuto del messaggio
-                    text: msg.content || msg.message || msg.text || '',
-                    content: msg.content || msg.message || msg.text || ''
-                })),
+                messages: conv.messages || [],
                 lastMessageSnippet: conv.messages?.length > 0 
-                    ? (conv.messages[conv.messages.length - 1].content || 
-                       conv.messages[conv.messages.length - 1].message ||
-                       conv.messages[conv.messages.length - 1].text || '').substring(0, 100) + '...'
+                    ? conv.messages[conv.messages.length - 1].content?.substring(0, 100) + '...'
                     : 'Nessun messaggio',
                 source: 'Chatbase API'
             };
@@ -256,82 +229,48 @@ async function getChatbotConversationsFromAPI(filters = {}) {
 }
 
 /**
- * 🚀 FUNZIONE PRINCIPALE: Recupera tutte le conversazioni (SOLO Firebase)
- * @returns {Array} Array delle conversazioni da Firebase
+ * 🚀 FUNZIONE PRINCIPALE: Recupera tutte le conversazioni (Firebase + API)
+ * @returns {Array} Array combinato delle conversazioni
  */
 async function getAllConversations() {
     try {
-        console.log('🔄 Recupero conversazioni da Firebase...');
+        console.log('🔄 Recupero conversazioni da tutte le fonti...');
         
-        // Usa solo Firebase - le conversazioni arrivano via webhook
-        const firebaseConversations = await getChatbotConversations();
-        console.log(`📊 Firebase: ${firebaseConversations.length} conversazioni`);
+        let allConversations = [];
         
-        return firebaseConversations;
+        // Prova prima con Firebase
+        try {
+            const firebaseConversations = await getChatbotConversations();
+            allConversations = [...firebaseConversations];
+            console.log(`📊 Firebase: ${firebaseConversations.length} conversazioni`);
+        } catch (firebaseError) {
+            console.warn('⚠️ Firebase non disponibile:', firebaseError.message);
+        }
+        
+        // Poi prova con Chatbase API
+        try {
+            const apiConversations = await getChatbotConversationsFromAPI();
+            allConversations = [...allConversations, ...apiConversations];
+            console.log(`🌐 API: ${apiConversations.length} conversazioni`);
+        } catch (apiError) {
+            console.warn('⚠️ API Chatbase non disponibile:', apiError.message);
+        }
+        
+        // Rimuovi duplicati basati su ID
+        const uniqueConversations = allConversations.reduce((acc, conv) => {
+            if (!acc.find(existing => existing.id === conv.id)) {
+                acc.push(conv);
+            }
+            return acc;
+        }, []);
+        
+        console.log(`✅ Totale conversazioni uniche: ${uniqueConversations.length}`);
+        return uniqueConversations;
         
     } catch (error) {
         console.error('❌ Errore nel recupero conversazioni:', error);
         return [];
     }
-}
-
-/**
- * 🔧 NUOVA: Forza refresh delle conversazioni da Firebase
- * @returns {Array} Conversazioni aggiornate
- */
-async function refreshConversations() {
-    try {
-        console.log('🔄 Refresh conversazioni da Firebase...');
-        
-        if (!db) {
-            await initFirebase();
-        }
-        
-        // Ordina per ultima attività
-        const querySnapshot = await db.collection('conversations')
-            .orderBy('lastMessageAt', 'desc')
-            .limit(50)
-            .get();
-            
-        const conversations = [];
-        
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            
-            conversations.push({
-                id: doc.id,
-                customerName: data.customerName || 'Cliente Anonimo',
-                phone: data.customerPhone || data.phone || 'N/A',
-                topic: data.topic || 'Generale',
-                lastActivity: data.lastMessageAt || data.dateCreated || new Date().toISOString(),
-                createdAt: data.dateCreated || new Date().toISOString(),
-                messages: data.messages || [],
-                lastMessageSnippet: this.getLastMessagePreview(data.messages),
-                source: data.source || 'Firebase',
-                messageCount: data.messageCount || (data.messages?.length || 0),
-                webhookReceivedAt: data.webhookReceivedAt
-            });
-        });
-        
-        console.log(`💬 Refresh completato: ${conversations.length} conversazioni`);
-        return conversations;
-        
-    } catch (error) {
-        console.error('❌ Errore refresh conversazioni:', error);
-        return [];
-    }
-}
-
-/**
- * 📝 Ottieni anteprima ultimo messaggio
- */
-function getLastMessagePreview(messages) {
-    if (!messages || messages.length === 0) return 'Nessun messaggio';
-    
-    const lastMsg = messages[messages.length - 1];
-    const text = lastMsg.message || lastMsg.text || lastMsg.content || 'Messaggio vuoto';
-    
-    return text.length > 100 ? text.substring(0, 100) + '...' : text;
 }
 
 /**
@@ -428,66 +367,12 @@ function extractContactInfo(messages) {
 }
 
 /**
- * 🔄 NUOVA: Sincronizza una conversazione da Chatbase a Firebase
- * @param {string} conversationId - ID della conversazione
- * @returns {boolean} True se sincronizzata con successo
+ * 📅 Utility: Ottiene una data N giorni fa in formato YYYY-MM-DD
  */
-async function syncConversationToFirebase(conversationId) {
-    try {
-        console.log(`🔄 Sincronizzazione conversazione ${conversationId} da Chatbase a Firebase...`);
-        
-        // Per ora, simuliamo la sincronizzazione manuale
-        // In futuro, qui implementeremo l'integrazione con webhook Chatbase
-        
-        // Dummy conversation per test
-        const dummyConversation = {
-            id: conversationId,
-            customerName: 'Cliente da Sync',
-            customerPhone: 'N/A',
-            topic: 'Sincronizzazione Test',
-            dateCreated: new Date().toISOString(),
-            lastMessageAt: new Date().toISOString(),
-            messages: [
-                {
-                    role: 'user',
-                    message: 'Messaggio sincronizzato manualmente',
-                    timestamp: new Date().toISOString()
-                }
-            ],
-            source: 'Manual Sync'
-        };
-        
-        // Salva su Firebase
-        if (!db) {
-            await initFirebase();
-        }
-        
-        await db.collection('conversations').doc(conversationId).set(dummyConversation);
-        console.log(`✅ Conversazione ${conversationId} sincronizzata su Firebase`);
-        
-        return true;
-    } catch (error) {
-        console.error('❌ Errore sincronizzazione:', error);
-        return false;
-    }
-}
-
-/**
- * 🔧 NUOVA: Forza aggiornamento da Firebase (ignora API)
- * @returns {Array} Conversazioni solo da Firebase
- */
-async function getConversationsFirebaseOnly() {
-    try {
-        console.log('🔄 Recupero conversazioni SOLO da Firebase...');
-        
-        const firebaseConversations = await getChatbotConversations();
-        console.log(`📊 Firebase Only: ${firebaseConversations.length} conversazioni`);
-        
-        return firebaseConversations;
-    } catch (error) {
-        console.error('❌ Errore recupero solo Firebase:', error);
-        return [];
-    }
+function getDateDaysAgo(days) {
+    const date = new Date();
+    date.setDate(date.getDate() - days);
+    return date.toISOString().split('T')[0];
 }
 
 // Export delle configurazioni per debug

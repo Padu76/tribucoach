@@ -11,7 +11,7 @@ import {
     where,
     orderBy,
     limit,
-    onSnapshot, // AGGIUNTO per listener in tempo reale
+    onSnapshot,
     serverTimestamp,
     arrayUnion
 } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -37,129 +37,233 @@ export async function getAllQuizResults() {
         console.log('📊 Recupero tutti i quiz results...');
         const q = query(collection(db, 'quiz_results'), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
-        const results = snapshot.docs.map(doc => ({
-            id: doc.id,
+        const results = snapshot.docs.map(doc => ({ 
+            id: doc.id, 
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate() || new Date()
         }));
         console.log(`📊 Quiz trovati: ${results.length}`);
         return results;
     } catch (error) {
-        console.error('❌ Errore recupero quiz:', error);
+        console.error('❌ Errore recupero quiz results:', error);
         return [];
     }
 }
 
 // === GESTIONE LEADS ===
-// Questa funzione dovrebbe essere aggiornata per salvare i leads derivati dai quiz
-export async function saveLead(leadData) {
-    try {
-        const docRef = await addDoc(collection(db, 'leads'), {
-            ...leadData,
-            timestamp: serverTimestamp()
-        });
-        console.log('✅ Lead salvato con ID:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('❌ Errore salvataggio lead:', error);
-        throw error;
-    }
-}
-
 export async function getLeads() {
     try {
-        console.log('🤝 Recupero tutti i leads...');
-        const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(q);
-        const leads = snapshot.docs.map(doc => ({
-            id: doc.id,
+        console.log('👥 Recupero tutti i leads...');
+        const leadsCol = collection(db, 'leads');
+        const leadSnapshot = await getDocs(leadsCol);
+        const leadsList = leadSnapshot.docs.map(doc => ({ 
+            id: doc.id, 
             ...doc.data(),
             timestamp: doc.data().timestamp?.toDate() || new Date()
         }));
-        console.log(`🤝 Leads trovati: ${leads.length}`);
-        return leads;
+        console.log(`👥 Leads trovati: ${leadsList.length}`);
+        return leadsList;
     } catch (error) {
         console.error('❌ Errore recupero leads:', error);
         return [];
     }
 }
 
-export function setupLeadsListener(callback) {
-    console.log('👂 Configurazione listener in tempo reale per leads...');
-    const q = query(collection(db, 'leads'), orderBy('timestamp', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const leads = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate() || new Date()
-        }));
-        console.log(`🔄 Aggiornamento in tempo reale: ${leads.length} leads.`);
-        callback(leads);
-    }, (error) => {
-        console.error('❌ Errore listener leads:', error);
-    });
-    return unsubscribe;
+export async function addLead(leadData) {
+    try {
+        const docRef = await addDoc(collection(db, 'leads'), {
+            ...leadData,
+            timestamp: serverTimestamp()
+        });
+        console.log('✅ Lead aggiunto con ID:', docRef.id);
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ Errore aggiunta lead:', error);
+        throw error;
+    }
 }
 
-// === GESTIONE CONVERSAZIONI CHATBOT (NUOVE FUNZIONI) ===
-export async function getChatbotConversations() {
+export async function updateLead(leadId, newData) {
     try {
-        console.log('💬 Recupero tutte le conversazioni chatbot da Firestore...');
-        // Ordina per timestamp in ordine decrescente (più recenti prima)
-        const q = query(collection(db, 'chatbot_conversations'), orderBy('timestamp', 'desc'));
+        const leadRef = doc(db, 'leads', leadId);
+        await updateDoc(leadRef, newData);
+        console.log('✅ Lead aggiornato con ID:', leadId);
+        return true;
+    } catch (error) {
+        console.error('❌ Errore aggiornamento lead:', error);
+        throw error;
+    }
+}
+
+export async function deleteLead(leadId) {
+    try {
+        await deleteDoc(doc(db, 'leads', leadId));
+        console.log('✅ Lead eliminato con ID:', leadId);
+        return true;
+    } catch (error) {
+        console.error('❌ Errore eliminazione lead:', error);
+        throw error;
+    }
+}
+
+// === GESTIONE METRICS ===
+export async function saveMetrics(metricsData) {
+    try {
+        const docRef = await addDoc(collection(db, 'metrics'), {
+            ...metricsData,
+            timestamp: serverTimestamp()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('❌ Errore salvataggio metrics:', error);
+        throw error;
+    }
+}
+
+export async function getMetrics() {
+    try {
+        console.log('📈 Recupero metrics...');
+        const q = query(collection(db, 'metrics'), orderBy('timestamp', 'desc'), limit(10));
         const snapshot = await getDocs(q);
-        const conversations = snapshot.docs.map(doc => ({
-            id: doc.id, // L'ID del documento è l'ID della conversazione di Chatbase
+        const results = snapshot.docs.map(doc => ({ 
+            id: doc.id, 
             ...doc.data(),
-            // Assicurati che i timestamp siano oggetti Date per una facile manipolazione nel frontend
             timestamp: doc.data().timestamp?.toDate() || new Date()
         }));
-        console.log(`💬 Conversazioni chatbot trovate: ${conversations.length}`);
-        return conversations;
+        console.log(`📈 Metrics trovati: ${results.length}`);
+        return results;
     } catch (error) {
-        console.error('❌ Errore recupero conversazioni chatbot da Firestore:', error);
+        console.error('❌ Errore recupero metrics:', error);
         return [];
     }
 }
 
-// Funzione per impostare un listener in tempo reale sulle conversazioni (opzionale ma consigliato per dashboard)
-export function setupChatbotConversationsListener(callback) {
-    console.log('👂 Configurazione listener in tempo reale per conversazioni chatbot...');
-    const q = query(collection(db, 'chatbot_conversations'), orderBy('timestamp', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const conversations = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate() || new Date()
-        }));
-        console.log(`🔄 Aggiornamento in tempo reale: ${conversations.length} conversazioni chatbot.`);
-        callback(conversations);
-    }, (error) => {
-        console.error('❌ Errore listener conversazioni chatbot:', error);
-    });
-    return unsubscribe;
+// === LISTENERS REAL-TIME ===
+export function setupQuizListener(callback) {
+    console.log('🔄 Attivando listener per quiz_results...');
+    
+    try {
+        const q = query(
+            collection(db, 'quiz_results'),
+            orderBy('timestamp', 'desc'),
+            limit(100)
+        );
+        
+        return onSnapshot(q, (snapshot) => {
+            console.log(`📊 Quiz listener: ${snapshot.size} documenti ricevuti`);
+            const results = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date()
+            }));
+            callback(results);
+        }, (error) => {
+            console.error('❌ Errore listener quiz:', error);
+            // Ritorna array vuoto in caso di errore
+            callback([]);
+        });
+    } catch (error) {
+        console.error('❌ Errore setup listener quiz:', error);
+        return () => {}; // Funzione vuota per unsubscribe
+    }
 }
 
+export function setupLeadsListener(callback) {
+    console.log('🔄 Attivando listener per leads...');
+    
+    try {
+        const q = query(
+            collection(db, 'leads'),
+            orderBy('timestamp', 'desc'),
+            limit(100)
+        );
+        
+        return onSnapshot(q, (snapshot) => {
+            console.log(`👥 Leads listener: ${snapshot.size} documenti ricevuti`);
+            const results = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date()
+            }));
+            callback(results);
+        }, (error) => {
+            console.error('❌ Errore listener leads:', error);
+            callback([]);
+        });
+    } catch (error) {
+        console.error('❌ Errore setup listener leads:', error);
+        return () => {};
+    }
+}
 
-// === FUNZIONI DI UTILITY ===
-export function formatDateTime(date) {
-    if (!date) return 'N/D';
-    const options = {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+export function setupMetricsListener(callback) {
+    console.log('🔄 Attivando listener per metrics...');
+    
+    try {
+        const q = query(
+            collection(db, 'metrics'),
+            orderBy('timestamp', 'desc'),
+            limit(10)
+        );
+        
+        return onSnapshot(q, (snapshot) => {
+            console.log(`📈 Metrics listener: ${snapshot.size} documenti ricevuti`);
+            const results = snapshot.docs.map(doc => ({ 
+                id: doc.id, 
+                ...doc.data(),
+                timestamp: doc.data().timestamp?.toDate() || new Date()
+            }));
+            callback(results);
+        }, (error) => {
+            console.error('❌ Errore listener metrics:', error);
+            callback([]);
+        });
+    } catch (error) {
+        console.error('❌ Errore setup listener metrics:', error);
+        return () => {};
+    }
+}
+
+// === UTILITY FUNCTIONS ===
+export function formatDateTime(timestamp) {
+    if (!timestamp) return 'N/A';
+    
+    try {
+        const date = timestamp instanceof Date ? timestamp : 
+                    timestamp.toDate ? timestamp.toDate() : 
+                    new Date(timestamp);
+        return date.toLocaleString('it-IT');
+    } catch (error) {
+        console.error('❌ Errore formattazione data:', error);
+        return 'Data non valida';
+    }
+}
+
+export function calculateTrend(current, previous) {
+    if (!previous || previous === 0) return { value: 0, isPositive: true };
+    
+    const change = ((current - previous) / previous) * 100;
+    return {
+        value: Math.abs(change).toFixed(1),
+        isPositive: change >= 0
     };
-    return new Date(date).toLocaleString('it-IT', options);
 }
 
+export function getProfileIcon(profileType) {
+    switch(profileType) {
+        case 'Nuovo Esploratore': return '🌱';
+        case 'Guerriero': return '⚔️';
+        case 'Atleta': return '🏆';
+        default: return '👤';
+    }
+}
+
+// === CALCOLO LEAD SCORE ===
 export function calculateLeadScore(quizData) {
-    let score = 0;
-    if (quizData) {
-        // Logica di scoring basata sui dati del quiz
-        // Esempio:
+    let score = quizData.score || quizData.lead_score || 0;
+    
+    // Se il punteggio non è presente, calcolalo
+    if (!score) {
         if (quizData.goals?.includes('Preparazione atletica specifica')) score += 30;
         if (quizData.goals?.includes('Aumentare massa muscolare')) score += 25;
         if (quizData.goals?.includes('Perdere peso e dimagrire')) score += 20;
@@ -167,19 +271,8 @@ export function calculateLeadScore(quizData) {
         if (quizData.training_style === 'Con personal trainer') score += 15;
         if (quizData.diet === 'Eccellente (molto attento, pianifico i pasti, pochi sgarri)') score += 10;
     }
-
+    
     return Math.min(Math.max(score, 0), 100);
-}
-
-export function getProfileIcon(email) {
-    if (!email) {
-        return 'https://via.placeholder.com/40/007bff/FFFFFF?text=U'; // Icona generica se non c'è email
-    }
-    // Esempio: Icona basata sulla prima lettera dell'email
-    const firstLetter = email.charAt(0).toUpperCase();
-    const bgColor = '#007bff'; // Un colore di sfondo
-    const textColor = 'FFFFFF'; // Colore del testo
-    return `https://via.placeholder.com/40/${bgColor.substring(1)}/${textColor}?text=${firstLetter}`;
 }
 
 // === FUNZIONI DI DEBUG ===
@@ -206,10 +299,9 @@ export async function addLeadNote(leadId, noteContent) {
                 timestamp: serverTimestamp()
             })
         });
-        console.log('✅ Nota aggiunta al lead con ID:', leadId);
         return true;
     } catch (error) {
         console.error('❌ Errore aggiunta nota lead:', error);
-        return false;
+        throw error;
     }
 }

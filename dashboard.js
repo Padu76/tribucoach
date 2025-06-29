@@ -81,30 +81,8 @@ class ChatbotDashboard {
             
             if (window.firebaseAPI && window.firebaseAPI.getAllConversations) {
                 console.log('✅ firebase-api.js trovato, carico conversazioni...');
-                
-                // 🔥 FIX: Forza il refresh dalle API invece di usare cache
-                this.chatConversations = await window.firebaseAPI.getChatbotConversationsFromAPI();
-                
-                // Se API non funziona, usa Firebase come fallback
-                if (!this.chatConversations || this.chatConversations.length === 0) {
-                    console.log('⚠️ API Chatbase non disponibile, uso Firebase come fallback...');
-                    this.chatConversations = await window.firebaseAPI.getChatbotConversations();
-                }
-                
+                this.chatConversations = await window.firebaseAPI.getAllConversations();
                 console.log(`💬 Conversazioni caricate: ${this.chatConversations.length}`);
-                
-                // 🔧 FIX: Pulisci i timestamp per evitare aggiornamenti automatici
-                this.chatConversations = this.chatConversations.map(conv => ({
-                    ...conv,
-                    lastActivity: this.normalizeTimestamp(conv.lastActivity || conv.updated_at || conv.created_at),
-                    createdAt: this.normalizeTimestamp(conv.createdAt || conv.created_at),
-                    // Assicurati che i messaggi abbiano timestamp corretti
-                    messages: (conv.messages || []).map(msg => ({
-                        ...msg,
-                        timestamp: this.normalizeTimestamp(msg.timestamp || msg.createdAt || msg.date)
-                    }))
-                }));
-                
             } else {
                 console.error('❌ firebase-api.js NON TROVATO dopo 100 tentativi');
                 console.log('🔍 Variabili window disponibili:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
@@ -113,39 +91,6 @@ class ChatbotDashboard {
         } catch (error) {
             console.error('❌ Errore caricamento conversazioni:', error);
             this.chatConversations = [];
-        }
-    }
-
-    // 🔧 NUOVA FUNZIONE: Normalizza i timestamp per evitare aggiornamenti automatici
-    normalizeTimestamp(timestamp) {
-        if (!timestamp) return null;
-        
-        try {
-            // Se è già un timestamp valido, mantienilo
-            if (timestamp instanceof Date) {
-                return timestamp.toISOString();
-            }
-            
-            // Se è una stringa, convertila
-            if (typeof timestamp === 'string') {
-                const date = new Date(timestamp);
-                if (!isNaN(date.getTime())) {
-                    return date.toISOString();
-                }
-            }
-            
-            // Se è un numero (Unix timestamp)
-            if (typeof timestamp === 'number') {
-                const date = new Date(timestamp);
-                if (!isNaN(date.getTime())) {
-                    return date.toISOString();
-                }
-            }
-            
-            return null;
-        } catch (error) {
-            console.warn('⚠️ Errore normalizzazione timestamp:', timestamp, error);
-            return null;
         }
     }
 
@@ -183,34 +128,6 @@ class ChatbotDashboard {
                 this.openWhatsApp(phone);
             }
         });
-
-        // Refresh conversazioni chatbot
-        const refreshChatBtn = document.getElementById('refreshChatConversations');
-        if (refreshChatBtn) {
-            refreshChatBtn.addEventListener('click', async () => {
-                console.log('🔄 Refresh manuale conversazioni...');
-                refreshChatBtn.innerHTML = '⏳ Aggiornamento...';
-                refreshChatBtn.disabled = true;
-                
-                try {
-                    await this.loadChatConversations();
-                    this.updateChatConversationsTable();
-                    this.updateMetrics();
-                    this.updateCharts();
-                    this.updateInsights();
-                    this.updateLastUpdateTime();
-                    
-                    // Aggiorna timestamp ultimo aggiornamento chat
-                    document.getElementById('lastChatUpdate').textContent = new Date().toLocaleString('it-IT');
-                    
-                } catch (error) {
-                    console.error('❌ Errore refresh chat:', error);
-                } finally {
-                    refreshChatBtn.innerHTML = '🔄 Aggiorna Conversazioni';
-                    refreshChatBtn.disabled = false;
-                }
-            });
-        }
 
         // Chiusura modal
         window.closeModal = () => {
@@ -273,22 +190,11 @@ class ChatbotDashboard {
 
         if (this.chatConversations.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="no-data">Nessuna conversazione chatbot trovata</td></tr>';
-            
-            // Aggiorna fonte dati
-            document.getElementById('chatDataSource').textContent = '📡 Fonte dati: Nessun dato';
             return;
         }
 
-        // 🔧 FIX: Ordina per data reale, non per data corrente
-        const sortedConversations = [...this.chatConversations].sort((a, b) => {
-            const dateA = new Date(a.lastActivity || a.createdAt || 0);
-            const dateB = new Date(b.lastActivity || b.createdAt || 0);
-            return dateB - dateA;
-        });
-
-        tbody.innerHTML = sortedConversations.map(conversation => {
-            // 🔧 FIX: Usa timestamp originale, non data corrente
-            const lastActivity = this.formatDate(conversation.lastActivity || conversation.createdAt);
+        tbody.innerHTML = this.chatConversations.map(conversation => {
+            const lastActivity = formatDateTime(conversation.lastActivity);
             const shortId = conversation.id.length > 10 ? conversation.id.substring(0, 10) + '...' : conversation.id;
 
             return `
@@ -312,13 +218,6 @@ class ChatbotDashboard {
                 </tr>
             `;
         }).join('');
-
-        // 🔧 Aggiorna fonte dati
-        const sources = [...new Set(this.chatConversations.map(c => c.source))];
-        document.getElementById('chatDataSource').textContent = `📡 Fonte dati: ${sources.join(', ')}`;
-        
-        // Aggiorna timestamp ultimo aggiornamento
-        document.getElementById('lastChatUpdate').textContent = new Date().toLocaleString('it-IT');
     }
 
     showConversationModal(conversationId) {
