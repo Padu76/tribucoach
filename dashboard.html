@@ -1211,6 +1211,9 @@
             quizData.forEach(quiz => {
                 const row = document.createElement('tr');
                 
+                // Debug: vedi struttura dati
+                console.log('Quiz data structure:', quiz);
+                
                 // Formatta la data
                 let formattedDate = 'N/A';
                 if (quiz.timestamp) {
@@ -1221,27 +1224,38 @@
                     }
                 }
                 
+                // Accesso ai dati con possibili varianti di nomi
+                const getNomeField = () => quiz.nome || quiz.name || quiz.firstName || 'Anonimo';
+                const getEtaField = () => quiz.eta || quiz.age || quiz.anni || 'N/A';
+                const getEmailField = () => quiz.email || quiz.emailAddress || 'Non fornita';
+                const getWhatsappField = () => quiz.whatsapp || quiz.telefono || quiz.phone || quiz.cellulare || 'N/A';
+                const getGenereField = () => quiz.genere || quiz.gender || quiz.sesso || 'N/A';
+                const getProfiloField = () => quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza || 'N/A';
+                const getObiettiviField = () => quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || 'N/A';
+                const getTipoAllenamentoField = () => quiz.tipoAllenamento || quiz.allenamento || quiz.workout || quiz.training || 'N/A';
+                const getOstacoliField = () => quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi || 'N/A';
+                
                 // Calcola punteggio
                 const score = calculateQuizScore(quiz);
                 
                 row.innerHTML = `
-                    <td>${quiz.nome || 'Anonimo'}</td>
-                    <td>${quiz.eta || 'N/A'}</td>
-                    <td>${quiz.email || 'Non fornita'}</td>
-                    <td>${quiz.whatsapp || 'N/A'}</td>
-                    <td>${quiz.genere || 'N/A'}</td>
-                    <td>${quiz.profilo || 'N/A'}</td>
-                    <td>${quiz.obiettivi || 'N/A'}</td>
-                    <td>${quiz.tipoAllenamento || 'N/A'}</td>
-                    <td>${quiz.ostacoli || 'N/A'}</td>
+                    <td>${getNomeField()}</td>
+                    <td>${getEtaField()}</td>
+                    <td>${getEmailField()}</td>
+                    <td>${getWhatsappField()}</td>
+                    <td>${getGenereField()}</td>
+                    <td>${getProfiloField()}</td>
+                    <td>${getObiettiviField()}</td>
+                    <td>${getTipoAllenamentoField()}</td>
+                    <td>${getOstacoliField()}</td>
                     <td><span style="color: ${getScoreColor(score)}; font-weight: bold;">${score}%</span></td>
                     <td>${formattedDate}</td>
                     <td>
                         <button class="action-button" onclick="viewQuizDetails('${quiz.id}')">
                             Dettagli
                         </button>
-                        ${quiz.whatsapp ? `
-                            <button class="action-button whatsapp" onclick="window.open('https://wa.me/${quiz.whatsapp.replace(/[^0-9]/g, '')}', '_blank')">
+                        ${getWhatsappField() !== 'N/A' ? `
+                            <button class="action-button whatsapp" onclick="window.open('https://wa.me/${getWhatsappField().replace(/[^0-9]/g, '')}', '_blank')">
                                 WhatsApp
                             </button>
                         ` : ''}
@@ -1250,6 +1264,9 @@
                 
                 tableBody.appendChild(row);
             });
+            
+            // Inizializza grafici dopo aver caricato i dati
+            initializeCharts(quizData);
         }
 
         /**
@@ -1294,13 +1311,13 @@
         }
 
         /**
-         * Aggiorna metriche quiz
+         * Aggiorna metriche quiz con mappatura campi migliorata
          */
         function updateQuizMetrics(quizData) {
             document.getElementById('totalQuizzes').textContent = quizData.length;
             document.getElementById('kpiTotalQuizzes').textContent = quizData.length;
             
-            // Calcola score medio
+            // Calcola score medio con nuovo algoritmo
             const scores = quizData.map(quiz => calculateQuizScore(quiz));
             const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
             document.getElementById('avgQuizScore').textContent = `${avgScore}%`;
@@ -1324,16 +1341,28 @@
             }).length;
             document.getElementById('quizzesToday').textContent = quizzesToday;
             
-            // Obiettivo più popolare
-            const objectives = quizData.map(quiz => quiz.obiettivi).filter(Boolean);
+            // Obiettivo più popolare - prova diversi nomi campo
+            const objectives = quizData.map(quiz => 
+                quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal
+            ).filter(Boolean);
             const mostPopular = getMostFrequent(objectives);
             document.getElementById('mostPopularGoal').textContent = mostPopular || 'N/A';
             document.getElementById('topQuizGoal').textContent = mostPopular || 'N/A';
             
-            // Ostacoli comuni
-            const obstacles = quizData.map(quiz => quiz.ostacoli).filter(Boolean);
+            // Ostacoli comuni - prova diversi nomi campo
+            const obstacles = quizData.map(quiz => 
+                quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi
+            ).filter(Boolean);
             const mostCommon = getMostFrequent(obstacles);
             document.getElementById('mostCommonObstacle').textContent = mostCommon || 'N/A';
+            
+            // Debug: mostra struttura primo quiz
+            if (quizData.length > 0) {
+                console.log('🔍 Struttura primo quiz:', {
+                    allFields: Object.keys(quizData[0]),
+                    sampleData: quizData[0]
+                });
+            }
         }
 
         /**
@@ -1495,39 +1524,183 @@
         }
 
         /**
-         * Calcola punteggio quiz
+         * Calcola punteggio quiz migliorato
          */
         function calculateQuizScore(quiz) {
             let score = 0;
-            let factors = 0;
+            let maxScore = 0;
             
-            // Fattori di scoring
-            if (quiz.eta) {
-                factors++;
-                if (parseInt(quiz.eta) >= 18 && parseInt(quiz.eta) <= 65) score += 20;
+            // Debug: vedi tutti i campi disponibili
+            console.log('Quiz fields for scoring:', Object.keys(quiz));
+            
+            // Presenza dati di contatto (40 punti max)
+            maxScore += 40;
+            if (quiz.nome || quiz.name || quiz.firstName) score += 10;
+            if (quiz.email || quiz.emailAddress) score += 15;
+            if (quiz.whatsapp || quiz.telefono || quiz.phone || quiz.cellulare) score += 15;
+            
+            // Completezza profilo (30 punti max)
+            maxScore += 30;
+            if (quiz.eta || quiz.age || quiz.anni) score += 10;
+            if (quiz.genere || quiz.gender || quiz.sesso) score += 5;
+            if (quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza) score += 15;
+            
+            // Motivazione e obiettivi (30 punti max)
+            maxScore += 30;
+            if (quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal) score += 20;
+            if (quiz.tipoAllenamento || quiz.allenamento || quiz.workout || quiz.training) score += 10;
+            
+            // Bonus per risposte dettagliate (bonus fino a 20 punti)
+            if (quiz.risposte && Object.keys(quiz.risposte).length > 5) score += 10;
+            if (quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi) score += 10;
+            
+            return maxScore > 0 ? Math.min(100, Math.round((score / maxScore) * 100)) : 0;
+        }
+
+        /**
+         * Inizializza i grafici Chart.js
+         */
+        function initializeCharts(quizData) {
+            // Prepara dati per grafici
+            const profileData = prepareProfileData(quizData);
+            const goalData = prepareGoalData(quizData);
+            const chatTopicData = prepareChatTopicData(currentConversationsData);
+            
+            // Grafico Profili Fitness
+            const profileCtx = document.getElementById('profileChart');
+            if (profileCtx && profileData.labels.length > 0) {
+                new Chart(profileCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: profileData.labels,
+                        datasets: [{
+                            data: profileData.values,
+                            backgroundColor: ['#ff6600', '#ff9933', '#ffcc66', '#4CAF50', '#2196F3'],
+                            borderWidth: 2,
+                            borderColor: '#333'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#fff' }
+                            }
+                        }
+                    }
+                });
             }
             
-            if (quiz.obiettivi) {
-                factors++;
-                score += 25;
+            // Grafico Obiettivi
+            const goalCtx = document.getElementById('goalChart');
+            if (goalCtx && goalData.labels.length > 0) {
+                new Chart(goalCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: goalData.labels,
+                        datasets: [{
+                            label: 'Frequenza',
+                            data: goalData.values,
+                            backgroundColor: '#ff6600',
+                            borderColor: '#ff4400',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        },
+                        scales: {
+                            y: { 
+                                ticks: { color: '#fff' },
+                                grid: { color: '#444' }
+                            },
+                            x: { 
+                                ticks: { color: '#fff' },
+                                grid: { color: '#444' }
+                            }
+                        }
+                    }
+                });
             }
             
-            if (quiz.profilo) {
-                factors++;
-                score += 20;
+            // Grafico Argomenti Chat
+            const chatCtx = document.getElementById('chatTopicChart');
+            if (chatCtx && chatTopicData.labels.length > 0) {
+                new Chart(chatCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: chatTopicData.labels,
+                        datasets: [{
+                            data: chatTopicData.values,
+                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#9C27B0', '#ff6600'],
+                            borderWidth: 2,
+                            borderColor: '#333'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { color: '#fff' } }
+                        }
+                    }
+                });
             }
+        }
+
+        /**
+         * Prepara dati profili per grafico
+         */
+        function prepareProfileData(quizData) {
+            const profiles = {};
             
-            if (quiz.tipoAllenamento) {
-                factors++;
-                score += 15;
-            }
+            quizData.forEach(quiz => {
+                const profile = quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza || 'Non specificato';
+                profiles[profile] = (profiles[profile] || 0) + 1;
+            });
             
-            if (quiz.email || quiz.whatsapp) {
-                factors++;
-                score += 20;
-            }
+            return {
+                labels: Object.keys(profiles),
+                values: Object.values(profiles)
+            };
+        }
+
+        /**
+         * Prepara dati obiettivi per grafico
+         */
+        function prepareGoalData(quizData) {
+            const goals = {};
             
-            return factors > 0 ? Math.round((score / factors) * (factors / 5) * 100) : 0;
+            quizData.forEach(quiz => {
+                const goal = quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || 'Non specificato';
+                goals[goal] = (goals[goal] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(goals),
+                values: Object.values(goals)
+            };
+        }
+
+        /**
+         * Prepara dati argomenti chat per grafico
+         */
+        function prepareChatTopicData(conversationsData) {
+            const topics = {};
+            
+            conversationsData.forEach(conv => {
+                const topic = conv.topic || 'Non classificato';
+                topics[topic] = (topics[topic] || 0) + 1;
+            });
+            
+            return {
+                labels: Object.keys(topics),
+                values: Object.values(topics)
+            };
         }
 
         /**
