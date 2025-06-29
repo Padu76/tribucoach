@@ -1,286 +1,311 @@
-// Dashboard.js - Versione con fix minimale per visualizzazione messaggi
+// dashboard.js - TribuCoach Dashboard con supporto conversazioni chatbot
+import { 
+    getAllQuizResults, 
+    getLeads, 
+    setupQuizListener, 
+    setupLeadsListener,
+    formatDateTime,
+    calculateLeadScore,
+    getProfileIcon
+} from './firebase-functions.js';
 
 class ChatbotDashboard {
     constructor() {
-        this.conversations = [];
-        this.currentConversation = null;
+        this.quizResults = [];
+        this.chatConversations = [];
+        this.leads = [];
+        this.unsubscribeQuiz = null;
+        this.unsubscribeLeads = null;
         this.init();
     }
 
     async init() {
         console.log('🚀 Inizializzazione Dashboard...');
-        await this.loadConversations();
-        this.setupEventListeners();
-        console.log('✅ Dashboard inizializzata');
+        
+        this.updateConnectionStatus('connecting');
+        
+        try {
+            // Carica dati iniziali
+            await this.loadAllData();
+            
+            // Setup listeners real-time
+            this.setupRealtimeListeners();
+            
+            // Setup event listeners UI
+            this.setupEventListeners();
+            
+            this.updateConnectionStatus('connected');
+            console.log('✅ Dashboard inizializzata con successo');
+            
+        } catch (error) {
+            console.error('❌ Errore inizializzazione dashboard:', error);
+            this.updateConnectionStatus('error');
+        }
     }
 
-    async loadConversations() {
+    async loadAllData() {
+        console.log('📡 Caricamento dati...');
+        
+        // Carica quiz results
+        this.quizResults = await getAllQuizResults();
+        console.log(`📊 Quiz caricati: ${this.quizResults.length}`);
+        
+        // Carica leads 
+        this.leads = await getLeads();
+        console.log(`👥 Leads caricati: ${this.leads.length}`);
+        
+        // 🔥 Carica conversazioni chatbot usando firebase-api.js
+        await this.loadChatConversations();
+        
+        // Aggiorna tutte le sezioni
+        this.updateQuizTable();
+        this.updateChatConversationsTable();
+        this.updateMetrics();
+        this.updateCharts();
+        this.updateInsights();
+        
+        this.updateLastUpdateTime();
+    }
+
+    async loadChatConversations() {
         try {
-            console.log('📡 Caricamento conversazioni...');
-            this.showLoading(true);
+            // Aspetta che window.firebaseAPI sia disponibile
+            let attempts = 0;
+            while (!window.firebaseAPI && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
+            }
             
-            // Usa la funzione esistente che già funziona
-            this.conversations = await window.firebase.getAllConversations();
-            console.log(`💬 Caricate ${this.conversations.length} conversazioni`);
-            
-            this.renderConversationsTable();
-            
+            if (window.firebaseAPI && window.firebaseAPI.getAllConversations) {
+                console.log('💬 Caricamento conversazioni chatbot...');
+                this.chatConversations = await window.firebaseAPI.getAllConversations();
+                console.log(`💬 Conversazioni caricate: ${this.chatConversations.length}`);
+            } else {
+                console.warn('⚠️ firebase-api.js non disponibile, uso dati mock');
+                this.chatConversations = [];
+            }
         } catch (error) {
             console.error('❌ Errore caricamento conversazioni:', error);
-            this.showError('Errore nel caricamento delle conversazioni');
-        } finally {
-            this.showLoading(false);
+            this.chatConversations = [];
         }
     }
 
-    renderConversationsTable() {
-        const tbody = document.querySelector('#conversationsTable tbody');
-        if (!tbody) return;
-
-        tbody.innerHTML = '';
-
-        if (this.conversations.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        <i class="fas fa-inbox"></i> Nessuna conversazione trovata
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-
-        // Ordina per data più recente
-        const sortedConversations = [...this.conversations].sort((a, b) => {
-            const dateA = new Date(a.lastActivity || a.timestamp || a.dateCreated || 0);
-            const dateB = new Date(b.lastActivity || b.timestamp || b.dateCreated || 0);
-            return dateB - dateA;
+    setupRealtimeListeners() {
+        console.log('🔄 Configurazione listeners real-time...');
+        
+        // Quiz listener
+        this.unsubscribeQuiz = setupQuizListener((results) => {
+            this.quizResults = results;
+            this.updateQuizTable();
+            this.updateMetrics();
+            this.updateCharts();
+            this.updateInsights();
+            this.updateLastUpdateTime();
         });
-
-        sortedConversations.forEach(conv => {
-            const row = this.createConversationRow(conv);
-            tbody.appendChild(row);
+        
+        // Leads listener  
+        this.unsubscribeLeads = setupLeadsListener((leads) => {
+            this.leads = leads;
+            this.updateMetrics();
+            this.updateLastUpdateTime();
         });
-
-        console.log(`✅ Renderizzate ${sortedConversations.length} righe`);
-    }
-
-    createConversationRow(conversation) {
-        const row = document.createElement('tr');
-        
-        // Estrae informazioni (compatibile con struttura esistente)
-        const id = conversation.id || 'N/A';
-        const shortId = id.length > 10 ? id.substring(0, 10) + '...' : id;
-        const customerName = conversation.customerName || conversation.customer || 'Cliente Anonimo';
-        const phone = conversation.phone || conversation.customerPhone || 'N/A';
-        const topic = conversation.topic || 'Generale';
-        const messagesCount = conversation.messages ? conversation.messages.length : 0;
-        
-        // Formatta data ultima attività
-        const lastActivity = this.formatDate(conversation.lastActivity || conversation.timestamp || conversation.dateCreated);
-        
-        // Ottieni ultimo messaggio
-        const lastMessage = this.getLastMessage(conversation);
-
-        row.innerHTML = `
-            <td><small class="text-muted">${shortId}</small></td>
-            <td>
-                <strong>${customerName}</strong>
-                ${phone !== 'N/A' ? `<br><small class="text-muted">${phone}</small>` : ''}
-            </td>
-            <td><span class="badge badge-info">${topic}</span></td>
-            <td><small>${lastMessage}</small></td>
-            <td>
-                <small class="text-muted">${lastActivity}</small>
-                <br><small class="text-info">${messagesCount} messaggi</small>
-            </td>
-            <td>
-                <button class="btn btn-primary btn-sm view-conversation" data-conversation-id="${id}">
-                    <i class="fas fa-eye"></i> Vedi Conversazione
-                </button>
-            </td>
-        `;
-
-        return row;
-    }
-
-    getLastMessage(conversation) {
-        if (!conversation.messages || conversation.messages.length === 0) {
-            return conversation.lastMessageSnippet || 'Nessun messaggio';
-        }
-
-        const lastMsg = conversation.messages[conversation.messages.length - 1];
-        let text = lastMsg.text || lastMsg.message || lastMsg.content || 'Messaggio vuoto';
-        
-        if (text.length > 50) {
-            text = text.substring(0, 50) + '...';
-        }
-
-        return text;
-    }
-
-    formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleString('it-IT', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (error) {
-            return 'Data non valida';
-        }
     }
 
     setupEventListeners() {
+        // Gestione click sui pulsanti delle conversazioni
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.view-conversation')) {
-                const conversationId = e.target.closest('.view-conversation').dataset.conversationId;
+            if (e.target.closest('.view-conversation-btn')) {
+                const conversationId = e.target.closest('.view-conversation-btn').dataset.conversationId;
                 this.showConversationModal(conversationId);
             }
+            
+            if (e.target.closest('.whatsapp-btn')) {
+                const phone = e.target.closest('.whatsapp-btn').dataset.phone;
+                this.openWhatsApp(phone);
+            }
         });
 
-        const refreshBtn = document.getElementById('refreshConversations');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                this.loadConversations();
-            });
-        }
-
-        const searchInput = document.getElementById('searchConversations');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                this.filterConversations(e.target.value);
-            });
-        }
-    }
-
-    async showConversationModal(conversationId) {
-        try {
-            console.log(`🔍 Apertura conversazione: ${conversationId}`);
-            
-            const conversation = this.conversations.find(c => c.id === conversationId);
-            if (!conversation) {
-                this.showError('Conversazione non trovata');
-                return;
-            }
-
-            this.currentConversation = conversation;
-            this.updateConversationModal(conversation);
-            
-            const modal = document.getElementById('conversationModal');
-            if (modal) {
-                $(modal).modal('show');
-            }
-            
-        } catch (error) {
-            console.error('❌ Errore apertura conversazione:', error);
-            this.showError('Errore nell\'apertura della conversazione');
-        }
-    }
-
-    updateConversationModal(conversation) {
-        // Aggiorna header del modal
-        const elements = {
-            'modalConversationId': conversation.id || 'N/A',
-            'modalCustomerName': conversation.customerName || conversation.customer || 'Cliente Anonimo',
-            'modalPhone': conversation.phone || conversation.customerPhone || 'N/A',
-            'modalTopic': conversation.topic || 'Generale',
-            'modalCreatedAt': this.formatDate(conversation.createdAt || conversation.dateCreated || conversation.timestamp),
-            'modalMessageCount': conversation.messages ? conversation.messages.length : 0
+        // Chiusura modal
+        window.closeModal = () => {
+            document.getElementById('detailsModal').style.display = 'none';
         };
 
-        // Aggiorna gli elementi DOM
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
+        // Click fuori dal modal per chiudere
+        document.getElementById('detailsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'detailsModal') {
+                window.closeModal();
             }
         });
-
-        // 🔥 FIX PRINCIPALE: Renderizza i messaggi correttamente
-        this.renderMessages(conversation.messages || []);
     }
 
-    renderMessages(messages) {
-        const container = document.getElementById('messagesContainer');
-        if (!container) {
-            console.error('❌ Container messaggi non trovato');
+    updateQuizTable() {
+        const tbody = document.getElementById('quiz-results-table-body');
+        if (!tbody) return;
+
+        if (this.quizResults.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" class="no-data">Nessun risultato quiz trovato</td></tr>';
             return;
         }
 
-        container.innerHTML = '';
+        tbody.innerHTML = this.quizResults.map(result => {
+            const score = calculateLeadScore(result);
+            const profileIcon = getProfileIcon(result.profile_type);
+            const timestamp = formatDateTime(result.timestamp);
 
-        if (messages.length === 0) {
-            container.innerHTML = `
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> Nessun messaggio in questa conversazione
-                </div>
+            return `
+                <tr>
+                    <td><strong>${result.name || 'N/A'}</strong></td>
+                    <td>${result.age || 'N/A'}</td>
+                    <td>${result.email || 'N/A'}</td>
+                    <td>${result.whatsapp || 'N/A'}</td>
+                    <td>${result.gender || 'N/A'}</td>
+                    <td>${profileIcon} ${result.profile_type || 'N/A'}</td>
+                    <td>${Array.isArray(result.goals) ? result.goals.slice(0,2).join(', ') : result.goals || 'N/A'}</td>
+                    <td>${result.training_style || 'N/A'}</td>
+                    <td>${Array.isArray(result.obstacles) ? result.obstacles.slice(0,2).join(', ') : result.obstacles || 'N/A'}</td>
+                    <td><span style="color: ${score >= 70 ? '#4CAF50' : score >= 50 ? '#ff9800' : '#f44336'}">${score}%</span></td>
+                    <td>${timestamp}</td>
+                    <td>
+                        <button class="action-button" onclick="showQuizDetails('${result.id}')">
+                            👁️ Dettagli
+                        </button>
+                        ${result.whatsapp ? `
+                            <button class="action-button whatsapp whatsapp-btn" data-phone="${result.whatsapp}">
+                                📱 WhatsApp
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
             `;
+        }).join('');
+    }
+
+    updateChatConversationsTable() {
+        const tbody = document.getElementById('chatbot-conversations-table-body');
+        if (!tbody) return;
+
+        if (this.chatConversations.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">Nessuna conversazione chatbot trovata</td></tr>';
             return;
         }
 
-        console.log(`🔧 Rendering ${messages.length} messaggi:`, messages);
+        tbody.innerHTML = this.chatConversations.map(conversation => {
+            const lastActivity = formatDateTime(conversation.lastActivity);
+            const shortId = conversation.id.length > 10 ? conversation.id.substring(0, 10) + '...' : conversation.id;
 
-        messages.forEach((message, index) => {
-            const messageElement = this.createMessageElement(message, index);
-            container.appendChild(messageElement);
-        });
-
-        // Scroll to bottom
-        container.scrollTop = container.scrollHeight;
-        console.log(`✅ Renderizzati ${messages.length} messaggi`);
+            return `
+                <tr>
+                    <td><code>${shortId}</code></td>
+                    <td><strong>${conversation.customerName || 'Cliente Anonimo'}</strong></td>
+                    <td>${conversation.phone || 'N/A'}</td>
+                    <td><small>${conversation.lastMessageSnippet || 'Nessun messaggio'}</small></td>
+                    <td><span style="background: #ff6600; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${conversation.topic || 'Generale'}</span></td>
+                    <td>${lastActivity}</td>
+                    <td>
+                        <button class="action-button view-conversation-btn" data-conversation-id="${conversation.id}">
+                            👁️ Vedi Conversazione
+                        </button>
+                        ${conversation.phone && conversation.phone !== 'N/A' ? `
+                            <button class="action-button whatsapp whatsapp-btn" data-phone="${conversation.phone}">
+                                📱 WhatsApp
+                            </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `;
+        }).join('');
     }
 
-    createMessageElement(message, index) {
-        const div = document.createElement('div');
-        div.className = 'message-item mb-3';
-
-        // 🔥 FIX: Gestisce diversi formati di messaggi
-        const isUser = message.sender === 'user' || 
-                      message.role === 'user' || 
-                      message.type === 'user' ||
-                      message.from === 'user';
+    showConversationModal(conversationId) {
+        console.log(`🔍 Apertura conversazione: ${conversationId}`);
         
-        const senderClass = isUser ? 'user-message' : 'bot-message';
-        const senderLabel = isUser ? 'Utente' : 'Bot';
-        const senderIcon = isUser ? 'fa-user' : 'fa-robot';
+        const conversation = this.chatConversations.find(c => c.id === conversationId);
+        if (!conversation) {
+            alert('Conversazione non trovata');
+            return;
+        }
 
-        // 🔥 FIX: Estrae il testo del messaggio da diversi campi possibili
-        const messageText = message.text || 
-                           message.message || 
-                           message.content || 
-                           message.body || 
-                           'Messaggio vuoto';
+        const modal = document.getElementById('detailsModal');
+        const modalBody = document.getElementById('modal-body-content');
 
-        // Formatta timestamp
-        const timestamp = this.formatDate(
-            message.timestamp || 
-            message.createdAt || 
-            message.date || 
-            message.time
-        );
+        modalBody.innerHTML = `
+            <h3>💬 Dettagli Conversazione Chatbot</h3>
+            
+            <div class="conversation-header">
+                <p><strong>ID Conversazione:</strong> ${conversation.id}</p>
+                <p><strong>Cliente:</strong> ${conversation.customerName || 'Cliente Anonimo'}</p>
+                <p><strong>Telefono:</strong> ${conversation.phone || 'N/A'}</p>
+                <p><strong>Argomento:</strong> ${conversation.topic || 'Generale'}</p>
+                <p><strong>Data Creazione:</strong> ${formatDateTime(conversation.createdAt)}</p>
+                <p><strong>Ultima Attività:</strong> ${formatDateTime(conversation.lastActivity)}</p>
+                <p><strong>Numero Messaggi:</strong> ${conversation.messages ? conversation.messages.length : 0}</p>
+                <p><strong>Fonte:</strong> ${conversation.source || 'N/A'}</p>
+            </div>
 
-        div.innerHTML = `
-            <div class="card ${senderClass}" style="margin-bottom: 10px;">
-                <div class="card-header d-flex justify-content-between align-items-center" 
-                     style="background-color: ${isUser ? '#e3f2fd' : '#f5f5f5'};">
-                    <span>
-                        <i class="fas ${senderIcon}"></i> ${senderLabel}
-                    </span>
-                    <small class="text-muted">${timestamp}</small>
+            <div class="conversation-messages">
+                <h4>📝 Cronologia Messaggi</h4>
+                <div class="messages-container">
+                    ${this.renderConversationMessages(conversation.messages || [])}
                 </div>
-                <div class="card-body" style="padding: 10px;">
-                    <p class="card-text" style="margin: 0; white-space: pre-wrap;">${this.escapeHtml(messageText)}</p>
-                </div>
+            </div>
+
+            <div class="conversation-actions">
+                ${conversation.phone && conversation.phone !== 'N/A' ? `
+                    <button class="action-button whatsapp whatsapp-btn" data-phone="${conversation.phone}">
+                        📱 Contatta via WhatsApp
+                    </button>
+                ` : ''}
+                <button class="action-button" onclick="navigator.clipboard.writeText('${conversation.id}')">
+                    📋 Copia ID Conversazione
+                </button>
             </div>
         `;
 
-        return div;
+        modal.style.display = 'flex';
+    }
+
+    renderConversationMessages(messages) {
+        if (!messages || messages.length === 0) {
+            return '<p class="no-messages">❌ Nessun messaggio in questa conversazione</p>';
+        }
+
+        return messages.map((message, index) => {
+            // Determina il tipo di messaggio
+            const isUser = message.role === 'user' || 
+                          message.sender === 'user' || 
+                          message.type === 'user' ||
+                          message.from === 'user';
+            
+            const messageClass = isUser ? 'user-message' : 'assistant-message';
+            const icon = isUser ? '👤' : '🤖';
+            const role = isUser ? 'Utente' : 'Assistente';
+            
+            // Estrae il testo del messaggio
+            const messageText = message.text || 
+                               message.message || 
+                               message.content || 
+                               message.body || 
+                               'Messaggio vuoto';
+            
+            // Formatta timestamp
+            const timestamp = formatDateTime(
+                message.timestamp || 
+                message.createdAt || 
+                message.date || 
+                message.time
+            );
+
+            return `
+                <div class="message-bubble ${messageClass}">
+                    <div class="message-header">
+                        <span class="message-icon">${icon}</span>
+                        <span class="message-role">${role}</span>
+                        <span class="message-time">${timestamp}</span>
+                    </div>
+                    <div class="message-content">${this.escapeHtml(messageText)}</div>
+                </div>
+            `;
+        }).join('');
     }
 
     escapeHtml(text) {
@@ -289,50 +314,114 @@ class ChatbotDashboard {
         return div.innerHTML;
     }
 
-    filterConversations(searchTerm) {
-        const rows = document.querySelectorAll('#conversationsTable tbody tr');
-        const term = searchTerm.toLowerCase();
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const shouldShow = text.includes(term);
-            row.style.display = shouldShow ? '' : 'none';
-        });
+    openWhatsApp(phone) {
+        if (!phone || phone === 'N/A') {
+            alert('Numero di telefono non disponibile');
+            return;
+        }
+        
+        // Pulisce il numero
+        const cleanPhone = phone.replace(/[^\d+]/g, '');
+        const whatsappUrl = `https://wa.me/${cleanPhone}`;
+        window.open(whatsappUrl, '_blank');
     }
 
-    showLoading(show) {
-        const loadingElement = document.getElementById('loadingSpinner');
-        if (loadingElement) {
-            loadingElement.style.display = show ? 'block' : 'none';
+    updateMetrics() {
+        // Metriche principali
+        document.getElementById('totalQuizzes').textContent = this.quizResults.length;
+        document.getElementById('totalChatConversations').textContent = this.chatConversations.length;
+        
+        // Score medio
+        const avgScore = this.quizResults.length > 0 
+            ? Math.round(this.quizResults.reduce((sum, q) => sum + calculateLeadScore(q), 0) / this.quizResults.length)
+            : 0;
+        document.getElementById('avgQuizScore').textContent = `${avgScore}%`;
+        
+        // KPI
+        document.getElementById('kpiTotalQuizzes').textContent = this.quizResults.length;
+        document.getElementById('kpiTotalChatConversations').textContent = this.chatConversations.length;
+        
+        // High score leads
+        const highScoreLeads = this.quizResults.filter(q => calculateLeadScore(q) >= 70).length;
+        document.getElementById('highScoreLeads').textContent = highScoreLeads;
+    }
+
+    updateCharts() {
+        // Placeholder per i grafici - implementa se necessario
+        console.log('📊 Aggiornamento grafici...');
+    }
+
+    updateInsights() {
+        // Qualified leads
+        const qualifiedCount = this.quizResults.filter(q => calculateLeadScore(q) >= 70).length;
+        document.getElementById('qualifiedLeadsCount').textContent = qualifiedCount;
+
+        // Most popular goal
+        const goals = this.quizResults.flatMap(q => Array.isArray(q.goals) ? q.goals : [q.goals]).filter(Boolean);
+        const goalCounts = goals.reduce((acc, goal) => {
+            acc[goal] = (acc[goal] || 0) + 1;
+            return acc;
+        }, {});
+        const mostPopularGoal = Object.keys(goalCounts).reduce((a, b) => goalCounts[a] > goalCounts[b] ? a : b, 'N/A');
+        document.getElementById('mostPopularGoal').textContent = mostPopularGoal;
+
+        // Most common obstacle
+        const obstacles = this.quizResults.flatMap(q => Array.isArray(q.obstacles) ? q.obstacles : [q.obstacles]).filter(Boolean);
+        const obstacleCounts = obstacles.reduce((acc, obstacle) => {
+            acc[obstacle] = (acc[obstacle] || 0) + 1;
+            return acc;
+        }, {});
+        const mostCommonObstacle = Object.keys(obstacleCounts).reduce((a, b) => obstacleCounts[a] > obstacleCounts[b] ? a : b, 'N/A');
+        document.getElementById('mostCommonObstacle').textContent = mostCommonObstacle;
+    }
+
+    updateConnectionStatus(status) {
+        const statusEl = document.getElementById('connection-status');
+        statusEl.className = `connection-status status-${status}`;
+        
+        switch(status) {
+            case 'connected':
+                statusEl.textContent = '✅ Connesso a Firebase';
+                break;
+            case 'connecting':
+                statusEl.textContent = '⏳ Connessione in corso...';
+                break;
+            case 'error':
+                statusEl.textContent = '❌ Errore di connessione';
+                break;
         }
     }
 
-    showError(message) {
-        console.error('❌ Errore:', message);
-        if (typeof toastr !== 'undefined') {
-            toastr.error(message);
-        } else {
-            alert('Errore: ' + message);
-        }
+    updateLastUpdateTime() {
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('it-IT');
     }
 
-    showSuccess(message) {
-        console.log('✅ Successo:', message);
-        if (typeof toastr !== 'undefined') {
-            toastr.success(message);
-        }
+    // Cleanup
+    destroy() {
+        if (this.unsubscribeQuiz) this.unsubscribeQuiz();
+        if (this.unsubscribeLeads) this.unsubscribeLeads();
     }
 }
 
-// Inizializza quando il DOM è pronto
+// Funzioni globali per il HTML
+window.showQuizDetails = (quizId) => {
+    console.log('Mostra dettagli quiz:', quizId);
+    // Implementa se necessario
+};
+
+window.closeModal = () => {
+    document.getElementById('detailsModal').style.display = 'none';
+};
+
+// Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Inizializzazione Dashboard Chatbot...');
+    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
     window.chatbotDashboard = new ChatbotDashboard();
 });
 
-// Funzioni helper globali
-window.refreshDashboard = () => {
+// Cleanup quando la pagina viene chiusa
+window.addEventListener('beforeunload', () => {
     if (window.chatbotDashboard) {
-        window.chatbotDashboard.loadConversations();
+        window.chatbotDashboard.destroy();
     }
-};
+});
