@@ -1,0 +1,44 @@
+# netlify.toml - Configurazione per deploy automatico Netlify
+
+[build]
+  # Directory di output
+  publish = "dist"
+  
+  # Comando di build
+  command = "npm run build"
+
+[functions]
+  # Directory delle functions
+  directory = "netlify/functions"
+
+# 🔄 SCHEDULED FUNCTIONS - Import automatico ogni ora
+[[plugins]]
+  package = "@netlify/plugin-scheduled-functions"
+  
+  [plugins.inputs]
+    # Esegui import ogni ora
+    schedule = "0 * * * *"
+
+# ⚙️ Environment Variables necessarie
+[build.environment]
+  NODE_VERSION = "18"
+
+# 🚀 Redirects per API
+[[redirects]]
+  from = "/api/auto-import"
+  to = "/.netlify/functions/auto-import"
+  status = 200
+
+[[redirects]]
+  from = "/api/manual-import"
+  to = "/.netlify/functions/manual-import"
+  status = 200
+
+# 📋 Headers di sicurezza
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
