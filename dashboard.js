@@ -69,19 +69,23 @@ class ChatbotDashboard {
 
     async loadChatConversations() {
         try {
-            // Aspetta che window.firebaseAPI sia disponibile
+            console.log('💬 Caricamento conversazioni chatbot...');
+            
+            // Aspetta che firebase-api.js sia caricato
             let attempts = 0;
-            while (!window.firebaseAPI && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
+            while (!window.firebaseAPI && attempts < 100) {
+                console.log(`⏳ Tentativo ${attempts + 1}/100 - Aspetto firebase-api.js...`);
+                await new Promise(resolve => setTimeout(resolve, 200));
                 attempts++;
             }
             
             if (window.firebaseAPI && window.firebaseAPI.getAllConversations) {
-                console.log('💬 Caricamento conversazioni chatbot...');
+                console.log('✅ firebase-api.js trovato, carico conversazioni...');
                 this.chatConversations = await window.firebaseAPI.getAllConversations();
                 console.log(`💬 Conversazioni caricate: ${this.chatConversations.length}`);
             } else {
-                console.warn('⚠️ firebase-api.js non disponibile, uso dati mock');
+                console.error('❌ firebase-api.js NON TROVATO dopo 100 tentativi');
+                console.log('🔍 Variabili window disponibili:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
                 this.chatConversations = [];
             }
         } catch (error) {
