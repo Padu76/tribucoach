@@ -1,5 +1,4 @@
-// Dashboard per gestione conversazioni chatbot
-// Versione aggiornata compatibile con firebase-api.js
+// Dashboard.js - Versione con fix minimale per visualizzazione messaggi
 
 class ChatbotDashboard {
     constructor() {
@@ -10,43 +9,9 @@ class ChatbotDashboard {
 
     async init() {
         console.log('🚀 Inizializzazione Dashboard...');
-        
-        // 🔥 ASPETTA CHE FIREBASEAPI SIA PRONTO
-        await this.waitForFirebaseAPI();
-        
-        if (!this.firebaseAPI || !this.firebaseAPI.getAllConversations) {
-            console.error('❌ FirebaseAPI non trovato o metodo getAllConversations mancante');
-            console.log('🔍 Window keys:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
-            this.showError('Firebase API non disponibile');
-            return;
-        }
-        
-        console.log('✅ Firebase API trovata con getAllConversations');
-
-        // Carica le conversazioni
         await this.loadConversations();
-        
-        // Setup event listeners
         this.setupEventListeners();
-        
         console.log('✅ Dashboard inizializzata');
-    }
-
-    // 🔥 NUOVA FUNZIONE: Aspetta che firebaseAPI sia pronto
-    async waitForFirebaseAPI(maxAttempts = 50) {
-        for (let i = 0; i < maxAttempts; i++) {
-            if (window.firebaseAPI && typeof window.firebaseAPI.getAllConversations === 'function') {
-                this.firebaseAPI = window.firebaseAPI;
-                console.log('✅ FirebaseAPI trovato al tentativo', i + 1);
-                return true;
-            }
-            
-            console.log(`⏳ Tentativo ${i + 1}/${maxAttempts} - Aspetto firebaseAPI...`);
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-        
-        console.error('❌ Timeout: firebaseAPI non trovato dopo', maxAttempts, 'tentavi');
-        return false;
     }
 
     async loadConversations() {
@@ -54,12 +19,10 @@ class ChatbotDashboard {
             console.log('📡 Caricamento conversazioni...');
             this.showLoading(true);
             
-            // Usa l'API Firebase
-            this.conversations = await this.firebaseAPI.getAllConversations();
-            
+            // Usa la funzione esistente che già funziona
+            this.conversations = await window.firebase.getAllConversations();
             console.log(`💬 Caricate ${this.conversations.length} conversazioni`);
             
-            // Renderizza la tabella
             this.renderConversationsTable();
             
         } catch (error) {
@@ -72,12 +35,8 @@ class ChatbotDashboard {
 
     renderConversationsTable() {
         const tbody = document.querySelector('#conversationsTable tbody');
-        if (!tbody) {
-            console.error('❌ Tabella conversazioni non trovata');
-            return;
-        }
+        if (!tbody) return;
 
-        // Pulisce la tabella
         tbody.innerHTML = '';
 
         if (this.conversations.length === 0) {
@@ -93,12 +52,11 @@ class ChatbotDashboard {
 
         // Ordina per data più recente
         const sortedConversations = [...this.conversations].sort((a, b) => {
-            const dateA = new Date(a.lastActivity || a.createdAt || 0);
-            const dateB = new Date(b.lastActivity || b.createdAt || 0);
+            const dateA = new Date(a.lastActivity || a.timestamp || a.dateCreated || 0);
+            const dateB = new Date(b.lastActivity || b.timestamp || b.dateCreated || 0);
             return dateB - dateA;
         });
 
-        // Renderizza ogni conversazione
         sortedConversations.forEach(conv => {
             const row = this.createConversationRow(conv);
             tbody.appendChild(row);
@@ -110,46 +68,35 @@ class ChatbotDashboard {
     createConversationRow(conversation) {
         const row = document.createElement('tr');
         
-        // Estrae informazioni
+        // Estrae informazioni (compatibile con struttura esistente)
         const id = conversation.id || 'N/A';
         const shortId = id.length > 10 ? id.substring(0, 10) + '...' : id;
-        const customerName = conversation.customerName || 'Cliente Anonimo';
-        const phone = conversation.phone || 'N/A';
+        const customerName = conversation.customerName || conversation.customer || 'Cliente Anonimo';
+        const phone = conversation.phone || conversation.customerPhone || 'N/A';
         const topic = conversation.topic || 'Generale';
         const messagesCount = conversation.messages ? conversation.messages.length : 0;
         
         // Formatta data ultima attività
-        const lastActivity = this.formatDate(conversation.lastActivity || conversation.createdAt);
+        const lastActivity = this.formatDate(conversation.lastActivity || conversation.timestamp || conversation.dateCreated);
         
         // Ottieni ultimo messaggio
         const lastMessage = this.getLastMessage(conversation);
 
         row.innerHTML = `
-            <td>
-                <small class="text-muted">${shortId}</small>
-            </td>
+            <td><small class="text-muted">${shortId}</small></td>
             <td>
                 <strong>${customerName}</strong>
                 ${phone !== 'N/A' ? `<br><small class="text-muted">${phone}</small>` : ''}
             </td>
-            <td>
-                <span class="badge badge-info">${topic}</span>
-            </td>
-            <td>
-                <small>${lastMessage}</small>
-            </td>
+            <td><span class="badge badge-info">${topic}</span></td>
+            <td><small>${lastMessage}</small></td>
             <td>
                 <small class="text-muted">${lastActivity}</small>
                 <br><small class="text-info">${messagesCount} messaggi</small>
             </td>
             <td>
-                <button class="btn btn-primary btn-sm view-conversation" 
-                        data-conversation-id="${id}">
+                <button class="btn btn-primary btn-sm view-conversation" data-conversation-id="${id}">
                     <i class="fas fa-eye"></i> Vedi Conversazione
-                </button>
-                <button class="btn btn-secondary btn-sm export-conversation" 
-                        data-conversation-id="${id}">
-                    <i class="fas fa-download"></i> Esporta
                 </button>
             </td>
         `;
@@ -159,13 +106,12 @@ class ChatbotDashboard {
 
     getLastMessage(conversation) {
         if (!conversation.messages || conversation.messages.length === 0) {
-            return 'Nessun messaggio';
+            return conversation.lastMessageSnippet || 'Nessun messaggio';
         }
 
         const lastMsg = conversation.messages[conversation.messages.length - 1];
-        let text = lastMsg.text || lastMsg.message || 'Messaggio vuoto';
+        let text = lastMsg.text || lastMsg.message || lastMsg.content || 'Messaggio vuoto';
         
-        // Trunca se troppo lungo
         if (text.length > 50) {
             text = text.substring(0, 50) + '...';
         }
@@ -191,20 +137,13 @@ class ChatbotDashboard {
     }
 
     setupEventListeners() {
-        // Event delegation per i pulsanti dinamici
         document.addEventListener('click', (e) => {
             if (e.target.closest('.view-conversation')) {
                 const conversationId = e.target.closest('.view-conversation').dataset.conversationId;
                 this.showConversationModal(conversationId);
             }
-            
-            if (e.target.closest('.export-conversation')) {
-                const conversationId = e.target.closest('.export-conversation').dataset.conversationId;
-                this.exportConversation(conversationId);
-            }
         });
 
-        // Refresh button
         const refreshBtn = document.getElementById('refreshConversations');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
@@ -212,7 +151,6 @@ class ChatbotDashboard {
             });
         }
 
-        // Search input
         const searchInput = document.getElementById('searchConversations');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
@@ -225,20 +163,15 @@ class ChatbotDashboard {
         try {
             console.log(`🔍 Apertura conversazione: ${conversationId}`);
             
-            // Trova la conversazione
             const conversation = this.conversations.find(c => c.id === conversationId);
             if (!conversation) {
-                console.error('❌ Conversazione non trovata:', conversationId);
                 this.showError('Conversazione non trovata');
                 return;
             }
 
             this.currentConversation = conversation;
-            
-            // Aggiorna il modal
             this.updateConversationModal(conversation);
             
-            // Mostra il modal
             const modal = document.getElementById('conversationModal');
             if (modal) {
                 $(modal).modal('show');
@@ -252,14 +185,24 @@ class ChatbotDashboard {
 
     updateConversationModal(conversation) {
         // Aggiorna header del modal
-        document.getElementById('modalConversationId').textContent = conversation.id || 'N/A';
-        document.getElementById('modalCustomerName').textContent = conversation.customerName || 'Cliente Anonimo';
-        document.getElementById('modalPhone').textContent = conversation.phone || 'N/A';
-        document.getElementById('modalTopic').textContent = conversation.topic || 'Generale';
-        document.getElementById('modalCreatedAt').textContent = this.formatDate(conversation.createdAt);
-        document.getElementById('modalMessageCount').textContent = conversation.messages ? conversation.messages.length : 0;
+        const elements = {
+            'modalConversationId': conversation.id || 'N/A',
+            'modalCustomerName': conversation.customerName || conversation.customer || 'Cliente Anonimo',
+            'modalPhone': conversation.phone || conversation.customerPhone || 'N/A',
+            'modalTopic': conversation.topic || 'Generale',
+            'modalCreatedAt': this.formatDate(conversation.createdAt || conversation.dateCreated || conversation.timestamp),
+            'modalMessageCount': conversation.messages ? conversation.messages.length : 0
+        };
 
-        // Renderizza i messaggi
+        // Aggiorna gli elementi DOM
+        Object.entries(elements).forEach(([id, value]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        });
+
+        // 🔥 FIX PRINCIPALE: Renderizza i messaggi correttamente
         this.renderMessages(conversation.messages || []);
     }
 
@@ -281,6 +224,8 @@ class ChatbotDashboard {
             return;
         }
 
+        console.log(`🔧 Rendering ${messages.length} messaggi:`, messages);
+
         messages.forEach((message, index) => {
             const messageElement = this.createMessageElement(message, index);
             container.appendChild(messageElement);
@@ -288,7 +233,6 @@ class ChatbotDashboard {
 
         // Scroll to bottom
         container.scrollTop = container.scrollHeight;
-        
         console.log(`✅ Renderizzati ${messages.length} messaggi`);
     }
 
@@ -296,29 +240,42 @@ class ChatbotDashboard {
         const div = document.createElement('div');
         div.className = 'message-item mb-3';
 
-        // Determina il tipo di messaggio
-        const isUser = message.sender === 'user' || message.type === 'user';
+        // 🔥 FIX: Gestisce diversi formati di messaggi
+        const isUser = message.sender === 'user' || 
+                      message.role === 'user' || 
+                      message.type === 'user' ||
+                      message.from === 'user';
+        
         const senderClass = isUser ? 'user-message' : 'bot-message';
         const senderLabel = isUser ? 'Utente' : 'Bot';
         const senderIcon = isUser ? 'fa-user' : 'fa-robot';
 
-        // Formatta timestamp
-        const timestamp = this.formatDate(message.timestamp || message.createdAt);
+        // 🔥 FIX: Estrae il testo del messaggio da diversi campi possibili
+        const messageText = message.text || 
+                           message.message || 
+                           message.content || 
+                           message.body || 
+                           'Messaggio vuoto';
 
-        // Testo del messaggio
-        const messageText = message.text || message.message || 'Messaggio vuoto';
+        // Formatta timestamp
+        const timestamp = this.formatDate(
+            message.timestamp || 
+            message.createdAt || 
+            message.date || 
+            message.time
+        );
 
         div.innerHTML = `
-            <div class="card ${senderClass}">
-                <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card ${senderClass}" style="margin-bottom: 10px;">
+                <div class="card-header d-flex justify-content-between align-items-center" 
+                     style="background-color: ${isUser ? '#e3f2fd' : '#f5f5f5'};">
                     <span>
                         <i class="fas ${senderIcon}"></i> ${senderLabel}
                     </span>
                     <small class="text-muted">${timestamp}</small>
                 </div>
-                <div class="card-body">
-                    <p class="card-text">${this.escapeHtml(messageText)}</p>
-                    ${message.metadata ? `<small class="text-muted">Metadata: ${JSON.stringify(message.metadata)}</small>` : ''}
+                <div class="card-body" style="padding: 10px;">
+                    <p class="card-text" style="margin: 0; white-space: pre-wrap;">${this.escapeHtml(messageText)}</p>
                 </div>
             </div>
         `;
@@ -343,32 +300,6 @@ class ChatbotDashboard {
         });
     }
 
-    exportConversation(conversationId) {
-        try {
-            const conversation = this.conversations.find(c => c.id === conversationId);
-            if (!conversation) {
-                console.error('❌ Conversazione non trovata per export:', conversationId);
-                return;
-            }
-
-            const dataStr = JSON.stringify(conversation, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `conversazione_${conversationId}_${new Date().toISOString().split('T')[0]}.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            console.log('✅ Conversazione esportata:', conversationId);
-            
-        } catch (error) {
-            console.error('❌ Errore export conversazione:', error);
-            this.showError('Errore nell\'esportazione');
-        }
-    }
-
     showLoading(show) {
         const loadingElement = document.getElementById('loadingSpinner');
         if (loadingElement) {
@@ -378,8 +309,6 @@ class ChatbotDashboard {
 
     showError(message) {
         console.error('❌ Errore:', message);
-        
-        // Mostra toast di errore se disponibile
         if (typeof toastr !== 'undefined') {
             toastr.error(message);
         } else {
@@ -389,15 +318,13 @@ class ChatbotDashboard {
 
     showSuccess(message) {
         console.log('✅ Successo:', message);
-        
-        // Mostra toast di successo se disponibile
         if (typeof toastr !== 'undefined') {
             toastr.success(message);
         }
     }
 }
 
-// Inizializza la dashboard quando il DOM è pronto
+// Inizializza quando il DOM è pronto
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Inizializzazione Dashboard Chatbot...');
     window.chatbotDashboard = new ChatbotDashboard();
@@ -407,26 +334,5 @@ document.addEventListener('DOMContentLoaded', () => {
 window.refreshDashboard = () => {
     if (window.chatbotDashboard) {
         window.chatbotDashboard.loadConversations();
-    }
-};
-
-window.exportAllConversations = () => {
-    if (window.chatbotDashboard && window.chatbotDashboard.conversations) {
-        try {
-            const dataStr = JSON.stringify(window.chatbotDashboard.conversations, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `tutte_conversazioni_${new Date().toISOString().split('T')[0]}.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            console.log('✅ Tutte le conversazioni esportate');
-            
-        } catch (error) {
-            console.error('❌ Errore export totale:', error);
-        }
     }
 };
