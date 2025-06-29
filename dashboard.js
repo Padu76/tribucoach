@@ -11,12 +11,16 @@ class ChatbotDashboard {
     async init() {
         console.log('🚀 Inizializzazione Dashboard...');
         
-        // Aspetta che Firebase sia pronto
-        if (typeof window.firebaseAPI === 'undefined') {
-            console.error('❌ Firebase API non trovata');
+        // Aspetta che Firebase sia pronto - prova diversi nomi
+        this.firebaseAPI = window.firebaseAPI || window.firebase || window.FirebaseAPI || firebase;
+        
+        if (!this.firebaseAPI || !this.firebaseAPI.getAllConversations) {
+            console.error('❌ Firebase API non trovata. Variabili disponibili:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
             this.showError('Firebase API non disponibile');
             return;
         }
+        
+        console.log('✅ Firebase API trovata:', this.firebaseAPI);
 
         // Carica le conversazioni
         await this.loadConversations();
@@ -32,8 +36,8 @@ class ChatbotDashboard {
             console.log('📡 Caricamento conversazioni...');
             this.showLoading(true);
             
-            // Usa la nuova API Firebase
-            this.conversations = await window.firebaseAPI.getAllConversations();
+            // Usa l'API Firebase trovata
+            this.conversations = await this.firebaseAPI.getAllConversations();
             
             console.log(`💬 Caricate ${this.conversations.length} conversazioni`);
             
