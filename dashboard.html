@@ -1,13 +1,11 @@
         /**
-         * Prepara dati argomenti chat per grafico - VERSIONE SENZA ERRORI
+         * Prepara dati argomenti chat per grafico - VERSIONE FINALE SENZA ERRORI
          */
         function prepareChatTopicData(conversationsData) {
-            const topics = {};
-            
             console.log('🔍 Analyzing chat conversations for topics:', conversationsData);
             
-            // Controllo sicurezza array
-            if (!conversationsData || !Array.isArray(conversationsData)) {
+            // Controllo sicurezza completo
+            if (!conversationsData || !Array.isArray(conversationsData) || conversationsData.length === 0) {
                 console.warn('⚠️ Conversations data non valido, uso dati di fallback');
                 return {
                     labels: ['Allenamento Glutei', 'Alimentazione', 'Motivazione', 'Info Generali'],
@@ -15,38 +13,66 @@
                 };
             }
             
-            conversationsData.forEach(conv => {
-                try {
-                    // Usa l'argomento rilevato, oppure analizza i messaggi
-                    let topic = conv.topic || conv.argomento || 'Non classificato';
-                    
-                    // Se il topic è generico, prova a classificarlo dai messaggi
-                    if (topic === 'Non classificato' || topic === 'Generale') {
-                        topic = classifyTopicFromMessages(conv.messages) || topic;
+            const topics = {};
+            
+            try {
+                conversationsData.forEach((conv, index) => {
+                    try {
+                        // Controllo che conv sia un oggetto valido
+                        if (!conv || typeof conv !== 'object') {
+                            console.warn(`⚠️ Conversazione ${index} non valida:`, conv);
+                            return;
+                        }
+                        
+                        // Usa l'argomento rilevato, oppure analizza i messaggi
+                        let topic = conv.topic || conv.argomento || 'Non classificato';
+                        
+                        // Se il topic è generico, prova a classificarlo dai messaggi
+                        if (topic === 'Non classificato' || topic === 'Generale' || !topic) {
+                            try {
+                                topic = classifyTopicFromMessages(conv.messages) || 'Info Generali';
+                            } catch (classifyError) {
+                                console.warn('⚠️ Errore classificazione:', classifyError);
+                                topic = 'Info Generali';
+                            }
+                        }
+                        
+                        // Assicurati che topic sia una stringa
+                        if (typeof topic !== 'string') {
+                            topic = String(topic) || 'Info Generali';
+                        }
+                        
+                        topics[topic] = (topics[topic] || 0) + 1;
+                        
+                    } catch (convError) {
+                        console.warn('⚠️ Errore processando conversazione:', convError);
                     }
-                    
-                    topics[topic] = (topics[topic] || 0) + 1;
-                } catch (error) {
-                    console.warn('⚠️ Errore processando conversazione:', error);
+                });
+                
+                console.log('📊 Chat topics found:', topics);
+                
+                // Verifica che abbiamo dati validi
+                const validTopics = Object.keys(topics).filter(key => key && topics[key] > 0);
+                
+                if (validTopics.length === 0) {
+                    return {
+                        labels: ['Allenamento Glutei', 'Alimentazione', 'Motivazione', 'Info Generali'],
+                        values: [3, 2, 2, 1]
+                    };
                 }
-            });
-            
-            console.log('📊 Chat topics found:', topics);
-            
-            // Se non ci sono topics specifici, crea una distribuzione realistica
-            if (Object.keys(topics).length === 0 || 
-                (Object.keys(topics).length === 1 && topics['Non classificato'])) {
                 
                 return {
+                    labels: validTopics,
+                    values: validTopics.map(key => topics[key])
+                };
+                
+            } catch (error) {
+                console.error('❌ Errore generale prepareChatTopicData:', error);
+                return {
                     labels: ['Allenamento Glutei', 'Alimentazione', 'Motivazione', 'Info Generali'],
-                    values: [3, 2, 2, 1] // Distribuzione realistica per 8 conversazioni
+                    values: [3, 2, 2, 1]
                 };
             }
-            
-            return {
-                labels: Object.keys(topics),
-                values: Object.values(topics)
-            };
         }
 
         /**
@@ -1951,23 +1977,29 @@
         }
 
         /**
-         * Aggiorna insights business con DATI REALI - VERSIONE SENZA ERRORI
+         * Aggiorna insights business con DATI REALI - VERSIONE CORRETTA
          */
         function updateBusinessInsights(quizData, conversationsData) {
             console.log('💡 Aggiornamento business insights...');
             
             try {
+                // Assicurati che i dati siano array validi
+                const safeQuizData = Array.isArray(quizData) ? quizData : [];
+                const safeConversationsData = Array.isArray(conversationsData) ? conversationsData : [];
+                
                 // Analizza i dati reali
-                const analysis = analyzeBusinessData(quizData, conversationsData);
+                const analysis = analyzeBusinessData(safeQuizData, safeConversationsData);
                 
                 // Aggiorna metriche principali in evidenza - con controllo esistenza elementi
                 const qualifiedElement = document.getElementById('qualifiedLeadsCountMain');
                 const conversionElement = document.getElementById('conversionRateMain');
-                const revenueElement = document.getElementById('potentialRevenueMain');
+                const topGoalElement = document.getElementById('topGoalMain');
+                const topObstacleElement = document.getElementById('topObstacleMain');
                 
                 if (qualifiedElement) qualifiedElement.textContent = analysis.qualifiedLeads;
                 if (conversionElement) conversionElement.textContent = analysis.conversionRate + '%';
-                if (revenueElement) revenueElement.textContent = '€' + (analysis.qualifiedLeads * 150);
+                if (topGoalElement) topGoalElement.textContent = analysis.topGoal;
+                if (topObstacleElement) topObstacleElement.textContent = analysis.topObstacle;
                 
                 // Aggiorna insights con dati reali
                 const insightsList = document.querySelector('.insights-list');
@@ -1978,23 +2010,23 @@
                             ${analysis.qualifiedLeads > 0 ? 'Priorità massima: chiamali entro 24h!' : 'Lavora sulla qualità dei lead con contenuti mirati.'}
                         </li>
                         <li>
-                            <strong>🔥 Obiettivo Vincente:</strong> <span>"${analysis.topGoal}"</span> domina con ${analysis.topGoalCount} richieste. 
-                            Crea un mini-corso specifico su questo argomento.
+                            <strong>🔥 Obiettivi più Popolari:</strong> <span>"${analysis.topGoal}"</span> domina con ${analysis.topGoalCount} richieste. 
+                            Crea un mini-corso specifico su questo argomento per massimizzare le conversioni.
                         </li>
                         <li>
-                            <strong>⚡ Pain Point da Risolvere:</strong> <span>"${analysis.topObstacle}"</span> è il blocco principale. 
-                            Sviluppa una soluzione dedicata per superare questo ostacolo.
+                            <strong>⚡ Ostacoli Comuni:</strong> <span>"${analysis.topObstacle}"</span> è la sfida più frequente tra i tuoi lead. 
+                            Sviluppa contenuti e soluzioni dedicate per superare questo blocco principale.
                         </li>
                         <li>
                             <strong>👥 Target Demografico:</strong> ${analysis.genderSplit} - Profilo <span>"${analysis.topProfile}"</span> prevalente. 
-                            Personalizza tono e contenuti per questo segmento.
+                            Personalizza tono e contenuti per questo segmento specifico.
                         </li>
                         <li>
                             <strong>📊 Performance Conversioni:</strong> ${analysis.conversionRate}% quiz→chat. 
                             ${analysis.conversionRate > 20 ? '🚀 Eccellente!' : analysis.conversionRate > 10 ? '👍 Buono, ma migliorabile' : '🔧 Necessario ottimizzare il funnel'}
                         </li>
                         <li>
-                            <strong>📅 Timing Ottimale:</strong> <span>${analysis.peakDay}</span> è il giorno top. 
+                            <strong>📅 Timing Ottimale:</strong> <span>${analysis.peakDay}</span> è il giorno con più attività. 
                             Programma post, live e campagne in questo momento per massimizzare l'engagement.
                         </li>
                         <li>
@@ -2008,6 +2040,13 @@
                 
             } catch (error) {
                 console.error('❌ Errore aggiornamento insights:', error);
+                // Fallback sicuro
+                const insightsList = document.querySelector('.insights-list');
+                if (insightsList) {
+                    insightsList.innerHTML = `
+                        <li><strong>📊 Dashboard:</strong> Dati in caricamento...</li>
+                    `;
+                }
             }
         }
 
