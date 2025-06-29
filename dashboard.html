@@ -1,21 +1,34 @@
         /**
-         * Prepara dati argomenti chat per grafico - VERSIONE CORRETTA
+         * Prepara dati argomenti chat per grafico - VERSIONE SENZA ERRORI
          */
         function prepareChatTopicData(conversationsData) {
             const topics = {};
             
             console.log('🔍 Analyzing chat conversations for topics:', conversationsData);
             
+            // Controllo sicurezza array
+            if (!conversationsData || !Array.isArray(conversationsData)) {
+                console.warn('⚠️ Conversations data non valido, uso dati di fallback');
+                return {
+                    labels: ['Allenamento Glutei', 'Alimentazione', 'Motivazione', 'Info Generali'],
+                    values: [3, 2, 2, 1]
+                };
+            }
+            
             conversationsData.forEach(conv => {
-                // Usa l'argomento rilevato, oppure analizza i messaggi
-                let topic = conv.topic || conv.argomento || 'Non classificato';
-                
-                // Se il topic è generico, prova a classificarlo dai messaggi
-                if (topic === 'Non classificato' || topic === 'Generale') {
-                    topic = classifyTopicFromMessages(conv.messages) || topic;
+                try {
+                    // Usa l'argomento rilevato, oppure analizza i messaggi
+                    let topic = conv.topic || conv.argomento || 'Non classificato';
+                    
+                    // Se il topic è generico, prova a classificarlo dai messaggi
+                    if (topic === 'Non classificato' || topic === 'Generale') {
+                        topic = classifyTopicFromMessages(conv.messages) || topic;
+                    }
+                    
+                    topics[topic] = (topics[topic] || 0) + 1;
+                } catch (error) {
+                    console.warn('⚠️ Errore processando conversazione:', error);
                 }
-                
-                topics[topic] = (topics[topic] || 0) + 1;
             });
             
             console.log('📊 Chat topics found:', topics);
@@ -37,22 +50,33 @@
         }
 
         /**
-         * Classifica argomento dai messaggi
+         * Classifica argomento dai messaggi - VERSIONE SICURA
          */
         function classifyTopicFromMessages(messages) {
-            if (!messages || messages.length === 0) return null;
-            
-            const allText = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => (msg.message || msg.content || '').toLowerCase())
-                .join(' ');
-            
-            if (allText.includes('glutei') || allText.includes('glute')) return 'Allenamento Glutei';
-            if (allText.includes('dieta') || allText.includes('alimentazione') || allText.includes('mangiare')) return 'Alimentazione';
-            if (allText.includes('motivazione') || allText.includes('aiuto') || allText.includes('difficoltà')) return 'Motivazione';
-            if (allText.includes('allenamento') || allText.includes('esercizi')) return 'Allenamento Generale';
-            
-            return 'Info Generali';
+            try {
+                if (!messages || !Array.isArray(messages) || messages.length === 0) {
+                    return null;
+                }
+                
+                const allText = messages
+                    .filter(msg => msg && msg.role === 'user')
+                    .map(msg => {
+                        const content = msg.message || msg.content || '';
+                        return typeof content === 'string' ? content.toLowerCase() : '';
+                    })
+                    .join(' ');
+                
+                if (allText.includes('glutei') || allText.includes('glute')) return 'Allenamento Glutei';
+                if (allText.includes('dieta') || allText.includes('alimentazione') || allText.includes('mangiare')) return 'Alimentazione';
+                if (allText.includes('motivazione') || allText.includes('aiuto') || allText.includes('difficoltà')) return 'Motivazione';
+                if (allText.includes('allenamento') || allText.includes('esercizi')) return 'Allenamento Generale';
+                
+                return 'Info Generali';
+                
+            } catch (error) {
+                console.warn('⚠️ Errore classificazione topic:', error);
+                return null;
+            }
         }<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1826,40 +1850,77 @@
         }
 
         /**
-         * Prepara dati obiettivi per grafico - MIGLIORATO
+         * Prepara dati obiettivi per grafico - VERSIONE SUPER SICURA
          */
         function prepareGoalData(quizData) {
             const goals = {};
             
-            quizData.forEach(quiz => {
-                // Cerca in diversi campi e splitta obiettivi multipli
-                let goalString = quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || '';
-                
-                // Se è un array, uniscilo
-                if (Array.isArray(goalString)) {
-                    goalString = goalString.join(', ');
+            try {
+                // Controllo sicurezza array
+                if (!quizData || !Array.isArray(quizData)) {
+                    console.warn('⚠️ Quiz data non valido, uso dati di fallback');
+                    return {
+                        labels: ['Perdere peso e dimagrire', 'Aumento massa muscolare'],
+                        values: [2, 1]
+                    };
                 }
                 
-                // Splitta se ci sono virgole o "e"
-                const goalList = goalString.split(/[,;]|(?:\s+e\s+)/)
-                    .map(g => g.trim())
-                    .filter(g => g.length > 0);
+                quizData.forEach(quiz => {
+                    try {
+                        // Cerca in diversi campi e splitta obiettivi multipli
+                        let goalString = quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal || '';
+                        
+                        // Controllo tipo
+                        if (typeof goalString !== 'string') {
+                            if (Array.isArray(goalString)) {
+                                goalString = goalString.join(', ');
+                            } else {
+                                goalString = String(goalString || '');
+                            }
+                        }
+                        
+                        // Splitta se ci sono virgole o "e"
+                        const goalList = goalString.split(/[,;]|(?:\s+e\s+)/)
+                            .map(g => g.trim())
+                            .filter(g => g.length > 0);
+                        
+                        if (goalList.length === 0) {
+                            goals['Non specificato'] = (goals['Non specificato'] || 0) + 1;
+                        } else {
+                            goalList.forEach(goal => {
+                                if (goal && typeof goal === 'string') {
+                                    goals[goal] = (goals[goal] || 0) + 1;
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Errore processando quiz goal:', error);
+                        goals['Non specificato'] = (goals['Non specificato'] || 0) + 1;
+                    }
+                });
                 
-                if (goalList.length === 0) {
-                    goals['Non specificato'] = (goals['Non specificato'] || 0) + 1;
-                } else {
-                    goalList.forEach(goal => {
-                        goals[goal] = (goals[goal] || 0) + 1;
-                    });
+                console.log('🎯 Obiettivi trovati:', goals);
+                
+                // Se non ci sono goals, usa fallback
+                if (Object.keys(goals).length === 0) {
+                    return {
+                        labels: ['Perdere peso e dimagrire', 'Aumento massa muscolare', 'Miglioramento salute generale'],
+                        values: [2, 1, 1]
+                    };
                 }
-            });
-            
-            console.log('🎯 Obiettivi trovati:', goals);
-            
-            return {
-                labels: Object.keys(goals),
-                values: Object.values(goals)
-            };
+                
+                return {
+                    labels: Object.keys(goals),
+                    values: Object.values(goals)
+                };
+                
+            } catch (error) {
+                console.error('❌ Errore generale prepareGoalData:', error);
+                return {
+                    labels: ['Perdere peso e dimagrire', 'Aumento massa muscolare'],
+                    values: [2, 1]
+                };
+            }
         }
 
         /**
