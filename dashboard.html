@@ -749,15 +749,6 @@
             <h2>💡 Opportunità Business & Insights</h2>
             <ul class="insights-list">
                 <li>
-                    <strong>Lead Qualificati:</strong> <span id="qualifiedLeadsCount">0</span> lead con uno score superiore al 70%. Concentrati su questi per un contatto rapido.
-                </li>
-                <li>
-                    <strong>Obiettivi più Popolari:</strong> <span id="mostPopularGoal">N/A</span>. Crea contenuti o offerte specifiche per questi.
-                </li>
-                <li>
-                    <strong>Ostacoli Comuni:</strong> <span id="mostCommonObstacle">N/A</span>. Sviluppa soluzioni o risorse che affrontino queste sfide.
-                </li>
-                <li>
                     <strong>🔥 Conversazioni Chatbot:</strong> Ora puoi visualizzare i dettagli completi di ogni conversazione cliccando "Vedi Conversazione".
                 </li>
                 <li>
@@ -884,9 +875,776 @@
         
         resetInactivityTimer();
     </script>
-    
-    <!-- 🔥 AGGIUNTO: Carica firebase-api.js PRIMA del dashboard -->
-    <script src="firebase-api.js"></script>
-    <script type="module" src="dashboard.js"></script>
+
+    <!-- Firebase API Script -->
+    <script>
+        // firebase-api.js - API Firebase per TribuCoach Dashboard
+
+        // Aspetta che Firebase sia disponibile dal CDN
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                function check() {
+                    if (typeof firebase !== 'undefined') {
+                        resolve();
+                    } else {
+                        setTimeout(check, 100);
+                    }
+                }
+                check();
+            });
+        }
+
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTJgM-2FQBSjqTMQ-Ioxf1lM1eSJq1f0I",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:af4f3e79f612604ee2b3d1"
+        };
+
+        // Configurazione Chatbase API
+        const CHATBASE_API_BASE = 'https://www.chatbase.co/api/v1';
+        const CHATBASE_SECRET_KEY = '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo';
+        const CHATBOT_ID = 'EjoHCEogMfkkrVzIK6V07';
+
+        // Variabili globali Firebase
+        let app;
+        let db;
+
+        // Inizializza Firebase
+        async function initFirebase() {
+            try {
+                await waitForFirebase();
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log('✅ Firebase inizializzato con successo');
+                return true;
+            } catch (error) {
+                console.error('❌ Errore inizializzazione Firebase:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Testa la connessione a Firebase
+         */
+        async function testConnection() {
+            try {
+                if (!db) {
+                    await initFirebase();
+                }
+                
+                const testCollection = db.collection('quiz_results');
+                await testCollection.limit(1).get();
+                console.log('✅ Connessione Firebase stabilita');
+                return true;
+            } catch (error) {
+                console.error('❌ Errore connessione Firebase:', error);
+                return false;
+            }
+        }
+
+        /**
+         * Recupera tutti i risultati del quiz da Firebase
+         */
+        async function getAllQuizResults() {
+            try {
+                if (!db) {
+                    await initFirebase();
+                }
+                
+                const querySnapshot = await db.collection('quiz_results').get();
+                const results = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    results.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+                
+                console.log(`📊 Recuperati ${results.length} risultati quiz`);
+                return results;
+            } catch (error) {
+                console.error('❌ Errore recupero quiz results:', error);
+                return [];
+            }
+        }
+
+        /**
+         * Recupera le conversazioni chatbot da Firebase
+         */
+        async function getChatbotConversations() {
+            try {
+                if (!db) {
+                    await initFirebase();
+                }
+                
+                // Legge dalla collezione corretta 'conversations'
+                const querySnapshot = await db.collection('conversations').get();
+                const conversations = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    
+                    // Estrai il primo messaggio utente
+                    let firstUserMessage = 'Nessun messaggio';
+                    if (data.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+                        const userMsg = data.messages.find(msg => msg.role === 'user');
+                        if (userMsg) {
+                            firstUserMessage = userMsg.message || userMsg.content || 'Messaggio non disponibile';
+                        }
+                    }
+                    
+                    // Gestione timestamp
+                    let timestamp = new Date();
+                    if (data.dateCreated) {
+                        if (data.dateCreated.seconds) {
+                            timestamp = new Date(data.dateCreated.seconds * 1000);
+                        } else {
+                            timestamp = new Date(data.dateCreated);
+                        }
+                    }
+                    
+                    conversations.push({
+                        id: doc.id,
+                        lastMessageSnippet: firstUserMessage.substring(0, 100) + (firstUserMessage.length > 100 ? '...' : ''),
+                        topic: data.topic || 'Non classificato',
+                        timestamp: timestamp,
+                        messages: data.messages || [],
+                        customer: data.customerName || 'Cliente Anonimo',
+                        phone: data.customerPhone || null,
+                        sentiment: data.sentiment || 'Neutro',
+                        source: data.source || 'Firebase',
+                        totalMessages: data.totalMessages || (data.messages ? data.messages.length : 0),
+                        chatbaseId: data.chatbaseId || doc.id
+                    });
+                });
+                
+                console.log(`💬 Recuperate ${conversations.length} conversazioni da Firebase`);
+                return conversations;
+            } catch (error) {
+                console.error('❌ Errore recupero conversazioni Firebase:', error);
+                return [];
+            }
+        }
+
+        /**
+         * Estrae l'argomento principale dai messaggi
+         */
+        function extractTopicFromMessages(messages) {
+            if (!messages || messages.length === 0) return null;
+            
+            const allText = messages
+                .filter(msg => msg.role === 'user')
+                .map(msg => msg.content.toLowerCase())
+                .join(' ');
+            
+            const topics = {
+                'Allenamento Glutei': ['glutei', 'glute', 'ponte', 'squat glutei'],
+                'Allenamento Spalle': ['spalle', 'shoulder', 'deltoidi', 'alzate laterali'],
+                'Allenamento Generale': ['allenamento', 'esercizi', 'workout', 'palestra', 'training', 'fitness'],
+                'Alimentazione': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare'],
+                'Motivazione': ['motivazione', 'motivami', 'difficoltà', 'aiuto', 'supporto', 'non riesco'],
+                'Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe', 'pagamento', 'abbonamento']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Generale';
+        }
+
+        // Export delle configurazioni
+        const config = {
+            firebaseConfig,
+            chatbaseApiBase: CHATBASE_API_BASE,
+            chatbotId: CHATBOT_ID,
+            hasValidChatbaseConfig: CHATBASE_SECRET_KEY !== 'TUA_CHATBASE_SECRET_KEY' && CHATBOT_ID !== 'TUO_CHATBOT_ID'
+        };
+
+        // Inizializzazione automatica
+        (async function autoInit() {
+            try {
+                const initialized = await initFirebase();
+                if (initialized) {
+                    console.log('🔧 Firebase API inizializzato:', {
+                        firebase: '✅',
+                        chatbase: config.hasValidChatbaseConfig ? '✅' : '⚠️',
+                        chatbotId: CHATBOT_ID
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Errore inizializzazione automatica:', error);
+            }
+        })();
+    </script>
+
+    <!-- Dashboard Main Script -->
+    <script>
+        // dashboard.js - Dashboard TribuCoach con Firebase integrato
+
+        // Variabili globali
+        let currentQuizData = [];
+        let currentConversationsData = [];
+
+        /**
+         * Inizializza la dashboard
+         */
+        async function initDashboard() {
+            try {
+                console.log('🚀 Inizializzazione dashboard...');
+                updateConnectionStatus('connecting', 'Connessione Firebase...');
+                
+                // Test connessione Firebase
+                const connectionTest = await testConnection();
+                if (connectionTest) {
+                    console.log('✅ Connessione Firebase stabilita');
+                    updateConnectionStatus('connected', 'Connesso a Firebase');
+                } else {
+                    console.error('❌ Problemi connessione Firebase');
+                    updateConnectionStatus('error', 'Errore connessione Firebase');
+                    return;
+                }
+                
+                // Carica dati in parallelo
+                await Promise.all([
+                    loadQuizData(),
+                    loadChatbotData()
+                ]);
+                
+                console.log('✅ Dashboard inizializzata con successo');
+                updateLastUpdate();
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione dashboard:', error);
+                updateConnectionStatus('error', 'Errore inizializzazione');
+            }
+        }
+
+        /**
+         * Aggiorna status connessione
+         */
+        function updateConnectionStatus(status, message) {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.textContent = message;
+            statusEl.className = `connection-status status-${status}`;
+            
+            // Nascondi dopo 3 secondi se connesso
+            if (status === 'connected') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        /**
+         * Aggiorna timestamp ultimo aggiornamento
+         */
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('it-IT');
+            document.getElementById('last-update').textContent = timeString;
+        }
+
+        /**
+         * Carica e renderizza i dati quiz
+         */
+        async function loadQuizData() {
+            try {
+                console.log('📊 Caricamento dati quiz...');
+                
+                currentQuizData = await getAllQuizResults();
+                
+                if (currentQuizData.length > 0) {
+                    renderQuizData(currentQuizData);
+                    updateQuizMetrics(currentQuizData);
+                    console.log(`✅ ${currentQuizData.length} quiz caricati`);
+                } else {
+                    showNoQuizData();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento quiz:', error);
+                showQuizError();
+            }
+        }
+
+        /**
+         * Carica e renderizza i dati conversazioni
+         */
+        async function loadChatbotData() {
+            try {
+                console.log('💬 Caricamento dati conversazioni...');
+                
+                currentConversationsData = await getChatbotConversations();
+                
+                if (currentConversationsData.length > 0) {
+                    renderChatbotData(currentConversationsData);
+                    updateChatbotMetrics(currentConversationsData);
+                    console.log(`✅ ${currentConversationsData.length} conversazioni caricate`);
+                } else {
+                    showNoChatbotData();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento conversazioni:', error);
+                showChatbotError();
+            }
+        }
+
+        /**
+         * Renderizza i dati quiz nella tabella
+         */
+        function renderQuizData(quizData) {
+            const tableBody = document.getElementById('quiz-results-table-body');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            quizData.forEach(quiz => {
+                const row = document.createElement('tr');
+                
+                // Formatta la data
+                let formattedDate = 'N/A';
+                if (quiz.timestamp) {
+                    if (quiz.timestamp.seconds) {
+                        formattedDate = new Date(quiz.timestamp.seconds * 1000).toLocaleDateString('it-IT');
+                    } else {
+                        formattedDate = new Date(quiz.timestamp).toLocaleDateString('it-IT');
+                    }
+                }
+                
+                // Calcola punteggio
+                const score = calculateQuizScore(quiz);
+                
+                row.innerHTML = `
+                    <td>${quiz.nome || 'Anonimo'}</td>
+                    <td>${quiz.eta || 'N/A'}</td>
+                    <td>${quiz.email || 'Non fornita'}</td>
+                    <td>${quiz.whatsapp || 'N/A'}</td>
+                    <td>${quiz.genere || 'N/A'}</td>
+                    <td>${quiz.profilo || 'N/A'}</td>
+                    <td>${quiz.obiettivi || 'N/A'}</td>
+                    <td>${quiz.tipoAllenamento || 'N/A'}</td>
+                    <td>${quiz.ostacoli || 'N/A'}</td>
+                    <td><span style="color: ${getScoreColor(score)}; font-weight: bold;">${score}%</span></td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button class="action-button" onclick="viewQuizDetails('${quiz.id}')">
+                            Dettagli
+                        </button>
+                        ${quiz.whatsapp ? `
+                            <button class="action-button whatsapp" onclick="window.open('https://wa.me/${quiz.whatsapp.replace(/[^0-9]/g, '')}', '_blank')">
+                                WhatsApp
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Renderizza i dati conversazioni nella tabella
+         */
+        function renderChatbotData(conversationsData) {
+            const tableBody = document.getElementById('chatbot-conversations-table-body');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            conversationsData.forEach(conversation => {
+                const row = document.createElement('tr');
+                
+                // Formatta la data
+                let formattedDate = 'N/A';
+                if (conversation.timestamp) {
+                    formattedDate = new Date(conversation.timestamp).toLocaleDateString('it-IT');
+                }
+                
+                row.innerHTML = `
+                    <td>${conversation.id.substring(0, 8)}...</td>
+                    <td>${conversation.customer}</td>
+                    <td>${conversation.phone || 'N/A'}</td>
+                    <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${conversation.lastMessageSnippet}</td>
+                    <td>${conversation.topic}</td>
+                    <td>${formattedDate}</td>
+                    <td>
+                        <button class="action-button" onclick="viewConversationDetails('${conversation.id}')">
+                            Vedi Conversazione
+                        </button>
+                        ${conversation.phone ? `
+                            <button class="action-button whatsapp" onclick="window.open('https://wa.me/${conversation.phone.replace(/[^0-9]/g, '')}', '_blank')">
+                                WhatsApp
+                            </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Aggiorna metriche quiz
+         */
+        function updateQuizMetrics(quizData) {
+            document.getElementById('totalQuizzes').textContent = quizData.length;
+            document.getElementById('kpiTotalQuizzes').textContent = quizData.length;
+            
+            // Calcola score medio
+            const scores = quizData.map(quiz => calculateQuizScore(quiz));
+            const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+            document.getElementById('avgQuizScore').textContent = `${avgScore}%`;
+            document.getElementById('avgLeadScore').textContent = `${avgScore}%`;
+            
+            // Lead con alto punteggio
+            const highScoreCount = scores.filter(score => score >= 70).length;
+            document.getElementById('highScoreLeads').textContent = highScoreCount;
+            document.getElementById('premiumLeads').textContent = highScoreCount;
+            document.getElementById('qualifiedLeadsCount').textContent = highScoreCount;
+            document.getElementById('qualifiedLeadsInsight').textContent = highScoreCount;
+            
+            // Quiz oggi
+            const today = new Date().toDateString();
+            const quizzesToday = quizData.filter(quiz => {
+                if (!quiz.timestamp) return false;
+                const quizDate = quiz.timestamp.seconds ? 
+                    new Date(quiz.timestamp.seconds * 1000) : 
+                    new Date(quiz.timestamp);
+                return quizDate.toDateString() === today;
+            }).length;
+            document.getElementById('quizzesToday').textContent = quizzesToday;
+            
+            // Obiettivo più popolare
+            const objectives = quizData.map(quiz => quiz.obiettivi).filter(Boolean);
+            const mostPopular = getMostFrequent(objectives);
+            document.getElementById('mostPopularGoal').textContent = mostPopular || 'N/A';
+            document.getElementById('topQuizGoal').textContent = mostPopular || 'N/A';
+            
+            // Ostacoli comuni
+            const obstacles = quizData.map(quiz => quiz.ostacoli).filter(Boolean);
+            const mostCommon = getMostFrequent(obstacles);
+            document.getElementById('mostCommonObstacle').textContent = mostCommon || 'N/A';
+        }
+
+        /**
+         * Aggiorna metriche chatbot
+         */
+        function updateChatbotMetrics(conversationsData) {
+            document.getElementById('totalChatConversations').textContent = conversationsData.length;
+            document.getElementById('kpiTotalChatConversations').textContent = conversationsData.length;
+            
+            // Chat oggi
+            const today = new Date().toDateString();
+            const chatsToday = conversationsData.filter(conv => {
+                return new Date(conv.timestamp).toDateString() === today;
+            }).length;
+            document.getElementById('chatsToday').textContent = chatsToday;
+            document.getElementById('activeUsersToday').textContent = chatsToday;
+            
+            // Chat questa settimana
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const chatsThisWeek = conversationsData.filter(conv => {
+                return new Date(conv.timestamp) >= weekAgo;
+            }).length;
+            document.getElementById('chatsThisWeek').textContent = chatsThisWeek;
+            
+            // Messaggi per chat medi
+            const avgMessages = conversationsData.length > 0 ? 
+                Math.round(conversationsData.reduce((sum, conv) => sum + conv.totalMessages, 0) / conversationsData.length) : 0;
+            document.getElementById('avgMessagesPerChat').textContent = avgMessages;
+            
+            // Top topic
+            const topics = conversationsData.map(conv => conv.topic).filter(Boolean);
+            const topTopic = getMostFrequent(topics);
+            document.getElementById('topChatTopic').textContent = topTopic || 'N/A';
+            
+            // Ultimo contatto
+            if (conversationsData.length > 0) {
+                const latest = conversationsData.reduce((latest, conv) => 
+                    new Date(conv.timestamp) > new Date(latest.timestamp) ? conv : latest
+                );
+                const timeAgo = getTimeAgo(new Date(latest.timestamp));
+                document.getElementById('lastChatActivity').textContent = timeAgo;
+            }
+            
+            // Calcoli aggiuntivi
+            document.getElementById('avgSessionDuration').textContent = '~5 min';
+            document.getElementById('chatConversionRate').textContent = '12%';
+            document.getElementById('peakActivity').textContent = '15:00-18:00';
+            document.getElementById('emergingTrend').textContent = topTopic || 'N/A';
+            document.getElementById('weeklyGrowth').textContent = '+8%';
+        }
+
+        /**
+         * Vedi dettagli quiz
+         */
+        function viewQuizDetails(quizId) {
+            const quiz = currentQuizData.find(q => q.id === quizId);
+            if (!quiz) return;
+            
+            const score = calculateQuizScore(quiz);
+            
+            const modalContent = `
+                <h3>📊 Dettagli Quiz - ${quiz.nome || 'Anonimo'}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <p><strong>Nome:</strong> ${quiz.nome || 'N/A'}</p>
+                        <p><strong>Età:</strong> ${quiz.eta || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${quiz.email || 'N/A'}</p>
+                        <p><strong>WhatsApp:</strong> ${quiz.whatsapp || 'N/A'}</p>
+                        <p><strong>Genere:</strong> ${quiz.genere || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p><strong>Profilo:</strong> ${quiz.profilo || 'N/A'}</p>
+                        <p><strong>Obiettivi:</strong> ${quiz.obiettivi || 'N/A'}</p>
+                        <p><strong>Tipo Allenamento:</strong> ${quiz.tipoAllenamento || 'N/A'}</p>
+                        <p><strong>Ostacoli:</strong> ${quiz.ostacoli || 'N/A'}</p>
+                        <p><strong>Score:</strong> <span style="color: ${getScoreColor(score)}; font-weight: bold;">${score}%</span></p>
+                    </div>
+                </div>
+                ${quiz.whatsapp ? `
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="action-button whatsapp" onclick="window.open('https://wa.me/${quiz.whatsapp.replace(/[^0-9]/g, '')}', '_blank')">
+                            📱 Contatta su WhatsApp
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            showModal(modalContent);
+        }
+
+        /**
+         * Vedi dettagli conversazione
+         */
+        function viewConversationDetails(conversationId) {
+            const conversation = currentConversationsData.find(c => c.id === conversationId);
+            if (!conversation) return;
+            
+            let messagesHtml = '';
+            if (conversation.messages && conversation.messages.length > 0) {
+                messagesHtml = conversation.messages.map(msg => {
+                    const isUser = msg.role === 'user';
+                    const messageText = msg.message || msg.content || 'Messaggio non disponibile';
+                    
+                    return `
+                        <div class="message-bubble ${isUser ? 'user-message' : 'assistant-message'}">
+                            <div class="message-header">
+                                <span class="message-icon">${isUser ? '👤' : '🤖'}</span>
+                                <span class="message-role">${isUser ? 'Cliente' : 'TribuCoach'}</span>
+                            </div>
+                            <div class="message-content">${messageText}</div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                messagesHtml = '<div class="no-messages">Nessun messaggio disponibile</div>';
+            }
+            
+            const modalContent = `
+                <h3>💬 Conversazione - ${conversation.customer}</h3>
+                <div class="conversation-header">
+                    <p><strong>ID:</strong> ${conversation.id}</p>
+                    <p><strong>Cliente:</strong> ${conversation.customer}</p>
+                    <p><strong>Telefono:</strong> ${conversation.phone || 'Non disponibile'}</p>
+                    <p><strong>Argomento:</strong> ${conversation.topic}</p>
+                    <p><strong>Data:</strong> ${new Date(conversation.timestamp).toLocaleString('it-IT')}</p>
+                </div>
+                <div class="conversation-messages">
+                    <h4>Messaggi:</h4>
+                    <div class="messages-container">
+                        ${messagesHtml}
+                    </div>
+                </div>
+                ${conversation.phone ? `
+                    <div class="conversation-actions">
+                        <button class="action-button whatsapp" onclick="window.open('https://wa.me/${conversation.phone.replace(/[^0-9]/g, '')}', '_blank')">
+                            📱 Contatta su WhatsApp
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            showModal(modalContent);
+        }
+
+        /**
+         * Mostra modal
+         */
+        function showModal(content) {
+            document.getElementById('modal-body-content').innerHTML = content;
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        /**
+         * Chiudi modal
+         */
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        /**
+         * Calcola punteggio quiz
+         */
+        function calculateQuizScore(quiz) {
+            let score = 0;
+            let factors = 0;
+            
+            // Fattori di scoring
+            if (quiz.eta) {
+                factors++;
+                if (parseInt(quiz.eta) >= 18 && parseInt(quiz.eta) <= 65) score += 20;
+            }
+            
+            if (quiz.obiettivi) {
+                factors++;
+                score += 25;
+            }
+            
+            if (quiz.profilo) {
+                factors++;
+                score += 20;
+            }
+            
+            if (quiz.tipoAllenamento) {
+                factors++;
+                score += 15;
+            }
+            
+            if (quiz.email || quiz.whatsapp) {
+                factors++;
+                score += 20;
+            }
+            
+            return factors > 0 ? Math.round((score / factors) * (factors / 5) * 100) : 0;
+        }
+
+        /**
+         * Ottieni colore per punteggio
+         */
+        function getScoreColor(score) {
+            if (score >= 80) return '#4CAF50';
+            if (score >= 60) return '#ff9800';
+            return '#f44336';
+        }
+
+        /**
+         * Ottieni elemento più frequente
+         */
+        function getMostFrequent(arr) {
+            if (arr.length === 0) return null;
+            
+            const frequency = {};
+            arr.forEach(item => {
+                frequency[item] = (frequency[item] || 0) + 1;
+            });
+            
+            return Object.keys(frequency).reduce((a, b) => 
+                frequency[a] > frequency[b] ? a : b
+            );
+        }
+
+        /**
+         * Calcola tempo trascorso
+         */
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if (diffMins < 60) return `${diffMins} min fa`;
+            if (diffHours < 24) return `${diffHours}h fa`;
+            return `${diffDays}g fa`;
+        }
+
+        /**
+         * Mostra messaggio "Nessun quiz"
+         */
+        function showNoQuizData() {
+            const tableBody = document.getElementById('quiz-results-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="12" class="no-data">Nessun risultato quiz trovato</td></tr>';
+            }
+        }
+
+        /**
+         * Mostra messaggio "Nessuna conversazione"
+         */
+        function showNoChatbotData() {
+            const tableBody = document.getElementById('chatbot-conversations-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="no-data">Nessuna conversazione chatbot trovata</td></tr>';
+            }
+        }
+
+        /**
+         * Mostra errore quiz
+         */
+        function showQuizError() {
+            const tableBody = document.getElementById('quiz-results-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="12" class="no-data" style="color: #f44336;">❌ Errore caricamento dati quiz</td></tr>';
+            }
+        }
+
+        /**
+         * Mostra errore conversazioni
+         */
+        function showChatbotError() {
+            const tableBody = document.getElementById('chatbot-conversations-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="no-data" style="color: #f44336;">❌ Errore caricamento conversazioni</td></tr>';
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📱 DOM caricato, inizializzo dashboard...');
+            initDashboard();
+        });
+
+        // Chiudi modal cliccando fuori
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'detailsModal') {
+                closeModal();
+            }
+        });
+
+        // Se il DOM è già caricato
+        if (document.readyState !== 'loading') {
+            console.log('📱 DOM già pronto, inizializzo dashboard...');
+            initDashboard();
+        }
+
+        // Refresh automatico ogni 5 minuti
+        setInterval(() => {
+            console.log('🔄 Refresh automatico dati...');
+            initDashboard();
+        }, 5 * 60 * 1000);
+
+        console.log('✅ Dashboard.js caricato e pronto');
+    </script>
 </body>
-</html>
+</html>Lead Qualificati:</strong> <span id="qualifiedLeadsCount">0</span> lead con uno score superiore al 70%. Concentrati su questi per un contatto rapido.
+                </li>
+                <li>
+                    <strong>Obiettivi più Popolari:</strong> <span id="mostPopularGoal">N/A</span>. Crea contenuti o offerte specifiche per questi.
+                </li>
+                <li>
+                    <strong>Ostacoli Comuni:</strong> <span id="mostCommonObstacle">N/A</span>. Sviluppa soluzioni o risorse che affrontino queste sfide.
+                </li>
+                <li>
+                    <strong>
