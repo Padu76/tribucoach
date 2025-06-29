@@ -473,6 +473,39 @@
             .message-bubble {
                 max-width: 95%;
             }
+            
+            /* 🔥 RESPONSIVE INSIGHTS: Da 2 colonne a 1 colonna su mobile */
+            #engagementInsights > div[style*="grid-template-columns: 1fr 1fr"] {
+                display: grid !important;
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            
+            /* Riduci padding su mobile */
+            #engagementInsights > div {
+                padding: 15px !important;
+            }
+            
+            /* Font size più piccoli su mobile */
+            #engagementInsights h4 {
+                font-size: 1rem !important;
+            }
+            
+            #engagementInsights div[style*="font-size: 1.8rem"] {
+                font-size: 1.5rem !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Extra small devices */
+            #engagementInsights > div {
+                padding: 10px !important;
+            }
+            
+            #engagementInsights div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
         }
     </style>
 </head>
@@ -592,57 +625,123 @@
 
             <h3>📈 Insights Engagement & Performance</h3>
             <div id="engagementInsights" class="chart-container" style="height: auto; padding: 0;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 25px;">
+                
+                <!-- PRIMA RIGA: 2 blocchi principali affiancati -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 25px 25px 0 25px;">
                     
-                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #ff6600; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <h4 style="color: #ff6600; margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 25px; border-radius: 12px; border-left: 4px solid #ff6600; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <h4 style="color: #ff6600; margin-bottom: 20px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
                             💬 Attività Chat Giornaliera
                         </h4>
-                        <div style="space-y: 8px;">
-                            <p style="margin: 8px 0; color: #eee;"><strong>Chat Oggi:</strong> <span id="chatsToday" style="color: #4CAF50; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Utenti Attivi Oggi:</strong> <span id="activeUsersToday" style="color: #2196F3; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Durata Media Sessione:</strong> <span id="avgSessionDuration" style="color: #ff9800; font-weight: bold;">0 min</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Ultimo Contatto:</strong> <span id="lastChatActivity" style="color: #ccc;">N/A</span></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Chat Oggi:</strong></p>
+                                <p style="margin: 0; color: #4CAF50; font-weight: bold; font-size: 1.8rem;" id="chatsToday">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Utenti Attivi:</strong></p>
+                                <p style="margin: 0; color: #2196F3; font-weight: bold; font-size: 1.8rem;" id="activeUsersToday">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Durata Media:</strong></p>
+                                <p style="margin: 0; color: #ff9800; font-weight: bold; font-size: 1.5rem;" id="avgSessionDuration">0 min</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Ultimo Contatto:</strong></p>
+                                <p style="margin: 0; color: #ccc; font-weight: bold; font-size: 1rem;" id="lastChatActivity">N/A</p>
+                            </div>
                         </div>
                     </div>
                     
-                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #4CAF50; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <h4 style="color: #4CAF50; margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 25px; border-radius: 12px; border-left: 4px solid #4CAF50; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <h4 style="color: #4CAF50; margin-bottom: 20px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
                             🎯 Quality Score & Conversioni
                         </h4>
-                        <div style="space-y: 8px;">
-                            <p style="margin: 8px 0; color: #eee;"><strong>Lead Score Medio:</strong> <span id="avgLeadScore" style="color: #4CAF50; font-weight: bold;">0%</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Lead Premium (≥80%):</strong> <span id="premiumLeads" style="color: #FFD700; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Lead Qualificati (≥70%):</strong> <span id="qualifiedLeadsInsight" style="color: #ff9800; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Tasso Conversione Chat:</strong> <span id="chatConversionRate" style="color: #9C27B0; font-weight: bold;">0%</span></p>
-                        </div>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #2196F3; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <h4 style="color: #2196F3; margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                            ⏰ Timing & Frequenza
-                        </h4>
-                        <div style="space-y: 8px;">
-                            <p style="margin: 8px 0; color: #eee;"><strong>Quiz Completati Oggi:</strong> <span id="quizzesToday" style="color: #4CAF50; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Picco Attività:</strong> <span id="peakActivity" style="color: #ff9800; font-weight: bold;">N/A</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Media Msg/Chat:</strong> <span id="avgMessagesPerChat" style="color: #9C27B0; font-weight: bold;">0</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Chat Questa Settimana:</strong> <span id="chatsThisWeek" style="color: #2196F3; font-weight: bold;">0</span></p>
-                        </div>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 20px; border-radius: 12px; border-left: 4px solid #9C27B0; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
-                        <h4 style="color: #9C27B0; margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
-                            🔥 Trend & Argomenti Caldi
-                        </h4>
-                        <div style="space-y: 8px;">
-                            <p style="margin: 8px 0; color: #eee;"><strong>Top Quiz Goal:</strong> <span id="topQuizGoal" style="color: #ff6600; font-weight: bold; font-size: 0.9rem;">N/A</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Top Chat Topic:</strong> <span id="topChatTopic" style="color: #4CAF50; font-weight: bold; font-size: 0.9rem;">N/A</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Trend Emergente:</strong> <span id="emergingTrend" style="color: #ff9800; font-weight: bold; font-size: 0.9rem;">N/A</span></p>
-                            <p style="margin: 8px 0; color: #eee;"><strong>Crescita Settimanale:</strong> <span id="weeklyGrowth" style="color: #2196F3; font-weight: bold;">0%</span></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Score Medio:</strong></p>
+                                <p style="margin: 0; color: #4CAF50; font-weight: bold; font-size: 1.8rem;" id="avgLeadScore">0%</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Lead Premium:</strong></p>
+                                <p style="margin: 0; color: #FFD700; font-weight: bold; font-size: 1.8rem;" id="premiumLeads">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Lead Qualificati:</strong></p>
+                                <p style="margin: 0; color: #ff9800; font-weight: bold; font-size: 1.5rem;" id="qualifiedLeadsInsight">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Tasso Conversione:</strong></p>
+                                <p style="margin: 0; color: #9C27B0; font-weight: bold; font-size: 1.5rem;" id="chatConversionRate">0%</p>
+                            </div>
                         </div>
                     </div>
                     
                 </div>
+                
+                <!-- SECONDA RIGA: 2 blocchi affiancati -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 25px;">
+                    
+                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 25px; border-radius: 12px; border-left: 4px solid #2196F3; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <h4 style="color: #2196F3; margin-bottom: 20px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                            ⏰ Timing & Frequenza
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Quiz Oggi:</strong></p>
+                                <p style="margin: 0; color: #4CAF50; font-weight: bold; font-size: 1.8rem;" id="quizzesToday">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Picco Attività:</strong></p>
+                                <p style="margin: 0; color: #ff9800; font-weight: bold; font-size: 1.2rem;" id="peakActivity">N/A</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Msg/Chat:</strong></p>
+                                <p style="margin: 0; color: #9C27B0; font-weight: bold; font-size: 1.5rem;" id="avgMessagesPerChat">0</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Chat Settimana:</strong></p>
+                                <p style="margin: 0; color: #2196F3; font-weight: bold; font-size: 1.5rem;" id="chatsThisWeek">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #333 0%, #404040 100%); padding: 25px; border-radius: 12px; border-left: 4px solid #9C27B0; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                        <h4 style="color: #9C27B0; margin-bottom: 20px; font-size: 1.2rem; display: flex; align-items: center; gap: 8px;">
+                            🔥 Trend & Argomenti Caldi
+                        </h4>
+                        <div style="space-y: 12px;">
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Top Quiz Goal:</strong></p>
+                                <p style="margin: 0 0 12px 0; color: #ff6600; font-weight: bold; font-size: 1rem; line-height: 1.3;" id="topQuizGoal">N/A</p>
+                            </div>
+                            <div>
+                                <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Top Chat Topic:</strong></p>
+                                <p style="margin: 0 0 12px 0; color: #4CAF50; font-weight: bold; font-size: 1rem;" id="topChatTopic">N/A</p>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div>
+                                    <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Trend Emergente:</strong></p>
+                                    <p style="margin: 0; color: #ff9800; font-weight: bold; font-size: 0.95rem;" id="emergingTrend">N/A</p>
+                                </div>
+                                <div>
+                                    <p style="margin: 8px 0; color: #ccc; font-size: 0.9rem;"><strong>Crescita:</strong></p>
+                                    <p style="margin: 0; color: #2196F3; font-weight: bold; font-size: 1.3rem;" id="weeklyGrowth">0%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- SPAZIO PER FUTURI BLOCCHI -->
+                <div style="padding: 0 25px 25px 25px;">
+                    <div style="border: 2px dashed #444; border-radius: 12px; padding: 20px; text-align: center; color: #666;">
+                        <p style="margin: 0; font-style: italic;">💡 Spazio riservato per metriche aggiuntive</p>
+                        <p style="margin: 5px 0 0 0; font-size: 0.8rem;">Nuovi insights e KPI verranno aggiunti qui</p>
+                    </div>
+                </div>
+                
             </div>
         </div>
 
