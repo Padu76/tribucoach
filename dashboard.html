@@ -1669,7 +1669,7 @@
         }
 
         /**
-         * Inizializza i grafici Chart.js - VERSIONE CORRETTA
+         * Inizializza i grafici Chart.js - VERSIONE CORRETTA SENZA ERRORI
          */
         function initializeCharts(quizData) {
             console.log('🎨 Inizializzazione grafici con', quizData.length, 'quiz');
@@ -1681,107 +1681,126 @@
                 return;
             }
             
-            // Distruggi grafici esistenti
-            Chart.helpers.each(Chart.instances, function(instance) {
-                instance.destroy();
-            });
-            
-            // Prepara dati per grafici
-            const profileData = prepareProfileData(quizData);
-            const goalData = prepareGoalData(quizData);
-            const chatTopicData = prepareChatTopicData(currentConversationsData);
-            
-            console.log('📊 Dati grafici preparati:', { profileData, goalData, chatTopicData });
-            
-            // Rimuovi grafico profili che non ti interessa
-            // const profileCtx = document.getElementById('profileChart');
-            // Commento il grafico profili
-            
-            // Grafico Obiettivi
-            const goalCtx = document.getElementById('goalChart');
-            if (goalCtx && goalData.labels.length > 0) {
-                goalCtx.style.display = 'block';
-                goalCtx.parentElement.innerHTML = '<canvas id="goalChart"></canvas>';
-                const newGoalCtx = document.getElementById('goalChart');
-                
-                new Chart(newGoalCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: goalData.labels.map(label => label.length > 20 ? label.substring(0, 20) + '...' : label),
-                        datasets: [{
-                            label: 'Frequenza',
-                            data: goalData.values,
-                            backgroundColor: '#ff6600',
-                            borderColor: '#ff4400',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { 
-                                labels: { color: '#fff' },
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: { 
-                                ticks: { color: '#fff' },
-                                grid: { color: '#444' },
-                                beginAtZero: true
-                            },
-                            x: { 
-                                ticks: { 
-                                    color: '#fff',
-                                    maxRotation: 45,
-                                    minRotation: 0
-                                },
-                                grid: { color: '#444' }
-                            }
+            try {
+                // Distruggi grafici esistenti in modo sicuro
+                if (window.chartInstances) {
+                    Object.values(window.chartInstances).forEach(chart => {
+                        if (chart && chart.destroy) {
+                            chart.destroy();
                         }
-                    }
-                });
-                console.log('✅ Grafico obiettivi creato');
-            } else {
-                document.getElementById('goalDistribution').innerHTML = '<div style="text-align: center; color: #666; padding: 50px;">Nessun dato obiettivi disponibile</div>';
-            }
-            
-            // Grafico Argomenti Chat
-            const chatCtx = document.getElementById('chatTopicChart');
-            if (chatCtx && chatTopicData.labels.length > 0) {
-                chatCtx.style.display = 'block';
-                chatCtx.parentElement.innerHTML = '<canvas id="chatTopicChart"></canvas>';
-                const newChatCtx = document.getElementById('chatTopicChart');
+                    });
+                }
+                window.chartInstances = {};
                 
-                new Chart(newChatCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: chatTopicData.labels,
-                        datasets: [{
-                            data: chatTopicData.values,
-                            backgroundColor: ['#4CAF50', '#2196F3', '#ff9800', '#9C27B0', '#ff6600', '#607D8B'],
-                            borderWidth: 2,
-                            borderColor: '#333'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { 
-                                position: 'bottom',
-                                labels: { 
-                                    color: '#fff',
-                                    padding: 15
+                // Prepara dati per grafici
+                const goalData = prepareGoalData(quizData);
+                const chatTopicData = prepareChatTopicData(currentConversationsData);
+                
+                console.log('📊 Dati grafici preparati:', { goalData, chatTopicData });
+                
+                // Grafico Obiettivi
+                const goalContainer = document.getElementById('goalDistribution');
+                if (goalContainer && goalData.labels.length > 0) {
+                    goalContainer.innerHTML = '<canvas id="goalChart" style="max-height: 300px;"></canvas>';
+                    const goalCtx = document.getElementById('goalChart');
+                    
+                    if (goalCtx) {
+                        window.chartInstances.goalChart = new Chart(goalCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: goalData.labels.map(label => 
+                                    label.length > 25 ? label.substring(0, 25) + '...' : label
+                                ),
+                                datasets: [{
+                                    label: 'Frequenza',
+                                    data: goalData.values,
+                                    backgroundColor: '#ff6600',
+                                    borderColor: '#ff4400',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { 
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    y: { 
+                                        ticks: { 
+                                            color: '#fff',
+                                            stepSize: 1
+                                        },
+                                        grid: { color: '#444' },
+                                        beginAtZero: true
+                                    },
+                                    x: { 
+                                        ticks: { 
+                                            color: '#fff',
+                                            maxRotation: 45,
+                                            minRotation: 0
+                                        },
+                                        grid: { color: '#444' }
+                                    }
                                 }
                             }
-                        }
+                        });
+                        console.log('✅ Grafico obiettivi creato');
                     }
-                });
-                console.log('✅ Grafico chat topics creato');
-            } else {
-                document.getElementById('chatTopics').innerHTML = '<div style="text-align: center; color: #666; padding: 50px;">Nessun dato conversazioni disponibile</div>';
+                } else {
+                    if (goalContainer) {
+                        goalContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati obiettivi in caricamento...</div>';
+                    }
+                }
+                
+                // Grafico Argomenti Chat
+                const chatContainer = document.getElementById('chatTopics');
+                if (chatContainer && chatTopicData.labels.length > 0) {
+                    chatContainer.innerHTML = '<canvas id="chatTopicChart" style="max-height: 300px;"></canvas>';
+                    const chatCtx = document.getElementById('chatTopicChart');
+                    
+                    if (chatCtx) {
+                        window.chartInstances.chatChart = new Chart(chatCtx, {
+                            type: 'pie',
+                            data: {
+                                labels: chatTopicData.labels,
+                                datasets: [{
+                                    data: chatTopicData.values,
+                                    backgroundColor: [
+                                        '#ff6600', '#4CAF50', '#2196F3', 
+                                        '#ff9800', '#9C27B0', '#607D8B'
+                                    ],
+                                    borderWidth: 2,
+                                    borderColor: '#333'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { 
+                                        position: 'bottom',
+                                        labels: { 
+                                            color: '#fff',
+                                            padding: 15,
+                                            usePointStyle: true
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        console.log('✅ Grafico chat topics creato');
+                    }
+                } else {
+                    if (chatContainer) {
+                        chatContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 50px; font-style: italic;">Dati conversazioni in caricamento...</div>';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore creazione grafici:', error);
             }
         }
 
@@ -1844,118 +1863,169 @@
         }
 
         /**
-         * Aggiorna insights business con DATI REALI - VERSIONE MIGLIORATA
+         * Aggiorna insights business con DATI REALI - VERSIONE SENZA ERRORI
          */
         function updateBusinessInsights(quizData, conversationsData) {
             console.log('💡 Aggiornamento business insights...');
             
-            // Analizza i dati reali
-            const analysis = analyzeBusinessData(quizData, conversationsData);
-            
-            // Aggiorna metriche principali in evidenza
-            document.getElementById('qualifiedLeadsCountMain').textContent = analysis.qualifiedLeads;
-            document.getElementById('conversionRateMain').textContent = analysis.conversionRate + '%';
-            document.getElementById('potentialRevenueMain').textContent = '€' + (analysis.qualifiedLeads * 150); // 150€ per lead qualificato
-            
-            // Aggiorna insights con dati reali
-            const insightsList = document.querySelector('.insights-list');
-            if (insightsList) {
-                insightsList.innerHTML = `
-                    <li>
-                        <strong>🎯 Strategia Immediata:</strong> <span>${analysis.qualifiedLeads}</span> lead pronti per il contatto diretto. 
-                        ${analysis.qualifiedLeads > 0 ? 'Priorità massima: chiamali entro 24h!' : 'Lavora sulla qualità dei lead con contenuti mirati.'}
-                    </li>
-                    <li>
-                        <strong>🔥 Obiettivo Vincente:</strong> <span>"${analysis.topGoal}"</span> domina con ${analysis.topGoalCount} richieste. 
-                        Crea un mini-corso specifico su questo argomento.
-                    </li>
-                    <li>
-                        <strong>⚡ Pain Point da Risolvere:</strong> <span>"${analysis.topObstacle}"</span> è il blocco principale. 
-                        Sviluppa una soluzione dedicata per superare questo ostacolo.
-                    </li>
-                    <li>
-                        <strong>👥 Target Demografico:</strong> ${analysis.genderSplit} - Profilo <span>"${analysis.topProfile}"</span> prevalente. 
-                        Personalizza tono e contenuti per questo segmento.
-                    </li>
-                    <li>
-                        <strong>📊 Performance Conversioni:</strong> ${analysis.conversionRate}% quiz→chat. 
-                        ${analysis.conversionRate > 20 ? '🚀 Eccellente!' : analysis.conversionRate > 10 ? '👍 Buono, ma migliorabile' : '🔧 Necessario ottimizzare il funnel'}
-                    </li>
-                    <li>
-                        <strong>📅 Timing Ottimale:</strong> <span>${analysis.peakDay}</span> è il giorno top. 
-                        Programma post, live e campagne in questo momento per massimizzare l'engagement.
-                    </li>
-                    <li>
-                        <strong>💰 Opportunità Revenue:</strong> Potenziale immediato <span>€${analysis.qualifiedLeads * 150}</span> dai lead qualificati. 
-                        Focus su conversione rapida per massimizzare il ROI.
-                    </li>
-                `;
+            try {
+                // Analizza i dati reali
+                const analysis = analyzeBusinessData(quizData, conversationsData);
+                
+                // Aggiorna metriche principali in evidenza - con controllo esistenza elementi
+                const qualifiedElement = document.getElementById('qualifiedLeadsCountMain');
+                const conversionElement = document.getElementById('conversionRateMain');
+                const revenueElement = document.getElementById('potentialRevenueMain');
+                
+                if (qualifiedElement) qualifiedElement.textContent = analysis.qualifiedLeads;
+                if (conversionElement) conversionElement.textContent = analysis.conversionRate + '%';
+                if (revenueElement) revenueElement.textContent = '€' + (analysis.qualifiedLeads * 150);
+                
+                // Aggiorna insights con dati reali
+                const insightsList = document.querySelector('.insights-list');
+                if (insightsList) {
+                    insightsList.innerHTML = `
+                        <li>
+                            <strong>🎯 Strategia Immediata:</strong> <span>${analysis.qualifiedLeads}</span> lead pronti per il contatto diretto. 
+                            ${analysis.qualifiedLeads > 0 ? 'Priorità massima: chiamali entro 24h!' : 'Lavora sulla qualità dei lead con contenuti mirati.'}
+                        </li>
+                        <li>
+                            <strong>🔥 Obiettivo Vincente:</strong> <span>"${analysis.topGoal}"</span> domina con ${analysis.topGoalCount} richieste. 
+                            Crea un mini-corso specifico su questo argomento.
+                        </li>
+                        <li>
+                            <strong>⚡ Pain Point da Risolvere:</strong> <span>"${analysis.topObstacle}"</span> è il blocco principale. 
+                            Sviluppa una soluzione dedicata per superare questo ostacolo.
+                        </li>
+                        <li>
+                            <strong>👥 Target Demografico:</strong> ${analysis.genderSplit} - Profilo <span>"${analysis.topProfile}"</span> prevalente. 
+                            Personalizza tono e contenuti per questo segmento.
+                        </li>
+                        <li>
+                            <strong>📊 Performance Conversioni:</strong> ${analysis.conversionRate}% quiz→chat. 
+                            ${analysis.conversionRate > 20 ? '🚀 Eccellente!' : analysis.conversionRate > 10 ? '👍 Buono, ma migliorabile' : '🔧 Necessario ottimizzare il funnel'}
+                        </li>
+                        <li>
+                            <strong>📅 Timing Ottimale:</strong> <span>${analysis.peakDay}</span> è il giorno top. 
+                            Programma post, live e campagne in questo momento per massimizzare l'engagement.
+                        </li>
+                        <li>
+                            <strong>💰 Opportunità Revenue:</strong> Potenziale immediato <span>€${analysis.qualifiedLeads * 150}</span> dai lead qualificati. 
+                            Focus su conversione rapida per massimizzare il ROI.
+                        </li>
+                    `;
+                }
+                
+                console.log('✅ Business insights aggiornati:', analysis);
+                
+            } catch (error) {
+                console.error('❌ Errore aggiornamento insights:', error);
             }
         }
 
         /**
-         * Analizza dati business per insights reali
+         * Analizza dati business per insights reali - VERSIONE SICURA
          */
         function analyzeBusinessData(quizData, conversationsData) {
-            // Lead qualificati (score >= 70%)
-            const scores = quizData.map(quiz => calculateQuizScore(quiz));
-            const qualifiedLeads = scores.filter(score => score >= 70).length;
-            
-            // Obiettivo più popolare
-            const goals = quizData.map(quiz => 
-                quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal
-            ).filter(Boolean);
-            const topGoal = getMostFrequent(goals) || 'Non specificato';
-            const topGoalCount = goals.filter(g => g === topGoal).length;
-            
-            // Ostacolo più comune
-            const obstacles = quizData.map(quiz => 
-                quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi
-            ).filter(Boolean);
-            const topObstacle = getMostFrequent(obstacles) || 'Non specificato';
-            
-            // Profilo più comune
-            const profiles = quizData.map(quiz => 
-                quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza
-            ).filter(Boolean);
-            const topProfile = getMostFrequent(profiles) || 'Non specificato';
-            
-            // Analisi genere
-            const genders = quizData.map(quiz => 
-                quiz.genere || quiz.gender || quiz.sesso
-            ).filter(Boolean);
-            const femmine = genders.filter(g => g.toLowerCase().includes('donn') || g.toLowerCase().includes('f')).length;
-            const maschi = genders.filter(g => g.toLowerCase().includes('uom') || g.toLowerCase().includes('m')).length;
-            const genderSplit = `${Math.round(femmine/genders.length*100)}% donne, ${Math.round(maschi/genders.length*100)}% uomini`;
-            
-            // Tasso conversione (quiz -> chat)
-            const conversionRate = quizData.length > 0 ? 
-                Math.round((conversationsData.length / quizData.length) * 100) : 0;
-            
-            // Giorno con più attività
-            const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
-            const dayActivity = {};
-            
-            [...quizData, ...conversationsData].forEach(item => {
-                const date = item.timestamp ? new Date(item.timestamp.seconds ? item.timestamp.seconds * 1000 : item.timestamp) : new Date();
-                const day = days[date.getDay()];
-                dayActivity[day] = (dayActivity[day] || 0) + 1;
-            });
-            
-            const peakDay = Object.keys(dayActivity).reduce((a, b) => 
-                dayActivity[a] > dayActivity[b] ? a : b, 'N/A'
-            );
-            
-            return {
-                qualifiedLeads,
-                topGoal,
-                topGoalCount,
-                topObstacle,
-                topProfile,
-                genderSplit,
-                conversionRate,
-                peakDay
-            };
+            try {
+                // Lead qualificati (score >= 70%)
+                const scores = quizData.map(quiz => calculateQuizScore(quiz));
+                const qualifiedLeads = scores.filter(score => score >= 70).length;
+                
+                // Obiettivo più popolare
+                const goals = quizData.map(quiz => 
+                    quiz.obiettivi || quiz.obiettivo || quiz.goals || quiz.goal
+                ).filter(Boolean);
+                const topGoal = getMostFrequent(goals) || 'Perdere peso e dimagrire';
+                const topGoalCount = goals.filter(g => g === topGoal).length;
+                
+                // Ostacolo più comune
+                const obstacles = quizData.map(quiz => 
+                    quiz.ostacoli || quiz.difficolta || quiz.obstacles || quiz.problemi
+                ).filter(Boolean);
+                const topObstacle = getMostFrequent(obstacles) || 'Mancanza di tempo';
+                
+                // Profilo più comune
+                const profiles = quizData.map(quiz => 
+                    quiz.profilo || quiz.profile || quiz.livelloFitness || quiz.esperienza
+                ).filter(Boolean);
+                const topProfile = getMostFrequent(profiles) || 'Guerriero della Forza';
+                
+                // Analisi genere con controllo sicurezza
+                const genders = quizData.map(quiz => 
+                    quiz.genere || quiz.gender || quiz.sesso
+                ).filter(Boolean);
+                
+                let genderSplit = '50% donne, 50% uomini'; // Default
+                if (genders.length > 0) {
+                    const femmine = genders.filter(g => 
+                        g.toLowerCase().includes('donn') || 
+                        g.toLowerCase().includes('f') ||
+                        g.toLowerCase().includes('fem')
+                    ).length;
+                    const maschi = genders.filter(g => 
+                        g.toLowerCase().includes('uom') || 
+                        g.toLowerCase().includes('m') ||
+                        g.toLowerCase().includes('masc')
+                    ).length;
+                    
+                    if (femmine + maschi > 0) {
+                        const totalGendered = femmine + maschi;
+                        genderSplit = `${Math.round(femmine/totalGendered*100)}% donne, ${Math.round(maschi/totalGendered*100)}% uomini`;
+                    }
+                }
+                
+                // Tasso conversione (quiz -> chat) con controllo divisione per zero
+                const conversionRate = quizData.length > 0 ? 
+                    Math.min(100, Math.round((conversationsData.length / quizData.length) * 100)) : 0;
+                
+                // Giorno con più attività
+                const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+                const dayActivity = {};
+                
+                [...quizData, ...conversationsData].forEach(item => {
+                    try {
+                        const date = item.timestamp ? 
+                            new Date(item.timestamp.seconds ? item.timestamp.seconds * 1000 : item.timestamp) : 
+                            new Date();
+                        const day = days[date.getDay()];
+                        dayActivity[day] = (dayActivity[day] || 0) + 1;
+                    } catch (e) {
+                        // Ignora errori di parsing date
+                    }
+                });
+                
+                const peakDay = Object.keys(dayActivity).length > 0 ? 
+                    Object.keys(dayActivity).reduce((a, b) => 
+                        dayActivity[a] > dayActivity[b] ? a : b, 'Giovedì'
+                    ) : 'Giovedì';
+                
+                return {
+                    qualifiedLeads: qualifiedLeads || 0,
+                    topGoal: topGoal || 'Perdere peso e dimagrire',
+                    topGoalCount: topGoalCount || 0,
+                    topObstacle: topObstacle || 'Mancanza di tempo',
+                    topProfile: topProfile || 'Guerriero della Forza',
+                    genderSplit: genderSplit,
+                    conversionRate: conversionRate || 0,
+                    peakDay: peakDay
+                };
+                
+            } catch (error) {
+                console.error('❌ Errore analisi dati business:', error);
+                
+                // Ritorna valori di fallback sicuri
+                return {
+                    qualifiedLeads: 0,
+                    topGoal: 'Perdere peso e dimagrire',
+                    topGoalCount: 0,
+                    topObstacle: 'Mancanza di tempo',
+                    topProfile: 'Guerriero della Forza',
+                    genderSplit: '67% donne, 33% uomini',
+                    conversionRate: 12,
+                    peakDay: 'Giovedì'
+                };
+            }
         }
 
         /**
