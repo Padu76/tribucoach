@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz TribuCoach - Analisi Completa del Profilo Fitness</title>
+    <title>Quiz TribuCoach - Debug</title>
     
     <style>
         * {
@@ -18,12 +18,12 @@
             color: #fff;
             min-height: 100vh;
             line-height: 1.6;
+            padding: 20px;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 20px;
         }
 
         .header {
@@ -40,40 +40,27 @@
             margin-bottom: 15px;
         }
 
-        .header p {
-            font-size: 1.3rem;
-            color: #ccc;
-            margin-bottom: 10px;
-        }
-
-        .progress-container {
+        .debug-panel {
             background: rgba(255,255,255,0.1);
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 40px;
+            border: 2px solid #ff6600;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 10px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-
-        .progress-text {
-            text-align: center;
-            margin-top: 15px;
+        .debug-panel h3 {
             color: #ff6600;
-            font-weight: bold;
-            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .debug-panel button {
+            background: #ff6600;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin: 5px;
+            cursor: pointer;
         }
 
         .question-container {
@@ -82,13 +69,6 @@
             padding: 50px;
             margin-bottom: 30px;
             border: 1px solid rgba(255,102,0,0.2);
-            display: none;
-            backdrop-filter: blur(10px);
-        }
-
-        .question-container.active {
-            display: block;
-            animation: fadeInUp 0.6s ease;
         }
 
         .question-title {
@@ -103,53 +83,6 @@
             text-align: center;
             margin-bottom: 35px;
             font-size: 1.2rem;
-        }
-
-        .options {
-            display: grid;
-            gap: 20px;
-            margin-bottom: 35px;
-        }
-
-        .option {
-            background: rgba(255,255,255,0.05);
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-        }
-
-        .option:hover {
-            border-color: rgba(255,102,0,0.5);
-            background: rgba(255,102,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .option.selected {
-            border-color: #ff6600;
-            background: rgba(255,102,0,0.2);
-            box-shadow: 0 8px 25px rgba(255,102,0,0.3);
-        }
-
-        .option-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .option-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .option-desc {
-            color: #ccc;
-            font-size: 1rem;
-            line-height: 1.5;
         }
 
         .input-group {
@@ -180,67 +113,6 @@
             border-color: #ff6600;
         }
 
-        .checkbox-group {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            cursor: pointer;
-            padding: 15px;
-            border-radius: 15px;
-            transition: background 0.3s ease;
-        }
-
-        .checkbox-item:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 24px;
-            height: 24px;
-            accent-color: #ff6600;
-        }
-
-        .checkbox-item label {
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-
-        .range-group {
-            margin-bottom: 25px;
-        }
-
-        .range-group label {
-            display: block;
-            margin-bottom: 15px;
-            color: #ff6600;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .range-input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .range-value {
-            text-align: center;
-            color: #ff9933;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-        }
-
         .btn {
             padding: 18px 35px;
             border-radius: 30px;
@@ -256,484 +128,242 @@
             color: white;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255,102,0,0.4);
-        }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
+        .btn-primary:disabled {
+            background: #666;
             cursor: not-allowed;
         }
 
-        .result-container {
-            background: rgba(255,255,255,0.05);
-            border-radius: 25px;
-            padding: 50px;
-            text-align: center;
-            border: 1px solid rgba(255,102,0,0.2);
-            display: none;
-            backdrop-filter: blur(10px);
-        }
-
-        .result-icon {
-            font-size: 5rem;
-            margin-bottom: 25px;
-        }
-
-        .result-title {
-            font-size: 2.8rem;
-            color: #ff6600;
-            margin-bottom: 20px;
-        }
-
-        .result-score {
-            font-size: 1.5rem;
-            color: #ff9933;
-            margin-bottom: 25px;
+        .validation-status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
             font-weight: bold;
         }
 
-        .result-description {
-            font-size: 1.3rem;
-            color: #ccc;
-            margin-bottom: 35px;
-            line-height: 1.8;
+        .validation-status.valid {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
         }
 
-        .result-recommendations {
-            background: rgba(255,102,0,0.1);
-            border-radius: 20px;
-            padding: 30px;
-            margin: 35px 0;
-            text-align: left;
-        }
-
-        .result-recommendations h3 {
-            color: #ff6600;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-
-        .result-recommendations ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .result-recommendations li {
-            margin-bottom: 15px;
-            padding-left: 30px;
-            position: relative;
-            font-size: 1.1rem;
-        }
-
-        .result-recommendations li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #ff6600;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .saving-indicator {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: #4CAF50;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-weight: bold;
-            display: none;
-            font-size: 1.1rem;
-            z-index: 1000;
-        }
-
-        .section-intro {
-            background: rgba(255,102,0,0.1);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 35px;
-            border-left: 5px solid #ff6600;
-        }
-
-        .section-intro h3 {
-            color: #ff6600;
-            margin-bottom: 10px;
-            font-size: 1.3rem;
-        }
-
-        .section-intro p {
-            color: #ccc;
-            font-size: 1rem;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            .header h1 {
-                font-size: 2.2rem;
-            }
-            .question-container {
-                padding: 30px 20px;
-            }
+        .validation-status.invalid {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+            color: #f44336;
         }
     </style>
 </head>
 <body>
-    <div class="saving-indicator" id="saving-indicator">
-        💾 Salvando i tuoi dati...
-    </div>
-
     <div class="container">
         <div class="header">
-            <h1>🎯 Analisi Profilo TribuCoach</h1>
-            <p>Quiz Avanzato per il tuo Piano Fitness Personalizzato</p>
-            <div style="font-size: 1rem; color: #999; margin-bottom: 30px;">12 domande • 5 minuti • Risultati immediati</div>
+            <h1>🎯 Quiz TribuCoach - Debug</h1>
+            <p>Versione di debug per identificare il problema</p>
         </div>
 
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
-            </div>
-            <div class="progress-text" id="progress-text">Domanda 1 di 12</div>
+        <div class="debug-panel">
+            <h3>🔧 Debug Panel</h3>
+            <button onclick="testValidation()">Test Validazione</button>
+            <button onclick="forceEnable()">Forza Attivazione</button>
+            <button onclick="showValues()">Mostra Valori</button>
+            <button onclick="testFirebase()">Test Firebase</button>
+            
+            <div id="debug-output" style="margin-top: 15px; color: #ccc; font-family: monospace;"></div>
         </div>
 
-        <!-- Domanda 1: Dati Personali -->
-        <div class="question-container active" id="question-1">
-            <div class="section-intro">
-                <h3>📋 Sezione 1: I tuoi dati</h3>
-                <p>Iniziamo con le informazioni base per personalizzare al meglio la tua esperienza</p>
-            </div>
+        <div class="question-container">
             <h2 class="question-title">Parlami di te</h2>
             <p class="question-subtitle">Questi dati mi aiutano a creare il tuo profilo personalizzato</p>
             
             <div class="input-group">
                 <label for="name">Nome completo:</label>
-                <input type="text" id="name" placeholder="Come ti chiami?" required>
+                <input type="text" id="name" placeholder="Come ti chiami?" value="luca">
             </div>
             
             <div class="input-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" placeholder="La tua email per ricevere il piano personalizzato" required>
+                <input type="email" id="email" placeholder="La tua email" value="padu76@hotmail.com">
             </div>
             
             <div class="input-group">
                 <label for="age">Età:</label>
-                <input type="number" id="age" min="16" max="80" placeholder="Quanti anni hai?" required>
+                <input type="number" id="age" min="16" max="80" placeholder="Quanti anni hai?" value="44">
             </div>
 
             <div class="input-group">
                 <label for="city">Città:</label>
-                <input type="text" id="city" placeholder="Dove vivi? (es. Verona, Milano...)">
+                <input type="text" id="city" placeholder="Dove vivi?" value="Verona">
             </div>
+
+            <div class="validation-status" id="validation-status">
+                Status validazione: In attesa...
+            </div>
+
+            <button class="btn btn-primary" id="next-btn" disabled>
+                Avanti →
+            </button>
         </div>
+    </div>
 
-        <!-- Domanda 2: Esperienza -->
-        <div class="question-container" id="question-2">
-            <h2 class="question-title">La tua esperienza fitness</h2>
-            <p class="question-subtitle">Aiutami a capire il tuo livello attuale di allenamento</p>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        console.log('🎯 Debug Quiz caricato');
+
+        let db = null;
+
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-9564b.firebaseapp.com",
+            projectId: "tribucoach-9564b",
+            storageBucket: "tribucoach-9564b.firebasestorage.app",
+            messagingSenderId: "476626832985",
+            appId: "1:476626832985:web:7835188f40f4348567ab48",
+            measurementId: "G-YZ565MKQ6V"
+        };
+
+        // Inizializza Firebase
+        function initFirebase() {
+            try {
+                if (typeof firebase !== 'undefined') {
+                    const app = firebase.initializeApp(firebaseConfig);
+                    db = firebase.firestore();
+                    console.log('✅ Firebase inizializzato');
+                    return true;
+                } else {
+                    console.warn('⚠️ Firebase SDK non caricato');
+                    return false;
+                }
+            } catch (error) {
+                console.warn('⚠️ Errore Firebase:', error.message);
+                return false;
+            }
+        }
+
+        function validateForm() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const age = parseInt(document.getElementById('age').value);
+            const city = document.getElementById('city').value.trim();
+
+            const validations = {
+                name: name.length > 0,
+                email: email.length > 0 && email.includes('@'),
+                age: age >= 16 && age <= 80,
+                city: city.length > 0
+            };
+
+            const isValid = Object.values(validations).every(v => v);
+
+            // Aggiorna status visivo
+            const statusDiv = document.getElementById('validation-status');
+            const nextBtn = document.getElementById('next-btn');
+
+            if (isValid) {
+                statusDiv.className = 'validation-status valid';
+                statusDiv.textContent = '✅ Tutti i campi sono validi!';
+                nextBtn.disabled = false;
+            } else {
+                statusDiv.className = 'validation-status invalid';
+                statusDiv.textContent = '❌ Alcuni campi non sono validi';
+                nextBtn.disabled = true;
+            }
+
+            return { isValid, validations, values: { name, email, age, city } };
+        }
+
+        function log(message) {
+            const output = document.getElementById('debug-output');
+            output.innerHTML = message + '<br>' + output.innerHTML;
+            console.log(message);
+        }
+
+        // Funzioni debug globali
+        window.testValidation = function() {
+            log('🔍 Testing validation...');
+            const result = validateForm();
+            log('📊 Validation result: ' + JSON.stringify(result, null, 2));
+        };
+
+        window.forceEnable = function() {
+            log('🚀 Forcing button enable...');
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            log('✅ Button enabled');
+        };
+
+        window.showValues = function() {
+            log('📋 Current values:');
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const age = document.getElementById('age').value;
+            const city = document.getElementById('city').value;
             
-            <div class="options">
-                <div class="option" data-value="principiante">
-                    <span class="option-icon">🌱</span>
-                    <div class="option-title">Principiante Motivato</div>
-                    <div class="option-desc">Ho poca esperienza ma tanta voglia di iniziare il mio percorso fitness</div>
-                </div>
-                <div class="option" data-value="intermedio">
-                    <span class="option-icon">💪</span>
-                    <div class="option-title">Guerriero in Crescita</div>
-                    <div class="option-desc">Mi alleno da qualche tempo, conosco le basi e voglio migliorare</div>
-                </div>
-                <div class="option" data-value="avanzato">
-                    <span class="option-icon">🏆</span>
-                    <div class="option-title">Atleta Esperto</div>
-                    <div class="option-desc">Ho anni di esperienza, conosco tecniche avanzate e cerco la perfezione</div>
-                </div>
-                <div class="option" data-value="professionista">
-                    <span class="option-icon">🥇</span>
-                    <div class="option-title">Professionista/Competitivo</div>
-                    <div class="option-desc">Sono un atleta professionista o gareggio a livello competitivo</div>
-                </div>
-            </div>
-        </div>
+            log('Name: "' + name + '" (length: ' + name.length + ')');
+            log('Email: "' + email + '" (length: ' + email.length + ')');
+            log('Age: "' + age + '" (parsed: ' + parseInt(age) + ')');
+            log('City: "' + city + '" (length: ' + city.length + ')');
+        };
 
-        <!-- Domanda 3: Obiettivi -->
-        <div class="question-container" id="question-3">
-            <h2 class="question-title">I tuoi obiettivi principali</h2>
-            <p class="question-subtitle">Seleziona fino a 3 obiettivi che ti motivano di più</p>
+        window.testFirebase = function() {
+            if (!db) {
+                log('❌ Firebase not initialized');
+                return;
+            }
             
-            <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-weight" value="Perdita di grasso">
-                    <label for="goal-weight">🔥 Perdere peso e definire il fisico</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-muscle" value="Aumento massa muscolare">
-                    <label for="goal-muscle">💪 Aumentare massa muscolare</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-strength" value="Miglioramento forza">
-                    <label for="goal-strength">🏋️ Migliorare forza e potenza</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-endurance" value="Resistenza cardiovascolare">
-                    <label for="goal-endurance">🏃 Aumentare resistenza cardiovascolare</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-health" value="Miglioramento salute generale">
-                    <label for="goal-health">❤️ Migliorare salute generale</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-sport" value="Performance sportiva specifica">
-                    <label for="goal-sport">🏆 Performance sportiva specifica</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="goal-flexibility" value="Flessibilità e mobilità">
-                    <label for="goal-flexibility">🤸 Migliorare flessibilità e mobilità</label>
-                </div>
-            </div>
-        </div>
+            log('🧪 Testing Firebase...');
+            db.collection('test').add({
+                test: true,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                message: 'Debug test'
+            }).then((docRef) => {
+                log('✅ Firebase test successful! ID: ' + docRef.id);
+            }).catch((error) => {
+                log('❌ Firebase test failed: ' + error.message);
+            });
+        };
 
-        <!-- Domanda 4: Tempo Disponibile -->
-        <div class="question-container" id="question-4">
-            <h2 class="question-title">Quanto tempo hai per allenarti?</h2>
-            <p class="question-subtitle">Considera una sessione di allenamento tipica</p>
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 DOM loaded');
             
-            <div class="options">
-                <div class="option" data-value="15-30 minuti">
-                    <span class="option-icon">⚡</span>
-                    <div class="option-title">Express - 15-30 minuti</div>
-                    <div class="option-desc">Sessioni brevi ma intense, perfette per chi ha poco tempo</div>
-                </div>
-                <div class="option" data-value="30-45 minuti">
-                    <span class="option-icon">⏰</span>
-                    <div class="option-title">Standard - 30-45 minuti</div>
-                    <div class="option-desc">La durata ideale per un allenamento completo ed efficace</div>
-                </div>
-                <div class="option" data-value="45-60 minuti">
-                    <span class="option-icon">🕐</span>
-                    <div class="option-title">Completo - 45-60 minuti</div>
-                    <div class="option-desc">Allenamenti dettagliati con focus specifici</div>
-                </div>
-                <div class="option" data-value="Più di 60 minuti">
-                    <span class="option-icon">🔥</span>
-                    <div class="option-title">Intensivo - Più di 60 minuti</div>
-                    <div class="option-desc">Sessioni lunghe per massimizzare i risultati</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Domanda 5: Frequenza -->
-        <div class="question-container" id="question-5">
-            <h2 class="question-title">Frequenza di allenamento</h2>
-            <p class="question-subtitle">Quante volte a settimana puoi dedicarti al fitness?</p>
+            // Inizializza Firebase
+            initFirebase();
             
-            <div class="options">
-                <div class="option" data-value="1-2 volte">
-                    <span class="option-icon">📅</span>
-                    <div class="option-title">Weekend Warrior - 1-2 volte</div>
-                    <div class="option-desc">Focus su mantenimento e benessere generale</div>
-                </div>
-                <div class="option" data-value="3-4 volte">
-                    <span class="option-icon">📈</span>
-                    <div class="option-title">Costante - 3-4 volte</div>
-                    <div class="option-desc">Frequenza ottimale per vedere progressi significativi</div>
-                </div>
-                <div class="option" data-value="5-6 volte">
-                    <span class="option-icon">💪</span>
-                    <div class="option-title">Dedicato - 5-6 volte</div>
-                    <div class="option-desc">Il fitness è una priorità nella tua routine</div>
-                </div>
-                <div class="option" data-value="Tutti i giorni">
-                    <span class="option-icon">🔥</span>
-                    <div class="option-title">Warrior - Tutti i giorni</div>
-                    <div class="option-desc">Dedichi quotidianamente tempo al tuo benessere</div>
-                </div>
-            </div>
-        </div>
+            // Setup input listeners
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    log('📝 Input changed: ' + this.id + ' = "' + this.value + '"');
+                    setTimeout(validateForm, 10);
+                });
+                input.addEventListener('change', validateForm);
+                input.addEventListener('keyup', validateForm);
+            });
 
-        <!-- Domanda 6: Preferenze Allenamento -->
-        <div class="question-container" id="question-6">
-            <h2 class="question-title">Dove e come ti piace allenarti?</h2>
-            <p class="question-subtitle">Seleziona tutti gli ambienti che preferisci</p>
-            
-            <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-home" value="Allenamento a casa">
-                    <label for="pref-home">🏠 Allenamento a casa</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-gym" value="Palestra attrezzata">
-                    <label for="pref-gym">🏋️ Palestra attrezzata</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-outdoor" value="All'aria aperta">
-                    <label for="pref-outdoor">🌳 All'aria aperta</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-functional" value="Allenamento funzionale">
-                    <label for="pref-functional">🤸 Allenamento funzionale</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-crossfit" value="CrossFit / HIIT">
-                    <label for="pref-crossfit">💥 CrossFit / HIIT</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="pref-yoga" value="Yoga e stretching">
-                    <label for="pref-yoga">🧘 Yoga e stretching</label>
-                </div>
-            </div>
-        </div>
+            // Setup button
+            document.getElementById('next-btn').addEventListener('click', function() {
+                log('🔘 Next button clicked');
+                const result = validateForm();
+                if (result.isValid) {
+                    log('✅ Proceeding to next question...');
+                    alert('Validazione OK! Procedendo alla domanda 2...');
+                } else {
+                    log('❌ Validation failed');
+                    alert('Compilare tutti i campi correttamente');
+                }
+            });
 
-        <!-- Domanda 7: Alimentazione -->
-        <div class="question-container" id="question-7">
-            <h2 class="question-title">La tua situazione alimentare</h2>
-            <p class="question-subtitle">Descrivimi il tuo rapporto attuale con l'alimentazione</p>
-            
-            <div class="options">
-                <div class="option" data-value="Ottima">
-                    <span class="option-icon">🥗</span>
-                    <div class="option-title">Nutrizionista Nato</div>
-                    <div class="option-desc">Mangio sano, bilanciato, controllo porzioni e macro</div>
-                </div>
-                <div class="option" data-value="Buona">
-                    <span class="option-icon">👍</span>
-                    <div class="option-title">Sulla Buona Strada</div>
-                    <div class="option-desc">Generalmente sana con qualche sgarro controllato</div>
-                </div>
-                <div class="option" data-value="Migliorabile">
-                    <span class="option-icon">📈</span>
-                    <div class="option-title">In Miglioramento</div>
-                    <div class="option-desc">So cosa dovrei mangiare ma faccio fatica a essere costante</div>
-                </div>
-                <div class="option" data-value="Caotica">
-                    <span class="option-icon">🍕</span>
-                    <div class="option-title">Caos Alimentare</div>
-                    <div class="option-desc">Mangio quello che capita, quando capita</div>
-                </div>
-            </div>
-        </div>
+            // Validazione iniziale
+            setTimeout(() => {
+                log('🔍 Initial validation...');
+                validateForm();
+            }, 500);
 
-        <!-- Domanda 8: Motivazione -->
-        <div class="question-container" id="question-8">
-            <h2 class="question-title">Cosa ti spinge a dare il massimo?</h2>
-            <p class="question-subtitle">Seleziona la tua principale fonte di motivazione</p>
-            
-            <div class="options">
-                <div class="option" data-value="Trasformazione fisica">
-                    <span class="option-icon">💪</span>
-                    <div class="option-title">Trasformazione Fisica</div>
-                    <div class="option-desc">Vedere i cambiamenti nel mio corpo mi motiva enormemente</div>
-                </div>
-                <div class="option" data-value="Performance">
-                    <span class="option-icon">🎯</span>
-                    <div class="option-title">Superare i Limiti</div>
-                    <div class="option-desc">Mi piace battere i miei record e superare sempre me stesso</div>
-                </div>
-                <div class="option" data-value="Benessere">
-                    <span class="option-icon">😊</span>
-                    <div class="option-title">Benessere Totale</div>
-                    <div class="option-desc">Cerco energia, buon umore e qualità della vita</div>
-                </div>
-                <div class="option" data-value="Socialità">
-                    <span class="option-icon">👥</span>
-                    <div class="option-title">Connessione Sociale</div>
-                    <div class="option-desc">Amo allenarmi con altri e condividere il percorso</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Domanda 9: Stress -->
-        <div class="question-container" id="question-9">
-            <h2 class="question-title">Il tuo livello di stress quotidiano</h2>
-            <p class="question-subtitle">Questo influenza il tipo di allenamento più adatto a te</p>
-            
-            <div class="range-group">
-                <label for="stress-level">Livello di stress da 1 a 10:</label>
-                <input type="range" id="stress-level" min="1" max="10" value="5" class="range-input">
-                <div class="range-value" id="stress-value">5 - Moderato</div>
-            </div>
-
-            <div class="options">
-                <div class="option" data-value="Sedentario">
-                    <span class="option-icon">🧘</span>
-                    <div class="option-title">Cerco Relax</div>
-                    <div class="option-desc">Preferisco allenamenti che mi aiutino a scaricare lo stress</div>
-                </div>
-                <div class="option" data-value="Moderatamente attivo">
-                    <span class="option-icon">⚡</span>
-                    <div class="option-title">Voglio Energia</div>
-                    <div class="option-desc">Ho bisogno di allenamenti che mi diano la carica</div>
-                </div>
-                <div class="option" data-value="Molto attivo">
-                    <span class="option-icon">⚖️</span>
-                    <div class="option-title">Equilibrio Perfetto</div>
-                    <div class="option-desc">Cerco il giusto mix tra intensità e recupero</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Domanda 10: Budget -->
-        <div class="question-container" id="question-10">
-            <h2 class="question-title">Investimento nel tuo benessere</h2>
-            <p class="question-subtitle">Quale budget mensile puoi dedicare al fitness?</p>
-            
-            <div class="options">
-                <div class="option" data-value="0-50€">
-                    <span class="option-icon">💰</span>
-                    <div class="option-title">Budget Contenuto</div>
-                    <div class="option-desc">0-50€/mese - Focus su soluzioni economiche ed efficaci</div>
-                </div>
-                <div class="option" data-value="50-150€">
-                    <span class="option-icon">💵</span>
-                    <div class="option-title">Budget Medio</div>
-                    <div class="option-desc">50-150€/mese - Palestra + qualche extra occasionale</div>
-                </div>
-                <div class="option" data-value="150-300€">
-                    <span class="option-icon">💎</span>
-                    <div class="option-title">Investimento Serio</div>
-                    <div class="option-desc">150-300€/mese - Personal trainer + nutrizione + extras</div>
-                </div>
-                <div class="option" data-value="300€+">
-                    <span class="option-icon">👑</span>
-                    <div class="option-title">Premium Experience</div>
-                    <div class="option-desc">300€+/mese - Il meglio disponibile per raggiungere gli obiettivi</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Domanda 11: Ostacoli -->
-        <div class="question-container" id="question-11">
-            <h2 class="question-title">Le tue sfide principali</h2>
-            <p class="question-subtitle">Cosa ti impedisce di raggiungere i tuoi obiettivi?</p>
-            
-            <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-time" value="Mancanza di tempo">
-                    <label for="challenge-time">⏰ Mancanza di tempo</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-motivation" value="Difficoltà a essere costante">
-                    <label for="challenge-motivation">😔 Difficoltà a rimanere motivato</label>
-                </div>
-                <div class="checkbox-
+            log('✅ Debug quiz initialized');
+        });
+    </script>
+</body>
+</html>
