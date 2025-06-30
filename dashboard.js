@@ -1,4 +1,4 @@
-// dashboard.js - TribuCoach Dashboard v2.0 con supporto 5 profili e insights avanzati
+// dashboard.js - TribuCoach Dashboard con supporto conversazioni chatbot
 import { 
     getAllQuizResults, 
     getLeads, 
@@ -16,12 +16,11 @@ class ChatbotDashboard {
         this.leads = [];
         this.unsubscribeQuiz = null;
         this.unsubscribeLeads = null;
-        this.charts = {}; // Store chart instances
         this.init();
     }
 
     async init() {
-        console.log('🚀 Inizializzazione Dashboard v2.0...');
+        console.log('🚀 Inizializzazione Dashboard...');
         
         this.updateConnectionStatus('connecting');
         
@@ -36,7 +35,7 @@ class ChatbotDashboard {
             this.setupEventListeners();
             
             this.updateConnectionStatus('connected');
-            console.log('✅ Dashboard v2.0 inizializzata con successo');
+            console.log('✅ Dashboard inizializzata con successo');
             
         } catch (error) {
             console.error('❌ Errore inizializzazione dashboard:', error);
@@ -47,7 +46,7 @@ class ChatbotDashboard {
     async loadAllData() {
         console.log('📡 Caricamento dati...');
         
-        // Carica quiz results con nuovo formato
+        // Carica quiz results
         this.quizResults = await getAllQuizResults();
         console.log(`📊 Quiz caricati: ${this.quizResults.length}`);
         
@@ -55,7 +54,7 @@ class ChatbotDashboard {
         this.leads = await getLeads();
         console.log(`👥 Leads caricati: ${this.leads.length}`);
         
-        // 🔥 Carica conversazioni chatbot
+        // 🔥 Carica conversazioni chatbot usando firebase-api.js
         await this.loadChatConversations();
         
         // Aggiorna tutte le sezioni
@@ -63,8 +62,7 @@ class ChatbotDashboard {
         this.updateChatConversationsTable();
         this.updateMetrics();
         this.updateCharts();
-        this.updateAdvancedInsights();
-        this.updateActionableInsights();
+        this.updateInsights();
         
         this.updateLastUpdateTime();
     }
@@ -87,6 +85,7 @@ class ChatbotDashboard {
                 console.log(`💬 Conversazioni caricate: ${this.chatConversations.length}`);
             } else {
                 console.error('❌ firebase-api.js NON TROVATO dopo 100 tentativi');
+                console.log('🔍 Variabili window disponibili:', Object.keys(window).filter(k => k.toLowerCase().includes('firebase')));
                 this.chatConversations = [];
             }
         } catch (error) {
@@ -104,8 +103,7 @@ class ChatbotDashboard {
             this.updateQuizTable();
             this.updateMetrics();
             this.updateCharts();
-            this.updateAdvancedInsights();
-            this.updateActionableInsights();
+            this.updateInsights();
             this.updateLastUpdateTime();
         });
         
@@ -144,61 +142,48 @@ class ChatbotDashboard {
         });
     }
 
-    // 🔥 TABELLA QUIZ OTTIMIZZATA CON NUOVO LAYOUT
     updateQuizTable() {
         const tbody = document.getElementById('quiz-results-table-body');
         if (!tbody) return;
 
         if (this.quizResults.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="no-data">Nessun risultato quiz trovato</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" class="no-data">Nessun risultato quiz trovato</td></tr>';
             return;
         }
 
-        const rows = this.quizResults.map(result => {
-            const score = this.calculateNewLeadScore(result);
-            const profileInfo = this.getNewProfileInfo(result.profile);
+        tbody.innerHTML = this.quizResults.map(result => {
+            const score = calculateLeadScore(result);
+            const profileIcon = getProfileIcon(result.profile_type);
             const timestamp = formatDateTime(result.timestamp);
-            
-            // Estrai dati per colonne ottimizzate
-            const goals = this.extractGoals(result);
-            const challenges = this.extractChallenges(result);
-            const contact = result.whatsapp || result.email || 'N/A';
-            
-            // Score badge
-            const scoreClass = score >= 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
-            
+
             return `
-                <tr class="data-row-main">
-                    <td class="col-name"><strong>${result.name || 'N/A'}</strong></td>
-                    <td class="col-age">${result.age || 'N/A'}</td>
-                    <td class="col-contact" title="${contact}">${this.truncateText(contact, 20)}</td>
-                    <td class="col-profile">
-                        <span class="tag ${profileInfo.class}">${profileInfo.icon} ${profileInfo.short}</span>
-                    </td>
-                    <td class="col-score">
-                        <span class="score-badge ${scoreClass}">${score}%</span>
-                    </td>
-                    <td class="col-goals" title="${goals.full}">${goals.short}</td>
-                    <td class="col-challenges" title="${challenges.full}">${challenges.short}</td>
-                    <td class="col-date">${this.formatShortDate(result.timestamp)}</td>
-                    <td class="col-actions">
-                        <button class="action-button details" onclick="showQuizDetails('${result.id}')">
-                            👁️
+                <tr>
+                    <td><strong>${result.name || 'N/A'}</strong></td>
+                    <td>${result.age || 'N/A'}</td>
+                    <td>${result.email || 'N/A'}</td>
+                    <td>${result.whatsapp || 'N/A'}</td>
+                    <td>${result.gender || 'N/A'}</td>
+                    <td>${profileIcon} ${result.profile_type || 'N/A'}</td>
+                    <td>${Array.isArray(result.goals) ? result.goals.slice(0,2).join(', ') : result.goals || 'N/A'}</td>
+                    <td>${result.training_style || 'N/A'}</td>
+                    <td>${Array.isArray(result.obstacles) ? result.obstacles.slice(0,2).join(', ') : result.obstacles || 'N/A'}</td>
+                    <td><span style="color: ${score >= 70 ? '#4CAF50' : score >= 50 ? '#ff9800' : '#f44336'}">${score}%</span></td>
+                    <td>${timestamp}</td>
+                    <td>
+                        <button class="action-button" onclick="showQuizDetails('${result.id}')">
+                            👁️ Dettagli
                         </button>
                         ${result.whatsapp ? `
                             <button class="action-button whatsapp whatsapp-btn" data-phone="${result.whatsapp}">
-                                📱
+                                📱 WhatsApp
                             </button>
                         ` : ''}
                     </td>
                 </tr>
             `;
         }).join('');
-
-        tbody.innerHTML = rows;
     }
 
-    // 🔥 TABELLA CHATBOT MIGLIORATA
     updateChatConversationsTable() {
         const tbody = document.getElementById('chatbot-conversations-table-body');
         if (!tbody) return;
@@ -210,23 +195,23 @@ class ChatbotDashboard {
 
         tbody.innerHTML = this.chatConversations.map(conversation => {
             const lastActivity = formatDateTime(conversation.lastActivity);
-            const shortId = conversation.id.length > 8 ? conversation.id.substring(0, 8) + '...' : conversation.id;
+            const shortId = conversation.id.length > 10 ? conversation.id.substring(0, 10) + '...' : conversation.id;
 
             return `
                 <tr>
-                    <td><code style="font-size: 0.8rem;">${shortId}</code></td>
-                    <td><strong>${this.truncateText(conversation.customerName || 'Anonimo', 15)}</strong></td>
+                    <td><code>${shortId}</code></td>
+                    <td><strong>${conversation.customerName || 'Cliente Anonimo'}</strong></td>
                     <td>${conversation.phone || 'N/A'}</td>
-                    <td><small>${this.truncateText(conversation.lastMessageSnippet || 'Nessun messaggio', 35)}</small></td>
-                    <td><span class="tag">${conversation.topic || 'Generale'}</span></td>
-                    <td style="font-size: 0.8rem;">${this.formatShortDate(conversation.lastActivity)}</td>
+                    <td><small>${conversation.lastMessageSnippet || 'Nessun messaggio'}</small></td>
+                    <td><span style="background: #ff6600; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${conversation.topic || 'Generale'}</span></td>
+                    <td>${lastActivity}</td>
                     <td>
-                        <button class="action-button details view-conversation-btn" data-conversation-id="${conversation.id}">
-                            👁️
+                        <button class="action-button view-conversation-btn" data-conversation-id="${conversation.id}">
+                            👁️ Vedi Conversazione
                         </button>
                         ${conversation.phone && conversation.phone !== 'N/A' ? `
                             <button class="action-button whatsapp whatsapp-btn" data-phone="${conversation.phone}">
-                                📱
+                                📱 WhatsApp
                             </button>
                         ` : ''}
                     </td>
@@ -235,636 +220,6 @@ class ChatbotDashboard {
         }).join('');
     }
 
-    // 🔥 METRICHE PRINCIPALI AGGIORNATE
-    updateMetrics() {
-        // Metriche base
-        document.getElementById('totalQuizzes').textContent = this.quizResults.length;
-        document.getElementById('totalChatConversations').textContent = this.chatConversations.length;
-        
-        // Score medio con nuovo calcolo
-        const avgScore = this.quizResults.length > 0 
-            ? Math.round(this.quizResults.reduce((sum, q) => sum + this.calculateNewLeadScore(q), 0) / this.quizResults.length)
-            : 0;
-        document.getElementById('avgQuizScore').textContent = `${avgScore}%`;
-        
-        // Lead premium (80+)
-        const premiumLeads = this.quizResults.filter(q => this.calculateNewLeadScore(q) >= 80).length;
-        document.getElementById('premiumLeadsCount').textContent = premiumLeads;
-        
-        // Quiz oggi
-        const today = new Date().toDateString();
-        const quizzesToday = this.quizResults.filter(q => {
-            const quizDate = q.timestamp ? new Date(q.timestamp).toDateString() : null;
-            return quizDate === today;
-        }).length;
-        document.getElementById('quizzesToday').textContent = quizzesToday;
-    }
-
-    // 🔥 ADVANCED INSIGHTS NUOVI
-    updateAdvancedInsights() {
-        this.updateHotLeads();
-        this.updateProfileBreakdown();
-        this.updateRevenuePotential();
-        this.updateTimingAnalysis();
-        this.updateTopChallenges();
-        this.updateLeadQuality();
-    }
-
-    updateHotLeads() {
-        const hotLeads = this.quizResults.filter(q => this.calculateNewLeadScore(q) >= 80);
-        const hotLeadsCount = hotLeads.length;
-        
-        document.getElementById('hotLeadsCount').textContent = hotLeadsCount;
-        
-        // Progress bar
-        const progressPercent = this.quizResults.length > 0 ? (hotLeadsCount / this.quizResults.length) * 100 : 0;
-        document.getElementById('hotLeadsProgress').style.width = `${progressPercent}%`;
-        
-        // Lista hot leads
-        const hotLeadsList = document.getElementById('hotLeadsList');
-        if (hotLeadsCount > 0) {
-            hotLeadsList.innerHTML = hotLeads.slice(0, 5).map(lead => `
-                <div class="hot-lead-item">
-                    <strong>${lead.name}</strong> - ${this.calculateNewLeadScore(lead)}%
-                    <br><small>${lead.email || lead.whatsapp}</small>
-                </div>
-            `).join('');
-        } else {
-            hotLeadsList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Nessun hot lead al momento</div>';
-        }
-    }
-
-    updateProfileBreakdown() {
-        const profileCounts = {
-            'Scudiero da Motivare': 0,
-            'Guerriero Principiante': 0,
-            'Atleta Determinato': 0,
-            'Master Elite': 0,
-            'Champion Pro': 0
-        };
-
-        this.quizResults.forEach(quiz => {
-            const profile = quiz.profile || 'Non definito';
-            if (profileCounts.hasOwnProperty(profile)) {
-                profileCounts[profile]++;
-            }
-        });
-
-        document.getElementById('scudieroCount').textContent = profileCounts['Scudiero da Motivare'];
-        document.getElementById('guerrieroCount').textContent = profileCounts['Guerriero Principiante'];
-        document.getElementById('atletaCount').textContent = profileCounts['Atleta Determinato'];
-        document.getElementById('masterCount').textContent = profileCounts['Master Elite'];
-        document.getElementById('championCount').textContent = profileCounts['Champion Pro'];
-
-        // Profilo dominante
-        const dominantProfile = Object.keys(profileCounts).reduce((a, b) => 
-            profileCounts[a] > profileCounts[b] ? a : b
-        );
-        document.getElementById('dominantProfile').textContent = profileCounts[dominantProfile] > 0 ? dominantProfile : 'N/A';
-    }
-
-    updateRevenuePotential() {
-        // Calcola revenue potenziale basato sui budget dichiarati
-        const budgetMapping = {
-            'budget_zero': 0,
-            'budget_basso': 30, // €30/mese medio
-            'budget_medio': 100, // €100/mese medio 
-            'budget_alto': 225, // €225/mese medio
-            'budget_premium': 400 // €400/mese medio
-        };
-
-        let totalRevenue = 0;
-        let budgetCount = 0;
-
-        this.quizResults.forEach(quiz => {
-            const budget = quiz.budget;
-            if (budget && budgetMapping[budget] !== undefined) {
-                totalRevenue += budgetMapping[budget];
-                budgetCount++;
-            }
-        });
-
-        // Revenue mensile potenziale
-        document.getElementById('revenueePotential').textContent = `€${totalRevenue.toLocaleString()}`;
-        
-        // Budget medio
-        const avgBudget = budgetCount > 0 ? Math.round(totalRevenue / budgetCount) : 0;
-        document.getElementById('avgBudget').textContent = `€${avgBudget}`;
-        
-        // Conversion rate stimato
-        const conversionRate = this.quizResults.length > 0 ? Math.round((budgetCount / this.quizResults.length) * 100) : 0;
-        document.getElementById('conversionRate').textContent = `${conversionRate}%`;
-    }
-
-    updateTimingAnalysis() {
-        // Analisi orari di picco per quiz
-        const quizHours = this.quizResults
-            .map(q => q.timestamp ? new Date(q.timestamp).getHours() : null)
-            .filter(hour => hour !== null);
-        
-        let peakHour = 'N/A';
-        if (quizHours.length > 0) {
-            const hourCounts = quizHours.reduce((acc, hour) => {
-                acc[hour] = (acc[hour] || 0) + 1;
-                return acc;
-            }, {});
-            const peak = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b);
-            peakHour = `${peak}:00-${parseInt(peak) + 1}:00`;
-        }
-        document.getElementById('peakHour').textContent = peakHour;
-
-        // Follow-up urgenti (quiz completati nelle ultime 24h)
-        const last24h = new Date();
-        last24h.setHours(last24h.getHours() - 24);
-        const urgentFollowups = this.quizResults.filter(q => {
-            return q.timestamp && new Date(q.timestamp) >= last24h;
-        }).length;
-        document.getElementById('urgentFollowups').textContent = urgentFollowups;
-
-        // Trend settimanale
-        const lastWeek = new Date();
-        lastWeek.setDate(lastWeek.getDate() - 7);
-        const thisWeekQuizzes = this.quizResults.filter(q => {
-            return q.timestamp && new Date(q.timestamp) >= lastWeek;
-        }).length;
-        
-        const prevWeek = new Date();
-        prevWeek.setDate(prevWeek.getDate() - 14);
-        const prevWeekQuizzes = this.quizResults.filter(q => {
-            const qDate = new Date(q.timestamp);
-            return q.timestamp && qDate >= prevWeek && qDate < lastWeek;
-        }).length;
-        
-        const weeklyTrend = document.getElementById('weeklyTrend');
-        if (prevWeekQuizzes > 0) {
-            const change = ((thisWeekQuizzes - prevWeekQuizzes) / prevWeekQuizzes) * 100;
-            const arrow = change >= 0 ? '↗' : '↘';
-            const color = change >= 0 ? '#4CAF50' : '#f44336';
-            weeklyTrend.textContent = `${arrow} ${change >= 0 ? '+' : ''}${Math.round(change)}% questa settimana`;
-            weeklyTrend.style.color = color;
-        } else {
-            weeklyTrend.textContent = '📊 Dati insufficienti';
-            weeklyTrend.style.color = '#999';
-        }
-    }
-
-    updateTopChallenges() {
-        // Analizza le sfide più comuni
-        const challengeCounts = {};
-        
-        this.quizResults.forEach(quiz => {
-            const challenges = quiz.main_challenges || quiz.challenges || [];
-            if (Array.isArray(challenges)) {
-                challenges.forEach(challenge => {
-                    challengeCounts[challenge] = (challengeCounts[challenge] || 0) + 1;
-                });
-            }
-        });
-
-        const sortedChallenges = Object.entries(challengeCounts)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 3);
-
-        const challengesContainer = document.getElementById('topChallenges');
-        if (sortedChallenges.length > 0) {
-            challengesContainer.innerHTML = sortedChallenges.map(([challenge, count]) => `
-                <div class="metric-small">
-                    🚧 <strong>${this.translateChallenge(challenge)}:</strong> ${count} persone
-                </div>
-            `).join('');
-        } else {
-            challengesContainer.innerHTML = '<div class="metric-small">📊 Nessuna sfida identificata ancora</div>';
-        }
-    }
-
-    updateLeadQuality() {
-        const premiumLeads = this.quizResults.filter(q => this.calculateNewLeadScore(q) >= 80).length;
-        const qualifiedLeads = this.quizResults.filter(q => this.calculateNewLeadScore(q) >= 60).length;
-        
-        document.getElementById('premiumCount').textContent = premiumLeads;
-        document.getElementById('qualifiedCount').textContent = qualifiedLeads;
-        
-        // Progress bar qualità
-        const qualityPercent = this.quizResults.length > 0 ? (qualifiedLeads / this.quizResults.length) * 100 : 0;
-        document.getElementById('qualityProgress').style.width = `${qualityPercent}%`;
-    }
-
-    // 🔥 ACTIONABLE INSIGHTS
-    updateActionableInsights() {
-        // Cerca elementi che potrebbero non esistere ancora nella versione HTML attuale
-        const priorityElement = document.getElementById('priorityLeadsText');
-        if (priorityElement) {
-            const hotLeads = this.quizResults.filter(q => this.calculateNewLeadScore(q) >= 80);
-            const priorityText = hotLeads.length > 0 
-                ? `${hotLeads.length} lead ad alta priorità da contattare immediatamente.`
-                : 'Tutti i lead sono stati processati.';
-            priorityElement.textContent = priorityText;
-        }
-    }
-
-    // 🔥 GRAFICI AGGIORNATI
-    updateCharts() {
-        console.log('📊 Aggiornamento grafici avanzati...');
-        
-        this.createProfileChart();
-        this.createGoalsChart();
-        this.createChatTopicsChart();
-        this.createTrendChart();
-    }
-
-    createProfileChart() {
-        const ctx = document.getElementById('profileChart');
-        if (!ctx) return;
-
-        const profileCounts = this.getProfileCounts();
-        
-        if (this.charts.profileChart) {
-            this.charts.profileChart.destroy();
-        }
-
-        this.charts.profileChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(profileCounts),
-                datasets: [{
-                    data: Object.values(profileCounts),
-                    backgroundColor: [
-                        '#9C27B0', // Scudiero
-                        '#4CAF50', // Guerriero
-                        '#2196F3', // Atleta
-                        '#FF9800', // Master
-                        '#F44336'  // Champion
-                    ],
-                    borderWidth: 3,
-                    borderColor: '#2a2a2a'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { 
-                            color: '#fff',
-                            font: { size: 12 }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    createGoalsChart() {
-        const ctx = document.getElementById('goalChart');
-        if (!ctx) return;
-
-        const goalCounts = {};
-        this.quizResults.forEach(quiz => {
-            const goals = quiz.goals || [];
-            if (Array.isArray(goals)) {
-                goals.forEach(goal => {
-                    const translated = this.translateGoal(goal);
-                    goalCounts[translated] = (goalCounts[translated] || 0) + 1;
-                });
-            }
-        });
-
-        const sortedGoals = Object.entries(goalCounts)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 6);
-
-        if (this.charts.goalChart) {
-            this.charts.goalChart.destroy();
-        }
-
-        this.charts.goalChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: sortedGoals.map(([goal]) => this.truncateText(goal, 20)),
-                datasets: [{
-                    label: 'Numero di Lead',
-                    data: sortedGoals.map(([, count]) => count),
-                    backgroundColor: '#ff6600',
-                    borderColor: '#ff9933',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#fff' },
-                        grid: { color: '#444' }
-                    },
-                    x: {
-                        ticks: { 
-                            color: '#fff',
-                            maxRotation: 45,
-                            font: { size: 10 }
-                        },
-                        grid: { color: '#444' }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff' }
-                    }
-                }
-            }
-        });
-    }
-
-    createChatTopicsChart() {
-        const ctx = document.getElementById('chatTopicChart');
-        if (!ctx) return;
-
-        const topicCounts = this.chatConversations.reduce((acc, conv) => {
-            const topic = conv.topic || 'Generale';
-            acc[topic] = (acc[topic] || 0) + 1;
-            return acc;
-        }, {});
-
-        if (this.charts.chatTopicChart) {
-            this.charts.chatTopicChart.destroy();
-        }
-
-        this.charts.chatTopicChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: Object.keys(topicCounts),
-                datasets: [{
-                    data: Object.values(topicCounts),
-                    backgroundColor: [
-                        '#ff6600', '#25D366', '#4CAF50',
-                        '#2196F3', '#ff9800', '#9C27B0', '#795548'
-                    ],
-                    borderWidth: 2,
-                    borderColor: '#2a2a2a'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff' }
-                    }
-                }
-            }
-        });
-    }
-
-    createTrendChart() {
-        const ctx = document.getElementById('trendChart');
-        if (!ctx) return;
-
-        // Calcola trend degli ultimi 7 giorni
-        const last7Days = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            
-            const nextDay = new Date(date);
-            nextDay.setDate(nextDay.getDate() + 1);
-            
-            const quizCount = this.quizResults.filter(q => {
-                const qDate = new Date(q.timestamp);
-                return q.timestamp && qDate >= date && qDate < nextDay;
-            }).length;
-            
-            const chatCount = this.chatConversations.filter(c => {
-                const cDate = new Date(c.lastActivity);
-                return c.lastActivity && cDate >= date && cDate < nextDay;
-            }).length;
-            
-            last7Days.push({
-                date: date.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' }),
-                quiz: quizCount,
-                chat: chatCount
-            });
-        }
-
-        if (this.charts.trendChart) {
-            this.charts.trendChart.destroy();
-        }
-
-        this.charts.trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: last7Days.map(d => d.date),
-                datasets: [
-                    {
-                        label: 'Quiz Completati',
-                        data: last7Days.map(d => d.quiz),
-                        borderColor: '#ff6600',
-                        backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'Conversazioni Chat',
-                        data: last7Days.map(d => d.chat),
-                        borderColor: '#4CAF50',
-                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#fff' },
-                        grid: { color: '#444' }
-                    },
-                    x: {
-                        ticks: { color: '#fff' },
-                        grid: { color: '#444' }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: { color: '#fff' }
-                    }
-                }
-            }
-        });
-    }
-
-    // 🔥 HELPER FUNCTIONS NUOVE
-    calculateNewLeadScore(quiz) {
-        // Usa il lead score esistente se disponibile, altrimenti calcola
-        if (quiz.lead_score || quiz.score) {
-            return quiz.lead_score || quiz.score;
-        }
-
-        // Calcolo semplificato compatibile con quiz vecchi e nuovi
-        let score = 0;
-
-        // Score base per esperienza (25 punti)
-        if (quiz.experience === 'professionista' || quiz.experience === 'avanzato') score += 25;
-        else if (quiz.experience === 'intermedio') score += 15;
-        else score += 10;
-
-        // Score per frequenza (15 punti)
-        if (quiz.frequency && quiz.frequency.includes('6+') || quiz.frequency === '5-6') score += 15;
-        else if (quiz.frequency && quiz.frequency.includes('3-4')) score += 10;
-        else score += 5;
-
-        // Score per obiettivi (15 punti)
-        const goals = quiz.goals || [];
-        if (Array.isArray(goals)) {
-            score += Math.min(goals.length * 3, 15);
-        }
-
-        // Score per budget (15 punti)
-        if (quiz.budget && quiz.budget.includes('premium')) score += 15;
-        else if (quiz.budget && quiz.budget.includes('alto')) score += 12;
-        else if (quiz.budget && quiz.budget.includes('medio')) score += 8;
-        else score += 5;
-
-        // Score per completezza dati (10 punti)
-        if (quiz.whatsapp && quiz.whatsapp.length > 0) score += 5;
-        if (quiz.email && quiz.email.length > 0) score += 3;
-        if (quiz.name && quiz.name.length > 0) score += 2;
-
-        // Score per età (bonus giovani/target) (10 punti)
-        if (quiz.age >= 25 && quiz.age <= 45) score += 10;
-        else if (quiz.age >= 18 && quiz.age <= 55) score += 5;
-
-        // Score per supporto/sfide (10 punti)
-        const challenges = quiz.main_challenges || quiz.challenges || quiz.obstacles || [];
-        if (Array.isArray(challenges) && challenges.length > 0) score += 5;
-
-        const support = quiz.support_needs || [];
-        if (Array.isArray(support) && support.length > 0) score += 5;
-
-        return Math.min(Math.max(score, 0), 100);
-    }
-
-    getNewProfileInfo(profile) {
-        const profileMap = {
-            'Scudiero da Motivare': { icon: '🛡️', short: 'Scudiero', class: 'profile-scudiero' },
-            'Guerriero Principiante': { icon: '🌱', short: 'Guerriero', class: 'profile-guerriero' },
-            'Atleta Determinato': { icon: '💪', short: 'Atleta', class: 'profile-atleta' },
-            'Master Elite': { icon: '🏆', short: 'Master', class: 'profile-master' },
-            'Champion Pro': { icon: '👑', short: 'Champion', class: 'profile-champion' },
-            // Compatibilità con profili vecchi
-            'Nuovo Esploratore': { icon: '🌱', short: 'Esploratore', class: 'profile-guerriero' },
-            'Guerriero Determinato': { icon: '💪', short: 'Guerriero', class: 'profile-atleta' },
-            'Atleta Avanzato': { icon: '🏆', short: 'Atleta', class: 'profile-master' }
-        };
-        
-        return profileMap[profile] || { icon: '👤', short: 'N/A', class: '' };
-    }
-
-    extractGoals(quiz) {
-        const goals = quiz.goals || [];
-        const goalsList = Array.isArray(goals) ? goals.map(g => this.translateGoal(g)) : [goals];
-        const full = goalsList.join(', ');
-        const short = goalsList.length > 2 ? `${goalsList.slice(0, 2).join(', ')}...` : full;
-        return { full, short };
-    }
-
-    extractChallenges(quiz) {
-        const challenges = quiz.main_challenges || quiz.challenges || quiz.obstacles || [];
-        const challengesList = Array.isArray(challenges) ? challenges.map(c => this.translateChallenge(c)) : [challenges];
-        const full = challengesList.join(', ');
-        const short = challengesList.length > 1 ? `${challengesList[0]}...` : full;
-        return { full, short };
-    }
-
-    translateGoal(goal) {
-        const translations = {
-            'perdere_peso': 'Perdere Peso',
-            'aumentare_massa': 'Massa Muscolare',
-            'tonificare': 'Tonificare',
-            'forza': 'Aumentare Forza',
-            'resistenza': 'Resistenza',
-            'salute': 'Salute Generale',
-            'autostima': 'Autostima',
-            'performance_sportiva': 'Performance Sport',
-            // Compatibilità con vecchi goal
-            'Perdita Peso': 'Perdere Peso',
-            'Aumento Massa Muscolare': 'Massa Muscolare',
-            'Preparazione atletica specifica': 'Performance Sport'
-        };
-        return translations[goal] || goal;
-    }
-
-    translateChallenge(challenge) {
-        const translations = {
-            'mancanza_tempo': 'Tempo',
-            'poca_motivazione': 'Motivazione',
-            'non_so_cosa_fare': 'Conoscenza',
-            'costanza': 'Costanza',
-            'risultati_lenti': 'Risultati',
-            'paura_giudizio': 'Giudizio Altri',
-            'problemi_fisici': 'Problemi Fisici',
-            'budget_limitato': 'Budget',
-            // Compatibilità con vecchi ostacoli
-            'Mancanza di tempo': 'Tempo',
-            'Difficoltà a rimanere motivato': 'Motivazione',
-            'Non so cosa fare o come farlo': 'Conoscenza'
-        };
-        return translations[challenge] || challenge;
-    }
-
-    getProfileCounts() {
-        const counts = {
-            'Scudiero da Motivare': 0,
-            'Guerriero Principiante': 0,
-            'Atleta Determinato': 0,
-            'Master Elite': 0,
-            'Champion Pro': 0
-        };
-
-        this.quizResults.forEach(quiz => {
-            const profile = quiz.profile || 'Non definito';
-            if (counts.hasOwnProperty(profile)) {
-                counts[profile]++;
-            } else {
-                // Mapping per vecchi profili
-                if (profile.includes('Esploratore') || profile.includes('Principiante')) {
-                    counts['Guerriero Principiante']++;
-                } else if (profile.includes('Guerriero') || profile.includes('Determinato')) {
-                    counts['Atleta Determinato']++;
-                } else if (profile.includes('Atleta') || profile.includes('Avanzato')) {
-                    counts['Master Elite']++;
-                }
-            }
-        });
-
-        return counts;
-    }
-
-    truncateText(text, maxLength) {
-        if (!text || text === 'N/A') return text;
-        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-    }
-
-    formatShortDate(timestamp) {
-        if (!timestamp) return 'N/A';
-        try {
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleDateString('it-IT', { 
-                day: '2-digit', 
-                month: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (error) {
-            return 'N/A';
-        }
-    }
-
-    // 🔥 MODAL CONVERSATION
     showConversationModal(conversationId) {
         console.log(`🔍 Apertura conversazione: ${conversationId}`);
         
@@ -975,21 +330,379 @@ class ChatbotDashboard {
         window.open(whatsappUrl, '_blank');
     }
 
+    updateMetrics() {
+        // Metriche principali
+        document.getElementById('totalQuizzes').textContent = this.quizResults.length;
+        document.getElementById('totalChatConversations').textContent = this.chatConversations.length;
+        
+        // Score medio
+        const avgScore = this.quizResults.length > 0 
+            ? Math.round(this.quizResults.reduce((sum, q) => sum + calculateLeadScore(q), 0) / this.quizResults.length)
+            : 0;
+        document.getElementById('avgQuizScore').textContent = `${avgScore}%`;
+        
+        // KPI
+        document.getElementById('kpiTotalQuizzes').textContent = this.quizResults.length;
+        document.getElementById('kpiTotalChatConversations').textContent = this.chatConversations.length;
+        
+        // High score leads
+        const highScoreLeads = this.quizResults.filter(q => calculateLeadScore(q) >= 70).length;
+        document.getElementById('highScoreLeads').textContent = highScoreLeads;
+    }
+
+    updateCharts() {
+        console.log('📊 Aggiornamento grafici...');
+        
+        // 1. GRAFICO PROFILI FITNESS
+        this.createProfileChart();
+        
+        // 2. GRAFICO OBIETTIVI  
+        this.createGoalsChart();
+        
+        // 3. GRAFICO ARGOMENTI CHAT
+        this.createChatTopicsChart();
+    }
+
+    createProfileChart() {
+        const ctx = document.getElementById('profileChart');
+        if (!ctx) return;
+
+        // Conta i profili
+        const profileCounts = this.quizResults.reduce((acc, quiz) => {
+            const profile = quiz.profile_type || 'Non definito';
+            acc[profile] = (acc[profile] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Distruggi grafico esistente se presente
+        if (window.profileChartInstance) {
+            window.profileChartInstance.destroy();
+        }
+
+        window.profileChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(profileCounts),
+                datasets: [{
+                    data: Object.values(profileCounts),
+                    backgroundColor: [
+                        '#ff6600',
+                        '#ff9933', 
+                        '#ffcc66',
+                        '#4CAF50',
+                        '#2196F3',
+                        '#9C27B0'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#2a2a2a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff' }
+                    }
+                }
+            }
+        });
+    }
+
+    createGoalsChart() {
+        const ctx = document.getElementById('goalChart');
+        if (!ctx) return;
+
+        // Conta gli obiettivi (può essere array)
+        const goalCounts = {};
+        this.quizResults.forEach(quiz => {
+            const goals = Array.isArray(quiz.goals) ? quiz.goals : [quiz.goals];
+            goals.filter(Boolean).forEach(goal => {
+                goalCounts[goal] = (goalCounts[goal] || 0) + 1;
+            });
+        });
+
+        // Prendi i top 6 obiettivi
+        const sortedGoals = Object.entries(goalCounts)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 6);
+
+        if (window.goalChartInstance) {
+            window.goalChartInstance.destroy();
+        }
+
+        window.goalChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedGoals.map(([goal]) => goal.length > 20 ? goal.substring(0, 20) + '...' : goal),
+                datasets: [{
+                    label: 'Numero di Lead',
+                    data: sortedGoals.map(([, count]) => count),
+                    backgroundColor: '#ff6600',
+                    borderColor: '#ff9933',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#fff' },
+                        grid: { color: '#333' }
+                    },
+                    x: {
+                        ticks: { 
+                            color: '#fff',
+                            maxRotation: 45
+                        },
+                        grid: { color: '#333' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff' }
+                    }
+                }
+            }
+        });
+    }
+
+    createChatTopicsChart() {
+        const ctx = document.getElementById('chatTopicChart');
+        if (!ctx) return;
+
+        // Conta gli argomenti delle chat
+        const topicCounts = this.chatConversations.reduce((acc, conv) => {
+            const topic = conv.topic || 'Generale';
+            acc[topic] = (acc[topic] || 0) + 1;
+            return acc;
+        }, {});
+
+        if (window.chatTopicChartInstance) {
+            window.chatTopicChartInstance.destroy();
+        }
+
+        window.chatTopicChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(topicCounts),
+                datasets: [{
+                    data: Object.values(topicCounts),
+                    backgroundColor: [
+                        '#ff6600',
+                        '#25D366', 
+                        '#4CAF50',
+                        '#2196F3',
+                        '#ff9800',
+                        '#9C27B0',
+                        '#795548'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#2a2a2a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff' }
+                    }
+                }
+            }
+        });
+    }
+
+    updateInsights() {
+        // Qualified leads
+        const qualifiedCount = this.quizResults.filter(q => calculateLeadScore(q) >= 70).length;
+        document.getElementById('qualifiedLeadsCount').textContent = qualifiedCount;
+
+        // Most popular goal
+        const goals = this.quizResults.flatMap(q => Array.isArray(q.goals) ? q.goals : [q.goals]).filter(Boolean);
+        const goalCounts = goals.reduce((acc, goal) => {
+            acc[goal] = (acc[goal] || 0) + 1;
+            return acc;
+        }, {});
+        const mostPopularGoal = Object.keys(goalCounts).reduce((a, b) => goalCounts[a] > goalCounts[b] ? a : b, 'N/A');
+        document.getElementById('mostPopularGoal').textContent = mostPopularGoal;
+
+        // Most common obstacle
+        const obstacles = this.quizResults.flatMap(q => Array.isArray(q.obstacles) ? q.obstacles : [q.obstacles]).filter(Boolean);
+        const obstacleCounts = obstacles.reduce((acc, obstacle) => {
+            acc[obstacle] = (acc[obstacle] || 0) + 1;
+            return acc;
+        }, {});
+        const mostCommonObstacle = Object.keys(obstacleCounts).reduce((a, b) => obstacleCounts[a] > obstacleCounts[b] ? a : b, 'N/A');
+        document.getElementById('mostCommonObstacle').textContent = mostCommonObstacle;
+
+        // 🔥 NUOVI INSIGHTS ENGAGEMENT
+        this.updateEngagementInsights(qualifiedCount, mostPopularGoal, goalCounts);
+    }
+
+    updateEngagementInsights(qualifiedCount, mostPopularGoal, goalCounts) {
+        // 🔥 NUOVE METRICHE CHATBOT GIORNALIERE
+        
+        // 1. CHAT OGGI E UTENTI ATTIVI
+        const today = new Date().toDateString();
+        const chatsToday = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity).toDateString() : null;
+            return chatDate === today;
+        }).length;
+        document.getElementById('chatsToday').textContent = chatsToday;
+
+        // Utenti attivi oggi (conversazioni uniche per customer)
+        const activeUsersToday = new Set(
+            this.chatConversations
+                .filter(conv => {
+                    const chatDate = conv.lastActivity ? new Date(conv.lastActivity).toDateString() : null;
+                    return chatDate === today;
+                })
+                .map(conv => conv.customerName || conv.id)
+        ).size;
+        document.getElementById('activeUsersToday').textContent = activeUsersToday;
+
+        // 2. DURATA MEDIA SESSIONE (basata sui messaggi)
+        const avgMessages = this.chatConversations.length > 0
+            ? Math.round(this.chatConversations.reduce((sum, conv) => sum + (conv.messages?.length || 0), 0) / this.chatConversations.length)
+            : 0;
+        document.getElementById('avgMessagesPerChat').textContent = avgMessages;
+        
+        // Stima durata sessione (1 messaggio ≈ 1-2 minuti)
+        const avgSessionDuration = Math.round(avgMessages * 1.5);
+        document.getElementById('avgSessionDuration').textContent = `${avgSessionDuration} min`;
+
+        // 3. ULTIMA ATTIVITÀ
+        const lastActivity = this.chatConversations.length > 0
+            ? Math.max(...this.chatConversations.map(conv => new Date(conv.lastActivity || 0)))
+            : null;
+        document.getElementById('lastChatActivity').textContent = lastActivity 
+            ? new Date(lastActivity).toLocaleString('it-IT', { 
+                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
+            })
+            : 'N/A';
+
+        // 4. QUALITY SCORES
+        const avgScore = this.quizResults.length > 0
+            ? Math.round(this.quizResults.reduce((sum, q) => sum + calculateLeadScore(q), 0) / this.quizResults.length)
+            : 0;
+        document.getElementById('avgLeadScore').textContent = `${avgScore}%`;
+
+        const premiumLeads = this.quizResults.filter(q => calculateLeadScore(q) >= 80).length;
+        document.getElementById('premiumLeads').textContent = premiumLeads;
+        document.getElementById('qualifiedLeadsInsight').textContent = qualifiedCount;
+
+        // 5. TASSO CONVERSIONE CHAT (chat che hanno portato a un contatto)
+        const chatsWithContact = this.chatConversations.filter(conv => 
+            conv.phone && conv.phone !== 'N/A' || 
+            (conv.customerName && conv.customerName !== 'Cliente Anonimo')
+        ).length;
+        const conversionRate = this.chatConversations.length > 0 
+            ? Math.round((chatsWithContact / this.chatConversations.length) * 100)
+            : 0;
+        document.getElementById('chatConversionRate').textContent = `${conversionRate}%`;
+
+        // 6. QUIZ OGGI
+        const quizzesToday = this.quizResults.filter(q => {
+            const quizDate = q.timestamp ? new Date(q.timestamp).toDateString() : null;
+            return quizDate === today;
+        }).length;
+        document.getElementById('quizzesToday').textContent = quizzesToday;
+
+        // 7. PICCO ATTIVITÀ (ora del giorno più frequente)
+        const chatHours = this.chatConversations
+            .map(conv => conv.lastActivity ? new Date(conv.lastActivity).getHours() : null)
+            .filter(hour => hour !== null);
+        
+        if (chatHours.length > 0) {
+            const hourCounts = chatHours.reduce((acc, hour) => {
+                acc[hour] = (acc[hour] || 0) + 1;
+                return acc;
+            }, {});
+            const peakHour = Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b);
+            document.getElementById('peakActivity').textContent = `${peakHour}:00-${parseInt(peakHour) + 1}:00`;
+        } else {
+            document.getElementById('peakActivity').textContent = 'N/A';
+        }
+
+        // 8. CHAT QUESTA SETTIMANA
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const chatsThisWeek = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity) : null;
+            return chatDate && chatDate >= oneWeekAgo;
+        }).length;
+        document.getElementById('chatsThisWeek').textContent = chatsThisWeek;
+
+        // 9. TOP INSIGHTS
+        document.getElementById('topQuizGoal').textContent = mostPopularGoal.length > 25 
+            ? mostPopularGoal.substring(0, 25) + '...' 
+            : mostPopularGoal;
+
+        // Top chat topic
+        const chatTopics = this.chatConversations.map(conv => conv.topic).filter(Boolean);
+        const topicCounts = chatTopics.reduce((acc, topic) => {
+            acc[topic] = (acc[topic] || 0) + 1;
+            return acc;
+        }, {});
+        const topChatTopic = Object.keys(topicCounts).length > 0
+            ? Object.keys(topicCounts).reduce((a, b) => topicCounts[a] > topicCounts[b] ? a : b)
+            : 'N/A';
+        document.getElementById('topChatTopic').textContent = topChatTopic;
+
+        // 10. TREND EMERGENTE (goal/topic con crescita recente)
+        const recentQuizzes = this.quizResults.filter(q => {
+            if (!q.timestamp) return false;
+            const quizDate = new Date(q.timestamp);
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            return quizDate >= threeDaysAgo;
+        });
+
+        if (recentQuizzes.length > 0) {
+            const recentGoals = recentQuizzes.flatMap(q => Array.isArray(q.goals) ? q.goals : [q.goals]).filter(Boolean);
+            const recentGoalCounts = recentGoals.reduce((acc, goal) => {
+                acc[goal] = (acc[goal] || 0) + 1;
+                return acc;
+            }, {});
+            const emergingTrend = Object.keys(recentGoalCounts).length > 0
+                ? Object.keys(recentGoalCounts).reduce((a, b) => recentGoalCounts[a] > recentGoalCounts[b] ? a : b)
+                : 'N/A';
+            const trendText = emergingTrend.length > 20 ? emergingTrend.substring(0, 20) + '...' : emergingTrend;
+            document.getElementById('emergingTrend').textContent = trendText;
+        } else {
+            document.getElementById('emergingTrend').textContent = 'Pochi dati recenti';
+        }
+
+        // 11. CRESCITA SETTIMANALE
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        const chatsLastWeek = this.chatConversations.filter(conv => {
+            const chatDate = conv.lastActivity ? new Date(conv.lastActivity) : null;
+            return chatDate && chatDate >= twoWeeksAgo && chatDate < oneWeekAgo;
+        }).length;
+        
+        const weeklyGrowth = chatsLastWeek > 0 
+            ? Math.round(((chatsThisWeek - chatsLastWeek) / chatsLastWeek) * 100)
+            : chatsThisWeek > 0 ? 100 : 0;
+        
+        const growthText = weeklyGrowth > 0 ? `+${weeklyGrowth}%` : `${weeklyGrowth}%`;
+        document.getElementById('weeklyGrowth').textContent = growthText;
+        document.getElementById('weeklyGrowth').style.color = weeklyGrowth >= 0 ? '#4CAF50' : '#f44336';
+    }
+
     updateConnectionStatus(status) {
         const statusEl = document.getElementById('connection-status');
-        if (!statusEl) return;
-        
         statusEl.className = `connection-status status-${status}`;
         
         switch(status) {
             case 'connected':
-                statusEl.textContent = '✅ Dashboard v2.0 Connessa';
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
+                statusEl.textContent = '✅ Connesso a Firebase';
                 break;
             case 'connecting':
-                statusEl.textContent = '⏳ Inizializzazione Dashboard v2.0...';
+                statusEl.textContent = '⏳ Connessione in corso...';
                 break;
             case 'error':
                 statusEl.textContent = '❌ Errore di connessione';
@@ -998,32 +711,17 @@ class ChatbotDashboard {
     }
 
     updateLastUpdateTime() {
-        const element = document.getElementById('last-update');
-        if (element) {
-            element.textContent = new Date().toLocaleTimeString('it-IT', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
+        document.getElementById('last-update').textContent = new Date().toLocaleTimeString('it-IT');
     }
 
     // Cleanup
     destroy() {
         if (this.unsubscribeQuiz) this.unsubscribeQuiz();
         if (this.unsubscribeLeads) this.unsubscribeLeads();
-        
-        // Distruggi tutti i grafici
-        Object.values(this.charts).forEach(chart => {
-            if (chart && typeof chart.destroy === 'function') {
-                chart.destroy();
-            }
-        });
-        this.charts = {};
     }
 }
 
-// 🔥 FUNZIONI GLOBALI AGGIORNATE
+// Funzioni globali per il HTML
 window.showQuizDetails = (quizId) => {
     console.log('🔍 Mostra dettagli quiz:', quizId);
     
@@ -1041,12 +739,12 @@ window.showQuizDetails = (quizId) => {
     const modal = document.getElementById('detailsModal');
     const modalBody = document.getElementById('modal-body-content');
     
-    const score = window.chatbotDashboard.calculateNewLeadScore(quiz);
-    const profileInfo = window.chatbotDashboard.getNewProfileInfo(quiz.profile);
+    const score = calculateLeadScore(quiz);
+    const profileIcon = getProfileIcon(quiz.profile_type);
     const timestamp = formatDateTime(quiz.timestamp);
 
     modalBody.innerHTML = `
-        <h3>🎯 Analisi Completa Lead - ${quiz.name}</h3>
+        <h3>🎯 Dettagli Completi Quiz Lead</h3>
         
         <div class="conversation-header">
             <p><strong>👤 Nome:</strong> ${quiz.name || 'N/A'}</p>
@@ -1054,20 +752,17 @@ window.showQuizDetails = (quizId) => {
             <p><strong>📱 WhatsApp:</strong> ${quiz.whatsapp || 'N/A'}</p>
             <p><strong>🎂 Età:</strong> ${quiz.age || 'N/A'} anni</p>
             <p><strong>⚧ Genere:</strong> ${quiz.gender || 'N/A'}</p>
-            <p><strong>🏙️ Città:</strong> ${quiz.city || 'N/A'}</p>
             <p><strong>📅 Data Quiz:</strong> ${timestamp}</p>
-            <p><strong>🏆 Lead Score:</strong> <span style="color: ${score >= 80 ? '#4CAF50' : score >= 60 ? '#ff9800' : '#f44336'}; font-weight: bold; font-size: 1.2rem;">${score}%</span></p>
+            <p><strong>🏆 Lead Score:</strong> <span style="color: ${score >= 70 ? '#4CAF50' : score >= 50 ? '#ff9800' : '#f44336'}; font-weight: bold;">${score}%</span></p>
         </div>
 
         <div class="conversation-messages">
-            <h4>${profileInfo.icon} Profilo Fitness: ${quiz.profile || 'N/A'}</h4>
+            <h4>🎭 Profilo Fitness</h4>
             <div class="messages-container">
-                <p><strong>💪 Esperienza:</strong> ${quiz.experience || 'N/A'}</p>
-                <p><strong>🤔 Tentativi Passati:</strong> ${quiz.past_attempts || 'N/A'}</p>
-                <p><strong>😊 Autostima:</strong> ${quiz.self_confidence || 'N/A'}</p>
-                <p><strong>💰 Budget:</strong> ${quiz.budget ? quiz.budget.replace('budget_', '').replace('_', ' ') : 'N/A'}</p>
-                <p><strong>⏰ Disponibilità:</strong> ${quiz.time_available || 'N/A'}</p>
-                <p><strong>📅 Frequenza:</strong> ${quiz.frequency || 'N/A'}</p>
+                <p><strong>${profileIcon} Tipo Profilo:</strong> ${quiz.profile_type || 'N/A'}</p>
+                <p><strong>💪 Livello Attività:</strong> ${quiz.activity_level || 'N/A'}</p>
+                <p><strong>🏋️ Esperienza Allenamento:</strong> ${quiz.training_experience || 'N/A'}</p>
+                <p><strong>🎯 Stile Allenamento Preferito:</strong> ${quiz.training_style || 'N/A'}</p>
             </div>
         </div>
 
@@ -1075,46 +770,41 @@ window.showQuizDetails = (quizId) => {
             <h4>🎯 Obiettivi & Motivazioni</h4>
             <div class="messages-container">
                 <p><strong>🎪 Obiettivi Principali:</strong></p>
-                <ul style="color: #eee; margin-left: 20px; margin-top: 10px;">
+                <ul style="color: #eee; margin-left: 20px;">
                     ${Array.isArray(quiz.goals) 
-                        ? quiz.goals.map(goal => `<li>${window.chatbotDashboard.translateGoal(goal)}</li>`).join('')
+                        ? quiz.goals.map(goal => `<li>${goal}</li>`).join('')
                         : `<li>${quiz.goals || 'N/A'}</li>`
                     }
                 </ul>
                 
-                <p style="margin-top: 15px;"><strong>💝 Motivazione Principale:</strong> ${quiz.main_motivation || 'N/A'}</p>
-                <p><strong>⏰ Aspettative Temporali:</strong> ${quiz.time_expectations || 'N/A'}</p>
+                <p style="margin-top: 15px;"><strong>🚧 Ostacoli Identificati:</strong></p>
+                <ul style="color: #eee; margin-left: 20px;">
+                    ${Array.isArray(quiz.obstacles) 
+                        ? quiz.obstacles.map(obstacle => `<li>${obstacle}</li>`).join('')
+                        : `<li>${quiz.obstacles || 'N/A'}</li>`
+                    }
+                </ul>
+                
+                <p style="margin-top: 15px;"><strong>⏰ Disponibilità Tempo:</strong> ${quiz.time_availability || 'N/A'}</p>
+                <p><strong>💰 Budget Indicativo:</strong> ${quiz.budget || 'N/A'}</p>
             </div>
         </div>
 
         <div class="conversation-messages">
-            <h4>🚧 Sfide & Supporto</h4>
+            <h4>🍎 Stile di Vita & Abitudini</h4>
             <div class="messages-container">
-                <p><strong>🚧 Sfide Principali:</strong></p>
-                <ul style="color: #eee; margin-left: 20px; margin-top: 10px;">
-                    ${Array.isArray(quiz.main_challenges) 
-                        ? quiz.main_challenges.map(challenge => `<li>${window.chatbotDashboard.translateChallenge(challenge)}</li>`).join('')
-                        : `<li>${quiz.main_challenges || quiz.obstacles || 'N/A'}</li>`
-                    }
-                </ul>
-                
-                <p style="margin-top: 15px;"><strong>🤝 Supporto Richiesto:</strong></p>
-                <ul style="color: #eee; margin-left: 20px; margin-top: 10px;">
-                    ${Array.isArray(quiz.support_needs) 
-                        ? quiz.support_needs.map(support => `<li>${support.replace('_', ' ')}</li>`).join('')
-                        : `<li>${quiz.support_needs || 'N/A'}</li>`
-                    }
-                </ul>
+                <p><strong>🥗 Abitudini Alimentari:</strong> ${quiz.diet || 'N/A'}</p>
+                <p><strong>😴 Qualità del Sonno:</strong> ${quiz.sleep || 'N/A'}</p>
+                <p><strong>😰 Livello Stress:</strong> ${quiz.stress || 'N/A'}</p>
+                <p><strong>🏥 Condizioni Mediche:</strong> ${quiz.medical_conditions || 'Nessuna dichiarata'}</p>
             </div>
         </div>
 
-        ${quiz.final_message && quiz.final_message.length > 0 ? `
+        ${quiz.additional_notes ? `
             <div class="conversation-messages">
-                <h4>📝 Messaggio Personale</h4>
+                <h4>📝 Note Aggiuntive</h4>
                 <div class="messages-container">
-                    <p style="font-style: italic; color: #ccc; line-height: 1.6; background: rgba(255,102,0,0.1); padding: 15px; border-radius: 8px; border-left: 3px solid #ff6600;">
-                        "${quiz.final_message}"
-                    </p>
+                    <p style="font-style: italic; color: #ccc;">"${quiz.additional_notes}"</p>
                 </div>
             </div>
         ` : ''}
@@ -1122,19 +812,19 @@ window.showQuizDetails = (quizId) => {
         <div class="conversation-actions">
             ${quiz.whatsapp ? `
                 <button class="action-button whatsapp whatsapp-btn" data-phone="${quiz.whatsapp}">
-                    📱 Contatta WhatsApp
+                    📱 Contatta via WhatsApp
                 </button>
             ` : ''}
             ${quiz.email ? `
-                <button class="action-button" onclick="window.open('mailto:${quiz.email}?subject=TribuCoach - Il tuo percorso fitness personalizzato&body=Ciao ${quiz.name}, ho visto il tuo quiz e vorrei aiutarti a raggiungere i tuoi obiettivi...', '_blank')">
+                <button class="action-button" onclick="window.open('mailto:${quiz.email}?subject=TribuCoach - Seguiamo il tuo percorso fitness', '_blank')">
                     📧 Invia Email
                 </button>
             ` : ''}
-            <button class="action-button details" onclick="navigator.clipboard.writeText('${quiz.whatsapp || quiz.email || quiz.name}')">
+            <button class="action-button" onclick="navigator.clipboard.writeText('${quiz.email || quiz.whatsapp || quiz.name || quiz.id}')">
                 📋 Copia Contatto
             </button>
-            <button class="action-button" style="background: ${score >= 80 ? '#4CAF50' : score >= 60 ? '#FF9800' : '#f44336'};">
-                🏆 Score: ${score}%
+            <button class="action-button" onclick="this.innerHTML = '✅ Lead Score: ${score}%'; setTimeout(() => this.innerHTML = '🏆 Lead Score', 2000)">
+                🏆 Lead Score: ${score}%
             </button>
         </div>
     `;
@@ -1146,9 +836,9 @@ window.closeModal = () => {
     document.getElementById('detailsModal').style.display = 'none';
 };
 
-// 🚀 INIZIALIZZAZIONE DASHBOARD V2.0
+// Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Inizializzazione TribuCoach Dashboard v2.0...');
+    console.log('🚀 Inizializzazione Dashboard TribuCoach...');
     window.chatbotDashboard = new ChatbotDashboard();
 });
 
