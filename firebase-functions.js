@@ -252,6 +252,8 @@ export function calculateTrend(current, previous) {
 export function getProfileIcon(profileType) {
     switch(profileType) {
         case 'Nuovo Esploratore': return '🌱';
+        case 'Guerriero Determinato': return '💪';
+        case 'Atleta Avanzato': return '🏆';
         case 'Guerriero': return '⚔️';
         case 'Atleta': return '🏆';
         default: return '👤';
@@ -260,17 +262,66 @@ export function getProfileIcon(profileType) {
 
 // === CALCOLO LEAD SCORE ===
 export function calculateLeadScore(quizData) {
-    let score = quizData.score || quizData.lead_score || 0;
+    let score = 0;
     
-    // Se il punteggio non è presente, calcolalo
-    if (!score) {
-        if (quizData.goals?.includes('Preparazione atletica specifica')) score += 30;
-        if (quizData.goals?.includes('Aumentare massa muscolare')) score += 25;
-        if (quizData.goals?.includes('Perdere peso e dimagrire')) score += 20;
-        if (quizData.activity_level === 'Molto attivo (5+ allenamenti intensi)') score += 20;
-        if (quizData.training_style === 'Con personal trainer') score += 15;
-        if (quizData.diet === 'Eccellente (molto attento, pianifico i pasti, pochi sgarri)') score += 10;
+    // Se già presente, ritorna quello esistente
+    if (quizData.score || quizData.lead_score) {
+        return quizData.score || quizData.lead_score;
     }
+    
+    // Score basato su esperienza (30 punti max)
+    switch(quizData.experience) {
+        case 'avanzato': 
+        case 'Avanzato': score += 30; break;
+        case 'intermedio': 
+        case 'Intermedio': score += 20; break;
+        case 'principiante': 
+        case 'Principiante Assoluto': score += 10; break;
+    }
+    
+    // Score basato su obiettivi (25 punti max)
+    if (quizData.goals && Array.isArray(quizData.goals)) {
+        score += Math.min(quizData.goals.length * 4, 20);
+        if (quizData.goals.includes('perdere_peso') || quizData.goals.includes('Perdita Peso')) score += 3;
+        if (quizData.goals.includes('aumentare_massa') || quizData.goals.includes('Aumento Massa Muscolare')) score += 2;
+    }
+    
+    // Score basato su frequenza (20 punti max)
+    switch(quizData.frequency) {
+        case '5+':
+        case '5-6': score += 20; break;
+        case '3-4': score += 15; break;
+        case '1-2': score += 10; break;
+    }
+    
+    // Score basato su sfide/ostacoli (15 punti max)
+    if (quizData.challenges && Array.isArray(quizData.challenges)) {
+        score += Math.min(quizData.challenges.length * 2, 10);
+    }
+    if (quizData.obstacles && Array.isArray(quizData.obstacles)) {
+        score += Math.min(quizData.obstacles.length * 2, 10);
+    }
+    
+    // Bonus completezza dati (10 punti max)
+    if (quizData.email && quizData.email.length > 0) score += 5;
+    if (quizData.name && quizData.name.length > 0) score += 3;
+    if (quizData.city && quizData.city.length > 0) score += 2;
+    
+    // Score per livello attività
+    if (quizData.activity_level) {
+        switch(quizData.activity_level) {
+            case 'Molto attivo': score += 15; break;
+            case 'Moderatamente attivo': score += 10; break;
+            case 'Lievemente attivo': score += 5; break;
+        }
+    }
+    
+    // Compatibilità con vecchi quiz
+    if (quizData.goals?.includes('Preparazione atletica specifica')) score += 30;
+    if (quizData.goals?.includes('Aumentare massa muscolare')) score += 25;
+    if (quizData.goals?.includes('Perdere peso e dimagrire')) score += 20;
+    if (quizData.training_style === 'Con personal trainer') score += 15;
+    if (quizData.diet === 'Eccellente (molto attento, pianifico i pasti, pochi sgarri)') score += 10;
     
     return Math.min(Math.max(score, 0), 100);
 }

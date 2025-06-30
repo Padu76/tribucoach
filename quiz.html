@@ -665,10 +665,21 @@
 
     <!-- Firebase SDK con CONFIGURAZIONE CORRETTA -->
     <script type="module">
-        // CORREZIONE: Usa i file Firebase che hai già!
+        // CORREZIONE: Import corretto dai file aggiornati
         import { saveQuizResult, calculateLeadScore } from './firebase-functions.js';
         import { analytics } from './firebase.js';
-        import { logEvent } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js';
+        
+        // Safe analytics function - CORRETTA
+        async function logEventSafe(eventName, parameters = {}) {
+            try {
+                if (analytics) {
+                    const { logEvent } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js');
+                    logEvent(analytics, eventName, parameters);
+                }
+            } catch (error) {
+                console.warn('Analytics event failed:', error);
+            }
+        }
 
         // Variabili globali
         let currentQuestion = 1;
@@ -885,13 +896,12 @@
                 console.log('✅ Quiz salvato con ID:', quizResultId);
                 
                 // Log analytics
-                if (analytics) {
-                    logEvent(analytics, 'quiz_completed', {
-                        profile_type: quizData.profile,
-                        lead_score: quizData.lead_score,
-                        has_email: !!quizData.email
-                    });
-                }
+                console.log('📊 Logging analytics...');
+                logEventSafe('quiz_completed', {
+                    profile_type: quizData.profile,
+                    lead_score: quizData.lead_score,
+                    has_email: !!quizData.email
+                });
                 
                 setTimeout(() => {
                     indicator.style.display = 'none';
@@ -934,12 +944,10 @@
             document.getElementById('result-container').style.display = 'block';
             
             // Log analytics per risultato
-            if (analytics) {
-                logEvent(analytics, 'quiz_result_shown', {
-                    profile_type: profile.name,
-                    score: quizData.lead_score
-                });
-            }
+            logEventSafe('quiz_result_shown', {
+                profile_type: profile.name,
+                score: quizData.lead_score
+            });
         }
 
         // Setup eventi
@@ -986,9 +994,7 @@
             updateNavigation();
             
             // Log inizio quiz
-            if (analytics) {
-                logEvent(analytics, 'quiz_started');
-            }
+            logEventSafe('quiz_started');
         });
 
     </script>

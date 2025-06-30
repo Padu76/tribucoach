@@ -2,6 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
@@ -18,6 +19,17 @@ const app = initializeApp(firebaseConfig);
 // Esporta i servizi Firebase
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Analytics - con gestione errori
+let analytics = null;
+try {
+  analytics = getAnalytics(app);
+  console.log('🔥 Firebase Analytics inizializzato');
+} catch (error) {
+  console.warn('⚠️ Analytics non disponibile:', error.message);
+}
+
+export { analytics };
 
 // Log per conferma
 console.log('🔥 Firebase inizializzato per progetto:', firebaseConfig.projectId);
