@@ -1,4 +1,908 @@
-<!DOCTYPE html>
+    <!-- Firebase SDK con caricamento dinamico -->
+    <script>
+        // Variabili globali
+        let currentQuestion = 1;
+        const totalQuestions = 12;
+        let quizData = {};
+        let quizStartTime = Date.now();
+
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-9564b.firebaseapp.com",
+            projectId: "tribucoach-9564b",
+            storageBucket: "tribucoach-9564b.firebasestorage.app",
+            messagingSenderId: "476626832985",
+            appId: "1:476626832985:web:7835188f40f4348567ab48",
+            measurementId: "G-YZ565MKQ6V"
+        };
+
+        // Sistema fallback locale
+        const LocalStorage = {
+            save: function(data) {
+                try {
+                    const savedData = this.getAll();
+                    const newEntry = {
+                        id: Date.now(),
+                        timestamp: new Date().toISOString(),
+                        ...data
+                    };
+                    savedData.push(newEntry);
+                    localStorage.setItem('tribucoach_quiz_data', JSON.stringify(savedData));
+                    console.log('✅ Dati salvati localmente');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Errore salvataggio locale:', error);
+                    return false;
+                }
+            },
+            
+            getAll: function() {
+                try {
+                    const data = localStorage.getItem('tribucoach_quiz_data');
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    return [];
+                }
+            }
+        };
+
+        // Variabili Firebase
+        let firebaseApp = null;
+        let db = null;
+        let analytics = null;
+        let firebaseReady = false;
+
+        // Caricamento dinamico Firebase
+        function loadFirebaseSDK() {
+            return new Promise((resolve, reject) => {
+                console.log('🔄 Caricando Firebase SDK...');
+                
+                // Lista di CDN da provare
+                const cdnList = [
+                    'https://www.gstatic.com/firebasejs/9.22.0/',
+                    'https://cdn.jsdelivr.net/npm/firebase@9.22.0/',
+                    'https://unpkg.com/firebase@9.22.0/'
+                ];
+                
+                let currentCdnIndex = 0;
+                
+                function tryLoadFromCDN(cdnBase) {
+                    const scripts = [
+                        cdnBase + 'firebase-app-compat.js',
+                        cdnBase + 'firebase-firestore-compat.js',
+                        cdnBase + 'firebase-analytics-compat.js'
+                    ];
+                    
+                    let loadedScripts = 0;
+                    let hasError = false;
+                    
+                    scripts.forEach((src, index) => {
+                        const script = document.createElement('script');
+                        script.src = src;
+                        script.async = false; // Mantiene ordine di caricamento
+                        
+                        script.onload = () => {
+                            loadedScripts++;
+                            console.log('✅ Caricato:', src.split('/').pop());
+                            
+                            if (loadedScripts === scripts.length && !hasError) {
+                                // Verifica che Firebase sia disponibile
+                                setTimeout(() => {
+                                    if (typeof firebase !== 'undefined') {
+                                        console.log('✅ Firebase SDK caricato completamente');
+                                        resolve(true);
+                                    } else {
+                                        console.warn('⚠️ Firebase non disponibile dopo caricamento');
+                                        tryNextCDN();
+                                    }
+                                }, 100);
+                            }
+                        };
+                        
+                        script.onerror = () => {
+                            hasError = true;
+                            console.warn('❌ Errore caricamento:', src);
+                            tryNextCDN();
+                        };
+                        
+                        document.head.appendChild(script);
+                    });
+                }
+                
+                function tryNextCDN() {
+                    currentCdnIndex++;
+                    if (currentCdnIndex < cdnList.length) {
+                        console.log('🔄 Provando CDN alternativo...');
+                        tryLoadFromCDN(cdnList[currentCdnIndex]);
+                    } else {
+                        console.warn('❌ Tutti i CDN Firebase falliti');
+                        reject(new Error('Firebase SDK non caricabile'));
+                    }
+                }
+                
+                // Inizia con il primo CDN
+                tryLoadFromCDN(cdnList[currentCdnIndex]);
+                
+                // Timeout dopo 10 secondi
+                setTimeout(() => {
+                    if (typeof firebase === 'undefined') {
+                        reject(new Error('Timeout caricamento Firebase'));
+                    }
+                }, 10000);
+            });
+        }
+
+        // Inizializza Firebase con regole migliorate
+        async function initializeFirebase() {
+            try {
+                // Prima carica l'SDK
+                await loadFirebaseSDK();
+                
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK non disponibile');
+                }
+
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                // Test connessione semplificato
+                console.log('🔄 Testando connessione Firebase...');
+                
+                // Test scrittura
+                const testDoc = await db.collection('connection_test').add({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    test: true,
+                    source: 'quiz_v7',
+                    user_agent: navigator.userAgent.substring(0, 100)
+                });
+                
+                firebaseReady = true;
+                console.log('✅ Firebase completamente funzionante! Test doc ID:', testDoc.id);
+                
+                // Inizializza Analytics
+                try {
+                    analytics = firebase.analytics();
+                    console.log('✅ Analytics attivato');
+                } catch (e) {
+                    console.warn('⚠️ Analytics non disponibile:', e.message);
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.warn('⚠️ Firebase non disponibile:', error.message);
+                firebaseReady = false;
+                
+                // Diagnostica specifica
+                if (error.message.includes('permission-denied')) {
+                    console.warn('🔒 Problema di permessi Firestore - controlla regole');
+                } else if (error.message.includes('SDK')) {
+                    console.warn('📦 SDK Firebase non caricabile - usa solo modalità locale');
+                } else {
+                    console.warn('🌐 Problema connessione Firebase - usa fallback locale');
+                }
+                
+                return false;
+            }
+        }
+
+        // Funzioni quiz (rimangono identiche)
+        function nextQuestion() {
+            if (!validateCurrentQuestion()) return;
+            
+            saveCurrentAnswer();
+            
+            if (currentQuestion < totalQuestions) {
+                showQuestion(currentQuestion + 1);
+            } else {
+                calculateResults();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestion > 1) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        function showQuestion(questionNum) {
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.classList.remove('active');
+            });
+            
+            document.getElementById('question-' + questionNum).classList.add('active');
+            
+            currentQuestion = questionNum;
+            updateProgress();
+            updateNavigation();
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = 'Domanda ' + currentQuestion + ' di ' + totalQuestions;
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
+            nextBtn.textContent = currentQuestion === totalQuestions ? 'Analizza Profilo' : 'Avanti →';
+            
+            validateCurrentQuestion();
+        }
+
+        function validateCurrentQuestion() {
+            const nextBtn = document.getElementById('next-btn');
+            let isValid = false;
+            
+            switch(currentQuestion) {
+                case 1:
+                    const name = document.getElementById('name').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const age = document.getElementById('age').value;
+                    isValid = name.length > 0 && email.length > 0 && age >= 16 && age <= 80;
+                    break;
+                    
+                case 2:
+                case 4:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    isValid = document.querySelector('#question-' + currentQuestion + ' .option.selected') !== null;
+                    break;
+                    
+                case 3:
+                case 6:
+                case 11:
+                    isValid = document.querySelectorAll('#question-' + currentQuestion + ' input[type="checkbox"]:checked').length > 0;
+                    break;
+                    
+                case 9:
+                    isValid = document.querySelector('#question-' + currentQuestion + ' .option.selected') !== null;
+                    break;
+            }
+            
+            nextBtn.disabled = !isValid;
+            return isValid;
+        }
+
+        function saveCurrentAnswer() {
+            switch(currentQuestion) {
+                case 1:
+                    quizData.name = document.getElementById('name').value.trim();
+                    quizData.email = document.getElementById('email').value.trim();
+                    quizData.age = parseInt(document.getElementById('age').value);
+                    quizData.city = document.getElementById('city').value.trim();
+                    break;
+                    
+                case 2:
+                    const experience = document.querySelector('#question-2 .option.selected');
+                    quizData.experience = experience ? experience.dataset.value : null;
+                    break;
+                    
+                case 3:
+                    const goals = [];
+                    document.querySelectorAll('#question-3 input[type="checkbox"]:checked').forEach(cb => {
+                        goals.push(cb.value);
+                    });
+                    quizData.goals = goals;
+                    break;
+                    
+                case 4:
+                    const timeAvailable = document.querySelector('#question-4 .option.selected');
+                    quizData.time_available = timeAvailable ? timeAvailable.dataset.value : null;
+                    break;
+                    
+                case 5:
+                    const frequency = document.querySelector('#question-5 .option.selected');
+                    quizData.frequency = frequency ? frequency.dataset.value : null;
+                    break;
+                    
+                case 6:
+                    const preferences = [];
+                    document.querySelectorAll('#question-6 input[type="checkbox"]:checked').forEach(cb => {
+                        preferences.push(cb.value);
+                    });
+                    quizData.workout_preferences = preferences;
+                    break;
+                    
+                case 7:
+                    const nutrition = document.querySelector('#question-7 .option.selected');
+                    quizData.nutrition = nutrition ? nutrition.dataset.value : null;
+                    break;
+                    
+                case 8:
+                    const motivation = document.querySelector('#question-8 .option.selected');
+                    quizData.motivation = motivation ? motivation.dataset.value : null;
+                    break;
+                    
+                case 9:
+                    const stressResponse = document.querySelector('#question-9 .option.selected');
+                    quizData.stress_level = parseInt(document.getElementById('stress-level').value);
+                    quizData.stress_response = stressResponse ? stressResponse.dataset.value : null;
+                    break;
+                    
+                case 10:
+                    const budget = document.querySelector('#question-10 .option.selected');
+                    quizData.budget = budget ? budget.dataset.value : null;
+                    break;
+                    
+                case 11:
+                    const challenges = [];
+                    document.querySelectorAll('#question-11 input[type="checkbox"]:checked').forEach(cb => {
+                        challenges.push(cb.value);
+                    });
+                    quizData.challenges = challenges;
+                    break;
+                    
+                case 12:
+                    const expectations = document.querySelector('#question-12 .option.selected');
+                    quizData.expectations = expectations ? expectations.dataset.value : null;
+                    break;
+            }
+        }
+
+        function calculateResults() {
+            const profile = determineAdvancedProfile();
+            const score = calculateAdvancedLeadScore();
+            
+            quizData.profile = profile.name;
+            quizData.lead_score = score;
+            quizData.completed_at = new Date();
+            quizData.completion_time = Date.now() - quizStartTime;
+            
+            saveCompleteData();
+            showResults(profile);
+        }
+
+        function determineAdvancedProfile() {
+            let scores = {
+                'Nuovo Esploratore': 0,
+                'Guerriero Determinato': 0,
+                'Atleta Avanzato': 0,
+                'Professionista Elite': 0
+            };
+            
+            // Score basato su esperienza
+            switch(quizData.experience) {
+                case 'principiante': scores['Nuovo Esploratore'] += 5; break;
+                case 'intermedio': scores['Guerriero Determinato'] += 5; break;
+                case 'avanzato': scores['Atleta Avanzato'] += 5; break;
+                case 'professionista': scores['Professionista Elite'] += 5; break;
+            }
+            
+            // Score basato su frequenza
+            switch(quizData.frequency) {
+                case '1-2': scores['Nuovo Esploratore'] += 3; break;
+                case '3-4': scores['Guerriero Determinato'] += 3; break;
+                case '5-6': scores['Atleta Avanzato'] += 3; break;
+                case '7': scores['Professionista Elite'] += 3; break;
+            }
+            
+            // Score basato su tempo disponibile
+            switch(quizData.time_available) {
+                case '15-30': scores['Nuovo Esploratore'] += 2; break;
+                case '30-45': scores['Guerriero Determinato'] += 2; break;
+                case '45-60': scores['Atleta Avanzato'] += 2; break;
+                case '60+': scores['Professionista Elite'] += 2; break;
+            }
+            
+            // Score basato su budget
+            switch(quizData.budget) {
+                case 'low': scores['Nuovo Esploratore'] += 1; break;
+                case 'medium': scores['Guerriero Determinato'] += 1; break;
+                case 'high': scores['Atleta Avanzato'] += 1; break;
+                case 'premium': scores['Professionista Elite'] += 1; break;
+            }
+            
+            const winningProfile = Object.keys(scores).reduce((a, b) => 
+                scores[a] > scores[b] ? a : b
+            );
+            
+            return getAdvancedProfileDetails(winningProfile);
+        }
+
+        function getAdvancedProfileDetails(profileName) {
+            const profiles = {
+                'Nuovo Esploratore': {
+                    name: 'Nuovo Esploratore',
+                    icon: '🌱',
+                    description: 'Sei all\'inizio di un fantastico viaggio! Hai la motivazione e l\'energia giuste per costruire abitudini solide che ti porteranno al successo.',
+                    recommendations: [
+                        'Programma di allenamento progressivo con focus sulla tecnica',
+                        'Educazione alimentare step-by-step per creare abitudini sostenibili',
+                        'Supporto motivazionale costante per superare le prime difficoltà',
+                        'Monitoraggio settimanale dei progressi per mantenere alta la motivazione',
+                        'Community di supporto con altri che stanno iniziando il loro percorso'
+                    ]
+                },
+                'Guerriero Determinato': {
+                    name: 'Guerriero Determinato',
+                    icon: '💪',
+                    description: 'Hai già le basi e sei pronto per il salto di qualità! Con la giusta strategia puoi raggiungere risultati straordinari.',
+                    recommendations: [
+                        'Programmi di allenamento periodizzati per massimizzare i risultati',
+                        'Strategia nutrizionale avanzata per supportare i tuoi obiettivi',
+                        'Tecniche di recovery e gestione dello stress per performance ottimali',
+                        'Sfide progressive per mantenere alta la motivazione',
+                        'Analisi biomeccanica per perfezionare la tecnica'
+                    ]
+                },
+                'Atleta Avanzato': {
+                    name: 'Atleta Avanzato',
+                    icon: '🏆',
+                    description: 'Sei un vero atleta con esperienza e dedizione. È tempo di perfezionare ogni dettaglio per raggiungere l\'eccellenza.',
+                    recommendations: [
+                        'Programmazione scientifica con periodizzazione avanzata',
+                        'Protocolli di recupero e rigenerazione specifici',
+                        'Ottimizzazione nutrizionale per performance di elite',
+                        'Analisi biomeccanica e correzioni tecniche avanzate',
+                        'Preparazione mentale e strategie di peak performance'
+                    ]
+                },
+                'Professionista Elite': {
+                    name: 'Professionista Elite',
+                    icon: '🥇',
+                    description: 'Sei al top del tuo gioco! Ogni dettaglio conta per mantenere e migliorare le tue performance d\'elite.',
+                    recommendations: [
+                        'Programmazione ultra-specifica per obiettivi competitivi',
+                        'Team multidisciplinare: PT, nutrizionista, fisioterapista',
+                        'Protocolli di recupero avanzati e monitoraggio biomarker',
+                        'Strategie di peaking per competizioni specifiche',
+                        'Innovazioni tecnologiche per massimizzare ogni margine di miglioramento'
+                    ]
+                }
+            };
+            
+            return profiles[profileName];
+        }
+
+        function calculateAdvancedLeadScore() {
+            let score = 0;
+            
+            // Base score per profilo
+            switch(quizData.profile) {
+                case 'Professionista Elite': score += 30; break;
+                case 'Atleta Avanzato': score += 25; break;
+                case 'Guerriero Determinato': score += 20; break;
+                case 'Nuovo Esploratore': score += 15; break;
+            }
+            
+            // Score basato su obiettivi
+            const goalCount = quizData.goals ? quizData.goals.length : 0;
+            score += Math.min(goalCount * 4, 20);
+            if (quizData.goals && quizData.goals.includes('perdere_peso')) score += 3;
+            if (quizData.goals && quizData.goals.includes('aumentare_massa')) score += 2;
+            
+            // Score basato su frequenza
+            switch(quizData.frequency) {
+                case '7': score += 20; break;
+                case '5-6': score += 17; break;
+                case '3-4': score += 14; break;
+                case '1-2': score += 10; break;
+            }
+            
+            // Score basato su budget
+            switch(quizData.budget) {
+                case 'premium': score += 15; break;
+                case 'high': score += 12; break;
+                case 'medium': score += 8; break;
+                case 'low': score += 5; break;
+            }
+            
+            // Score basato su motivazione
+            switch(quizData.motivation) {
+                case 'performance': score += 10; break;
+                case 'risultati_fisici': score += 8; break;
+                case 'benessere': score += 6; break;
+                case 'socialita': score += 5; break;
+            }
+            
+            // Bonus per completezza dati
+            if (quizData.email && quizData.email.length > 0) score += 5;
+            if (quizData.city && quizData.city.length > 0) score += 2;
+            if (quizData.challenges && quizData.challenges.length > 0) score += 3;
+            
+            return Math.min(score, 100);
+        }
+
+        function saveCompleteData() {
+            const indicator = document.getElementById('saving-indicator');
+            const errorIndicator = document.getElementById('error-indicator');
+            
+            indicator.style.display = 'block';
+            
+            if (firebaseReady && db) {
+                // Salva su Firebase
+                db.collection('quiz_results').add({
+                    ...quizData,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    source: 'website_quiz_v7',
+                    version: '7.0'
+                }).then((quizRef) => {
+                    console.log('✅ Quiz salvato su Firebase con ID:', quizRef.id);
+                    
+                    // Crea lead se score >= 30
+                    if (quizData.lead_score >= 30) {
+                        return db.collection('leads').add({
+                            name: quizData.name,
+                            email: quizData.email,
+                            city: quizData.city || 'Non specificata',
+                            profile: getAdvancedProfileDetails(quizData.profile).icon + ' ' + quizData.profile,
+                            score: quizData.lead_score,
+                            last_action: 'Quiz completato',
+                            status: quizData.lead_score >= 70 ? 'Lead Caldo' : quizData.lead_score >= 50 ? 'Interessato' : 'Da coltivare',
+                            source: 'quiz_v7',
+                            budget_range: quizData.budget,
+                            main_goals: quizData.goals ? quizData.goals.join(', ') : '',
+                            frequency_target: quizData.frequency,
+                            created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                            quiz_id: quizRef.id
+                        });
+                    }
+                }).then((leadRef) => {
+                    if (leadRef) {
+                        console.log('✅ Lead creato con ID:', leadRef.id);
+                    }
+                    
+                    // Salva metrica
+                    return db.collection('metrics').add({
+                        date: new Date().toISOString().split('T')[0],
+                        quiz_completed: 1,
+                        lead_generated: quizData.lead_score >= 30 ? 1 : 0,
+                        hot_lead: quizData.lead_score >= 70 ? 1 : 0,
+                        average_score: quizData.lead_score,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }).then(() => {
+                    indicator.textContent = '✅ Dati salvati su Firebase!';
+                    indicator.style.background = '#4CAF50';
+                    
+                    if (analytics) {
+                        analytics.logEvent('quiz_completed', {
+                            profile_type: quizData.profile,
+                            lead_score: quizData.lead_score
+                        });
+                    }
+                }).catch((error) => {
+                    console.warn('Errore Firebase, uso fallback:', error);
+                    LocalStorage.save(quizData);
+                    indicator.style.display = 'none';
+                    errorIndicator.textContent = '⚠️ Salvato localmente - Firebase offline';
+                    errorIndicator.style.display = 'block';
+                    setTimeout(() => errorIndicator.style.display = 'none', 4000);
+                });
+            } else {
+                // Usa solo localStorage
+                const saved = LocalStorage.save(quizData);
+                indicator.style.display = 'none';
+                
+                if (saved) {
+                    errorIndicator.textContent = '💾 Dati salvati localmente';
+                    errorIndicator.style.background = '#ff9800';
+                } else {
+                    errorIndicator.textContent = '❌ Errore salvataggio';
+                    errorIndicator.style.background = '#f44336';
+                }
+                
+                errorIndicator.style.display = 'block';
+                setTimeout(() => errorIndicator.style.display = 'none', 4000);
+            }
+            
+            setTimeout(() => indicator.style.display = 'none', 3000);
+        }
+
+        function showResults(profile) {
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.classList.remove('active');
+            });
+            document.querySelector('.navigation').style.display = 'none';
+            document.querySelector('.progress-container').style.display = 'none';
+            
+            document.getElementById('result-icon').textContent = profile.icon;
+            document.getElementById('result-title').textContent = profile.name;
+            document.getElementById('result-score').textContent = 'Lead Score: ' + quizData.lead_score + '/100';
+            document.getElementById('result-description').textContent = profile.description;
+            
+            const recList = document.getElementById('result-recommendations-list');
+            recList.innerHTML = '';
+            profile.recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recList.appendChild(li);
+            });
+            
+            document.getElementById('result-container').style.display = 'block';
+        }
+
+        function downloadResults() {
+            const results = {
+                nome: quizData.name,
+                email: quizData.email,
+                profilo: quizData.profile,
+                score: quizData.lead_score,
+                data_completamento: new Date().toLocaleString('it-IT'),
+                dettagli: quizData
+            };
+            
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'tribucoach_profilo_' + quizData.name.replace(/\s+/g, '_') + '.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Inizializzazione migliorata
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎯 Quiz TribuCoach inizializzato');
+            
+            // Inizializza Firebase in background (non bloccante)
+            initializeFirebase().then((success) => {
+                if (success) {
+                    console.log('✅ Firebase pronto per l\'uso');
+                } else {
+                    console.log('📱 Modalità locale attiva - tutti i dati verranno salvati nel browser');
+                }
+            });
+            
+            // Setup stress slider
+            const stressSlider = document.getElementById('stress-level');
+            const stressValue = document.getElementById('stress-value');
+            
+            if (stressSlider && stressValue) {
+                stressSlider.addEventListener('input', function() {
+                    const value = parseInt(this.value);
+                    const labels = {
+                        1: '1 - Molto rilassato', 2: '2 - Rilassato', 3: '3 - Calmo',
+                        4: '4 - Lievemente stressato', 5: '5 - Moderatamente stressato',
+                        6: '6 - Abbastanza stressato', 7: '7 - Stressato',
+                        8: '8 - Molto stressato', 9: '9 - Estremamente stressato',
+                        10: '10 - Sovraccarico totale'
+                    };
+                    stressValue.textContent = labels[value] || value + ' - Moderato';
+                });
+            }
+            
+            // Setup per opzioni singole
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    questionContainer.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    this.classList.add('selected');
+                    validateCurrentQuestion();
+                });
+            });
+            
+            // Setup per input fields
+            document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"]').forEach(input => {
+                input.addEventListener('input', validateCurrentQuestion);
+            });
+            
+            // Setup per checkbox con limite su obiettivi
+            document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const checked = document.querySelectorAll('#question-3 input[type="checkbox"]:checked');
+                    if (checked.length > 3) {
+                        this.checked = false;
+                        alert('Puoi selezionare massimo 3 obiettivi principali!');
+                    }
+                    validateCurrentQuestion();
+                });
+            });
+            
+            // Setup per altri checkbox
+            document.querySelectorAll('input[type="checkbox"]:not(#question-3 input[type="checkbox"])').forEach(checkbox => {
+                checkbox.addEventListener('change', validateCurrentQuestion);
+            });
+            
+            // Inizializza UI
+            updateProgress();
+            updateNavigation();
+            
+            // Status check dopo 3 secondi
+            setTimeout(() => {
+                console.log('📊 Firebase status:', firebaseReady ? '✅ Connesso e funzionante' : '📱 Modalità locale attiva');
+            }, 3000);
+        });
+
+        // Debug functions potenziate
+        window.debugQuiz = function() {
+            console.log('=== 🐛 DEBUG QUIZ TRIBUCOACH ===');
+            console.log('📍 Domanda corrente:', currentQuestion);
+            console.log('📊 Dati quiz raccolti:', Object.keys(quizData).length, 'campi');
+            console.log('📋 Dati completi:', quizData);
+            console.log('🔥 Firebase SDK caricato:', typeof firebase !== 'undefined');
+            console.log('🔥 Firebase pronto:', firebaseReady);
+            console.log('💾 Dati locali salvati:', LocalStorage.getAll().length, 'entries');
+            console.log('🌐 Database Firestore:', db ? 'Inizializzato' : 'Non inizializzato');
+            console.log('📊 Analytics:', analytics ? 'Attivo' : 'Non attivo');
+            return {
+                currentQuestion,
+                quizData,
+                firebaseReady,
+                localDataCount: LocalStorage.getAll().length,
+                firebaseAvailable: typeof firebase !== 'undefined'
+            };
+        };
+
+        window.testFirebase = function() {
+            console.log('🧪 === TEST FIREBASE MANUALE ===');
+            
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase SDK non caricato');
+                console.log('💡 Prova a ricaricare la pagina - Firebase si sta caricando in background');
+                return;
+            }
+            
+            if (!db) {
+                console.error('❌ Database Firestore non inizializzato');
+                console.log('🔄 Riprovo inizializzazione...');
+                initializeFirebase();
+                return;
+            }
+            
+            console.log('🔄 Testando scrittura su Firebase...');
+            
+            db.collection('manual_test').add({
+                test: true,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                message: 'Test manuale da console',
+                user_agent: navigator.userAgent.substring(0, 100),
+                url: window.location.href
+            }).then((docRef) => {
+                console.log('✅ Test Firebase RIUSCITO! Documento ID:', docRef.id);
+                firebaseReady = true;
+            }).catch((error) => {
+                console.error('❌ Test Firebase FALLITO:');
+                console.error('Codice errore:', error.code);
+                console.error('Messaggio:', error.message);
+                
+                // Suggerimenti basati sull'errore
+                switch(error.code) {
+                    case 'permission-denied':
+                        console.warn('💡 SOLUZIONE: Le regole Firestore sono troppo restrittive');
+                        console.warn('   Vai su console.firebase.google.com → Firestore → Rules');
+                        console.warn('   E modifica le regole per permettere la scrittura');
+                        break;
+                    case 'unavailable':
+                        console.warn('💡 SOLUZIONE: Servizio Firebase temporaneamente non disponibile');
+                        console.warn('   Riprova tra qualche minuto');
+                        break;
+                    case 'unauthenticated':
+                        console.warn('💡 SOLUZIONE: Potrebbe essere richiesta autenticazione utente');
+                        break;
+                    default:
+                        console.warn('💡 Controlla console.firebase.google.com per dettagli');
+                }
+            });
+        };
+
+        window.forceFirebaseReload = function() {
+            console.log('🔄 Forzando ricaricamento Firebase...');
+            firebaseReady = false;
+            firebaseApp = null;
+            db = null;
+            analytics = null;
+            
+            initializeFirebase().then((success) => {
+                if (success) {
+                    console.log('✅ Firebase ricaricato con successo!');
+                } else {
+                    console.log('❌ Ricaricamento Firebase fallito');
+                }
+            });
+        };
+
+        window.exportLocalData = function() {
+            console.log('📤 Esportando dati salvati localmente...');
+            const data = LocalStorage.getAll();
+            console.log('📊 Trovati', data.length, 'quiz completati');
+            
+            if (data.length === 0) {
+                console.warn('⚠️ Nessun dato locale da esportare');
+                console.log('💡 Completa almeno un quiz per avere dati da esportare');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'tribucoach_quiz_backup_' + new Date().toISOString().split('T')[0] + '.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('✅ File scaricato:', link.download);
+        };
+
+        window.showQuizStats = function() {
+            const localData = LocalStorage.getAll();
+            console.log('📈 === STATISTICHE QUIZ ===');
+            console.log('📊 Quiz completati:', localData.length);
+            
+            if (localData.length > 0) {
+                const avgScore = localData.reduce((sum, quiz) => sum + (quiz.lead_score || 0), 0) / localData.length;
+                console.log('⭐ Score medio:', Math.round(avgScore * 10) / 10);
+                
+                const profiles = {};
+                localData.forEach(quiz => {
+                    const profile = quiz.profile || 'Sconosciuto';
+                    profiles[profile] = (profiles[profile] || 0) + 1;
+                });
+                console.log('👥 Profili più comuni:', profiles);
+                
+                const latestQuiz = localData[localData.length - 1];
+                console.log('🕐 Ultimo quiz:', new Date(latestQuiz.timestamp).toLocaleString('it-IT'));
+            } else {
+                console.log('📝 Nessun quiz completato ancora');
+            }
+        };
+
+        window.clearLocalData = function() {
+            const count = LocalStorage.getAll().length;
+            if (count === 0) {
+                console.log('📭 Nessun dato locale da cancellare');
+                return;
+            }
+            
+            if (confirm('Sei sicuro di voler cancellare tutti i ' + count + ' quiz salvati localmente?')) {
+                localStorage.removeItem('tribucoach_quiz_data');
+                console.log('🗑️ Cancellati ' + count + ' quiz locali');
+            } else {
+                console.log('❌ Operazione annullata');
+            }
+        };
+
+        window.showFirebaseStatus = function() {
+            console.log('🔥 === STATUS FIREBASE ===');
+            console.log('📦 SDK caricato:', typeof firebase !== 'undefined');
+            console.log('🔧 App inizializzata:', firebaseApp !== null);
+            console.log('💾 Database pronto:', db !== null);
+            console.log('📊 Analytics attivo:', analytics !== null);
+            console.log('✅ Stato generale:', firebaseReady ? 'PRONTO' : 'NON PRONTO');
+            
+            if (typeof firebase !== 'undefined' && db) {
+                console.log('🧪 Esegui testFirebase() per testare la scrittura');
+            } else {
+                console.log('🔄 Esegui forceFirebaseReload() per ricaricare');
+            }
+        };
+
+        // Espone funzioni globalmente
+        window.nextQuestion = nextQuestion;
+        window.prevQuestion = prevQuestion;
+        window.downloadResults = downloadResults;
+
+        // Aggiungi comandi helper
+        window.help = function() {
+            console.log('🎯 === COMANDI DISPONIBILI ===');
+            console.log('debugQuiz()          - Mostra stato completo del quiz');
+            console.log('testFirebase()       - Testa connessione Firebase');
+            console.log('showFirebaseStatus() - Mostra stato Firebase dettagliato');
+            console.log('forceFirebaseReload()- Ricarica Firebase manualmente');
+            console.log('exportLocalData()    - Scarica backup dati locali');
+            console.log('showQuizStats()      - Mostra statistiche quiz completati');
+            console.log('clearLocalData()     - Cancella tutti i dati locali');
+            console.log('help()               - Mostra questo menu');
+        };
+
+        // Mostra help automaticamente dopo il caricamento
+        setTimeout(() => {
+            console.log('💡 Digita help() nella console per vedere tutti i comandi disponibili');
+        }, 1000);
+    </script><!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -922,7 +1826,7 @@
         let quizData = {};
         let quizStartTime = Date.now();
 
-        // Configurazione Firebase
+        // Configurazione Firebase con regole aggiornate
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-9564b.firebaseapp.com",
@@ -969,37 +1873,61 @@
         let analytics = null;
         let firebaseReady = false;
 
-        // Inizializza Firebase
+        // Inizializza Firebase con regole migliorate
         function initializeFirebase() {
             try {
                 if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase SDK non caricato');
+                    console.warn('❌ Firebase SDK non caricato');
+                    return false;
                 }
 
                 firebaseApp = firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 
-                // Test connessione
-                db.collection('connection_test').add({
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    test: true
-                }).then(() => {
-                    firebaseReady = true;
-                    console.log('✅ Firebase connesso');
-                    
-                    try {
-                        analytics = firebase.analytics();
-                    } catch (e) {
-                        console.warn('Analytics non disponibile');
-                    }
-                }).catch((error) => {
-                    console.warn('⚠️ Test Firebase fallito:', error);
-                    firebaseReady = false;
-                });
+                // Test connessione semplificato senza scrivere
+                console.log('🔄 Testando connessione Firebase...');
+                
+                // Prova prima a leggere qualcosa di sicuro
+                db.collection('test').limit(1).get()
+                    .then(() => {
+                        console.log('✅ Firebase connesso per lettura');
+                        
+                        // Ora prova a scrivere un document test
+                        return db.collection('connection_test').add({
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                            test: true,
+                            source: 'quiz_v6'
+                        });
+                    })
+                    .then(() => {
+                        firebaseReady = true;
+                        console.log('✅ Firebase completamente funzionante!');
+                        
+                        // Inizializza Analytics
+                        try {
+                            analytics = firebase.analytics();
+                            console.log('✅ Analytics attivato');
+                        } catch (e) {
+                            console.warn('⚠️ Analytics non disponibile:', e.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.warn('⚠️ Firebase test fallito:', error.code, error.message);
+                        firebaseReady = false;
+                        
+                        // Diagnostica specifica per tipo di errore
+                        if (error.code === 'permission-denied') {
+                            console.warn('🔒 Problema di permessi Firestore - uso fallback locale');
+                        } else if (error.code === 'unavailable') {
+                            console.warn('🌐 Firebase non raggiungibile - uso fallback locale');
+                        }
+                    });
 
+                return true;
             } catch (error) {
-                console.warn('⚠️ Firebase non disponibile:', error);
+                console.warn('⚠️ Inizializzazione Firebase fallita:', error.message);
                 firebaseReady = false;
+                return false;
             }
         }
 
@@ -1511,40 +2439,145 @@
             }, 2000);
         });
 
-        // Debug functions
+        // Debug functions - assicurati che siano disponibili globalmente
         window.debugQuiz = function() {
-            console.log('=== DEBUG QUIZ ===');
-            console.log('Domanda corrente:', currentQuestion);
-            console.log('Dati quiz:', quizData);
-            console.log('Firebase pronto:', firebaseReady);
-            console.log('Dati locali:', LocalStorage.getAll().length, 'entries');
+            console.log('=== 🐛 DEBUG QUIZ TRIBUCOACH ===');
+            console.log('📍 Domanda corrente:', currentQuestion);
+            console.log('📊 Dati quiz raccolti:', Object.keys(quizData).length, 'campi');
+            console.log('📋 Dati completi:', quizData);
+            console.log('🔥 Firebase SDK caricato:', typeof firebase !== 'undefined');
+            console.log('🔥 Firebase pronto:', firebaseReady);
+            console.log('💾 Dati locali salvati:', LocalStorage.getAll().length, 'entries');
+            console.log('🌐 Database Firestore:', db ? 'Inizializzato' : 'Non inizializzato');
+            console.log('📊 Analytics:', analytics ? 'Attivo' : 'Non attivo');
+            return {
+                currentQuestion,
+                quizData,
+                firebaseReady,
+                localDataCount: LocalStorage.getAll().length,
+                firebaseAvailable: typeof firebase !== 'undefined'
+            };
         };
 
         window.testFirebase = function() {
-            if (db) {
-                db.collection('test').add({
-                    test: true,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then((docRef) => {
-                    console.log('✅ Test Firebase riuscito! ID:', docRef.id);
-                }).catch((error) => {
-                    console.error('❌ Test Firebase fallito:', error);
-                });
-            } else {
-                console.error('❌ Database non disponibile');
+            console.log('🧪 === TEST FIREBASE MANUALE ===');
+            
+            if (typeof firebase === 'undefined') {
+                console.error('❌ Firebase SDK non caricato');
+                return;
             }
+            
+            if (!db) {
+                console.error('❌ Database Firestore non inizializzato');
+                return;
+            }
+            
+            console.log('🔄 Testando scrittura su Firebase...');
+            
+            db.collection('manual_test').add({
+                test: true,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                message: 'Test manuale da console',
+                user_agent: navigator.userAgent
+            }).then((docRef) => {
+                console.log('✅ Test Firebase RIUSCITO! Documento ID:', docRef.id);
+                firebaseReady = true;
+            }).catch((error) => {
+                console.error('❌ Test Firebase FALLITO:');
+                console.error('Codice errore:', error.code);
+                console.error('Messaggio:', error.message);
+                console.error('Dettagli completi:', error);
+                
+                // Suggerimenti basati sull'errore
+                switch(error.code) {
+                    case 'permission-denied':
+                        console.warn('💡 SOLUZIONE: Controlla le regole Firestore nella console Firebase');
+                        break;
+                    case 'unavailable':
+                        console.warn('💡 SOLUZIONE: Controlla connessione internet o stato servizi Firebase');
+                        break;
+                    case 'unauthenticated':
+                        console.warn('💡 SOLUZIONE: Potrebbe essere richiesta autenticazione utente');
+                        break;
+                    default:
+                        console.warn('💡 Controlla console Firebase per dettagli');
+                }
+            });
+        };
+
+        window.testFirestoreRules = function() {
+            console.log('🔐 === TEST REGOLE FIRESTORE ===');
+            
+            if (!db) {
+                console.error('❌ Database non disponibile');
+                return;
+            }
+            
+            // Test lettura
+            console.log('📖 Test lettura...');
+            db.collection('test').limit(1).get()
+                .then((snapshot) => {
+                    console.log('✅ Lettura OK, documenti trovati:', snapshot.size);
+                })
+                .catch((error) => {
+                    console.error('❌ Lettura fallita:', error.code, error.message);
+                });
+            
+            // Test scrittura
+            console.log('✏️ Test scrittura...');
+            db.collection('rules_test').add({
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                test_type: 'rules_verification'
+            })
+                .then((docRef) => {
+                    console.log('✅ Scrittura OK, ID:', docRef.id);
+                })
+                .catch((error) => {
+                    console.error('❌ Scrittura fallita:', error.code, error.message);
+                });
         };
 
         window.exportLocalData = function() {
+            console.log('📤 Esportando dati salvati localmente...');
             const data = LocalStorage.getAll();
+            console.log('📊 Trovati', data.length, 'quiz completati');
+            
+            if (data.length === 0) {
+                console.warn('⚠️ Nessun dato locale da esportare');
+                return;
+            }
+            
             const dataStr = JSON.stringify(data, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = 'tribucoach_quiz_backup.json';
+            link.download = 'tribucoach_quiz_backup_' + new Date().toISOString().split('T')[0] + '.json';
             link.click();
             URL.revokeObjectURL(url);
+            
+            console.log('✅ File scaricato:', link.download);
+        };
+
+        window.showQuizStats = function() {
+            const localData = LocalStorage.getAll();
+            console.log('📈 === STATISTICHE QUIZ ===');
+            console.log('📊 Quiz completati:', localData.length);
+            
+            if (localData.length > 0) {
+                const avgScore = localData.reduce((sum, quiz) => sum + (quiz.lead_score || 0), 0) / localData.length;
+                console.log('⭐ Score medio:', Math.round(avgScore * 10) / 10);
+                
+                const profiles = {};
+                localData.forEach(quiz => {
+                    const profile = quiz.profile || 'Sconosciuto';
+                    profiles[profile] = (profiles[profile] || 0) + 1;
+                });
+                console.log('👥 Profili più comuni:', profiles);
+                
+                const latestQuiz = localData[localData.length - 1];
+                console.log('🕐 Ultimo quiz:', new Date(latestQuiz.timestamp).toLocaleString('it-IT'));
+            }
         };
 
         // Espone funzioni globalmente
