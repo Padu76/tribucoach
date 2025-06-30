@@ -216,7 +216,7 @@
 
         // Variabili globali
         let currentQuestion = 1;
-        const totalQuestions = 12;
+        const totalQuestions = 14; // Aggiornato da 12 a 14
         let quizData = {};
 
         // Funzioni per la gestione del quiz
@@ -276,8 +276,10 @@
                 case 1:
                     const name = document.getElementById('name').value.trim();
                     const email = document.getElementById('email').value.trim();
+                    const whatsapp = document.getElementById('whatsapp').value.trim();
+                    const gender = document.getElementById('gender').value;
                     const age = document.getElementById('age').value;
-                    isValid = name.length > 0 && email.length > 0 && age >= 16 && age <= 80;
+                    isValid = name.length > 0 && email.length > 0 && whatsapp.length > 0 && gender !== '' && age >= 16 && age <= 80;
                     break;
                     
                 case 2:
@@ -286,13 +288,15 @@
                 case 7:
                 case 8:
                 case 10:
-                case 12:
+                case 11:
+                case 14:
                     isValid = document.querySelector(`#question-${currentQuestion} .option.selected`) !== null;
                     break;
                     
                 case 3:
                 case 6:
-                case 11:
+                case 12:
+                case 13:
                     isValid = document.querySelectorAll(`#question-${currentQuestion} input[type="checkbox"]:checked`).length > 0;
                     break;
                     
@@ -310,6 +314,8 @@
                 case 1:
                     quizData.name = document.getElementById('name').value.trim();
                     quizData.email = document.getElementById('email').value.trim();
+                    quizData.whatsapp = document.getElementById('whatsapp').value.trim();
+                    quizData.gender = document.getElementById('gender').value;
                     quizData.age = parseInt(document.getElementById('age').value);
                     quizData.city = document.getElementById('city').value.trim();
                     break;
@@ -362,20 +368,33 @@
                     break;
                     
                 case 10:
-                    const budget = document.querySelector('#question-10 .option.selected');
-                    quizData.budget = budget ? budget.dataset.value : null;
+                    const sleepQuality = document.querySelector('#question-10 .option.selected');
+                    quizData.sleep_quality = sleepQuality ? sleepQuality.dataset.value : null;
                     break;
                     
                 case 11:
+                    const budget = document.querySelector('#question-11 .option.selected');
+                    quizData.budget = budget ? budget.dataset.value : null;
+                    break;
+                    
+                case 12:
                     const challenges = [];
-                    document.querySelectorAll('#question-11 input[type="checkbox"]:checked').forEach(cb => {
+                    document.querySelectorAll('#question-12 input[type="checkbox"]:checked').forEach(cb => {
                         challenges.push(cb.value);
                     });
                     quizData.challenges = challenges;
                     break;
                     
-                case 12:
-                    const expectations = document.querySelector('#question-12 .option.selected');
+                case 13:
+                    const hobbies = [];
+                    document.querySelectorAll('#question-13 input[type="checkbox"]:checked').forEach(cb => {
+                        hobbies.push(cb.value);
+                    });
+                    quizData.hobbies = hobbies;
+                    break;
+                    
+                case 14:
+                    const expectations = document.querySelector('#question-14 .option.selected');
                     quizData.expectations = expectations ? expectations.dataset.value : null;
                     break;
             }
@@ -1109,14 +1128,14 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
         <div class="header">
             <h1>🎯 Analisi Profilo TribuCoach</h1>
             <p>Quiz Avanzato per il tuo Piano Fitness Personalizzato</p>
-            <div class="subtitle">12 domande • 5 minuti • Risultati immediati</div>
+            <div class="subtitle">14 domande • 6 minuti • Risultati immediati</div>
         </div>
 
         <div class="progress-container">
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
-            <div class="progress-text" id="progress-text">Domanda 1 di 12</div>
+            <div class="progress-text" id="progress-text">Domanda 1 di 14</div>
         </div>
 
         <!-- Sezione 1: Informazioni Personali -->
@@ -1136,6 +1155,21 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
             <div class="input-group">
                 <label for="email">Email:</label>
                 <input type="email" id="email" placeholder="La tua email per ricevere il piano personalizzato" required>
+            </div>
+
+            <div class="input-group">
+                <label for="whatsapp">WhatsApp:</label>
+                <input type="tel" id="whatsapp" placeholder="Es. +39 347 888 1515" required>
+            </div>
+
+            <div class="input-group">
+                <label for="gender">Genere:</label>
+                <select id="gender" required>
+                    <option value="">Seleziona...</option>
+                    <option value="Uomo">Uomo</option>
+                    <option value="Donna">Donna</option>
+                    <option value="Altro">Altro</option>
+                </select>
             </div>
             
             <div class="input-group">
@@ -1394,7 +1428,135 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
             </div>
         </div>
 
-        <!-- Domanda 10: Budget -->
+        <!-- Aggiunta Domanda: Qualità del Sonno -->
+        <div class="question-container" id="question-10">
+            <h2 class="question-title">La qualità del tuo sonno</h2>
+            <p class="question-subtitle">Il sonno influenza enormemente i risultati fitness</p>
+            
+            <div class="options">
+                <div class="option" data-value="ottimo">
+                    <span class="option-icon">😴</span>
+                    <div class="option-title">Sonno Perfetto</div>
+                    <div class="option-desc">Dormo 7-8 ore, mi sveglio riposato, qualità eccellente</div>
+                </div>
+                <div class="option" data-value="buono">
+                    <span class="option-icon">😊</span>
+                    <div class="option-title">Generalmente Buono</div>
+                    <div class="option-desc">Di solito dormo bene, qualche notte agitata occasionale</div>
+                </div>
+                <div class="option" data-value="irregolare">
+                    <span class="option-icon">😐</span>
+                    <div class="option-title">Alti e Bassi</div>
+                    <div class="option-desc">Alternanza tra notti buone e notti difficili</div>
+                </div>
+                <div class="option" data-value="problematico">
+                    <span class="option-icon">😵</span>
+                    <div class="option-title">Sonno Disturbato</div>
+                    <div class="option-desc">Difficoltà ad addormentarmi, risvegli frequenti, sempre stanco</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domanda 10 rinumerata a 11: Budget -->
+        <div class="question-container" id="question-11">
+            <h2 class="question-title">Investimento nel tuo benessere</h2>
+            <p class="question-subtitle">Quale budget mensile puoi dedicare al fitness?</p>
+            
+            <div class="options">
+                <div class="option" data-value="low">
+                    <span class="option-icon">💰</span>
+                    <div class="option-title">Budget Contenuto</div>
+                    <div class="option-desc">0-50€/mese - Focus su soluzioni economiche ed efficaci</div>
+                </div>
+                <div class="option" data-value="medium">
+                    <span class="option-icon">💵</span>
+                    <div class="option-title">Budget Medio</div>
+                    <div class="option-desc">50-150€/mese - Palestra + qualche extra occasionale</div>
+                </div>
+                <div class="option" data-value="high">
+                    <span class="option-icon">💎</span>
+                    <div class="option-title">Investimento Serio</div>
+                    <div class="option-desc">150-300€/mese - Personal trainer + nutrizione + extras</div>
+                </div>
+                <div class="option" data-value="premium">
+                    <span class="option-icon">👑</span>
+                    <div class="option-title">Premium Experience</div>
+                    <div class="option-desc">300€+/mese - Il meglio disponibile per raggiungere gli obiettivi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domanda 11 rinumerata a 12: Sfide Principali -->
+        <div class="question-container" id="question-12">
+            <h2 class="question-title">Le tue sfide principali</h2>
+            <p class="question-subtitle">Cosa ti impedisce di raggiungere i tuoi obiettivi?</p>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-time" value="tempo">
+                    <label for="challenge-time">⏰ Mancanza di tempo</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-motivation" value="motivazione">
+                    <label for="challenge-motivation">😔 Difficoltà a rimanere motivato</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-knowledge" value="conoscenza">
+                    <label for="challenge-knowledge">❓ Non so cosa fare o come farlo</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-consistency" value="costanza">
+                    <label for="challenge-consistency">📅 Difficoltà a essere costante</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-results" value="risultati">
+                    <label for="challenge-results">📊 Non vedo risultati abbastanza velocemente</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-injuries" value="infortuni">
+                    <label for="challenge-injuries">🩹 Problemi fisici o infortuni passati</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nuova Domanda: Hobby e Stile di Vita -->
+        <div class="question-container" id="question-13">
+            <h2 class="question-title">I tuoi hobby e stile di vita</h2>
+            <p class="question-subtitle">Seleziona le attività che ti piacciono nel tempo libero</p>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-reading" value="lettura">
+                    <label for="hobby-reading">📚 Lettura e studio</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-nature" value="natura">
+                    <label for="hobby-nature">🌿 Attività all'aria aperta</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-social" value="sociale">
+                    <label for="hobby-social">👥 Uscite sociali e networking</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-creative" value="creativita">
+                    <label for="hobby-creative">🎨 Attività creative (arte, musica, scrittura)</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-tech" value="tecnologia">
+                    <label for="hobby-tech">💻 Gaming, tecnologia, social media</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-cooking" value="cucina">
+                    <label for="hobby-cooking">🍳 Cucinare e sperimentare ricette</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="hobby-travel" value="viaggi">
+                    <label for="hobby-travel">✈️ Viaggi e nuove esperienze</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domanda 12 rinumerata a 14: Aspettative -->
         <div class="question-container" id="question-10">
             <h2 class="question-title">Investimento nel tuo benessere</h2>
             <p class="question-subtitle">Quale budget mensile puoi dedicare al fitness?</p>
