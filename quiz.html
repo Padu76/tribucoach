@@ -252,17 +252,31 @@
         }
 
         function updateNavigation() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
+            // Trova solo i tasti nella domanda attiva
+            const activeQuestion = document.querySelector('.question-container.active');
+            if (!activeQuestion) return;
             
-            prevBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
-            nextBtn.textContent = currentQuestion === totalQuestions ? 'Analizza Profilo' : 'Avanti →';
+            const prevBtn = activeQuestion.querySelector('#prev-btn');
+            const nextBtn = activeQuestion.querySelector('#next-btn');
+            
+            if (prevBtn) {
+                prevBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
+            }
+            
+            if (nextBtn) {
+                nextBtn.textContent = currentQuestion === totalQuestions ? 'Analizza Profilo' : 'Avanti →';
+            }
             
             validateCurrentQuestion();
         }
 
         function validateCurrentQuestion() {
-            const nextBtn = document.getElementById('next-btn');
+            // Trova solo i tasti nella domanda attiva
+            const activeQuestion = document.querySelector('.question-container.active');
+            const nextBtn = activeQuestion ? activeQuestion.querySelector('#next-btn') : null;
+            
+            if (!nextBtn) return false;
+            
             let isValid = false;
             
             switch(currentQuestion) {
@@ -298,7 +312,9 @@
                     break;
             }
             
+            // Aggiorna solo il pulsante della domanda attiva
             nextBtn.disabled = !isValid;
+            
             return isValid;
         }
 
