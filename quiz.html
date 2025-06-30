@@ -458,535 +458,6 @@
             <div class="subtitle">12 domande • 5 minuti • Risultati immediati</div>
         </div>
 
-        <!-- Domanda 11: Sfide Principali -->
-        <div class="question-container" id="question-11">
-            <h2 class="question-title">Le tue sfide principali</h2>
-            <p class="question-subtitle">Cosa ti impedisce di raggiungere i tuoi obiettivi?</p>
-            
-            <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-time" value="tempo">
-                    <label for="challenge-time">⏰ Mancanza di tempo</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-motivation" value="motivazione">
-                    <label for="challenge-motivation">😔 Difficoltà a rimanere motivato</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-knowledge" value="conoscenza">
-                    <label for="challenge-knowledge">❓ Non so cosa fare o come farlo</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-consistency" value="costanza">
-                    <label for="challenge-consistency">📅 Difficoltà a essere costante</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-results" value="risultati">
-                    <label for="challenge-results">📊 Non vedo risultati abbastanza velocemente</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="challenge-injuries" value="infortuni">
-                    <label for="challenge-injuries">🩹 Problemi fisici o infortuni passati</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Domanda 12: Aspettative -->
-        <div class="question-container" id="question-12">
-            <h2 class="question-title">Le tue aspettative</h2>
-            <p class="question-subtitle">Quando vorresti vedere i primi risultati significativi?</p>
-            
-            <div class="options">
-                <div class="option" data-value="immediate">
-                    <span class="option-icon">🚀</span>
-                    <div class="option-title">Risultati Rapidi</div>
-                    <div class="option-desc">2-4 settimane - Voglio vedere cambiamenti velocemente</div>
-                </div>
-                <div class="option" data-value="realistic">
-                    <span class="option-icon">📈</span>
-                    <div class="option-title">Progressione Realistica</div>
-                    <div class="option-desc">1-3 mesi - Preferisco risultati sostenibili nel tempo</div>
-                </div>
-                <div class="option" data-value="patient">
-                    <span class="option-icon">🌱</span>
-                    <div class="option-title">Crescita Graduale</div>
-                    <div class="option-desc">3-6 mesi - Sono paziente e voglio costruire bene</div>
-                </div>
-                <div class="option" data-value="longterm">
-                    <span class="option-icon">🏔️</span>
-                    <div class="option-title">Trasformazione Profonda</div>
-                    <div class="option-desc">6+ mesi - Questo è un cambiamento di vita permanente</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Risultato -->
-        <div class="result-container" id="result-container">
-            <div class="result-icon" id="result-icon">🎯</div>
-            <h2 class="result-title" id="result-title">Il tuo profilo</h2>
-            <div class="result-score" id="result-score">Lead Score: 85/100</div>
-            <p class="result-description" id="result-description">Descrizione del profilo...</p>
-            
-            <div class="result-recommendations">
-                <h3>🎯 Il tuo piano personalizzato:</h3>
-                <ul id="result-recommendations-list">
-                    <!-- Generato dinamicamente -->
-                </ul>
-            </div>
-            
-            <div class="cta-buttons">
-                <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="cta-primary">
-                    💬 Chatta con TribuCoach AI
-                </a>
-                <a href="https://wa.me/3478881515?text=Ciao%2C%20ho%20completato%20il%20quiz%20TribuCoach%20e%20vorrei%20prenotare%20una%20consulenza%20gratuita!" target="_blank" class="cta-secondary">
-                    📅 Prenota Consulenza Gratuita
-                </a>
-            </div>
-        </div>
-
-        <div class="navigation">
-            <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()" style="display: none;">
-                ← Indietro
-            </button>
-            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
-                Avanti →
-            </button>
-        </div>
-    </div>
-
-    <!-- JavaScript SENZA Firebase - Solo funzionalità quiz -->
-    <script>
-        // Variabili globali
-        let currentQuestion = 1;
-        const totalQuestions = 12;
-        let quizData = {};
-
-        // Funzioni per la gestione del quiz
-        window.nextQuestion = function() {
-            if (!validateCurrentQuestion()) return;
-            
-            saveCurrentAnswer();
-            
-            if (currentQuestion < totalQuestions) {
-                showQuestion(currentQuestion + 1);
-            } else {
-                calculateResults();
-            }
-        }
-
-        window.prevQuestion = function() {
-            if (currentQuestion > 1) {
-                showQuestion(currentQuestion - 1);
-            }
-        }
-
-        function showQuestion(questionNum) {
-            // Nascondi tutte le domande
-            document.querySelectorAll('.question-container').forEach(q => {
-                q.classList.remove('active');
-            });
-            
-            // Mostra la domanda corrente
-            document.getElementById(`question-${questionNum}`).classList.add('active');
-            
-            currentQuestion = questionNum;
-            updateProgress();
-            updateNavigation();
-        }
-
-        function updateProgress() {
-            const progress = (currentQuestion / totalQuestions) * 100;
-            document.getElementById('progress-fill').style.width = `${progress}%`;
-            document.getElementById('progress-text').textContent = `Domanda ${currentQuestion} di ${totalQuestions}`;
-        }
-
-        function updateNavigation() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            
-            prevBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
-            nextBtn.textContent = currentQuestion === totalQuestions ? 'Analizza Profilo' : 'Avanti →';
-            
-            validateCurrentQuestion();
-        }
-
-        function validateCurrentQuestion() {
-            const nextBtn = document.getElementById('next-btn');
-            let isValid = false;
-            
-            switch(currentQuestion) {
-                case 1:
-                    const name = document.getElementById('name').value.trim();
-                    const email = document.getElementById('email').value.trim();
-                    const age = document.getElementById('age').value;
-                    isValid = name.length > 0 && email.length > 0 && age >= 16 && age <= 80;
-                    break;
-                    
-                case 2:
-                case 4:
-                case 5:
-                case 7:
-                case 8:
-                case 10:
-                case 12:
-                    isValid = document.querySelector(`#question-${currentQuestion} .option.selected`) !== null;
-                    break;
-                    
-                case 3:
-                case 6:
-                case 11:
-                    isValid = document.querySelectorAll(`#question-${currentQuestion} input[type="checkbox"]:checked`).length > 0;
-                    break;
-                    
-                case 9:
-                    isValid = document.querySelector(`#question-${currentQuestion} .option.selected`) !== null;
-                    break;
-            }
-            
-            nextBtn.disabled = !isValid;
-            return isValid;
-        }
-
-        function saveCurrentAnswer() {
-            switch(currentQuestion) {
-                case 1:
-                    quizData.name = document.getElementById('name').value.trim();
-                    quizData.email = document.getElementById('email').value.trim();
-                    quizData.age = parseInt(document.getElementById('age').value);
-                    quizData.city = document.getElementById('city').value.trim();
-                    break;
-                    
-                case 2:
-                    const experience = document.querySelector('#question-2 .option.selected');
-                    quizData.experience = experience ? experience.dataset.value : null;
-                    break;
-                    
-                case 3:
-                    const goals = [];
-                    document.querySelectorAll('#question-3 input[type="checkbox"]:checked').forEach(cb => {
-                        goals.push(cb.value);
-                    });
-                    quizData.goals = goals;
-                    break;
-                    
-                case 4:
-                    const timeAvailable = document.querySelector('#question-4 .option.selected');
-                    quizData.time_available = timeAvailable ? timeAvailable.dataset.value : null;
-                    break;
-                    
-                case 5:
-                    const frequency = document.querySelector('#question-5 .option.selected');
-                    quizData.frequency = frequency ? frequency.dataset.value : null;
-                    break;
-                    
-                case 6:
-                    const preferences = [];
-                    document.querySelectorAll('#question-6 input[type="checkbox"]:checked').forEach(cb => {
-                        preferences.push(cb.value);
-                    });
-                    quizData.workout_preferences = preferences;
-                    break;
-                    
-                case 7:
-                    const nutrition = document.querySelector('#question-7 .option.selected');
-                    quizData.nutrition = nutrition ? nutrition.dataset.value : null;
-                    break;
-                    
-                case 8:
-                    const motivation = document.querySelector('#question-8 .option.selected');
-                    quizData.motivation = motivation ? motivation.dataset.value : null;
-                    break;
-                    
-                case 9:
-                    const stressResponse = document.querySelector('#question-9 .option.selected');
-                    quizData.stress_level = parseInt(document.getElementById('stress-level').value);
-                    quizData.stress_response = stressResponse ? stressResponse.dataset.value : null;
-                    break;
-                    
-                case 10:
-                    const budget = document.querySelector('#question-10 .option.selected');
-                    quizData.budget = budget ? budget.dataset.value : null;
-                    break;
-                    
-                case 11:
-                    const challenges = [];
-                    document.querySelectorAll('#question-11 input[type="checkbox"]:checked').forEach(cb => {
-                        challenges.push(cb.value);
-                    });
-                    quizData.challenges = challenges;
-                    break;
-                    
-                case 12:
-                    const expectations = document.querySelector('#question-12 .option.selected');
-                    quizData.expectations = expectations ? expectations.dataset.value : null;
-                    break;
-            }
-        }
-
-        function calculateResults() {
-            // Calcola il profilo avanzato
-            const profile = determineAdvancedProfile();
-            const score = calculateAdvancedLeadScore();
-            
-            quizData.profile = profile.name;
-            quizData.lead_score = score;
-            quizData.completed_at = new Date();
-            
-            // Log dei dati per debug (in futuro andrà su Firebase)
-            console.log('📊 Dati quiz completati:', quizData);
-            
-            // Mostra risultati
-            showResults(profile);
-        }
-
-        function determineAdvancedProfile() {
-            let scores = {
-                'Nuovo Esploratore': 0,
-                'Guerriero Determinato': 0,
-                'Atleta Avanzato': 0,
-                'Professionista Elite': 0
-            };
-            
-            // Score basato su esperienza (peso maggiore)
-            switch(quizData.experience) {
-                case 'principiante': scores['Nuovo Esploratore'] += 5; break;
-                case 'intermedio': scores['Guerriero Determinato'] += 5; break;
-                case 'avanzato': scores['Atleta Avanzato'] += 5; break;
-                case 'professionista': scores['Professionista Elite'] += 5; break;
-            }
-            
-            // Score basato su frequenza
-            switch(quizData.frequency) {
-                case '1-2': scores['Nuovo Esploratore'] += 3; break;
-                case '3-4': scores['Guerriero Determinato'] += 3; break;
-                case '5-6': scores['Atleta Avanzato'] += 3; break;
-                case '7': scores['Professionista Elite'] += 3; break;
-            }
-            
-            // Score basato su tempo disponibile
-            switch(quizData.time_available) {
-                case '15-30': scores['Nuovo Esploratore'] += 2; break;
-                case '30-45': scores['Guerriero Determinato'] += 2; break;
-                case '45-60': scores['Atleta Avanzato'] += 2; break;
-                case '60+': scores['Professionista Elite'] += 2; break;
-            }
-            
-            // Score basato su budget
-            switch(quizData.budget) {
-                case 'low': scores['Nuovo Esploratore'] += 1; break;
-                case 'medium': scores['Guerriero Determinato'] += 1; break;
-                case 'high': scores['Atleta Avanzato'] += 1; break;
-                case 'premium': scores['Professionista Elite'] += 1; break;
-            }
-            
-            // Determina il profilo vincente
-            const winningProfile = Object.keys(scores).reduce((a, b) => 
-                scores[a] > scores[b] ? a : b
-            );
-            
-            return getAdvancedProfileDetails(winningProfile);
-        }
-
-        function getAdvancedProfileDetails(profileName) {
-            const profiles = {
-                'Nuovo Esploratore': {
-                    name: 'Nuovo Esploratore',
-                    icon: '🌱',
-                    description: 'Sei all\'inizio di un fantastico viaggio! Hai la motivazione e l\'energia giuste per costruire abitudini solide che ti porteranno al successo.',
-                    recommendations: [
-                        'Programma di allenamento progressivo con focus sulla tecnica',
-                        'Educazione alimentare step-by-step per creare abitudini sostenibili',
-                        'Supporto motivazionale costante per superare le prime difficoltà',
-                        'Monitoraggio settimanale dei progressi per mantenere alta la motivazione',
-                        'Community di supporto con altri che stanno iniziando il loro percorso'
-                    ]
-                },
-                'Guerriero Determinato': {
-                    name: 'Guerriero Determinato',
-                    icon: '💪',
-                    description: 'Hai già le basi e sei pronto per il salto di qualità! Con la giusta strategia puoi raggiungere risultati straordinari.',
-                    recommendations: [
-                        'Programmi di allenamento periodizzati per massimizzare i risultati',
-                        'Strategia nutrizionale avanzata per supportare i tuoi obiettivi',
-                        'Tecniche di recovery e gestione dello stress per performance ottimali',
-                        'Sfide progressive per mantenere alta la motivazione',
-                        'Analisi biomeccanica per perfezionare la tecnica'
-                    ]
-                },
-                'Atleta Avanzato': {
-                    name: 'Atleta Avanzato',
-                    icon: '🏆',
-                    description: 'Sei un vero atleta con esperienza e dedizione. È tempo di perfezionare ogni dettaglio per raggiungere l\'eccellenza.',
-                    recommendations: [
-                        'Programmazione scientifica con periodizzazione avanzata',
-                        'Protocolli di recupero e rigenerazione specifici',
-                        'Ottimizzazione nutrizionale per performance di elite',
-                        'Analisi biomeccanica e correzioni tecniche avanzate',
-                        'Preparazione mentale e strategie di peak performance'
-                    ]
-                },
-                'Professionista Elite': {
-                    name: 'Professionista Elite',
-                    icon: '🥇',
-                    description: 'Sei al top del tuo gioco! Ogni dettaglio conta per mantenere e migliorare le tue performance d\'elite.',
-                    recommendations: [
-                        'Programmazione ultra-specifica per obiettivi competitivi',
-                        'Team multidisciplinare: PT, nutrizionista, fisioterapista',
-                        'Protocolli di recupero avanzati e monitoraggio biomarker',
-                        'Strategie di peaking per competizioni specifiche',
-                        'Innovazioni tecnologiche per massimizzare ogni margine di miglioramento'
-                    ]
-                }
-            };
-            
-            return profiles[profileName];
-        }
-
-        function calculateAdvancedLeadScore() {
-            let score = 0;
-            
-            // Base score per profilo (30 punti max)
-            switch(quizData.profile) {
-                case 'Professionista Elite': score += 30; break;
-                case 'Atleta Avanzato': score += 25; break;
-                case 'Guerriero Determinato': score += 20; break;
-                case 'Nuovo Esploratore': score += 15; break;
-            }
-            
-            // Score basato su obiettivi (25 punti max)
-            const goalCount = quizData.goals?.length || 0;
-            score += Math.min(goalCount * 4, 20);
-            if (quizData.goals?.includes('perdere_peso')) score += 3;
-            if (quizData.goals?.includes('aumentare_massa')) score += 2;
-            
-            // Score basato su frequenza (20 punti max)
-            switch(quizData.frequency) {
-                case '7': score += 20; break;
-                case '5-6': score += 17; break;
-                case '3-4': score += 14; break;
-                case '1-2': score += 10; break;
-            }
-            
-            // Score basato su budget (15 punti max)
-            switch(quizData.budget) {
-                case 'premium': score += 15; break;
-                case 'high': score += 12; break;
-                case 'medium': score += 8; break;
-                case 'low': score += 5; break;
-            }
-            
-            // Score basato su motivazione (10 punti max)
-            switch(quizData.motivation) {
-                case 'performance': score += 10; break;
-                case 'risultati_fisici': score += 8; break;
-                case 'benessere': score += 6; break;
-                case 'socialita': score += 5; break;
-            }
-            
-            // Bonus per completezza dati
-            if (quizData.email && quizData.email.length > 0) score += 5;
-            if (quizData.city && quizData.city.length > 0) score += 2;
-            if (quizData.challenges && quizData.challenges.length > 0) score += 3;
-            
-            return Math.min(score, 100); // Max 100
-        }
-
-        function showResults(profile) {
-            // Nascondi domande e navigazione
-            document.querySelectorAll('.question-container').forEach(q => {
-                q.classList.remove('active');
-            });
-            document.querySelector('.navigation').style.display = 'none';
-            document.querySelector('.progress-container').style.display = 'none';
-            
-            // Mostra risultati
-            document.getElementById('result-icon').textContent = profile.icon;
-            document.getElementById('result-title').textContent = profile.name;
-            document.getElementById('result-score').textContent = `Lead Score: ${quizData.lead_score}/100`;
-            document.getElementById('result-description').textContent = profile.description;
-            
-            // Popola raccomandazioni
-            const recList = document.getElementById('result-recommendations-list');
-            recList.innerHTML = '';
-            profile.recommendations.forEach(rec => {
-                const li = document.createElement('li');
-                li.textContent = rec;
-                recList.appendChild(li);
-            });
-            
-            document.getElementById('result-container').style.display = 'block';
-        }
-
-        // Setup range slider per stress level
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Quiz TribuCoach inizializzato (versione senza Firebase)');
-            
-            const stressSlider = document.getElementById('stress-level');
-            const stressValue = document.getElementById('stress-value');
-            
-            if (stressSlider && stressValue) {
-                stressSlider.addEventListener('input', function() {
-                    const value = parseInt(this.value);
-                    const labels = {
-                        1: '1 - Molto rilassato',
-                        2: '2 - Rilassato', 
-                        3: '3 - Calmo',
-                        4: '4 - Lievemente stressato',
-                        5: '5 - Moderatamente stressato',
-                        6: '6 - Abbastanza stressato',
-                        7: '7 - Stressato',
-                        8: '8 - Molto stressato',
-                        9: '9 - Estremamente stressato',
-                        10: '10 - Sovraccarico totale'
-                    };
-                    stressValue.textContent = labels[value] || `${value} - Moderato`;
-                });
-            }
-            
-            // Setup per opzioni singole
-            document.querySelectorAll('.option').forEach(option => {
-                option.addEventListener('click', function() {
-                    const questionContainer = this.closest('.question-container');
-                    questionContainer.querySelectorAll('.option').forEach(opt => {
-                        opt.classList.remove('selected');
-                    });
-                    
-                    this.classList.add('selected');
-                    validateCurrentQuestion();
-                });
-            });
-            
-            // Setup per input fields
-            document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"]').forEach(input => {
-                input.addEventListener('input', validateCurrentQuestion);
-            });
-            
-            // Setup per checkbox con limite
-            document.querySelectorAll('#question-3 input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const checked = document.querySelectorAll('#question-3 input[type="checkbox"]:checked');
-                    if (checked.length > 3) {
-                        this.checked = false;
-                        alert('Puoi selezionare massimo 3 obiettivi principali!');
-                    }
-                    validateCurrentQuestion();
-                });
-            });
-            
-            // Setup per altri checkbox
-            document.querySelectorAll('input[type="checkbox"]:not(#question-3 input[type="checkbox"])').forEach(checkbox => {
-                checkbox.addEventListener('change', validateCurrentQuestion);
-            });
-            
-            // Inizializza
-            updateProgress();
-            updateNavigation();
-        });
-
-    </script>
-</body>
-</html>
-
         <div class="progress-container">
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
@@ -1296,4 +767,514 @@
                     <div class="option-desc">300€+/mese - Il meglio disponibile per raggiungere gli obiettivi</div>
                 </div>
             </div>
-        
+        </div>
+
+        <!-- Domanda 11: Sfide Principali -->
+        <div class="question-container" id="question-11">
+            <h2 class="question-title">Le tue sfide principali</h2>
+            <p class="question-subtitle">Cosa ti impedisce di raggiungere i tuoi obiettivi?</p>
+            
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-time" value="tempo">
+                    <label for="challenge-time">⏰ Mancanza di tempo</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-motivation" value="motivazione">
+                    <label for="challenge-motivation">😔 Difficoltà a rimanere motivato</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-knowledge" value="conoscenza">
+                    <label for="challenge-knowledge">❓ Non so cosa fare o come farlo</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-consistency" value="costanza">
+                    <label for="challenge-consistency">📅 Difficoltà a essere costante</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-results" value="risultati">
+                    <label for="challenge-results">📊 Non vedo risultati abbastanza velocemente</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="challenge-injuries" value="infortuni">
+                    <label for="challenge-injuries">🩹 Problemi fisici o infortuni passati</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domanda 12: Aspettative -->
+        <div class="question-container" id="question-12">
+            <h2 class="question-title">Le tue aspettative</h2>
+            <p class="question-subtitle">Quando vorresti vedere i primi risultati significativi?</p>
+            
+            <div class="options">
+                <div class="option" data-value="immediate">
+                    <span class="option-icon">🚀</span>
+                    <div class="option-title">Risultati Rapidi</div>
+                    <div class="option-desc">2-4 settimane - Voglio vedere cambiamenti velocemente</div>
+                </div>
+                <div class="option" data-value="realistic">
+                    <span class="option-icon">📈</span>
+                    <div class="option-title">Progressione Realistica</div>
+                    <div class="option-desc">1-3 mesi - Preferisco risultati sostenibili nel tempo</div>
+                </div>
+                <div class="option" data-value="patient">
+                    <span class="option-icon">🌱</span>
+                    <div class="option-title">Crescita Graduale</div>
+                    <div class="option-desc">3-6 mesi - Sono paziente e voglio costruire bene</div>
+                </div>
+                <div class="option" data-value="longterm">
+                    <span class="option-icon">🏔️</span>
+                    <div class="option-title">Trasformazione Profonda</div>
+                    <div class="option-desc">6+ mesi - Questo è un cambiamento di vita permanente</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risultato -->
+        <div class="result-container" id="result-container">
+            <div class="result-icon" id="result-icon">🎯</div>
+            <h2 class="result-title" id="result-title">Il tuo profilo</h2>
+            <div class="result-score" id="result-score">Lead Score: 85/100</div>
+            <p class="result-description" id="result-description">Descrizione del profilo...</p>
+            
+            <div class="result-recommendations">
+                <h3>🎯 La tua strategia personalizzata:</h3>
+                <div id="result-recommendations-text">
+                    <!-- Generato dinamicamente -->
+                </div>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="https://www.chatbase.co/chatbot-iframe/EjoHCEogMfkkrVzIK6V07" target="_blank" class="cta-primary">
+                    💬 Ricevi consigli da TribuChat
+                </a>
+                <a href="https://wa.me/3478881515?text=Ciao%2C%20ho%20completato%20il%20quiz%20TribuCoach%20e%20vorrei%20prenotare%20una%20consulenza%20gratuita!" target="_blank" class="cta-secondary">
+                    📅 Prenota una consulenza privata
+                </a>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()" style="display: none;">
+                ← Indietro
+            </button>
+            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
+                Avanti →
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variabili globali - dichiarata una sola volta
+        let currentQuestion = 1;
+        const totalQuestions = 12;
+        let quizData = {};
+
+        // Funzioni per la gestione del quiz
+        window.nextQuestion = function() {
+            if (!validateCurrentQuestion()) return;
+            
+            saveCurrentAnswer();
+            
+            if (currentQuestion < totalQuestions) {
+                showQuestion(currentQuestion + 1);
+            } else {
+                calculateResults();
+            }
+        }
+
+        window.prevQuestion = function() {
+            if (currentQuestion > 1) {
+                showQuestion(currentQuestion - 1);
+            }
+        }
+
+        function showQuestion(questionNum) {
+            // Nascondi tutte le domande
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.classList.remove('active');
+            });
+            
+            // Mostra la domanda corrente
+            document.getElementById(`question-${questionNum}`).classList.add('active');
+            
+            currentQuestion = questionNum;
+            updateProgress();
+            updateNavigation();
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('progress-text').textContent = `Domanda ${currentQuestion} di ${totalQuestions}`;
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            prevBtn.style.display = currentQuestion > 1 ? 'block' : 'none';
+            nextBtn.textContent = currentQuestion === totalQuestions ? 'Analizza Profilo' : 'Avanti →';
+            
+            validateCurrentQuestion();
+        }
+
+        function validateCurrentQuestion() {
+            const nextBtn = document.getElementById('next-btn');
+            let isValid = false;
+            
+            switch(currentQuestion) {
+                case 1:
+                    const name = document.getElementById('name').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const age = document.getElementById('age').value;
+                    isValid = name.length > 0 && email.length > 0 && age >= 16 && age <= 80;
+                    break;
+                    
+                case 2:
+                case 4:
+                case 5:
+                case 7:
+                case 8:
+                case 10:
+                case 12:
+                    isValid = document.querySelector(`#question-${currentQuestion} .option.selected`) !== null;
+                    break;
+                    
+                case 3:
+                case 6:
+                case 11:
+                    isValid = document.querySelectorAll(`#question-${currentQuestion} input[type="checkbox"]:checked`).length > 0;
+                    break;
+                    
+                case 9:
+                    isValid = document.querySelector(`#question-${currentQuestion} .option.selected`) !== null;
+                    break;
+            }
+            
+            nextBtn.disabled = !isValid;
+            return isValid;
+        }
+
+        function saveCurrentAnswer() {
+            switch(currentQuestion) {
+                case 1:
+                    quizData.name = document.getElementById('name').value.trim();
+                    quizData.email = document.getElementById('email').value.trim();
+                    quizData.age = parseInt(document.getElementById('age').value);
+                    quizData.city = document.getElementById('city').value.trim();
+                    break;
+                    
+                case 2:
+                    const experience = document.querySelector('#question-2 .option.selected');
+                    quizData.experience = experience ? experience.dataset.value : null;
+                    break;
+                    
+                case 3:
+                    const goals = [];
+                    document.querySelectorAll('#question-3 input[type="checkbox"]:checked').forEach(cb => {
+                        goals.push(cb.value);
+                    });
+                    quizData.goals = goals;
+                    break;
+                    
+                case 4:
+                    const timeAvailable = document.querySelector('#question-4 .option.selected');
+                    quizData.time_available = timeAvailable ? timeAvailable.dataset.value : null;
+                    break;
+                    
+                case 5:
+                    const frequency = document.querySelector('#question-5 .option.selected');
+                    quizData.frequency = frequency ? frequency.dataset.value : null;
+                    break;
+                    
+                case 6:
+                    const preferences = [];
+                    document.querySelectorAll('#question-6 input[type="checkbox"]:checked').forEach(cb => {
+                        preferences.push(cb.value);
+                    });
+                    quizData.workout_preferences = preferences;
+                    break;
+                    
+                case 7:
+                    const nutrition = document.querySelector('#question-7 .option.selected');
+                    quizData.nutrition = nutrition ? nutrition.dataset.value : null;
+                    break;
+                    
+                case 8:
+                    const motivation = document.querySelector('#question-8 .option.selected');
+                    quizData.motivation = motivation ? motivation.dataset.value : null;
+                    break;
+                    
+                case 9:
+                    const stressResponse = document.querySelector('#question-9 .option.selected');
+                    quizData.stress_level = parseInt(document.getElementById('stress-level').value);
+                    quizData.stress_response = stressResponse ? stressResponse.dataset.value : null;
+                    break;
+                    
+                case 10:
+                    const budget = document.querySelector('#question-10 .option.selected');
+                    quizData.budget = budget ? budget.dataset.value : null;
+                    break;
+                    
+                case 11:
+                    const challenges = [];
+                    document.querySelectorAll('#question-11 input[type="checkbox"]:checked').forEach(cb => {
+                        challenges.push(cb.value);
+                    });
+                    quizData.challenges = challenges;
+                    break;
+                    
+                case 12:
+                    const expectations = document.querySelector('#question-12 .option.selected');
+                    quizData.expectations = expectations ? expectations.dataset.value : null;
+                    break;
+            }
+        }
+
+        function calculateResults() {
+            // Calcola il profilo avanzato
+            const profile = determineAdvancedProfile();
+            const score = calculateAdvancedLeadScore();
+            
+            quizData.profile = profile.name;
+            quizData.lead_score = score;
+            quizData.completed_at = new Date();
+            
+            // Log dei dati per debug (in futuro andrà su Firebase)
+            console.log('📊 Dati quiz completati:', quizData);
+            
+            // Mostra risultati
+            showResults(profile);
+        }
+
+        function determineAdvancedProfile() {
+            let scores = {
+                'Nuovo Esploratore': 0,
+                'Guerriero Determinato': 0,
+                'Atleta Avanzato': 0,
+                'Professionista Elite': 0
+            };
+            
+            // Score basato su esperienza (peso maggiore)
+            switch(quizData.experience) {
+                case 'principiante': scores['Nuovo Esploratore'] += 5; break;
+                case 'intermedio': scores['Guerriero Determinato'] += 5; break;
+                case 'avanzato': scores['Atleta Avanzato'] += 5; break;
+                case 'professionista': scores['Professionista Elite'] += 5; break;
+            }
+            
+            // Score basato su frequenza
+            switch(quizData.frequency) {
+                case '1-2': scores['Nuovo Esploratore'] += 3; break;
+                case '3-4': scores['Guerriero Determinato'] += 3; break;
+                case '5-6': scores['Atleta Avanzato'] += 3; break;
+                case '7': scores['Professionista Elite'] += 3; break;
+            }
+            
+            // Score basato su tempo disponibile
+            switch(quizData.time_available) {
+                case '15-30': scores['Nuovo Esploratore'] += 2; break;
+                case '30-45': scores['Guerriero Determinato'] += 2; break;
+                case '45-60': scores['Atleta Avanzato'] += 2; break;
+                case '60+': scores['Professionista Elite'] += 2; break;
+            }
+            
+            // Score basato su budget
+            switch(quizData.budget) {
+                case 'low': scores['Nuovo Esploratore'] += 1; break;
+                case 'medium': scores['Guerriero Determinato'] += 1; break;
+                case 'high': scores['Atleta Avanzato'] += 1; break;
+                case 'premium': scores['Professionista Elite'] += 1; break;
+            }
+            
+            // Determina il profilo vincente
+            const winningProfile = Object.keys(scores).reduce((a, b) => 
+                scores[a] > scores[b] ? a : b
+            );
+            
+            return getAdvancedProfileDetails(winningProfile);
+        }
+
+        function getAdvancedProfileDetails(profileName) {
+            const profiles = {
+                'Nuovo Esploratore': {
+                    name: 'Nuovo Esploratore',
+                    icon: '🌱',
+                    description: 'Complimenti! Sei all\'inizio di un fantastico viaggio fitness e hai già dimostrato il primo passo fondamentale: la volontà di cambiare.',
+                    fullAnalysis: `Ciao ${quizData.name}! Dall'analisi del tuo profilo emerge che sei in una fase perfetta per costruire solide basi fitness. La tua motivazione è il tuo punto di forza principale, ma ora è il momento di trasformarla in abitudini concrete e sostenibili.
+
+AREA ABITUDINI: Il tuo successo dipenderà dalla capacità di creare routine piccole ma costanti. Inizia con micro-abitudini: 10 minuti di movimento al giorno, bere un bicchiere d'acqua al risveglio, fare le scale invece dell'ascensore. Le piccole azioni ripetute quotidianamente battono sempre gli sforzi intensi ma sporadici. Il segreto è la costanza, non l'intensità.
+
+ALIMENTAZIONE: Probabilmente stai sottovalutando l'importanza del timing dei pasti e della composizione dei tuoi piatti. Non serve stravolgere tutto subito: inizia aggiungendo una porzione di verdure ad ogni pasto e riduci le bevande zuccherate. La colazione è fondamentale per attivare il metabolismo - mai saltarla! Pianifica i pasti della settimana: questo ti eviterà scelte alimentari impulsive quando sei stanco o di fretta.
+
+MOTIVAZIONE: La tua energia iniziale è preziosa, ma devi imparare a gestirla. Fissa obiettivi piccoli e misurabili: "questa settimana farò 3 allenamenti da 20 minuti" invece di "mi allenerò sempre". Celebra ogni piccola vittoria e non essere troppo duro con te stesso nei giorni difficili. La motivazione va e viene, le abitudini restano.
+
+SONNO & RECUPERO: Spesso chi inizia sottovaluta il sonno, ma è quando dormi che il tuo corpo si trasforma. Punta a 7-8 ore per notte, crea una routine serale rilassante e spegni i dispositivi almeno un'ora prima di dormire. Un sonno di qualità migliora l'umore, l'energia e la capacità di prendere decisioni alimentari corrette.
+
+Il tuo percorso sarà fatto di alti e bassi, ma ricorda: ogni esperto è stato un principiante. Tu hai già fatto il primo passo più difficile!`
+                },
+                'Guerriero Determinato': {
+                    name: 'Guerriero Determinato',
+                    icon: '💪',
+                    description: 'Perfetto! Hai già le basi solide e sei pronto per il salto di qualità. La tua determinazione è evidente, ora dobbiamo ottimizzare ogni aspetto.',
+                    fullAnalysis: `Ciao ${quizData.name}! Il tuo profilo mostra una persona già ben avviata nel percorso fitness con una determinazione invidiabile. Ora è il momento di perfezionare la strategia per accelerare i risultati e superare eventuali plateau.
+
+AREA ABITUDINI: Sei nella fase cruciale dove le buone intenzioni devono diventare automatismi. La tua sfida principale è l'ottimizzazione: invece di aggiungere sempre nuove cose, perfeziona quelle che già fai. Crea rituali pre e post allenamento che ti mettano nella giusta mentalità. Traccia i tuoi progressi con un diario o un'app: vedere i miglioramenti ti darà la spinta per continuare nei momenti difficili.
+
+ALIMENTAZIONE: È probabilmente l'area con il maggior potenziale di miglioramento. Oltre a cosa mangi, devi prestare attenzione a quando e quanto mangi. Sperimenta con il timing dei carboidrati: più al mattino e pre-workout, meno la sera. Aumenta l'apporto proteico a 1.6-2g per kg di peso corporeo. Non dimenticare i grassi buoni: avocado, noci, olio EVO. L'idratazione è cruciale: almeno 35ml per kg di peso corporeo al giorno.
+
+MOTIVAZIONE: La tua determinazione è forte, ma può diventare un'arma a doppio taglio se non gestita bene. Impara a distinguere tra "spingere di più" e "spingere meglio". A volte meno è più: un allenamento ben fatto vale più di due fatti male. Trova un accountability partner o un gruppo di allenamento: la motivazione condivisa è più duratura di quella solitaria.
+
+SONNO & RECUPERO: Questo è dove spesso i "guerrieri" fanno l'errore più grande. Il tuo corpo ha bisogno di recuperare per crescere. Include giorni di recupero attivo nella tua routine. Pratiche come meditation, stretching o yoga non sono "perdite di tempo" ma investimenti nei tuoi risultati. Il sonno profondo è quando avviene la sintesi proteica: senza recupero adeguato, stai sabotando i tuoi sforzi.
+
+Sei sulla strada giusta, ora dobbiamo solo affinare la strategia per portarti al livello successivo!`
+                },
+                'Atleta Avanzato': {
+                    name: 'Atleta Avanzato',
+                    icon: '🏆',
+                    description: 'Eccellente! Sei un vero atleta con esperienza e dedizione. Il tuo livello richiede strategie sofisticate per continuare a progredire.',
+                    fullAnalysis: `Ciao ${quizData.name}! Il tuo profilo rivela un atleta serio e dedicato. A questo livello, i margini di miglioramento sono più sottili ma possono fare la differenza tra essere buoni ed essere eccezionali.
+
+AREA ABITUDINI: La tua sfida è evitare la stagnazione mantenendo la progressione. Varia periodicamente i tuoi stimoli allenanti: se fai sempre la stessa routine, il corpo si adatta e smette di migliorare. Implementa la periodizzazione: alterna fasi di volume alto/intensità bassa con fasi di volume basso/intensità alta. Le tue abitudini devono essere più sofisticate: warm-up specifici, mobilità pre-allenamento, cooldown strutturati.
+
+ALIMENTAZIONE: A questo livello, la nutrizione deve essere quasi chirurgica. Considera l'integrazione strategica: creatina per la forza, beta-alanina per la resistenza, omega-3 per il recupero. Il timing diventa cruciale: finestra anabolica post-workout con proteine e carboidrati rapidi. Sperimenta con approcci avanzati come il carb cycling o la periodizzazione nutrizionale. L'idratazione deve includere elettroliti, specialmente durante allenamenti intensi.
+
+MOTIVAZIONE: A livelli avanzati, la motivazione intrinseca diventa più importante di quella estrinseca. Fissa obiettivi di performance oltre a quelli estetici: battere un record personale, migliorare una tecnica, dominare un movimento complesso. La visualizzazione e la preparazione mentale diventano strumenti fondamentali. Studia continuamente: leggi ricerche, segui coach di livello, non smettere mai di imparare.
+
+SONNO & RECUPERO: Questo è il tuo moltiplicatore di performance. Oltre alle 8 ore notturne, considera pisolini strategici di 20-30 minuti. Integra tecniche avanzate di recupero: contrasto caldo/freddo, massage gun, breathing techniques. Monitor biomarkers come HRV (Heart Rate Variability) per guidare l'intensità degli allenamenti. Il recovery è dove avviene la super-compensazione.
+
+STRESS MANAGEMENT: A livelli avanzati, lo stress da allenamento si somma a quello della vita quotidiana. Impara tecniche di gestione dello stress: meditazione, journaling, hobby disconnessi dal fitness. A volte il miglior allenamento è un giorno di rest completo.
+
+Sei già nell'elite, ora puntiamo alla perfezione!`
+                },
+                'Professionista Elite': {
+                    name: 'Professionista Elite',
+                    icon: '🥇',
+                    description: 'Straordinario! Sei al vertice del fitness. Il tuo livello richiede una precisione assoluta in ogni dettaglio per mantenere e migliorare l\'eccellenza.',
+                    fullAnalysis: `Ciao ${quizData.name}! Il tuo profilo indica un atleta di elite level. A questo stadio, ogni dettaglio conta e la differenza tra buono ed eccezionale si misura in percentuali microscopiche ma decisive.
+
+AREA ABITUDINI: La tua vita è il tuo allenamento. Ogni abitudine deve essere ottimizzata per la performance: dal momento in cui ti svegli a come ti prepari mentalmente prima di ogni sessione. Implementa protocolli di preparazione rigidi e replicabili. La consistenza a questo livello non è più una scelta, è una necessità. Documenta tutto: sensazioni, performance, variabili ambientali. I dati sono i tuoi migliori alleati per l'ottimizzazione continua.
+
+ALIMENTAZIONE: La nutrizione è la tua medicina e il tuo carburante. Lavora con nutrizionisti specializzati in sport performance. Considera analisi avanzate: test genetici per personalizzare macro e micronutrienti, analisi della composizione corporea con DEXA, test intolleranze alimentari. L'integrazione deve essere scientifica e mirata: timing preciso, dosaggi ottimali, purezza certificata. Sperimenta con strategie cutting-edge come fasting protocols, ketogenic phases, o carb backloading.
+
+MOTIVAZIONE: A questo livello, la motivazione trascende il personale. Stai spingendo i limiti umani. La tua motivazione deve essere sistemica: performance, legacy, ispirazione per altri. Sviluppa routine di preparazione mentale sofisticate: visualizzazione dettagliata, self-talk positivo, goal setting a breve e lungo termine. Lavora con sport psychologists per ottimizzare la mente quanto il corpo.
+
+SONNO & RECUPERO: Il sonno è il tuo laboratorio di crescita. Investi in tecnologie avanzate: materassi per atleti, controllo temperatura ambiente, light therapy per ottimizzare i ritmi circadiani. Monitor costantemente biomarkers: HRV, temperatura basale, cortisolo salivare. Integra modalità di recovery cutting-edge: crioterapia, camera iperbarica, red light therapy, float tanks.
+
+STRESS & PERFORMANCE: Gestisci lo stress come un professionista. Lo stress positivo (eustress) spinge la performance, quello negativo (distress) la sabota. Impara a riconoscere i segnali e ad agire di conseguenza. Sviluppa strategie di coping multiple: breathwork, meditation, flow states, mindfulness.
+
+LONGEVITÀ ATLETICA: A questo livello, non pensi solo alla performance di oggi ma alla sostenibilità nel tempo. Investi in mobilità, stabilità, prevenzione infortuni. La longevità atletica è il vero segno di un professionista elite.
+
+Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere umani. Continue to push the boundaries!`
+                }
+            };
+            
+            return profiles[profileName];
+        }
+
+        function calculateAdvancedLeadScore() {
+            let score = 0;
+            
+            // Base score per profilo (30 punti max)
+            switch(quizData.profile) {
+                case 'Professionista Elite': score += 30; break;
+                case 'Atleta Avanzato': score += 25; break;
+                case 'Guerriero Determinato': score += 20; break;
+                case 'Nuovo Esploratore': score += 15; break;
+            }
+            
+            // Score basato su obiettivi (25 punti max)
+            const goalCount = quizData.goals?.length || 0;
+            score += Math.min(goalCount * 4, 20);
+            if (quizData.goals?.includes('perdere_peso')) score += 3;
+            if (quizData.goals?.includes('aumentare_massa')) score += 2;
+            
+            // Score basato su frequenza (20 punti max)
+            switch(quizData.frequency) {
+                case '7': score += 20; break;
+                case '5-6': score += 17; break;
+                case '3-4': score += 14; break;
+                case '1-2': score += 10; break;
+            }
+            
+            // Score basato su budget (15 punti max)
+            switch(quizData.budget) {
+                case 'premium': score += 15; break;
+                case 'high': score += 12; break;
+                case 'medium': score += 8; break;
+                case 'low': score += 5; break;
+            }
+            
+            // Score basato su motivazione (10 punti max)
+            switch(quizData.motivation) {
+                case 'performance': score += 10; break;
+                case 'risultati_fisici': score += 8; break;
+                case 'benessere': score += 6; break;
+                case 'socialita': score += 5; break;
+            }
+            
+            // Bonus per completezza dati
+            if (quizData.email && quizData.email.length > 0) score += 5;
+            if (quizData.city && quizData.city.length > 0) score += 2;
+            if (quizData.challenges && quizData.challenges.length > 0) score += 3;
+            
+            return Math.min(score, 100); // Max 100
+        }
+
+        function showResults(profile) {
+            // Nascondi domande e navigazione
+            document.querySelectorAll('.question-container').forEach(q => {
+                q.classList.remove('active');
+            });
+            document.querySelector('.navigation').style.display = 'none';
+            document.querySelector('.progress-container').style.display = 'none';
+            
+            // Mostra risultati
+            document.getElementById('result-icon').textContent = profile.icon;
+            document.getElementById('result-title').textContent = profile.name;
+            document.getElementById('result-score').textContent = `Lead Score: ${quizData.lead_score}/100`;
+            document.getElementById('result-description').textContent = profile.description;
+            
+            // Popola l'analisi completa
+            const recText = document.getElementById('result-recommendations-text');
+            recText.innerHTML = `<p style="line-height: 1.8; font-size: 1.1rem; color: #ddd; white-space: pre-line;">${profile.fullAnalysis}</p>`;
+            
+            document.getElementById('result-container').style.display = 'block';
+        }
+
+        // Setup iniziale
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Quiz TribuCoach inizializzato (versione senza Firebase)');
+            
+            // Setup range slider per stress level
+            const stressSlider = document.getElementById('stress-level');
+            const stressValue = document.getElementById('stress-value');
+            
+            if (stressSlider && stressValue) {
+                stressSlider.addEventListener('input', function() {
+                    const value = parseInt(this.value);
+                    const labels = {
+                        1: '1 - Molto rilassato',
+                        2: '2 - Rilassato', 
+                        3: '3 - Calmo',
+                        4: '4 - Lievemente stressato',
+                        5: '5 - Moderatamente stressato',
+                        6: '6 - Abbastanza stressato',
+                        7: '7 - Stressato',
+                        8: '8 - Molto stressato',
+                        9: '9 - Estremamente stressato',
+                        10: '10 - Sovraccarico totale'
+                    };
+                    stressValue.textContent = labels[value] || `${value} - Moderato`;
+                });
+            }
+            
+            // Setup per opzioni singole
+            document.querySelectorAll('.option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const questionContainer = this.closest('.question-container');
+                    questionContainer.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
