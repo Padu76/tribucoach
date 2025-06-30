@@ -90,14 +90,7 @@
             </div>
         </div>
 
-        <div class="navigation">
-            <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()" style="display: none;">
-                ← Indietro
-            </button>
-            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
-                Avanti →
-            </button>
-        </div>
+        <!-- Navigation globale rimossa da qui -->
     </div>
 
     <script>
@@ -595,12 +588,14 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
         }
 
         function showResults(profile) {
-            // Nascondi domande e navigazione
+            // Nascondi domande e progress
             document.querySelectorAll('.question-container').forEach(q => {
                 q.classList.remove('active');
             });
-            document.querySelector('.navigation').style.display = 'none';
             document.querySelector('.progress-container').style.display = 'none';
+            
+            // NASCONDI NAVIGATION SOLO NEI RISULTATI
+            document.querySelector('.navigation').style.display = 'none';
             
             // Mostra risultati
             document.getElementById('result-icon').textContent = profile.icon;
@@ -714,6 +709,7 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
+            overflow: visible;
         }
 
         .header {
@@ -852,6 +848,17 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
             display: flex;
             justify-content: space-between;
             margin-top: 40px;
+            width: 100%;
+            position: relative;
+            clear: both;
+            z-index: 10;
+        }
+
+        /* Forza il posizionamento corretto */
+        .container .navigation {
+            position: static !important;
+            float: none !important;
+            clear: both !important;
         }
 
         .btn {
@@ -1180,6 +1187,16 @@ Tu non stai solo allenando il tuo corpo, stai ridefinendo cosa significa essere 
             <div class="input-group">
                 <label for="city">Città:</label>
                 <input type="text" id="city" placeholder="Dove vivi? (es. Verona, Milano...)">
+            </div>
+
+            <!-- Navigation dentro la domanda -->
+            <div class="navigation">
+                <button class="btn btn-secondary" id="prev-btn" onclick="prevQuestion()" style="display: none;">
+                    ← Indietro
+                </button>
+                <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
+                    Avanti →
+                </button>
             </div>
         </div>
 
