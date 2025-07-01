@@ -698,6 +698,18 @@
         let currentTheme = 'light';
         let chart = null;
 
+        // === CONNECTION STATUS ===
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.textContent = '🟢 Firebase Connesso';
+                statusEl.className = 'connection-status status-connected';
+            } else {
+                statusEl.textContent = '🟡 Modalità Demo';
+                statusEl.className = 'connection-status status-demo';
+            }
+        }
+
         // === FIREBASE INITIALIZATION CON DEBUG ===
         async function initFirebase() {
             return new Promise((resolve) => {
@@ -862,27 +874,33 @@
             }
         }
 
-        // === PROCESS LEAD DATA AVANZATO ===
+        // === PROCESS LEAD DATA AVANZATO (BASATO SUI TUOI DATI REALI) ===
         function processLeadDataAdvanced(docId, data) {
             console.log('🔍 Processing lead:', docId, Object.keys(data));
             
-            // Cerca tutti i possibili nomi per ogni campo
-            const name = data.userName || data.name || data.user_name || data.nome || data.fullName || 'Nome non disponibile';
-            const email = data.userEmail || data.email || data.user_email || data.mail || 'Non disponibile';
-            const phone = data.userWhatsApp || data.phone || data.whatsapp || data.user_phone || data.telefono || data.cellulare || 'Non disponibile';
-            const age = data.userAge || data.age || data.user_age || data.eta || 'N/A';
-            const gender = data.userGender || data.gender || data.user_gender || data.genere || data.sesso || 'N/A';
+            // Dai tuoi dati reali vedo questi campi:
+            // - name, email, whatsapp, age, gender, lead_score, city, goals, challenges, etc.
             
-            // Score con vari nomi possibili
-            let score = data.fitnessScore || data.score || data.lead_score || data.punteggio || 0;
+            const name = data.name || data.userName || data.user_name || data.nome || 'Nome non disponibile';
+            const email = data.email || data.userEmail || data.user_email || 'Non disponibile';
+            const phone = data.whatsapp || data.userWhatsApp || data.phone || data.telefono || 'Non disponibile';
+            const age = data.age || data.userAge || data.eta || 'N/A';
+            const gender = data.gender || data.userGender || data.genere || 'N/A';
+            
+            // Score - dai tuoi dati vedo "lead_score"
+            let score = data.lead_score || data.fitnessScore || data.score || 0;
             if (!score) {
-                score = calculateScore(data);
+                score = calculateScoreFromYourData(data);
             }
             
-            const profile = data.fitnessPersonality || data.profile || data.personality || data.profilo || data.tipo || 'Non specificato';
+            // Profile - dai tuoi dati potrebbe essere derivato da personality_traits o altri campi
+            let profile = data.profile || data.personality || 'Non specificato';
+            if (!profile || profile === 'Non specificato') {
+                profile = deriveProfileFromData(data);
+            }
             
-            // Goals - può essere array o stringa
-            let goals = data.fitnessGoals || data.goals || data.obiettivi || [];
+            // Goals - dai tuoi dati vedo "goals" array
+            let goals = data.goals || data.fitnessGoals || data.obiettivi || [];
             if (typeof goals === 'string') {
                 goals = [goals];
             }
@@ -890,16 +908,27 @@
                 goals = [];
             }
             
-            // Timestamp con vari formati
+            // Obstacles/Challenges - dai tuoi dati vedo "challenges"
+            let obstacles = data.challenges || data.obstacles || data.ostacoli || [];
+            if (typeof obstacles === 'string') {
+                obstacles = [obstacles];
+            }
+            if (!Array.isArray(obstacles)) {
+                obstacles = [];
+            }
+            
+            // Budget - dai tuoi dati vedo "budget"
+            const budget = data.budget || data.budget_range || 'Non specificato';
+            
+            // City - dai tuoi dati vedo "city"
+            const city = data.city || data.citta || 'Non specificato';
+            
+            // Timestamp
             let timestamp;
             if (data.timestamp && data.timestamp.toDate) {
                 timestamp = data.timestamp.toDate();
-            } else if (data.timestamp) {
-                timestamp = new Date(data.timestamp);
             } else if (data.created_at && data.created_at.toDate) {
                 timestamp = data.created_at.toDate();
-            } else if (data.created_at) {
-                timestamp = new Date(data.created_at);
             } else if (data.date) {
                 timestamp = new Date(data.date);
             } else {
@@ -916,6 +945,9 @@
                 score,
                 profile,
                 goals,
+                obstacles,
+                budget,
+                city,
                 timestamp,
                 source: 'Firebase',
                 rawData: data // Per debug
@@ -925,40 +957,98 @@
             return result;
         }
 
-        // === PROCESS CHAT DATA AVANZATO ===
+        // === CALCOLA SCORE DAI TUOI DATI ===
+        function calculateScoreFromYourData(data) {
+            let score = 50; // Base score
+            
+            // Basato sui campi che vedo nei tuoi dati
+            if (data.motivation === 'risultati_fisici') score += 15;
+            if (data.nutrition === 'ottima' || data.nutrition_level === 'alimentazione_ottima') score += 10;
+            if (data.budget === 'budget_premium') score += 15;
+            if (data.time_available === '30-60' || data.time_available === '60+') score += 10;
+            if (data.workout_preferences && data.workout_preferences.length > 0) score += 5;
+            if (data.goals && data.goals.length > 0) score += data.goals.length * 3;
+            if (data.email && data.email.includes('@')) score += 10;
+            if (data.whatsapp) score += 10;
+            
+            return Math.min(Math.max(score, 0), 100);
+        }
+
+        // === DERIVA PROFILO DAI DATI ===
+        function deriveProfileFromData(data) {
+            // Basato sui tuoi dati, creo profili logici
+            if (data.budget === 'budget_premium') {
+                return 'Cliente Premium';
+            }
+            if (data.motivation === 'risultati_fisici') {
+                return 'Orientato ai Risultati';
+            }
+            if (data.nutrition === 'ottima') {
+                return 'Esperto Nutrizione';
+            }
+            if (data.age && data.age > 50) {
+                return 'Senior Motivato';
+            }
+            if (data.time_available === '15-30') {
+                return 'Busy Professional';
+            }
+            if (data.goals && data.goals.includes('perdita_peso')) {
+                return 'Weight Loss Focused';
+            }
+            
+            return 'Nuovo Esploratore';
+        }
+
+        // === PROCESS CHAT DATA AVANZATO (BASATO SUI TUOI DATI REALI) ===
         function processChatDataAdvanced(docId, data) {
             console.log('🔍 Processing chat:', docId, Object.keys(data));
             
-            const messages = data.messages || data.conversation || data.chat || [];
+            // Dai tuoi dati vedo: messages, sentiment, source, topic, dateCreated, etc.
             
-            const clientName = data.customerName || data.customer_name || data.clientName || data.nome || 
-                             extractClientName(messages) || 'Cliente Anonimo';
+            const messages = data.messages || data.conversation || [];
             
-            const phone = data.customerPhone || data.customer_phone || data.phone || data.telefono || 
-                         extractPhone(messages) || 'N/A';
+            // Nome cliente - cerca nei messaggi o usa campo esistente
+            let clientName = data.customerName || data.customer_name || 'Cliente Anonimo';
+            if (clientName === 'Cliente Anonimo' && messages.length > 0) {
+                clientName = extractClientNameFromYourMessages(messages) || 'Cliente Anonimo';
+            }
             
-            const email = data.customerEmail || data.customer_email || data.email || data.mail || 
-                         extractEmail(messages) || 'N/A';
+            // Phone - cerca nei messaggi
+            let phone = data.customerPhone || data.phone || 'N/A';
+            if (phone === 'N/A' && messages.length > 0) {
+                phone = extractPhoneFromYourMessages(messages) || 'N/A';
+            }
             
-            const topic = data.topic || data.argomento || data.subject || 
-                         extractTopic(messages) || 'Conversazione generale';
+            // Email - cerca nei messaggi  
+            let email = data.customerEmail || data.email || 'N/A';
+            if (email === 'N/A' && messages.length > 0) {
+                email = extractEmailFromYourMessages(messages) || 'N/A';
+            }
             
+            // Topic - dai tuoi dati vedo che hai già "topic"
+            const topic = data.topic || extractTopicFromYourMessages(messages) || 'Conversazione generale';
+            
+            // Ultimo messaggio
             let lastMessage = 'Nessun messaggio';
             if (messages.length > 0) {
                 const lastMsg = messages[messages.length - 1];
                 lastMessage = lastMsg.content || lastMsg.message || lastMsg.text || 'Nessun messaggio';
             }
             
-            // Timestamp
+            // Sentiment - dai tuoi dati vedo che hai già "sentiment"
+            const sentiment = data.sentiment || 'Neutrale';
+            
+            // Source - dai tuoi dati vedo "source"
+            const source = data.source || 'Firebase';
+            
+            // Timestamp - dai tuoi dati vedo "dateCreated" e "lastMessageAt"
             let timestamp;
             if (data.lastMessageAt && data.lastMessageAt.toDate) {
                 timestamp = data.lastMessageAt.toDate();
-            } else if (data.lastMessageAt) {
-                timestamp = new Date(data.lastMessageAt);
+            } else if (data.dateCreated && data.dateCreated.toDate) {
+                timestamp = data.dateCreated.toDate();
             } else if (data.created_at && data.created_at.toDate) {
                 timestamp = data.created_at.toDate();
-            } else if (data.created_at) {
-                timestamp = new Date(data.created_at);
             } else {
                 timestamp = new Date();
             }
@@ -971,13 +1061,73 @@
                 topic,
                 lastMessage,
                 messageCount: messages.length,
+                sentiment,
                 timestamp,
                 source: 'Firebase',
+                chatbaseId: data.chatbaseId || null, // Dai tuoi dati
+                totalMessages: data.totalMessages || messages.length, // Dai tuoi dati
                 rawData: data // Per debug
             };
             
             console.log('✅ Chat processata:', result);
             return result;
+        }
+
+        // === ESTRAI INFO DAI TUOI MESSAGGI ===
+        function extractClientNameFromYourMessages(messages) {
+            for (const msg of messages) {
+                if (msg.role === 'user' || msg.sender === 'user') {
+                    const content = msg.content || msg.message || msg.text || '';
+                    const match = content.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-Z\s]{2,20})/i);
+                    if (match) return match[1].trim();
+                }
+            }
+            return null;
+        }
+
+        function extractPhoneFromYourMessages(messages) {
+            for (const msg of messages) {
+                if (msg.role === 'user' || msg.sender === 'user') {
+                    const content = msg.content || msg.message || msg.text || '';
+                    const match = content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                }
+            }
+            return null;
+        }
+
+        function extractEmailFromYourMessages(messages) {
+            for (const msg of messages) {
+                if (msg.role === 'user' || msg.sender === 'user') {
+                    const content = msg.content || msg.message || msg.text || '';
+                    const match = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                    if (match) return match[1];
+                }
+            }
+            return null;
+        }
+
+        function extractTopicFromYourMessages(messages) {
+            const allText = messages
+                .filter(msg => msg.role === 'user' || msg.sender === 'user')
+                .map(msg => (msg.content || msg.message || msg.text || '').toLowerCase())
+                .join(' ');
+            
+            const topics = {
+                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe'],
+                'Alimentazione': ['dieta', 'alimentazione', 'nutrizione', 'cibo'],
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'training'],
+                'Consulenza': ['consulenza', 'appuntamento', 'incontro'],
+                'Supporto': ['aiuto', 'supporto', 'problema', 'difficoltà']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Conversazione generale';
         }
 
         function loadDemoData() {
