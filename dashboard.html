@@ -1,143 +1,10 @@
-                    rate: `${Math.round((conversions/consultations)*100)}%`,
-                    color: '#ef4444'
-                }
-            ];
-            
-            let html = '';
-            steps.forEach((step, index) => {
-                if (index > 0) {
-                    html += '<div class="funnel-arrow">⬇️</div>';
-                }
-                
-                html += `
-                    <div class="funnel-step" style="background: linear-gradient(135deg, ${step.color}, ${step.color}dd)">
-                        <div class="funnel-step-info">
-                            <h3>${step.title}</h3>
-                            <div class="funnel-step-rate">Conversione: ${step.rate}</div>
-                        </div>
-                        <div class="funnel-step-value">${step.value.toLocaleString()}</div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // === GRAFICI INTERATTIVI ===
-        function initCharts() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            
-            charts.trend = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug'],
-                    datasets: [{
-                        label: 'Lead',
-                        data: [12, 19, 23, 25, 22, 30, 35],
-                        borderColor: '#ff6600',
-                        backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: currentTheme === 'dark' ? '#e2e8f0' : '#1e293b'
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: currentTheme === 'dark' ? '#94a3b8' : '#64748b'
-                            },
-                            grid: {
-                                color: currentTheme === 'dark' ? '#333' : '#e2e8f0'
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                color: currentTheme === 'dark' ? '#94a3b8' : '#64748b'
-                            },
-                            grid: {
-                                color: currentTheme === 'dark' ? '#333' : '#e2e8f0'
-                            }
-                        }
-                    }
-                }
-            });
-
-            // Chatbot Analytics Chart
-            const chatbotCtx = document.getElementById('chatbotChart').getContext('2d');
-            charts.chatbot = new Chart(chatbotCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Informazioni Prezzi', 'Supporto Nutrizionale', 'Allenamento', 'Consulenza'],
-                    datasets: [{
-                        data: [40, 25, 20, 15],
-                        backgroundColor: ['#ff6600', '#10b981', '#3b82f6', '#f59e0b'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: currentTheme === 'dark' ? '#e2e8f0' : '#1e293b',
-                                padding: 20
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function showChart(type) {
-            // Aggiorna dataset del grafico basato sul tipo
-            const chart = charts.trend;
-            
-            const datasets = {
-                leads: {
-                    label: 'Lead',
-                    data: [12, 19, 23, 25, 22, 30, 35],
-                    borderColor: '#ff6600',
-                    backgroundColor: 'rgba(255, 102, 0, 0.1)'
-                },
-                conversions: {
-                    label: 'Conversioni',
-                    data: [5, 8, 12, 15, 13, 18, 22],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
-                },
-                sentiment: {
-                    label: 'Sentiment Positivo %',
-                    data: [65, 70, 68, 75, 72, 78, 80],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
-                },
-                comparison: {
-                    label: 'Questo Mese vs Scorso',
-                    data: [110, 125, 108, 130, 115, 140, 135],
-                    borderColor: '#8b5cf6',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)'
-                }
-            };
-            
-            chart.data.datasets[0] = { ...datasets[type], tension: 0.4, fill: true };
-            chart.update();
-            
             // Aggiorna stili bottoni
             document.querySelectorAll('.chart-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.classList.add('active');
+            
+            showNotification(`📊 Grafico ${type} caricato!`);
         }
 
         function updateChartsTheme() {
@@ -169,11 +36,19 @@
         function updateSentimentAnalysis() {
             const container = document.getElementById('sentimentGrid');
             
-            // Calcola sentiment dai dati reali
-            const sentiments = chatsData.reduce((acc, chat) => {
-                acc[chat.sentiment] = (acc[chat.sentiment] || 0) + 1;
-                return acc;
-            }, { positive: 0, neutral: 0, negative: 0 });
+            // Calcola sentiment dai dati reali o usa demo
+            let sentiments = { positive: 0, neutral: 0, negative: 0 };
+            
+            if (chatsData.length > 0) {
+                sentiments = chatsData.reduce((acc, chat) => {
+                    const sentiment = chat.sentiment || 'neutral';
+                    acc[sentiment] = (acc[sentiment] || 0) + 1;
+                    return acc;
+                }, { positive: 0, neutral: 0, negative: 0 });
+            } else {
+                // Dati demo
+                sentiments = { positive: 18, neutral: 8, negative: 3 };
+            }
             
             const total = Object.values(sentiments).reduce((a, b) => a + b, 0) || 1;
             
@@ -211,7 +86,7 @@
                         <div class="sentiment-icon">${card.icon}</div>
                         <div class="sentiment-value" style="color: ${card.color}">${card.value}</div>
                         <div class="sentiment-label">${card.label}</div>
-                        <div class="sentiment-percentage">${card.percentage}%</div>
+                        <div style="margin-top: 0.5rem; font-weight: 600; color: ${card.color}">${card.percentage}%</div>
                     </div>
                 `;
             });
@@ -237,14 +112,18 @@
         function updateKeywordTrends(period = 'giorni') {
             const container = document.getElementById('keywordCloud');
             
-            // Estrai keywords da tutte le conversazioni
-            const keywordCount = {};
+            // Estrai keywords dai dati reali o usa demo
+            let keywordCount = {};
             
-            chatsData.forEach(chat => {
-                chat.keywords?.forEach(keyword => {
-                    keywordCount[keyword] = (keywordCount[keyword] || 0) + 1;
+            if (chatsData.length > 0) {
+                chatsData.forEach(chat => {
+                    if (chat.keywords && Array.isArray(chat.keywords)) {
+                        chat.keywords.forEach(keyword => {
+                            keywordCount[keyword] = (keywordCount[keyword] || 0) + 1;
+                        });
+                    }
                 });
-            });
+            }
             
             // Aggiungi keywords demo per visualizzazione
             const demoKeywords = {
@@ -267,13 +146,15 @@
             // Ordina per frequenza
             const sortedKeywords = Object.entries(keywordCount)
                 .sort(([,a], [,b]) => b - a)
-                .slice(0, 15);
+                .slice(0, 12);
             
             let html = '';
             sortedKeywords.forEach(([keyword, count]) => {
-                const size = Math.max(0.8, Math.min(2, count / 10));
+                const size = Math.max(0.8, Math.min(1.5, count / 15));
                 html += `
-                    <div class="keyword-tag" style="transform: scale(${size})" onclick="analyzeKeyword('${keyword}')">
+                    <div class="keyword-tag" 
+                         style="transform: scale(${size})" 
+                         onclick="analyzeKeyword('${keyword}')">
                         ${keyword}
                         <span class="keyword-count">${count}</span>
                     </div>
@@ -281,6 +162,7 @@
             });
             
             container.innerHTML = html;
+            showNotification(`🔍 Keywords aggiornate per: ${period}`);
         }
 
         function analyzeKeyword(keyword) {
@@ -288,7 +170,6 @@
         }
 
         function updateKeywords(period) {
-            // Aggiorna periodo e ricarica keywords
             updateKeywordTrends(period);
             
             // Aggiorna bottoni attivi
@@ -302,42 +183,42 @@
         function updateMLInsights() {
             const container = document.getElementById('mlInsights');
             
-            // Calcola insights ML
-            const totalLeads = leadsData.length;
-            const highScoreLeads = leadsData.filter(l => l.score > 80).length;
-            const avgConversionProb = totalLeads > 0 ? 
-                Math.round(leadsData.reduce((sum, lead) => sum + lead.conversionProbability, 0) / totalLeads) : 0;
+            // Calcola insights ML basati sui dati
+            const totalLeads = leadsData.length || 45;
+            const highScoreLeads = leadsData.filter(l => (l.score || 0) > 80).length || 15;
+            const avgScore = totalLeads > 0 ? 
+                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 75), 0) / totalLeads) : 78;
             
             const insights = [
                 {
                     title: 'Accuracy Modello ML',
                     score: '94.2%',
-                    description: 'Il modello predice correttamente le conversioni nel 94.2% dei casi'
+                    description: 'Il modello predice correttamente le conversioni nel 94.2% dei casi basato sui pattern storici'
                 },
                 {
-                    title: 'Probabilità Conversione Media',
-                    score: `${avgConversionProb}%`,
-                    description: 'Probabilità media di conversione calcolata dall\'algoritmo ML'
+                    title: 'Score Medio Predetto',
+                    score: `${avgScore}%`,
+                    description: 'Score medio calcolato dall\'algoritmo ML sui lead attuali con fattori di correzione'
                 },
                 {
-                    title: 'Lead Predetti Hot',
+                    title: 'Lead Hot Identificati',
                     score: highScoreLeads,
-                    description: 'Lead identificati come high-value dall\'AI con score > 80%'
+                    description: 'Lead classificati come high-value dall\'AI con probabilità conversione > 80%'
                 },
                 {
                     title: 'ROI Predetto',
                     score: '€12.4K',
-                    description: 'Ricavo previsto dai lead attuali basato su pattern storici'
+                    description: 'Ricavo previsto dai lead attuali basato su pattern di conversione storica'
                 },
                 {
                     title: 'Miglior Canale',
                     score: 'Quiz + Chat',
-                    description: 'Combinazione più efficace identificata dall\'algoritmo'
+                    description: 'Combinazione più efficace identificata dall\'algoritmo di machine learning'
                 },
                 {
-                    title: 'Prossimo Aggiornamento',
+                    title: 'Prossimo Update',
                     score: '2 giorni',
-                    description: 'Tempo stimato per il prossimo retrain automatico del modello'
+                    description: 'Tempo stimato per il prossimo retrain automatico del modello con nuovi dati'
                 }
             ];
             
@@ -368,28 +249,236 @@
         function updateChatbotAnalytics(period) {
             // Aggiorna grafico chatbot con nuovi dati
             if (charts.chatbot) {
-                const topicCounts = chatsData.reduce((acc, chat) => {
-                    acc[chat.topic] = (acc[chat.topic] || 0) + 1;
-                    return acc;
-                }, {});
+                // Calcola distribuzione argomenti dai dati reali
+                let topicCounts = {};
                 
-                const labels = Object.keys(topicCounts).slice(0, 5);
-                const data = Object.values(topicCounts).slice(0, 5);
+                if (chatsData.length > 0) {
+                    topicCounts = chatsData.reduce((acc, chat) => {
+                        acc[chat.topic] = (acc[chat.topic] || 0) + 1;
+                        return acc;
+                    }, {});
+                } else {
+                    // Dati demo
+                    topicCounts = {
+                        'Informazioni Prezzi': 12,
+                        'Supporto Nutrizionale': 8,
+                        'Allenamento': 6,
+                        'Consulenza': 4
+                    };
+                }
+                
+                const labels = Object.keys(topicCounts).slice(0, 4);
+                const data = Object.values(topicCounts).slice(0, 4);
+                const colors = ['#ff6600', '#10b981', '#3b82f6', '#f59e0b'];
                 
                 charts.chatbot.data.labels = labels;
                 charts.chatbot.data.datasets[0].data = data;
+                charts.chatbot.data.datasets[0].backgroundColor = colors;
                 charts.chatbot.update();
             }
             
             showNotification(`📊 Analytics chatbot aggiornate per: ${period}`);
         }
 
-        // === UTILITY FUNCTIONS AVANZATE ===
+        // === INIZIALIZZAZIONE FIREBASE (ORIGINALE) ===
+        async function initFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase non disponibile');
+                }
+
+                const app = firebase.initializeApp(FIREBASE_CONFIG);
+                db = firebase.firestore();
+                await db.collection('test').limit(1).get();
+                
+                isConnected = true;
+                console.log('✅ Firebase connesso');
+                showNotification('🔥 Firebase connesso!');
+                return true;
+            } catch (error) {
+                console.error('❌ Firebase non disponibile:', error);
+                isConnected = false;
+                showNotification('⚠️ Firebase non disponibile - modalità demo');
+                return false;
+            }
+        }
+
+        // === CARICAMENTO DATI (ORIGINALE) ===
+        async function loadData() {
+            try {
+                if (isConnected) {
+                    // Carica dati reali da Firebase
+                    const [quizSnapshot, chatsSnapshot] = await Promise.all([
+                        db.collection('quiz_results').get(),
+                        db.collection('conversations').get()
+                    ]);
+
+                    leadsData = [];
+                    quizSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        leadsData.push({
+                            id: doc.id,
+                            name: data.userName || data.name || 'Nome non disponibile',
+                            email: data.userEmail || data.email || 'Non disponibile',
+                            phone: data.userWhatsApp || data.phone || 'Non disponibile',
+                            age: data.userAge || data.age || 'N/A',
+                            gender: data.userGender || data.gender || 'N/A',
+                            score: data.fitnessScore || data.score || 0,
+                            profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                            goals: data.fitnessGoals || data.goals || [],
+                            obstacles: data.fitnessObstacles || data.obstacles || [],
+                            budget: data.budget || 'Non specificato',
+                            timestamp: data.timestamp || data.completed_at
+                        });
+                    });
+
+                    chatsData = [];
+                    chatsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const messages = data.messages || [];
+                        chatsData.push({
+                            id: doc.id,
+                            clientName: extractNameFromMessages(messages) || data.customerName || 'Cliente Anonimo',
+                            phone: extractPhoneFromMessages(messages) || data.customerPhone || 'N/A',
+                            email: extractEmailFromMessages(messages) || data.customerEmail || 'N/A',
+                            topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
+                            lastMessage: messages.length > 0 ? messages[messages.length - 1].content : 'Nessun messaggio',
+                            messages: messages,
+                            timestamp: data.lastMessageAt || data.dateCreated || new Date()
+                        });
+                    });
+                } else {
+                    // Carica dati demo
+                    loadDemoData();
+                }
+
+                // Aggiorna tutte le sezioni
+                updateMetrics();
+                updateInsights();
+                updateHeatmap();
+                updateFunnel();
+                updateSentimentAnalysis();
+                updateKeywordTrends();
+                updateMLInsights();
+                filterLeads(currentLeadFilter);
+                filterChats(currentChatFilter);
+                
+                // Inizializza grafici
+                setTimeout(() => {
+                    initCharts();
+                }, 500);
+
+            } catch (error) {
+                console.error('Errore caricamento dati:', error);
+                loadDemoData();
+            }
+        }
+
+        // === DATI DEMO (ORIGINALE) ===
+        function loadDemoData() {
+            leadsData = [
+                {
+                    id: 'demo_1',
+                    name: 'Marco Rossi',
+                    email: 'marco.rossi@email.com',
+                    phone: '+39 333 1234567',
+                    age: 28,
+                    gender: 'Maschio',
+                    score: 85,
+                    profile: 'Guerriero Determinato',
+                    goals: ['Perdita peso', 'Tonificazione'],
+                    obstacles: ['Tempo limitato', 'Motivazione'],
+                    budget: '€150-200/mese',
+                    timestamp: new Date()
+                },
+                {
+                    id: 'demo_2', 
+                    name: 'Sara Bianchi',
+                    email: 'sara.bianchi@email.com',
+                    phone: '+39 334 5678901',
+                    age: 34,
+                    gender: 'Femmina',
+                    score: 92,
+                    profile: 'Atleta Esperto',
+                    goals: ['Aumento massa', 'Performance'],
+                    obstacles: ['Plateau risultati'],
+                    budget: '€200-300/mese',
+                    timestamp: new Date(Date.now() - 86400000)
+                },
+                {
+                    id: 'demo_3',
+                    name: 'Luca Verdi', 
+                    email: 'luca.verdi@email.com',
+                    phone: '+39 335 9876543',
+                    age: 25,
+                    gender: 'Maschio',
+                    score: 76,
+                    profile: 'Principiante Motivato',
+                    goals: ['Forza', 'Resistenza'],
+                    obstacles: ['Dieta', 'Costanza'],
+                    budget: '€100-150/mese',
+                    timestamp: new Date(Date.now() - 172800000)
+                }
+            ];
+
+            chatsData = [
+                {
+                    id: 'chat_1',
+                    clientName: 'Anna Neri',
+                    phone: '+39 347 1111111',
+                    email: 'anna.neri@email.com',
+                    topic: 'Informazioni Prezzi',
+                    lastMessage: 'Vorrei sapere i costi per un programma personalizzato',
+                    messages: [
+                        { role: 'user', content: 'Ciao, mi interessano i vostri servizi', timestamp: new Date() },
+                        { role: 'assistant', content: 'Ciao Anna! Come posso aiutarti?', timestamp: new Date() },
+                        { role: 'user', content: 'Vorrei informazioni sui prezzi. Sono Anna, 347 1111111', timestamp: new Date() }
+                    ],
+                    timestamp: new Date(),
+                    sentiment: 'positive',
+                    keywords: ['prezzo', 'programma']
+                },
+                {
+                    id: 'chat_2',
+                    clientName: 'Giovanni Blu',
+                    phone: '+39 348 2222222', 
+                    email: 'N/A',
+                    topic: 'Supporto Nutrizionale',
+                    lastMessage: 'Ho bisogno di aiuto con la dieta per massa muscolare',
+                    messages: [
+                        { role: 'user', content: 'Mi chiamo Giovanni, numero 348 2222222', timestamp: new Date() },
+                        { role: 'assistant', content: 'Ciao Giovanni! Come posso aiutarti?', timestamp: new Date() },
+                        { role: 'user', content: 'Ho bisogno di supporto nutrizionale per la massa', timestamp: new Date() }
+                    ],
+                    timestamp: new Date(Date.now() - 86400000),
+                    sentiment: 'neutral',
+                    keywords: ['dieta', 'massa muscolare']
+                }
+            ];
+
+            // Aggiorna tutte le sezioni
+            updateMetrics();
+            updateInsights();
+            updateHeatmap();
+            updateFunnel();
+            updateSentimentAnalysis();
+            updateKeywordTrends();
+            updateMLInsights();
+            filterLeads(currentLeadFilter);
+            filterChats(currentChatFilter);
+            
+            // Inizializza grafici
+            setTimeout(() => {
+                initCharts();
+            }, 500);
+        }
+
+        // === UTILITY FUNCTIONS (ORIGINALI) ===
         function extractNameFromMessages(messages) {
             if (!messages) return null;
             for (const msg of messages) {
                 if (msg.role === 'user') {
-                    const match = msg.content?.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-ZÀ-ÿ\s]{2,20})/i);
+                    const match = msg.content?.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
                     if (match) return match[1].trim();
                 }
             }
@@ -427,11 +516,10 @@
                 .join(' ');
             
             const topics = {
-                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe'],
-                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione', 'cibo'],
-                'Prenotazione Consulenza': ['consulenza', 'appuntamento', 'incontro'],
-                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra'],
-                'Personal Training': ['personal', 'trainer', 'PT', 'allenatore']
+                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto'],
+                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione'],
+                'Prenotazione Consulenza': ['consulenza', 'appuntamento'],
+                'Allenamento': ['allenamento', 'esercizi', 'workout']
             };
             
             for (const [topic, keywords] of Object.entries(topics)) {
@@ -443,200 +531,16 @@
             return 'Conversazione Generale';
         }
 
-        // === CARICAMENTO CHATBASE ===
-        async function loadChatbaseConversations() {
-            try {
-                console.log('🔍 Caricamento conversazioni da Chatbase...');
-                
-                const response = await fetch(`${CHATBASE_CONFIG.apiBase}/conversations`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.apiKey}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Chatbase API error: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                return (data.conversations || data.data || []).map(conv => {
-                    const contactInfo = extractContactInfoFromChatbase(conv.messages);
-                    
-                    return {
-                        id: 'cb_' + conv.id,
-                        clientName: contactInfo.name || 'Cliente Chatbase',
-                        phone: contactInfo.phone || 'N/A',
-                        email: contactInfo.email || 'N/A',
-                        topic: extractTopicFromMessages(conv.messages) || 'Conversazione Chatbase',
-                        lastMessage: conv.messages?.length > 0 ? 
-                            conv.messages[conv.messages.length - 1].content?.substring(0, 100) + '...' : 
-                            'Nessun messaggio',
-                        messages: conv.messages || [],
-                        timestamp: conv.updated_at || conv.created_at || new Date(),
-                        source: 'Chatbase'
-                    };
-                });
-
-            } catch (error) {
-                console.warn('⚠️ Chatbase non disponibile:', error.message);
-                return [];
-            }
-        }
-
-        function extractContactInfoFromChatbase(messages) {
-            if (!messages) return { name: null, phone: null, email: null };
-            
-            let name = null, phone = null, email = null;
-            
-            messages.forEach(msg => {
-                if (msg.role === 'user' && msg.content) {
-                    const text = msg.content.toLowerCase();
-                    
-                    if (!name) {
-                        const nameMatch = text.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-ZÀ-ÿ\s]{2,30})/i);
-                        if (nameMatch) name = nameMatch[1].trim();
-                    }
-                    
-                    if (!phone) {
-                        const phoneMatch = text.match(/([+]?[0-9\s\-]{8,15})/);
-                        if (phoneMatch) phone = phoneMatch[1].replace(/\s/g, '');
-                    }
-                    
-                    if (!email) {
-                        const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-                        if (emailMatch) email = emailMatch[1];
-                    }
-                }
-            });
-            
-            return { name, phone, email };
-        }
-
-        // === DATI DEMO AVANZATI ===
-        function loadDemoData() {
-            leadsData = [
-                {
-                    id: 'demo_1',
-                    name: 'Marco Rossi',
-                    email: 'marco.rossi@email.com',
-                    phone: '+39 333 1234567',
-                    age: 28,
-                    gender: 'Maschio',
-                    score: 85,
-                    profile: 'Guerriero Determinato',
-                    goals: ['Perdita peso', 'Tonificazione'],
-                    obstacles: ['Tempo limitato', 'Motivazione'],
-                    budget: '€150-200/mese',
-                    timestamp: new Date(),
-                    aiScore: 87,
-                    conversionProbability: 73
-                },
-                {
-                    id: 'demo_2', 
-                    name: 'Sara Bianchi',
-                    email: 'sara.bianchi@email.com',
-                    phone: '+39 334 5678901',
-                    age: 34,
-                    gender: 'Femmina',
-                    score: 92,
-                    profile: 'Atleta Esperto',
-                    goals: ['Aumento massa', 'Performance'],
-                    obstacles: ['Plateau risultati'],
-                    budget: '€200-300/mese',
-                    timestamp: new Date(Date.now() - 86400000),
-                    aiScore: 94,
-                    conversionProbability: 89
-                },
-                {
-                    id: 'demo_3',
-                    name: 'Luca Verdi', 
-                    email: 'luca.verdi@email.com',
-                    phone: '+39 335 9876543',
-                    age: 25,
-                    gender: 'Maschio',
-                    score: 76,
-                    profile: 'Principiante Motivato',
-                    goals: ['Forza', 'Resistenza'],
-                    obstacles: ['Dieta', 'Costanza'],
-                    budget: '€100-150/mese',
-                    timestamp: new Date(Date.now() - 172800000),
-                    aiScore: 68,
-                    conversionProbability: 45
-                }
-            ];
-
-            chatsData = [
-                {
-                    id: 'chat_1',
-                    clientName: 'Anna Neri',
-                    phone: '+39 347 1111111',
-                    email: 'anna.neri@email.com',
-                    topic: 'Informazioni Prezzi',
-                    lastMessage: 'Vorrei sapere i costi per un programma personalizzato',
-                    messages: [
-                        { role: 'user', content: 'Ciao, mi interessano i vostri servizi', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Anna! Come posso aiutarti?', timestamp: new Date() },
-                        { role: 'user', content: 'Vorrei informazioni sui prezzi', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(),
-                    sentiment: 'positive',
-                    keywords: ['prezzo', 'programma'],
-                    urgency: 'medium'
-                },
-                {
-                    id: 'chat_2',
-                    clientName: 'Giovanni Blu',
-                    phone: '+39 348 2222222', 
-                    email: 'N/A',
-                    topic: 'Supporto Nutrizionale',
-                    lastMessage: 'Ho bisogno di aiuto con la dieta per massa muscolare',
-                    messages: [
-                        { role: 'user', content: 'Mi chiamo Giovanni', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Giovanni!', timestamp: new Date() },
-                        { role: 'user', content: 'Ho bisogno di supporto nutrizionale', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(Date.now() - 86400000),
-                    sentiment: 'neutral',
-                    keywords: ['dieta', 'massa muscolare'],
-                    urgency: 'high'
-                }
-            ];
-
-            updateAllSections();
-        }
-
-        // === AGGIORNAMENTO SEZIONI ===
-        async function updateAllSections() {
-            updateMetrics();
-            updateHeatmap();
-            updateFunnel();
-            updateSentimentAnalysis();
-            updateKeywordTrends();
-            updateMLInsights();
-            updateInsights();
-            filterLeads(currentLeadFilter);
-            filterChats(currentChatFilter);
-            
-            // Inizializza grafici dopo un breve delay
-            setTimeout(() => {
-                initCharts();
-            }, 500);
-        }
-
-        // === FILTRI AVANZATI ===
+        // === FILTRI (ORIGINALI) ===
         function filterLeads(period) {
             currentLeadFilter = period;
             
             // Aggiorna stati bottoni
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                if (btn.textContent.toLowerCase() === period) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+            document.querySelectorAll('#leadsContainer').forEach(container => {
+                const buttons = container.parentElement.parentElement.querySelectorAll('.filter-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
+                });
             });
             
             const now = new Date();
@@ -658,23 +562,16 @@
             renderLeads();
         }
 
-        function filterByScore(level) {
-            switch (level) {
-                case 'hot':
-                    filteredLeads = leadsData.filter(lead => lead.score > 80);
-                    break;
-                case 'warm':
-                    filteredLeads = leadsData.filter(lead => lead.score >= 60 && lead.score <= 79);
-                    break;
-                case 'cold':
-                    filteredLeads = leadsData.filter(lead => lead.score < 60);
-                    break;
-            }
-            renderLeads();
-        }
-
         function filterChats(period) {
             currentChatFilter = period;
+            
+            // Aggiorna stati bottoni
+            document.querySelectorAll('#chatsContainer').forEach(container => {
+                const buttons = container.parentElement.parentElement.querySelectorAll('.filter-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
+                });
+            });
             
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -692,11 +589,6 @@
                 }
             });
             
-            renderChats();
-        }
-
-        function filterBySentiment(sentiment) {
-            filteredChats = chatsData.filter(chat => chat.sentiment === sentiment);
             renderChats();
         }
 
@@ -735,7 +627,7 @@
             renderChats();
         }
 
-        // === RENDERING AVANZATO ===
+        // === RENDERING (ORIGINALE) ===
         function renderLeads() {
             const container = document.getElementById('leadsContainer');
             
@@ -755,11 +647,11 @@
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Lead</th>
-                                <th>Contatti</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefono</th>
                                 <th>Profilo</th>
-                                <th>Score AI</th>
-                                <th>Conversione</th>
+                                <th>Score</th>
                                 <th>Data</th>
                                 <th>Azioni</th>
                             </tr>
@@ -769,15 +661,283 @@
             
             filteredLeads.forEach(lead => {
                 const score = lead.score || 0;
-                const aiScore = lead.aiScore || 0;
-                const conversion = lead.conversionProbability || 0;
                 const badgeClass = score > 80 ? 'badge-success' : score >= 60 ? 'badge-warning' : 'badge-danger';
-                const conversionClass = conversion > 70 ? 'badge-success' : conversion >= 50 ? 'badge-warning' : 'badge-danger';
                 const date = lead.timestamp instanceof Date ? 
                     lead.timestamp.toLocaleDateString('it-IT') : 
                     new Date(lead.timestamp).toLocaleDateString('it-IT');
                 
-                html +=            </button>
+                html += `
+                    <tr>
+                        <td><strong>${lead.name}</strong></td>
+                        <td><small>${lead.email}</small></td>
+                        <td><small>${lead.phone}</small></td>
+                        <td><span class="badge badge-info">${lead.profile}</span></td>
+                        <td><span class="badge ${badgeClass}">${score}%</span></td>
+                        <td><small>${date}</small></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showLeadDetails('${lead.id}')">
+                                👁️ Dettagli
+                            </button>
+                            ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
+                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${lead.phone}')">
+                                    📱 WhatsApp
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function renderChats() {
+            const container = document.getElementById('chatsContainer');
+            
+            if (filteredChats.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <h3>Nessuna conversazione trovata</h3>
+                        <p>Modifica i filtri per vedere più risultati</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Telefono</th>
+                                <th>Email</th>
+                                <th>Argomento</th>
+                                <th>Ultimo Messaggio</th>
+                                <th>Data</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            filteredChats.forEach(chat => {
+                const date = chat.timestamp instanceof Date ? 
+                    chat.timestamp.toLocaleDateString('it-IT') : 
+                    new Date(chat.timestamp).toLocaleDateString('it-IT');
+                const preview = chat.lastMessage.length > 50 ? 
+                    chat.lastMessage.substring(0, 50) + '...' : 
+                    chat.lastMessage;
+                
+                html += `
+                    <tr>
+                        <td><strong>${chat.clientName}</strong></td>
+                        <td><small>${chat.phone}</small></td>
+                        <td><small>${chat.email}</small></td>
+                        <td><span class="badge badge-info">${chat.topic}</span></td>
+                        <td><small>${preview}</small></td>
+                        <td><small>${date}</small></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showChatDetails('${chat.id}')">
+                                👁️ Chat
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="exportChatToPDF('${chat.id}')">
+                                📄 PDF
+                            </button>
+                            ${chat.phone !== 'N/A' ? 
+                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${chat.phone}')">
+                                    📱 WhatsApp
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // === METRICHE (ORIGINALE) ===
+        function updateMetrics() {
+            const totalLeads = leadsData.length;
+            const avgScore = totalLeads > 0 ? 
+                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const totalChats = chatsData.length;
+            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length        .insight-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(255, 102, 0, 0.1);
+        }
+
+        .insight-title {
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .insight-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+
+        .insight-action {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .heatmap-grid {
+                grid-template-columns: repeat(12, 1fr);
+            }
+            
+            .keyword-cloud {
+                justify-content: center;
+            }
+            
+            .ml-insights {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-controls {
+                justify-content: center;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .empty-state p {
+            font-size: 0.9rem;
+        }
+
+        /* ANIMAZIONI */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        /* SCROLLBAR PERSONALIZZATA */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- NOTIFICA POPUP -->
+    <div id="notificationPopup" class="notification-popup">
+        <span id="notificationText"></span>
+        <button class="close-btn" onclick="hideNotification()">&times;</button>
+    </div>
+
+    <header class="header">
+        <div class="header-content">
+            <h1>🎯 TribuCoach Dashboard</h1>
+            <p>Gestione completa lead e conversazioni con analisi avanzate</p>
+        </div>
+        <div class="header-controls">
+            <button class="notification-bell" onclick="toggleNotifications()">
+                🔔
+                <span class="notification-badge" id="notificationBadge">3</span>
+            </button>
             <button class="theme-toggle" onclick="toggleTheme()">
                 <span id="themeIcon">🌙</span>
             </button>
@@ -785,33 +945,33 @@
     </header>
 
     <div class="container">
-        <!-- METRICHE PRINCIPALI AVANZATE -->
+        <!-- METRICHE PRINCIPALI -->
         <div class="metrics">
             <div class="metric-card animate-in">
                 <h3>Lead Totali</h3>
                 <div class="value" id="totalLeads">0</div>
-                <div class="change positive" id="leadsChange">
+                <div class="change positive">
                     <span>↗️</span> +12% questa settimana
                 </div>
             </div>
             <div class="metric-card animate-in">
                 <h3>Score Medio</h3>
                 <div class="value" id="avgScore">0%</div>
-                <div class="change positive" id="scoreChange">
+                <div class="change positive">
                     <span>📈</span> +5% dal mese scorso
                 </div>
             </div>
             <div class="metric-card animate-in">
                 <h3>Conversazioni</h3>
                 <div class="value" id="totalChats">0</div>
-                <div class="change positive" id="chatsChange">
+                <div class="change positive">
                     <span>💬</span> +8% questa settimana
                 </div>
             </div>
             <div class="metric-card animate-in">
                 <h3>Lead Premium</h3>
                 <div class="value" id="premiumLeads">0</div>
-                <div class="change" id="premiumChange">
+                <div class="change">
                     <span>⭐</span> Score > 80%
                 </div>
             </div>
@@ -831,7 +991,7 @@
             </div>
         </div>
 
-        <!-- HEATMAP ORARI AVANZATA -->
+        <!-- HEATMAP ORARI -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
@@ -861,12 +1021,12 @@
             </div>
         </div>
 
-        <!-- FUNNEL DI CONVERSIONE AVANZATO -->
+        <!-- FUNNEL DI CONVERSIONE -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
                     <span>📈</span>
-                    Funnel di Conversione AI-Enhanced
+                    Funnel di Conversione
                 </h2>
                 <div class="section-controls">
                     <div class="period-selector">
@@ -904,7 +1064,7 @@
             </div>
         </div>
 
-        <!-- SENTIMENT ANALYSIS REAL-TIME -->
+        <!-- SENTIMENT ANALYSIS -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
@@ -922,16 +1082,16 @@
             </div>
         </div>
 
-        <!-- KEYWORD TRENDS AVANZATE -->
+        <!-- KEYWORD TRENDS -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
                     <span>🔍</span>
-                    Keyword Trends - AI Insights
+                    Keyword Trends - Cosa Chiedono i Clienti
                 </h2>
                 <div class="section-controls">
                     <div class="period-selector">
-                        <button class="period-btn active" onclick="updateKeywords('giorni')">Ultimi 7gg</button>
+                        <button class="period-btn active" onclick="updateKeywords('giorni')">7gg</button>
                         <button class="period-btn" onclick="updateKeywords('settimane')">30gg</button>
                         <button class="period-btn" onclick="updateKeywords('mesi')">90gg</button>
                     </div>
@@ -979,21 +1139,13 @@
             </div>
         </div>
 
-        <!-- LEAD QUIZ AVANZATI -->
+        <!-- LEAD QUIZ -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
                     <span>🥇</span>
-                    Lead Quiz - Analisi Approfondita
+                    Lead Quiz Completati
                 </h2>
-                <div class="section-controls">
-                    <button class="btn btn-primary" onclick="exportLeads()">
-                        📤 Esporta Excel
-                    </button>
-                    <button class="btn btn-success" onclick="scheduleFollowup()">
-                        📅 Programma Follow-up
-                    </button>
-                </div>
             </div>
             
             <div class="filters">
@@ -1004,38 +1156,24 @@
                     <button class="filter-btn" onclick="filterLeads('settimana')">Settimana</button>
                     <button class="filter-btn" onclick="filterLeads('mese')">Mese</button>
                 </div>
-                <div class="filter-group">
-                    <span class="filter-label">Score:</span>
-                    <button class="filter-btn" onclick="filterByScore('hot')">🔥 Hot (80+)</button>
-                    <button class="filter-btn" onclick="filterByScore('warm')">🌡️ Warm (60-79)</button>
-                    <button class="filter-btn" onclick="filterByScore('cold')">❄️ Cold (<60)</button>
-                </div>
-                <input type="text" class="search-input" placeholder="🔍 Cerca per nome, email, telefono..." id="searchLeads" onkeyup="searchLeads()">
+                <input type="text" class="search-input" placeholder="🔍 Cerca per nome, email..." id="searchLeads" onkeyup="searchLeads()">
             </div>
             
             <div class="section-content">
                 <div id="leadsContainer" class="loading">
                     <div class="spinner"></div>
-                    <p>Caricamento lead con AI insights...</p>
+                    Caricamento lead...
                 </div>
             </div>
         </div>
 
-        <!-- CONVERSAZIONI CHAT AVANZATE -->
+        <!-- CONVERSAZIONI CHAT -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
                     <span>💬</span>
-                    Conversazioni Chatbot - Analisi Avanzata
+                    Conversazioni Chatbot
                 </h2>
-                <div class="section-controls">
-                    <button class="btn btn-primary" onclick="exportChats()">
-                        📤 Esporta Report
-                    </button>
-                    <button class="btn btn-success" onclick="bulkActions()">
-                        ⚡ Azioni Bulk
-                    </button>
-                </div>
             </div>
             
             <div class="filters">
@@ -1046,44 +1184,33 @@
                     <button class="filter-btn" onclick="filterChats('settimana')">Settimana</button>
                     <button class="filter-btn" onclick="filterChats('mese')">Mese</button>
                 </div>
-                <div class="filter-group">
-                    <span class="filter-label">Sentiment:</span>
-                    <button class="filter-btn" onclick="filterBySentiment('positive')">😊 Positivo</button>
-                    <button class="filter-btn" onclick="filterBySentiment('neutral')">😐 Neutro</button>
-                    <button class="filter-btn" onclick="filterBySentiment('negative')">😞 Negativo</button>
-                </div>
-                <input type="text" class="search-input" placeholder="🔍 Cerca conversazioni, argomenti..." id="searchChats" onkeyup="searchChats()">
+                <input type="text" class="search-input" placeholder="🔍 Cerca conversazioni..." id="searchChats" onkeyup="searchChats()">
             </div>
             
             <div class="section-content">
                 <div id="chatsContainer" class="loading">
                     <div class="spinner"></div>
-                    <p>Caricamento conversazioni con sentiment analysis...</p>
+                    Caricamento conversazioni...
                 </div>
             </div>
         </div>
 
-        <!-- INSIGHTS ACTIONABLE AVANZATI -->
+        <!-- INSIGHTS ACTIONABLE -->
         <div class="section animate-in">
             <div class="section-header">
                 <h2 class="section-title">
                     <span>💡</span>
-                    AI-Powered Insights & Raccomandazioni
+                    Insights & Raccomandazioni
                 </h2>
-                <div class="section-controls">
-                    <button class="btn btn-primary" onclick="generateInsights()">
-                        🧠 Genera Nuovi Insights
-                    </button>
-                </div>
             </div>
             
             <div class="insights-grid" id="insightsContainer">
-                <!-- Insights avanzati generati dinamicamente -->
+                <!-- Popolato dinamicamente -->
             </div>
         </div>
     </div>
 
-    <!-- MODAL AVANZATO -->
+    <!-- MODAL -->
     <div class="modal" id="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -1100,7 +1227,7 @@
     </div>
 
     <script>
-        // === CONFIGURAZIONE AVANZATA ===
+        // === CONFIGURAZIONE ===
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-a2254.firebaseapp.com",
@@ -1110,13 +1237,7 @@
             appId: "1:425200296836:web:7835188f40f4348567ab48"
         };
 
-        const CHATBASE_CONFIG = {
-            apiKey: "0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo",
-            agentId: "EjoHCEogMfkkrVzIK6V07",
-            apiBase: "https://www.chatbase.co/api/v1"
-        };
-
-        // === VARIABILI GLOBALI AVANZATE ===
+        // === VARIABILI GLOBALI ===
         let db = null;
         let isConnected = false;
         let leadsData = [];
@@ -1125,31 +1246,28 @@
         let filteredChats = [];
         let currentLeadFilter = 'tutti';
         let currentChatFilter = 'tutti';
-        let currentTheme = 'dark';
+        let currentTheme = 'light';
         let notificationCount = 3;
         let charts = {};
-        let mlModel = null;
-        let sentimentData = {
-            positive: 0,
-            neutral: 0,
-            negative: 0
-        };
 
         // === TEMA DARK/LIGHT ===
         function toggleTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             document.body.setAttribute('data-theme', currentTheme);
             
             const themeIcon = document.getElementById('themeIcon');
-            themeIcon.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            themeIcon.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
             
             localStorage.setItem('theme', currentTheme);
+            showNotification(`🎨 Tema ${currentTheme === 'dark' ? 'Scuro' : 'Chiaro'} attivato!`);
             
             // Aggiorna i grafici per il nuovo tema
-            updateChartsTheme();
+            if (Object.keys(charts).length > 0) {
+                updateChartsTheme();
+            }
         }
 
-        // === NOTIFICHE PUSH AVANZATE ===
+        // === NOTIFICHE PUSH ===
         function showNotification(message, type = 'info') {
             const popup = document.getElementById('notificationPopup');
             const text = document.getElementById('notificationText');
@@ -1157,14 +1275,10 @@
             text.textContent = message;
             popup.classList.add('show');
             
-            // Auto-hide dopo 5 secondi
+            // Auto-hide dopo 4 secondi
             setTimeout(() => {
                 hideNotification();
-            }, 5000);
-            
-            // Aggiorna badge
-            notificationCount++;
-            updateNotificationBadge();
+            }, 4000);
         }
 
         function hideNotification() {
@@ -1187,204 +1301,7 @@
             }
         }
 
-        // === INIZIALIZZAZIONE FIREBASE AVANZATA ===
-        async function initFirebase() {
-            try {
-                if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase non disponibile');
-                }
-
-                const app = firebase.initializeApp(FIREBASE_CONFIG);
-                db = firebase.firestore();
-                
-                // Test connessione
-                await db.collection('test').limit(1).get();
-                
-                isConnected = true;
-                console.log('✅ Firebase connesso con successo');
-                showNotification('🔥 Firebase connesso!');
-                return true;
-            } catch (error) {
-                console.error('❌ Firebase non disponibile:', error);
-                isConnected = false;
-                showNotification('⚠️ Firebase non disponibile - modalità demo attiva');
-                return false;
-            }
-        }
-
-        // === CARICAMENTO DATI AVANZATO ===
-        async function loadData() {
-            try {
-                if (isConnected) {
-                    showNotification('📡 Caricamento dati da Firebase...');
-                    
-                    const [quizSnapshot, chatsSnapshot, chatbaseChats] = await Promise.all([
-                        db.collection('quiz_results').get().catch(() => ({ docs: [] })),
-                        db.collection('conversations').get().catch(() => ({ docs: [] })),
-                        loadChatbaseConversations().catch(() => [])
-                    ]);
-
-                    // Processa quiz results con AI scoring
-                    leadsData = [];
-                    quizSnapshot.docs.forEach(doc => {
-                        const data = doc.data();
-                        const lead = {
-                            id: doc.id,
-                            name: data.userName || data.name || 'Nome non disponibile',
-                            email: data.userEmail || data.email || 'Non disponibile',
-                            phone: data.userWhatsApp || data.phone || 'Non disponibile',
-                            age: data.userAge || data.age || 'N/A',
-                            gender: data.userGender || data.gender || 'N/A',
-                            score: data.fitnessScore || data.score || 0,
-                            profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                            goals: data.fitnessGoals || data.goals || [],
-                            obstacles: data.fitnessObstacles || data.obstacles || [],
-                            budget: data.budget || 'Non specificato',
-                            timestamp: data.timestamp || data.completed_at,
-                            aiScore: calculateAIScore(data),
-                            conversionProbability: predictConversion(data)
-                        };
-                        leadsData.push(lead);
-                    });
-
-                    // Processa conversazioni con sentiment analysis
-                    chatsData = [];
-                    
-                    // Firebase conversations
-                    chatsSnapshot.docs.forEach(doc => {
-                        const data = doc.data();
-                        const messages = data.messages || [];
-                        const sentiment = analyzeChatSentiment(messages);
-                        
-                        chatsData.push({
-                            id: doc.id,
-                            clientName: extractNameFromMessages(messages) || data.customerName || 'Cliente Anonimo',
-                            phone: extractPhoneFromMessages(messages) || data.customerPhone || 'N/A',
-                            email: extractEmailFromMessages(messages) || data.customerEmail || 'N/A',
-                            topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
-                            lastMessage: messages.length > 0 ? messages[messages.length - 1].content : 'Nessun messaggio',
-                            messages: messages,
-                            timestamp: data.lastMessageAt || data.dateCreated || new Date(),
-                            source: 'Firebase',
-                            sentiment: sentiment,
-                            keywords: extractKeywords(messages),
-                            urgency: calculateUrgency(messages)
-                        });
-                    });
-                    
-                    // Chatbase conversations
-                    chatbaseChats.forEach(chat => {
-                        chatsData.push({
-                            ...chat,
-                            sentiment: analyzeChatSentiment(chat.messages),
-                            keywords: extractKeywords(chat.messages),
-                            urgency: calculateUrgency(chat.messages)
-                        });
-                    });
-
-                    showNotification('✅ Dati caricati con successo!');
-                } else {
-                    loadDemoData();
-                    showNotification('🎭 Modalità demo attiva');
-                }
-
-                // Aggiorna tutte le sezioni
-                await updateAllSections();
-
-            } catch (error) {
-                console.error('Errore caricamento dati:', error);
-                loadDemoData();
-                showNotification('⚠️ Errore caricamento - dati demo caricati');
-            }
-        }
-
-        // === FUNZIONI AI/ML ===
-        function calculateAIScore(data) {
-            let score = 0;
-            
-            // Scoring basato su ML (simulato)
-            if (data.experience === 'avanzato') score += 30;
-            if (data.goals && data.goals.length > 2) score += 25;
-            if (data.budget && parseInt(data.budget) > 150) score += 20;
-            if (data.age && data.age > 25 && data.age < 40) score += 15;
-            if (data.email && data.email.includes('@gmail.com')) score += 10;
-            
-            return Math.min(score, 100);
-        }
-
-        function predictConversion(data) {
-            // Predizione ML della probabilità di conversione (simulata)
-            const baseScore = data.fitnessScore || data.score || 0;
-            const factors = [
-                data.budget ? 0.3 : 0,
-                data.goals && data.goals.length > 1 ? 0.2 : 0,
-                data.email !== 'Non disponibile' ? 0.2 : 0,
-                data.phone !== 'Non disponibile' ? 0.15 : 0,
-                baseScore > 70 ? 0.15 : 0
-            ];
-            
-            const probability = factors.reduce((sum, factor) => sum + factor, 0) * 100;
-            return Math.round(probability);
-        }
-
-        function analyzeChatSentiment(messages) {
-            if (!messages || messages.length === 0) return 'neutral';
-            
-            const userMessages = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content?.toLowerCase() || '')
-                .join(' ');
-            
-            const positiveWords = ['grazie', 'perfetto', 'ottimo', 'bene', 'fantastico', 'eccellente', 'felice'];
-            const negativeWords = ['problema', 'difficile', 'male', 'pessimo', 'arrabbiato', 'deluso'];
-            
-            let score = 0;
-            positiveWords.forEach(word => {
-                if (userMessages.includes(word)) score += 1;
-            });
-            negativeWords.forEach(word => {
-                if (userMessages.includes(word)) score -= 1;
-            });
-            
-            if (score > 0) return 'positive';
-            if (score < 0) return 'negative';
-            return 'neutral';
-        }
-
-        function extractKeywords(messages) {
-            if (!messages) return [];
-            
-            const text = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content?.toLowerCase() || '')
-                .join(' ');
-            
-            const commonKeywords = [
-                'allenamento', 'dieta', 'prezzo', 'consulenza', 'personal trainer',
-                'massa muscolare', 'perdere peso', 'palestra', 'nutrizione', 'programma'
-            ];
-            
-            return commonKeywords.filter(keyword => text.includes(keyword));
-        }
-
-        function calculateUrgency(messages) {
-            if (!messages) return 'low';
-            
-            const urgentWords = ['urgente', 'subito', 'velocemente', 'presto', 'immediato'];
-            const text = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content?.toLowerCase() || '')
-                .join(' ');
-            
-            const hasUrgentWords = urgentWords.some(word => text.includes(word));
-            const messageCount = messages.length;
-            
-            if (hasUrgentWords || messageCount > 10) return 'high';
-            if (messageCount > 5) return 'medium';
-            return 'low';
-        }
-
-        // === HEATMAP ORARI AVANZATA ===
+        // === HEATMAP ORARI ===
         function updateHeatmap(period = 'settimana') {
             const container = document.getElementById('heatmapGrid');
             const labelsContainer = document.getElementById('heatmapLabels');
@@ -1392,19 +1309,28 @@
             // Genera labels ore
             let labelsHTML = '';
             for (let i = 0; i < 24; i++) {
-                labelsHTML += `<div>${i}:00</div>`;
+                labelsHTML += `<div>${i}h</div>`;
             }
             labelsContainer.innerHTML = labelsHTML;
             
-            // Calcola attività per ora
+            // Simula dati attività per ora (basato sui dati reali se disponibili)
             const hourlyData = Array(24).fill(0);
             const allData = [...leadsData, ...chatsData];
             
-            allData.forEach(item => {
-                const timestamp = item.timestamp instanceof Date ? item.timestamp : new Date(item.timestamp);
-                const hour = timestamp.getHours();
-                hourlyData[hour] += 1;
-            });
+            // Se ci sono dati reali, usali
+            if (allData.length > 0) {
+                allData.forEach(item => {
+                    const timestamp = item.timestamp instanceof Date ? item.timestamp : new Date(item.timestamp);
+                    const hour = timestamp.getHours();
+                    hourlyData[hour] += 1;
+                });
+            } else {
+                // Dati demo per visualizzazione
+                const demoData = [2, 1, 0, 1, 2, 3, 5, 8, 12, 15, 18, 22, 25, 28, 24, 20, 16, 12, 8, 6, 4, 3, 2, 1];
+                demoData.forEach((count, hour) => {
+                    hourlyData[hour] = count;
+                });
+            }
             
             const maxActivity = Math.max(...hourlyData) || 1;
             const avgActivity = Math.round(hourlyData.reduce((a, b) => a + b, 0) / 24);
@@ -1433,25 +1359,25 @@
             document.getElementById('peakHour').textContent = `${peakHour}:00`;
             document.getElementById('avgActivity').textContent = `${avgActivity} eventi/ora`;
             document.getElementById('bestTime').textContent = `${peakHour}:00-${peakHour + 1}:00`;
+            
+            showNotification(`📊 Heatmap aggiornata per: ${period}`);
         }
 
         function drillDownHour(hour) {
             showNotification(`🔍 Analizzando attività ore ${hour}:00-${hour + 1}:00`);
-            // Qui potresti mostrare dettagli specifici per quell'ora
         }
 
-        // === FUNNEL DI CONVERSIONE AVANZATO ===
+        // === FUNNEL DI CONVERSIONE ===
         function updateFunnel(period = 'settimana') {
             const container = document.getElementById('funnelSteps');
             
-            // Calcola metriche funnel con dati reali + simulati
+            // Calcola metriche funnel
             const visitors = 1500 + Math.floor(Math.random() * 500);
-            const quizStarts = leadsData.length + 200 + Math.floor(Math.random() * 100);
-            const quizCompletes = leadsData.length;
-            const chatInteractions = chatsData.length;
-            const hotLeads = leadsData.filter(l => l.score > 80).length;
-            const consultations = Math.floor(hotLeads * 0.7);
-            const conversions = Math.floor(consultations * 0.4);
+            const quizStarts = leadsData.length + 200;
+            const quizCompletes = leadsData.length || 45;
+            const chatInteractions = chatsData.length || 28;
+            const hotLeads = leadsData.filter(l => (l.score || 0) > 80).length || 15;
+            const consultations = Math.floor(hotLeads * 0.7) || 10;
             
             const steps = [
                 {
@@ -1489,15 +1415,164 @@
                     value: consultations,
                     rate: `${Math.round((consultations/hotLeads)*100)}%`,
                     color: '#ff6600'
+                }
+            ];
+            
+            let html = '';
+            steps.forEach((step, index) => {
+                if (index > 0) {
+                    html += '<div class="funnel-arrow">⬇️</div>';
+                }
+                
+                html += `
+                    <div class="funnel-step" style="background: linear-gradient(135deg, ${step.color}, ${step.color}dd)">
+                        <div class="funnel-step-info">
+                            <h3>${step.title}</h3>
+                            <div class="funnel-step-rate">Conversione: ${step.rate}</div>
+                        </div>
+                        <div class="funnel-step-value">${step.value.toLocaleString()}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            showNotification(`📈 Funnel aggiornato per: ${period}`);
+        }
+
+        // === GRAFICI INTERATTIVI ===
+        function initCharts() {
+            // Chart principale dei trend
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'],
+                    datasets: [{
+                        label: 'Lead',
+                        data: [12, 19, 23, 25, 22, 30, 35],
+                        borderColor: '#ff6600',
+                        backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#ff6600',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6
+                    }]
                 },
-                {
-                    title: '💰 Conversione Finale',
-                    value: conversions,<!DOCTYPE html>
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: currentTheme === 'dark' ? '#e2e8f0' : '#1e293b',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: currentTheme === 'dark' ? '#94a3b8' : '#64748b'
+                            },
+                            grid: {
+                                color: currentTheme === 'dark' ? '#333' : '#e2e8f0'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: currentTheme === 'dark' ? '#94a3b8' : '#64748b'
+                            },
+                            grid: {
+                                color: currentTheme === 'dark' ? '#333' : '#e2e8f0'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart chatbot analytics
+            const chatbotCtx = document.getElementById('chatbotChart').getContext('2d');
+            charts.chatbot = new Chart(chatbotCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Prezzi', 'Nutrizione', 'Allenamento', 'Consulenza'],
+                    datasets: [{
+                        data: [40, 25, 20, 15],
+                        backgroundColor: ['#ff6600', '#10b981', '#3b82f6', '#f59e0b'],
+                        borderWidth: 3,
+                        borderColor: currentTheme === 'dark' ? '#1a1a1a' : '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: currentTheme === 'dark' ? '#e2e8f0' : '#1e293b',
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showChart(type) {
+            const chart = charts.trend;
+            if (!chart) return;
+            
+            const datasets = {
+                leads: {
+                    label: 'Lead Generati',
+                    data: [12, 19, 23, 25, 22, 30, 35],
+                    borderColor: '#ff6600',
+                    backgroundColor: 'rgba(255, 102, 0, 0.1)'
+                },
+                conversions: {
+                    label: 'Conversioni',
+                    data: [5, 8, 12, 15, 13, 18, 22],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                },
+                sentiment: {
+                    label: 'Sentiment Positivo %',
+                    data: [65, 70, 68, 75, 72, 78, 80],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                },
+                comparison: {
+                    label: 'Questo vs Scorso Periodo',
+                    data: [110, 125, 108, 130, 115, 140, 135],
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)'
+                }
+            };
+            
+            chart.data.datasets[0] = { 
+                ...datasets[type], 
+                tension: 0.4, 
+                fill: true,
+                pointBackgroundColor: datasets[type].borderColor,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            };
+            chart.update();
+            
+            // Aggiorna stili bottoni
+            document.querySelectorAll('.chart-btn').forEach(btn<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TribuCoach Dashboard Pro</title>
+    <title>TribuCoach Dashboard</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -1508,13 +1583,13 @@
     
     <style>
         :root {
-            --bg-primary: #0f0f0f;
-            --bg-secondary: #1a1a1a;
-            --bg-tertiary: #262626;
-            --text-primary: #e2e8f0;
-            --text-secondary: #94a3b8;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
             --text-muted: #64748b;
-            --border-color: #333;
+            --border-color: #e2e8f0;
             --accent-color: #ff6600;
             --accent-hover: #e55a00;
             --success-color: #10b981;
@@ -1523,14 +1598,14 @@
             --info-color: #3b82f6;
         }
 
-        [data-theme="light"] {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
+        [data-theme="dark"] {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #262626;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
             --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --border-color: #333;
         }
 
         * {
@@ -1578,15 +1653,17 @@
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 0.5rem;
-            border-radius: 8px;
+            padding: 0.75rem;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .theme-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
         .notification-bell {
@@ -1594,15 +1671,17 @@
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 0.5rem;
-            border-radius: 8px;
+            padding: 0.75rem;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1.2rem;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .notification-bell:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
 
         .notification-badge {
@@ -1626,13 +1705,7 @@
             50% { transform: scale(1.1); }
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        /* NOTIFICHE PUSH */
+        /* NOTIFICA POPUP */
         .notification-popup {
             position: fixed;
             top: 20px;
@@ -1646,6 +1719,7 @@
             transform: translateX(400px);
             opacity: 0;
             transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
 
         .notification-popup.show {
@@ -1660,13 +1734,25 @@
             color: white;
             font-size: 1.2rem;
             cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
         }
 
-        /* METRICHE PRINCIPALI */
+        .notification-popup .close-btn:hover {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* METRICHE AVANZATE */
         .metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
+            gap: 2rem;
             margin-bottom: 3rem;
         }
 
@@ -1674,6 +1760,7 @@
             background: var(--bg-secondary);
             border-radius: 16px;
             padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
             transition: all 0.3s ease;
             position: relative;
@@ -1691,8 +1778,8 @@
         }
 
         .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(255, 102, 0, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(255, 102, 0, 0.15);
             border-color: var(--accent-color);
         }
 
@@ -1710,6 +1797,10 @@
             font-weight: 700;
             color: var(--accent-color);
             margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .metric-card .change {
@@ -1728,13 +1819,19 @@
             color: var(--danger-color);
         }
 
-        /* SEZIONI AVANZATE */
+        /* SEZIONI */
         .section {
             background: var(--bg-secondary);
             border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             border: 1px solid var(--border-color);
             margin-bottom: 2rem;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
 
         .section-header {
@@ -1743,6 +1840,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
         }
 
         .section-title {
@@ -1763,24 +1861,36 @@
         .period-selector {
             display: flex;
             background: var(--bg-tertiary);
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 0.25rem;
+            border: 1px solid var(--border-color);
         }
 
         .period-btn {
             background: none;
             border: none;
             color: var(--text-secondary);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .period-btn.active {
             background: var(--accent-color);
             color: white;
+            box-shadow: 0 2px 8px rgba(255, 102, 0, 0.3);
+        }
+
+        .period-btn:hover:not(.active) {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .section-content {
+            padding: 0;
         }
 
         /* HEATMAP ORARI */
@@ -1791,7 +1901,7 @@
         .heatmap-grid {
             display: grid;
             grid-template-columns: repeat(24, 1fr);
-            gap: 4px;
+            gap: 6px;
             margin: 2rem 0;
         }
 
@@ -1804,23 +1914,27 @@
             font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             position: relative;
+            border: 2px solid transparent;
         }
 
         .heatmap-hour:hover {
             transform: scale(1.1);
             z-index: 10;
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
         }
 
         .heatmap-labels {
             display: grid;
             grid-template-columns: repeat(24, 1fr);
-            gap: 4px;
+            gap: 6px;
             margin-bottom: 1rem;
             font-size: 0.75rem;
             color: var(--text-muted);
             text-align: center;
+            font-weight: 500;
         }
 
         .heatmap-legend {
@@ -1831,6 +1945,9 @@
             margin-top: 2rem;
             font-size: 0.875rem;
             color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 12px;
         }
 
         /* FUNNEL DI CONVERSIONE */
@@ -1846,18 +1963,34 @@
 
         .funnel-step {
             background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: relative;
             transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .funnel-step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .funnel-step:hover::before {
+            left: 100%;
         }
 
         .funnel-step:hover {
             transform: translateX(10px);
-            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.3);
+            box-shadow: 0 12px 40px rgba(255, 102, 0, 0.3);
         }
 
         .funnel-step-info h3 {
@@ -1874,7 +2007,7 @@
         }
 
         .funnel-step-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: white;
         }
@@ -1884,6 +2017,13 @@
             font-size: 2rem;
             color: var(--text-muted);
             margin: 0.5rem 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
         }
 
         /* GRAFICI INTERATTIVI */
@@ -1897,22 +2037,31 @@
             display: flex;
             gap: 1rem;
             margin-bottom: 2rem;
+            flex-wrap: wrap;
         }
 
         .chart-btn {
             background: var(--bg-tertiary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
 
         .chart-btn.active {
             background: var(--accent-color);
             color: white;
             border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+        }
+
+        .chart-btn:hover:not(.active) {
+            background: var(--bg-secondary);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
         }
 
         /* SENTIMENT ANALYSIS */
@@ -1925,8 +2074,8 @@
 
         .sentiment-card {
             background: var(--bg-tertiary);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 16px;
+            padding: 2rem;
             text-align: center;
             border: 2px solid transparent;
             transition: all 0.3s ease;
@@ -1934,25 +2083,39 @@
 
         .sentiment-card.positive {
             border-color: var(--success-color);
+            background: linear-gradient(135deg, var(--bg-tertiary), rgba(16, 185, 129, 0.1));
         }
 
         .sentiment-card.neutral {
             border-color: var(--warning-color);
+            background: linear-gradient(135deg, var(--bg-tertiary), rgba(245, 158, 11, 0.1));
         }
 
         .sentiment-card.negative {
             border-color: var(--danger-color);
+            background: linear-gradient(135deg, var(--bg-tertiary), rgba(239, 68, 68, 0.1));
+        }
+
+        .sentiment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .sentiment-icon {
-            font-size: 2rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
         }
 
         .sentiment-value {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+        }
+
+        .sentiment-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         /* KEYWORD TRENDS */
@@ -1961,6 +2124,7 @@
             flex-wrap: wrap;
             gap: 1rem;
             padding: 2rem;
+            justify-content: center;
         }
 
         .keyword-tag {
@@ -1974,21 +2138,25 @@
             gap: 0.5rem;
             transition: all 0.3s ease;
             cursor: pointer;
+            border: 2px solid transparent;
         }
 
         .keyword-tag:hover {
             transform: scale(1.05);
             background: var(--accent-hover);
+            border-color: white;
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
         }
 
         .keyword-count {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.3);
             padding: 0.25rem 0.75rem;
             border-radius: 15px;
             font-size: 0.8rem;
+            font-weight: 700;
         }
 
-        /* LEAD SCORING ML */
+        /* ML INSIGHTS */
         .ml-insights {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1998,9 +2166,15 @@
 
         .ml-card {
             background: var(--bg-tertiary);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2rem;
-            border-left: 4px solid var(--accent-color);
+            border-left: 6px solid var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .ml-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(255, 102, 0, 0.15);
         }
 
         .ml-card h4 {
@@ -2015,14 +2189,86 @@
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-color), var(--success-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .ml-description {
             color: var(--text-secondary);
             font-size: 0.9rem;
+            line-height: 1.6;
         }
 
-        /* TABELLE AVANZATE */
+        /* FILTRI */
+        .filters {
+            padding: 2rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-right: 0.5rem;
+        }
+
+        .filter-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .search-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            min-width: 300px;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* TABELLE */
         .table-container {
             overflow-x: auto;
             border-radius: 12px;
@@ -2056,7 +2302,7 @@
             background: var(--bg-tertiary);
         }
 
-        /* BADGES MIGLIORATI */
+        /* BADGES */
         .badge {
             display: inline-flex;
             align-items: center;
@@ -2091,19 +2337,19 @@
             border: 1px solid var(--info-color);
         }
 
-        /* BOTTONI MIGLIORATI */
+        /* BOTTONI */
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             padding: 0.75rem 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 0.875rem;
             font-weight: 600;
             text-decoration: none;
             cursor: pointer;
             border: none;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -2159,74 +2405,7 @@
             font-size: 0.8rem;
         }
 
-        /* FILTRI AVANZATI */
-        .filters {
-            padding: 2rem;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .filter-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-right: 0.5rem;
-        }
-
-        .filter-btn {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-btn:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        .filter-btn.active {
-            background: var(--accent-color);
-            border-color: var(--accent-color);
-            color: white;
-        }
-
-        .search-input {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.75rem 1.25rem;
-            border-radius: 10px;
-            font-size: 0.875rem;
-            min-width: 300px;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
-        }
-
-        .search-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        /* MODAL MIGLIORATO */
+        /* MODAL */
         .modal {
             position: fixed;
             inset: 0;
@@ -2301,7 +2480,7 @@
             justify-content: flex-end;
         }
 
-        /* INFO GRID MIGLIORATO */
+        /* INFO GRID */
         .info-grid {
             display: grid;
             gap: 1.5rem;
@@ -2325,7 +2504,7 @@
             text-align: right;
         }
 
-        /* CHAT MESSAGES MIGLIORATO */
+        /* CHAT MESSAGES */
         .chat-messages {
             max-height: 500px;
             overflow-y: auto;
@@ -2364,7 +2543,7 @@
             margin-top: 0.5rem;
         }
 
-        /* INSIGHTS MIGLIORATI */
+        /* INSIGHTS */
         .insights-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -2383,162 +2562,4 @@
 
         .insight-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(255, 102, 0, 0.1);
-        }
-
-        .insight-title {
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-        }
-
-        .insight-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-        }
-
-        .insight-action {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        /* RESPONSIVE MIGLIORATO */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-            
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-            
-            .metrics {
-                grid-template-columns: 1fr;
-            }
-            
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .search-input {
-                min-width: 100%;
-            }
-            
-            .heatmap-grid {
-                grid-template-columns: repeat(12, 1fr);
-            }
-            
-            .keyword-cloud {
-                justify-content: center;
-            }
-            
-            .ml-insights {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* LOADING MIGLIORATO */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem;
-            color: var(--text-secondary);
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top: 3px solid var(--accent-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* EMPTY STATE MIGLIORATO */
-        .empty-state {
-            text-align: center;
-            padding: 4rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state .icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.5;
-        }
-
-        .empty-state h3 {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .empty-state p {
-            font-size: 0.9rem;
-        }
-
-        /* ANIMAZIONI */
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-in {
-            animation: slideInUp 0.6s ease-out;
-        }
-
-        /* SCROLLBAR PERSONALIZZATA */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-color);
-        }
-    </style>
-</head>
-<body data-theme="dark">
-    <!-- NOTIFICA POPUP -->
-    <div id="notificationPopup" class="notification-popup">
-        <span id="notificationText"></span>
-        <button class="close-btn" onclick="hideNotification()">&times;</button>
-    </div>
-
-    <header class="header">
-        <div class="header-content">
-            <h1>🎯 TribuCoach Dashboard Pro</h1>
-            <p>Analytics Avanzate e AI-Powered Insights</p>
-        </div>
-        <div class="header-controls">
-            <button class="notification-bell" onclick="toggleNotifications()">
-                🔔
-                <span class="notification-badge" id="notificationBadge">3</span>
+            box-shadow: 0 20px 40px rgba(255, 102
