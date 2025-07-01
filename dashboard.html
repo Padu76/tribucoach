@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TribuCoach Dashboard Pro</title>
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK v9 (compat mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
@@ -69,17 +69,6 @@
             overflow: hidden;
         }
 
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-        }
-
         .header-content {
             position: relative;
             z-index: 1;
@@ -129,47 +118,24 @@
             transform: scale(1.05);
         }
 
-        .notification-center {
-            position: relative;
-        }
-
-        .notification-bell {
+        .connection-status {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 0.75rem;
-            border-radius: 50%;
-            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
             backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            position: relative;
         }
 
-        .notification-bell:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
+        .status-connected {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
         }
 
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger-color);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
+        .status-demo {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: rgba(245, 158, 11, 0.4);
         }
 
         /* CONTAINER */
@@ -179,7 +145,7 @@
             padding: 2rem;
         }
 
-        /* METRICHE ANIMATE */
+        /* METRICHE */
         .metrics {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -240,12 +206,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            animation: countUp 2s ease-out;
-        }
-
-        @keyframes countUp {
-            from { transform: scale(0.5); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
         }
 
         .metric-card .change {
@@ -257,29 +217,14 @@
             gap: 0.25rem;
         }
 
-        .metric-card .trend-chart {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 60px;
-            height: 30px;
-            opacity: 0.3;
-        }
-
         /* SEZIONI */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
         .section {
             background: var(--card-color);
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
             overflow: hidden;
+            margin-bottom: 2rem;
             transition: all 0.3s ease;
         }
 
@@ -306,333 +251,12 @@
             gap: 0.75rem;
         }
 
-        .section-title .emoji {
-            font-size: 1.5rem;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-        }
-
         .section-content {
             padding: 1.5rem 2rem;
-            min-height: 300px;
+            min-height: 200px;
         }
 
-        /* HEATMAP ORARI */
-        .heatmap-container {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 4px;
-            margin-top: 1rem;
-        }
-
-        .heatmap-hour {
-            aspect-ratio: 1;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .heatmap-hour:hover {
-            transform: scale(1.1);
-            z-index: 10;
-        }
-
-        .heatmap-legend {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
-            font-size: 0.75rem;
-            color: #64748b;
-        }
-
-        /* FUNNEL CONVERSIONE */
-        .funnel-container {
-            margin-top: 1rem;
-        }
-
-        .funnel-step {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 102, 0, 0.05);
-            border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .funnel-step:hover {
-            background: rgba(255, 102, 0, 0.1);
-            transform: translateX(5px);
-        }
-
-        .funnel-step-number {
-            background: var(--primary-color);
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 1rem;
-        }
-
-        .funnel-step-content {
-            flex: 1;
-        }
-
-        .funnel-step-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .funnel-step-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-
-        .funnel-step-percentage {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        /* SCORE PREDITTIVO */
-        .prediction-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .prediction-card {
-            background: linear-gradient(135deg, rgba(255, 102, 0, 0.1), rgba(16, 185, 129, 0.1));
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .prediction-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .prediction-score {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .prediction-label {
-            font-size: 0.875rem;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        /* SENTIMENT ANALYSIS */
-        .sentiment-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .sentiment-card {
-            text-align: center;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-        }
-
-        .sentiment-positive {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
-            border-color: var(--secondary-color);
-        }
-
-        .sentiment-neutral {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
-            border-color: var(--info-color);
-        }
-
-        .sentiment-negative {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
-            border-color: var(--danger-color);
-        }
-
-        .sentiment-emoji {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .sentiment-percentage {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 0.25rem;
-        }
-
-        .sentiment-positive .sentiment-percentage { color: var(--secondary-color); }
-        .sentiment-neutral .sentiment-percentage { color: var(--info-color); }
-        .sentiment-negative .sentiment-percentage { color: var(--danger-color); }
-
-        /* KEYWORD CLOUD */
-        .keyword-cloud {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            justify-content: center;
-        }
-
-        .keyword-tag {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .keyword-tag:hover {
-            transform: scale(1.1);
-            background: var(--primary-dark);
-        }
-
-        .keyword-count {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            padding: 0.2rem 0.5rem;
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
-        }
-
-        /* LEAD SCORING ML */
-        .ml-insights {
-            margin-top: 1rem;
-        }
-
-        .ml-insight {
-            background: rgba(255, 102, 0, 0.05);
-            border-left: 4px solid var(--primary-color);
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .ml-insight-title {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .ml-insight-value {
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: var(--text-color);
-            margin-bottom: 0.25rem;
-        }
-
-        .ml-insight-prediction {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        /* NOTIFICHE */
-        .notification-popup {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            max-width: 350px;
-        }
-
-        .notification-popup.show {
-            transform: translateX(0);
-        }
-
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .notification-close {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: #64748b;
-        }
-
-        .notification-message {
-            color: #64748b;
-            font-size: 0.875rem;
-        }
-
-        /* COMPARAZIONE PERIODI */
-        .period-selector {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            background: rgba(255, 102, 0, 0.05);
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
-
-        .period-btn {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex: 1;
-            text-align: center;
-        }
-
-        .period-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .period-btn.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        /* TABELLE RESPONSIVE */
+        /* TABELLE */
         .table-container {
             overflow-x: auto;
             border-radius: 8px;
@@ -717,21 +341,6 @@
             overflow: hidden;
         }
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
@@ -743,32 +352,12 @@
             box-shadow: 0 5px 15px rgba(255, 102, 0, 0.3);
         }
 
-        .btn-success {
-            background: linear-gradient(135deg, var(--secondary-color), #059669);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger-color), #dc2626);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-        }
-
         .btn-sm {
             padding: 0.5rem 1rem;
             font-size: 0.8rem;
         }
 
-        /* FILTRI */
+        /* FILTERS */
         .filters {
             padding: 1.5rem 2rem;
             background: rgba(255, 102, 0, 0.05);
@@ -830,61 +419,6 @@
             box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
         }
 
-        /* RESPONSIVO */
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-            
-            .metrics {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .metrics {
-                grid-template-columns: 1fr;
-            }
-            
-            .filters {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .search-input {
-                min-width: 100%;
-            }
-            
-            .sentiment-grid,
-            .prediction-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .notification-popup {
-                right: 10px;
-                left: 10px;
-                max-width: none;
-                transform: translateY(-100px);
-            }
-            
-            .notification-popup.show {
-                transform: translateY(0);
-            }
-        }
-
         /* LOADING */
         .loading {
             display: flex;
@@ -908,7 +442,92 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ANIMAZIONI */
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* CHART CONTAINER */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* NOTIFICATION */
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .notification-message {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+        }
+
+        /* ANIMATIONS */
         .fade-in {
             animation: fadeIn 0.5s ease-out;
         }
@@ -926,249 +545,6 @@
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
         }
-
-        /* CHART CONTAINER */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 1rem;
-        }
-
-        .chart-controls {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            justify-content: center;
-        }
-
-        .chart-btn {
-            background: var(--card-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .chart-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .chart-btn.active {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        /* MODAL */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            padding: 1rem;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: var(--card-color);
-            border-radius: 16px;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-color);
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(255, 102, 0, 0.05), rgba(16, 185, 129, 0.05));
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-color);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #6b7280;
-            padding: 0.5rem;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 102, 0, 0.1);
-            color: var(--primary-color);
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-            color: var(--text-color);
-        }
-
-        .modal-footer {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-            background: rgba(255, 102, 0, 0.05);
-        }
-
-        /* INFO GRID */
-        .info-grid {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .info-label {
-            font-weight: 600;
-            color: var(--text-color);
-        }
-
-        .info-value {
-            color: #64748b;
-        }
-
-        /* CHAT MESSAGES */
-        .chat-messages {
-            max-height: 400px;
-            overflow-y: auto;
-            padding: 1rem;
-            background: rgba(255, 102, 0, 0.05);
-            border-radius: 12px;
-            margin: 1rem 0;
-            border: 1px solid var(--border-color);
-        }
-
-        .message {
-            margin-bottom: 1rem;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            max-width: 80%;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .message.user {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: white;
-            margin-left: auto;
-            border-bottom-right-radius: 4px;
-        }
-
-        .message.assistant {
-            background: var(--card-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            margin-right: auto;
-            border-bottom-left-radius: 4px;
-        }
-
-        .message-meta {
-            font-size: 0.75rem;
-            opacity: 0.7;
-            margin-top: 0.5rem;
-        }
-
-        /* INSIGHTS */
-        .insights-grid {
-            display: grid;
-            gap: 1rem;
-            padding: 2rem;
-        }
-
-        .insight-item {
-            background: rgba(255, 102, 0, 0.05);
-            border: 1px solid rgba(255, 102, 0, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border-left: 4px solid var(--primary-color);
-            transition: all 0.3s ease;
-        }
-
-        .insight-item:hover {
-            transform: translateX(5px);
-            background: rgba(255, 102, 0, 0.1);
-        }
-
-        .insight-title {
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .insight-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .insight-action {
-            color: #64748b;
-            font-size: 0.875rem;
-            line-height: 1.5;
-        }
-
-        /* EMPTY STATE */
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #64748b;
-        }
-
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        /* FULL WIDTH SECTIONS */
-        .full-width-section {
-            grid-column: 1 / -1;
-        }
-
-        /* STATUS INDICATORS */
-        .status-online {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: var(--secondary-color);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-offline {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #64748b;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body data-theme="light">
@@ -1176,14 +552,11 @@
         <div class="header-content">
             <div>
                 <h1>🚀 TribuCoach Dashboard Pro</h1>
-                <p>Analytics avanzate, AI insights e automazioni smart per la crescita del tuo business</p>
+                <p>Sistema integrato con Firebase per gestione lead e conversazioni</p>
             </div>
             <div class="header-controls">
-                <div class="notification-center">
-                    <button class="notification-bell" onclick="toggleNotifications()">
-                        🔔
-                        <span class="notification-badge" id="notificationBadge">3</span>
-                    </button>
+                <div class="connection-status" id="connectionStatus">
+                    🔄 Connessione...
                 </div>
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
@@ -1193,49 +566,35 @@
     </header>
 
     <div class="container">
-        <!-- METRICHE PRINCIPALI ANIMATE -->
+        <!-- METRICHE PRINCIPALI -->
         <div class="metrics fade-in">
             <div class="metric-card">
                 <h3><span>🎯</span> Lead Totali</h3>
                 <div class="value" id="totalLeads">0</div>
-                <div class="change">📈 +12% questa settimana</div>
-                <canvas class="trend-chart" id="leadsChart"></canvas>
+                <div class="change">📈 Ultima settimana</div>
             </div>
             <div class="metric-card">
                 <h3><span>⭐</span> Score Medio</h3>
                 <div class="value" id="avgScore">0%</div>
-                <div class="change">📊 +5% dal mese scorso</div>
-                <canvas class="trend-chart" id="scoreChart"></canvas>
+                <div class="change">🎯 Performance media</div>
             </div>
             <div class="metric-card">
                 <h3><span>💬</span> Conversazioni</h3>
                 <div class="value" id="totalChats">0</div>
-                <div class="change">🚀 +8% questa settimana</div>
-                <canvas class="trend-chart" id="chatsChart"></canvas>
+                <div class="change">📞 Interazioni totali</div>
             </div>
             <div class="metric-card">
                 <h3><span>👑</span> Lead Premium</h3>
                 <div class="value" id="premiumLeads">0</div>
                 <div class="change">💎 Score > 80%</div>
-                <canvas class="trend-chart" id="premiumChart"></canvas>
-            </div>
-            <div class="metric-card">
-                <h3><span>🤖</span> Automazioni Attive</h3>
-                <div class="value" id="automationsActive">5</div>
-                <div class="change">⚡ 24/7 operatività</div>
-            </div>
-            <div class="metric-card">
-                <h3><span>💰</span> Opportunità Budget</h3>
-                <div class="value" id="totalOpportunity">€0</div>
-                <div class="change">💹 Pipeline stimata</div>
             </div>
         </div>
 
         <!-- LEAD QUIZ COMPLETATI -->
-        <div class="section full-width-section">
+        <div class="section">
             <div class="section-header">
                 <h2 class="section-title">
-                    <span class="emoji">🥇</span>
+                    <span>🥇</span>
                     Lead Quiz Completati
                 </h2>
             </div>
@@ -1260,10 +619,10 @@
         </div>
 
         <!-- CONVERSAZIONI CHAT -->
-        <div class="section full-width-section">
+        <div class="section">
             <div class="section-header">
                 <h2 class="section-title">
-                    <span class="emoji">💬</span>
+                    <span>💬</span>
                     Conversazioni Chatbot
                 </h2>
             </div>
@@ -1287,203 +646,27 @@
             </div>
         </div>
 
-        <!-- DASHBOARD GRID -->
-        <div class="dashboard-grid">
-            <!-- SCORE PREDITTIVO AI -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">🧠</span>
-                        Score Predittivo AI
-                    </h2>
-                </div>
-                <div class="section-content">
-                    <p>Algoritmi di machine learning per predire conversioni</p>
-                    <div class="prediction-grid" id="predictionGrid">
-                        <!-- Popolato dinamicamente -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- TREND GRAFICI INTERATTIVI -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">📈</span>
-                        Trend Analytics
-                    </h2>
-                </div>
-                <div class="section-content">
-                    <div class="chart-controls">
-                        <button class="chart-btn active" onclick="changeChart('leads')">👥 Lead</button>
-                        <button class="chart-btn" onclick="changeChart('score')">⭐ Score</button>
-                        <button class="chart-btn" onclick="changeChart('conversions')">💰 Conversioni</button>
-                        <button class="chart-btn" onclick="changeChart('engagement')">📊 Engagement</button>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SENTIMENT ANALYSIS -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">😊</span>
-                        Sentiment Analysis
-                    </h2>
-                </div>
-                <div class="section-content">
-                    <p>Analisi del sentiment delle conversazioni chatbot</p>
-                    <div class="sentiment-grid">
-                        <div class="sentiment-card sentiment-positive">
-                            <div class="sentiment-emoji">😊</div>
-                            <div class="sentiment-percentage" id="sentimentPositive">68%</div>
-                            <div class="sentiment-label">Positivo</div>
-                        </div>
-                        <div class="sentiment-card sentiment-neutral">
-                            <div class="sentiment-emoji">😐</div>
-                            <div class="sentiment-percentage" id="sentimentNeutral">25%</div>
-                            <div class="sentiment-label">Neutrale</div>
-                        </div>
-                        <div class="sentiment-card sentiment-negative">
-                            <div class="sentiment-emoji">😞</div>
-                            <div class="sentiment-percentage" id="sentimentNegative">7%</div>
-                            <div class="sentiment-label">Negativo</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- KEYWORD TRENDS -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">🏷️</span>
-                        Keyword Trends
-                    </h2>
-                </div>
-                <div class="section-content">
-                    <p>Parole chiave più frequenti nelle conversazioni</p>
-                    <div class="keyword-cloud" id="keywordCloud">
-                        <!-- Popolato dinamicamente -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LEAD SCORING ML -->
-        <div class="section full-width-section slide-in">
+        <!-- ANALYTICS CHART -->
+        <div class="section">
             <div class="section-header">
                 <h2 class="section-title">
-                    <span class="emoji">🎯</span>
-                    Lead Scoring ML & Insights
-                </h2>
-            </div>
-            <div class="section-content">
-                <div class="ml-insights" id="mlInsights">
-                    <!-- Popolato dinamicamente -->
-                </div>
-            </div>
-        </div>
-
-        <!-- CHATBOT ANALYTICS -->
-        <div class="section full-width-section slide-in">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="emoji">🤖</span>
-                    Chatbot Analytics & Topics
-                </h2>
-            </div>
-            <div class="section-content">
-                <div class="period-selector">
-                    <button class="period-btn active" onclick="updateChatbotPeriod('week')">Settimana</button>
-                    <button class="period-btn" onclick="updateChatbotPeriod('month')">Mese</button>
-                    <button class="period-btn" onclick="updateChatbotPeriod('quarter')">Trimestre</button>
-                </div>
-                <div class="chart-container">
-                    <canvas id="chatbotChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- HEATMAP E FUNNEL IN FONDO -->
-        <div class="dashboard-grid">
-            <!-- HEATMAP ORARI -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">🔥</span>
-                        Heatmap Attività Oraria
-                    </h2>
-                    <div class="status-online"></div>
-                </div>
-                <div class="section-content">
-                    <p>Intensità delle interazioni per fascia oraria (ultimi 7 giorni)</p>
-                    <div class="heatmap-container" id="heatmapContainer">
-                        <!-- Popolato dinamicamente -->
-                    </div>
-                    <div class="heatmap-legend">
-                        <span>🟦 Bassa (0-25%)</span>
-                        <span>🟨 Media (26-50%)</span>
-                        <span>🟧 Alta (51-75%)</span>
-                        <span>🟥 Molto Alta (76-100%)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- FUNNEL CONVERSIONE -->
-            <div class="section slide-in">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="emoji">⚡</span>
-                        Funnel Conversione
-                    </h2>
-                </div>
-                <div class="section-content">
-                    <div class="funnel-container" id="funnelContainer">
-                        <!-- Popolato dinamicamente -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- INSIGHTS ACTIONABLE -->
-        <div class="section full-width-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="emoji">💡</span>
-                    Insights & Raccomandazioni AI
+                    <span>📊</span>
+                    Analytics Overview
                 </h2>
             </div>
             
-            <div class="insights-grid" id="insightsContainer">
-                <!-- Popolato dinamicamente -->
+            <div class="section-content">
+                <div class="chart-container">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Dettagli</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body" id="modalBody">
-                <!-- Contenuto dinamico -->
-            </div>
-            <div class="modal-footer" id="modalFooter">
-                <!-- Azioni dinamiche -->
-            </div>
-        </div>
-    </div>
-
-    <!-- NOTIFICHE POPUP -->
-    <div class="notification-popup" id="notificationPopup">
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
         <div class="notification-header">
-            <div class="notification-title" id="notificationTitle">Nuova Notifica</div>
+            <div class="notification-title" id="notificationTitle">Notifica</div>
             <button class="notification-close" onclick="closeNotification()">&times;</button>
         </div>
         <div class="notification-message" id="notificationMessage">
@@ -1492,7 +675,7 @@
     </div>
 
     <script>
-        // === CONFIGURAZIONE ===
+        // === CONFIGURAZIONE FIREBASE ===
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-a2254.firebaseapp.com",
@@ -1503,6 +686,7 @@
         };
 
         // === VARIABILI GLOBALI ===
+        let app = null;
         let db = null;
         let isConnected = false;
         let leadsData = [];
@@ -1512,138 +696,121 @@
         let currentLeadFilter = 'tutti';
         let currentChatFilter = 'tutti';
         let currentTheme = 'light';
-        let charts = {};
-        let notifications = [];
-        let notificationCount = 0;
-        let dynamicScoring = {};
-        let lastRefresh = new Date();
+        let chart = null;
 
-        // === TEMA ===
-        function toggleTheme() {
-            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.body.setAttribute('data-theme', currentTheme);
-            
-            const icon = document.getElementById('themeIcon');
-            const text = document.getElementById('themeText');
-            
-            if (currentTheme === 'dark') {
-                icon.textContent = '☀️';
-                text.textContent = 'Light Mode';
-            } else {
-                icon.textContent = '🌙';
-                text.textContent = 'Dark Mode';
-            }
-            
-            // Salva preferenza
-            try {
-                const savedTheme = currentTheme;
-                // In un ambiente reale, salveresti in localStorage
-                console.log('Tema salvato:', savedTheme);
-            } catch (error) {
-                console.log('Impossibile salvare tema in questa ambiente');
-            }
-            
-            // Ricrea i grafici con i nuovi colori
-            setTimeout(() => {
-                createCharts();
-                updateHeatmap();
-            }, 100);
-        }
-
-        // === INIZIALIZZAZIONE FIREBASE ===
+        // === FIREBASE INITIALIZATION ===
         async function initFirebase() {
-            try {
-                if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase non disponibile');
-                }
+            return new Promise((resolve) => {
+                // Timeout per evitare attese infinite
+                const timeout = setTimeout(() => {
+                    console.warn('⏰ Firebase timeout - usando modalità demo');
+                    resolve(false);
+                }, 5000);
 
-                const app = firebase.initializeApp(FIREBASE_CONFIG);
-                db = firebase.firestore();
-                await db.collection('test').limit(1).get();
+                function tryInit() {
+                    try {
+                        if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
+                            app = firebase.initializeApp(FIREBASE_CONFIG);
+                            db = firebase.firestore();
+                            
+                            // Test connessione semplice
+                            db.collection('quiz_results').limit(1).get()
+                                .then(() => {
+                                    clearTimeout(timeout);
+                                    isConnected = true;
+                                    console.log('✅ Firebase connesso');
+                                    updateConnectionStatus(true);
+                                    resolve(true);
+                                })
+                                .catch((error) => {
+                                    clearTimeout(timeout);
+                                    console.warn('⚠️ Firebase test fallito:', error.message);
+                                    isConnected = false;
+                                    updateConnectionStatus(false);
+                                    resolve(false);
+                                });
+                        } else if (typeof firebase === 'undefined') {
+                            setTimeout(tryInit, 500);
+                        } else {
+                            clearTimeout(timeout);
+                            resolve(true);
+                        }
+                    } catch (error) {
+                        clearTimeout(timeout);
+                        console.warn('⚠️ Firebase error:', error.message);
+                        isConnected = false;
+                        updateConnectionStatus(false);
+                        resolve(false);
+                    }
+                }
                 
-                isConnected = true;
-                console.log('✅ Firebase connesso');
-                return true;
-            } catch (error) {
-                console.error('❌ Firebase non disponibile:', error);
-                isConnected = false;
-                return false;
+                tryInit();
+            });
+        }
+
+        // === CONNECTION STATUS ===
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.textContent = '🟢 Firebase Connesso';
+                statusEl.className = 'connection-status status-connected';
+            } else {
+                statusEl.textContent = '🟡 Modalità Demo';
+                statusEl.className = 'connection-status status-demo';
             }
         }
 
-        // === CARICAMENTO DATI ===
+        // === DATA LOADING ===
         async function loadData() {
-            try {
-                if (isConnected) {
-                    // Carica dati reali da Firebase
-                    const [quizSnapshot, chatsSnapshot] = await Promise.all([
-                        db.collection('quiz_results').get(),
-                        db.collection('conversations').get()
-                    ]);
-
-                    leadsData = [];
-                    quizSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        leadsData.push({
-                            id: doc.id,
-                            name: data.userName || data.name || 'Nome non disponibile',
-                            email: data.userEmail || data.email || 'Non disponibile',
-                            phone: data.userWhatsApp || data.phone || 'Non disponibile',
-                            age: data.userAge || data.age || 'N/A',
-                            gender: data.userGender || data.gender || 'N/A',
-                            score: data.fitnessScore || data.score || 0,
-                            profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                            goals: data.fitnessGoals || data.goals || [],
-                            obstacles: data.fitnessObstacles || data.obstacles || [],
-                            budget: data.budget || 'Non specificato',
-                            timestamp: data.timestamp || data.completed_at
-                        });
-                    });
-
-                    chatsData = [];
-                    chatsSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        const messages = data.messages || [];
-                        chatsData.push({
-                            id: doc.id,
-                            clientName: extractNameFromMessages(messages) || data.customerName || 'Cliente Anonimo',
-                            phone: extractPhoneFromMessages(messages) || data.customerPhone || 'N/A',
-                            email: extractEmailFromMessages(messages) || data.customerEmail || 'N/A',
-                            topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
-                            lastMessage: messages.length > 0 ? messages[messages.length - 1].content : 'Nessun messaggio',
-                            messages: messages,
-                            timestamp: data.lastMessageAt || data.dateCreated || new Date()
-                        });
-                    });
-                } else {
-                    // Carica dati demo avanzati
-                    loadAdvancedDemoData();
+            console.log('📊 Caricamento dati...');
+            
+            if (isConnected) {
+                try {
+                    await loadFirebaseData();
+                } catch (error) {
+                    console.warn('⚠️ Errore Firebase, carico dati demo:', error);
+                    loadDemoData();
                 }
-
-                // Aggiorna tutte le sezioni
-                updateMetrics();
-                updateHeatmap();
-                updateFunnel();
-                updatePredictions();
-                updateSentiment();
-                updateKeywordCloud();
-                updateMLInsights();
-                updateInsights();
-                createCharts();
-                filterLeads(currentLeadFilter);
-                filterChats(currentChatFilter);
-                
-                lastRefresh = new Date();
-                console.log('📊 Dati aggiornati:', lastRefresh.toLocaleTimeString());
-
-            } catch (error) {
-                console.error('Errore caricamento dati:', error);
-                loadAdvancedDemoData();
+            } else {
+                loadDemoData();
             }
+            
+            updateUI();
         }
 
-        function loadAdvancedDemoData() {
-            // Dati demo più realistici e dettagliati
+        async function loadFirebaseData() {
+            console.log('🔥 Caricamento da Firebase...');
+            
+            // Carica quiz results
+            const quizSnapshot = await db.collection('quiz_results')
+                .orderBy('timestamp', 'desc')
+                .limit(100)
+                .get();
+                
+            leadsData = [];
+            quizSnapshot.forEach(doc => {
+                const data = doc.data();
+                leadsData.push(processLeadData(doc.id, data));
+            });
+            
+            // Carica conversations
+            const chatsSnapshot = await db.collection('conversations')
+                .orderBy('lastMessageAt', 'desc')
+                .limit(100)
+                .get();
+                
+            chatsData = [];
+            chatsSnapshot.forEach(doc => {
+                const data = doc.data();
+                chatsData.push(processChatData(doc.id, data));
+            });
+            
+            console.log(`📊 Firebase: ${leadsData.length} lead, ${chatsData.length} chat`);
+        }
+
+        function loadDemoData() {
+            console.log('🎭 Caricamento dati demo...');
+            
             leadsData = [
                 {
                     id: 'demo_1',
@@ -1655,12 +822,11 @@
                     score: 85,
                     profile: 'Guerriero Determinato',
                     goals: ['Perdita peso', 'Tonificazione'],
-                    obstacles: ['Tempo limitato', 'Motivazione'],
-                    budget: '€150-200/mese',
-                    timestamp: new Date()
+                    timestamp: new Date(),
+                    source: 'Demo'
                 },
                 {
-                    id: 'demo_2', 
+                    id: 'demo_2',
                     name: 'Sara Bianchi',
                     email: 'sara.bianchi@email.com',
                     phone: '+39 334 5678901',
@@ -1669,13 +835,12 @@
                     score: 92,
                     profile: 'Atleta Esperto',
                     goals: ['Aumento massa', 'Performance'],
-                    obstacles: ['Plateau risultati'],
-                    budget: '€200-300/mese',
-                    timestamp: new Date(Date.now() - 86400000)
+                    timestamp: new Date(Date.now() - 86400000),
+                    source: 'Demo'
                 },
                 {
                     id: 'demo_3',
-                    name: 'Luca Verdi', 
+                    name: 'Luca Verdi',
                     email: 'luca.verdi@email.com',
                     phone: '+39 335 9876543',
                     age: 25,
@@ -1683,37 +848,8 @@
                     score: 76,
                     profile: 'Principiante Motivato',
                     goals: ['Forza', 'Resistenza'],
-                    obstacles: ['Dieta', 'Costanza'],
-                    budget: '€100-150/mese',
-                    timestamp: new Date(Date.now() - 172800000)
-                },
-                {
-                    id: 'demo_4',
-                    name: 'Giulia Romano',
-                    email: 'giulia.romano@email.com',
-                    phone: '+39 347 1111222',
-                    age: 31,
-                    gender: 'Femmina',
-                    score: 88,
-                    profile: 'Fitness Enthusiast',
-                    goals: ['Definizione', 'Benessere'],
-                    obstacles: ['Stress lavoro'],
-                    budget: '€180-250/mese',
-                    timestamp: new Date(Date.now() - 259200000)
-                },
-                {
-                    id: 'demo_5',
-                    name: 'Francesco Blu',
-                    email: 'francesco.blu@email.com',
-                    phone: '+39 348 3333444',
-                    age: 29,
-                    gender: 'Maschio',
-                    score: 71,
-                    profile: 'Comeback Hero',
-                    goals: ['Ripresa forma', 'Salute'],
-                    obstacles: ['Infortunio precedente'],
-                    budget: '€120-180/mese',
-                    timestamp: new Date(Date.now() - 345600000)
+                    timestamp: new Date(Date.now() - 172800000),
+                    source: 'Demo'
                 }
             ];
 
@@ -1725,129 +861,107 @@
                     email: 'anna.neri@email.com',
                     topic: 'Informazioni Prezzi',
                     lastMessage: 'Vorrei sapere i costi per un programma personalizzato',
-                    messages: [
-                        { role: 'user', content: 'Ciao, mi interessano i vostri servizi', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Anna! Come posso aiutarti?', timestamp: new Date() },
-                        { role: 'user', content: 'Vorrei informazioni sui prezzi. Sono Anna, 347 1111111', timestamp: new Date() }
-                    ],
-                    timestamp: new Date()
+                    messageCount: 3,
+                    timestamp: new Date(),
+                    source: 'Demo'
                 },
                 {
                     id: 'chat_2',
                     clientName: 'Giovanni Blu',
-                    phone: '+39 348 2222222', 
+                    phone: '+39 348 2222222',
                     email: 'N/A',
                     topic: 'Supporto Nutrizionale',
                     lastMessage: 'Ho bisogno di aiuto con la dieta per massa muscolare',
-                    messages: [
-                        { role: 'user', content: 'Mi chiamo Giovanni, numero 348 2222222', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Giovanni! Come posso aiutarti?', timestamp: new Date() },
-                        { role: 'user', content: 'Ho bisogno di supporto nutrizionale per la massa', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(Date.now() - 86400000)
-                },
-                {
-                    id: 'chat_3',
-                    clientName: 'Maria Verde',
-                    phone: '+39 349 5555666',
-                    email: 'maria.verde@email.com',
-                    topic: 'Prenotazione Consulenza',
-                    lastMessage: 'Quando posso prenotare una consulenza?',
-                    messages: [
-                        { role: 'user', content: 'Salve, sono Maria 349 5555666', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Maria! Ti aiuto subito', timestamp: new Date() },
-                        { role: 'user', content: 'Vorrei prenotare una consulenza, quando è possibile?', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(Date.now() - 172800000)
-                },
-                {
-                    id: 'chat_4',
-                    clientName: 'Alessandro Rosso',
-                    phone: '+39 350 7777888',
-                    email: 'N/A',
-                    topic: 'Allenamento',
-                    lastMessage: 'Che tipo di allenamento consigliate per principianti?',
-                    messages: [
-                        { role: 'user', content: 'Ciao sono Alessandro, 350 7777888', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Alessandro! Benvenuto', timestamp: new Date() },
-                        { role: 'user', content: 'Sono un principiante, che allenamento mi consigliate?', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(Date.now() - 259200000)
+                    messageCount: 4,
+                    timestamp: new Date(Date.now() - 86400000),
+                    source: 'Demo'
                 }
             ];
-
-            // Simula scoring dinamico
-            initDynamicScoring();
-        }
-
-        // === DYNAMIC SCORING ===
-        function initDynamicScoring() {
-            dynamicScoring = {
-                totalScore: 0,
-                conversions: 0,
-                engagement: 0,
-                lastUpdate: new Date()
-            };
             
-            // Simula aggiornamenti real-time
-            setInterval(() => {
-                dynamicScoring.totalScore = Math.min(100, dynamicScoring.totalScore + Math.random() * 2);
-                dynamicScoring.conversions += Math.random() * 0.5;
-                dynamicScoring.engagement = 65 + Math.random() * 20;
-                updateDynamicMetrics();
-            }, 5000);
+            console.log(`🎭 Demo: ${leadsData.length} lead, ${chatsData.length} chat`);
         }
 
-        function updateDynamicMetrics() {
-            // Aggiorna metriche in tempo reale
-            const scoreElement = document.getElementById('avgScore');
-            if (scoreElement) {
-                const newScore = Math.round(dynamicScoring.totalScore);
-                scoreElement.textContent = newScore + '%';
-                scoreElement.style.transform = 'scale(1.05)';
-                setTimeout(() => {
-                    scoreElement.style.transform = 'scale(1)';
-                }, 200);
-            }
+        // === DATA PROCESSING ===
+        function processLeadData(docId, data) {
+            return {
+                id: docId,
+                name: data.userName || data.name || 'Nome non disponibile',
+                email: data.userEmail || data.email || 'Non disponibile',
+                phone: data.userWhatsApp || data.phone || 'Non disponibile',
+                age: data.userAge || data.age || 'N/A',
+                gender: data.userGender || data.gender || 'N/A',
+                score: data.fitnessScore || data.score || calculateScore(data),
+                profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                goals: Array.isArray(data.fitnessGoals) ? data.fitnessGoals : 
+                       Array.isArray(data.goals) ? data.goals : [],
+                timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : 
+                          data.timestamp ? new Date(data.timestamp) : new Date(),
+                source: 'Firebase'
+            };
         }
 
-        // === UTILITY FUNCTIONS ===
-        function extractNameFromMessages(messages) {
-            if (!messages) return null;
+        function processChatData(docId, data) {
+            const messages = data.messages || [];
+            return {
+                id: docId,
+                clientName: extractClientName(messages) || data.customerName || 'Cliente Anonimo',
+                phone: extractPhone(messages) || data.customerPhone || 'N/A',
+                email: extractEmail(messages) || data.customerEmail || 'N/A',
+                topic: data.topic || extractTopic(messages) || 'Conversazione generale',
+                lastMessage: messages.length > 0 ? 
+                    (messages[messages.length - 1].content || 'Nessun messaggio') : 
+                    'Nessun messaggio',
+                messageCount: messages.length,
+                timestamp: data.lastMessageAt?.toDate ? data.lastMessageAt.toDate() : 
+                          data.timestamp ? new Date(data.timestamp) : new Date(),
+                source: 'Firebase'
+            };
+        }
+
+        function calculateScore(data) {
+            let score = 50; // Base score
+            
+            if (data.experience === 'avanzato') score += 20;
+            if (data.experience === 'intermedio') score += 10;
+            
+            if (data.goals && data.goals.length > 0) score += data.goals.length * 5;
+            if (data.userEmail || data.email) score += 10;
+            if (data.userWhatsApp || data.phone) score += 15;
+            
+            return Math.min(Math.max(score, 0), 100);
+        }
+
+        function extractClientName(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user') {
-                    const match = msg.content?.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
                     if (match) return match[1].trim();
                 }
             }
             return null;
         }
 
-        function extractPhoneFromMessages(messages) {
-            if (!messages) return null;
+        function extractPhone(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user') {
-                    const match = msg.content?.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1];
                 }
             }
             return null;
         }
 
-        function extractEmailFromMessages(messages) {
-            if (!messages) return null;
+        function extractEmail(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user') {
-                    const match = msg.content?.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
                     if (match) return match[1];
                 }
             }
             return null;
         }
 
-        function extractTopicFromMessages(messages) {
-            if (!messages) return 'Conversazione Generale';
-            
+        function extractTopic(messages) {
             const allText = messages
                 .filter(msg => msg.role === 'user')
                 .map(msg => msg.content?.toLowerCase() || '')
@@ -1866,447 +980,40 @@
                 }
             }
             
-            return 'Conversazione Generale';
+            return 'Conversazione generale';
         }
 
-        // === HEATMAP ORARI ===
-        function updateHeatmap() {
-            const container = document.getElementById('heatmapContainer');
-            let html = '';
+        // === UI UPDATE ===
+        function updateUI() {
+            updateMetrics();
+            filterLeads(currentLeadFilter);
+            filterChats(currentChatFilter);
+            createChart();
             
-            // Simula dati heatmap per 24 ore (2 righe da 12 ore)
-            const heatmapData = [];
-            for (let i = 0; i < 24; i++) {
-                const intensity = Math.random() * 100;
-                heatmapData.push({
-                    hour: i,
-                    intensity: intensity,
-                    interactions: Math.floor(intensity * 2)
-                });
-            }
-            
-            heatmapData.forEach(data => {
-                const intensity = data.intensity;
-                let bgColor;
-                
-                if (intensity < 25) bgColor = '#3b82f6'; // Blu
-                else if (intensity < 50) bgColor = '#eab308'; // Giallo
-                else if (intensity < 75) bgColor = '#f97316'; // Arancione
-                else bgColor = '#ef4444'; // Rosso
-                
-                html += `
-                    <div class="heatmap-hour" 
-                         style="background-color: ${bgColor}" 
-                         onclick="showHourDetails(${data.hour}, ${data.interactions})"
-                         title="${data.hour}:00 - ${data.interactions} interazioni">
-                        ${data.hour}
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+            showNotification('✅ Aggiornamento Completato', 
+                `Caricati ${leadsData.length} lead e ${chatsData.length} conversazioni`);
         }
 
-        function showHourDetails(hour, interactions) {
-            showNotification(`📊 Dettagli Orario ${hour}:00`, `${interactions} interazioni registrate in questa fascia oraria`);
+        function updateMetrics() {
+            const totalLeads = leadsData.length;
+            const avgScore = totalLeads > 0 ? 
+                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const totalChats = chatsData.length;
+            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
+
+            document.getElementById('totalLeads').textContent = totalLeads;
+            document.getElementById('avgScore').textContent = avgScore + '%';
+            document.getElementById('totalChats').textContent = totalChats;
+            document.getElementById('premiumLeads').textContent = premiumLeads;
         }
 
-        // === FUNNEL CONVERSIONE ===
-        function updateFunnel() {
-            const container = document.getElementById('funnelContainer');
-            
-            const funnelSteps = [
-                { name: 'Visitatori Sito', value: 1000, percentage: 100 },
-                { name: 'Avvio Quiz', value: 350, percentage: 35 },
-                { name: 'Quiz Completato', value: 280, percentage: 28 },
-                { name: 'Chat Avviata', value: 180, percentage: 18 },
-                { name: 'Contatto Acquisito', value: 120, percentage: 12 },
-                { name: 'Conversione', value: 45, percentage: 4.5 }
-            ];
-            
-            let html = '';
-            funnelSteps.forEach((step, index) => {
-                html += `
-                    <div class="funnel-step" style="animation-delay: ${index * 0.1}s">
-                        <div class="funnel-step-number">${index + 1}</div>
-                        <div class="funnel-step-content">
-                            <div class="funnel-step-title">${step.name}</div>
-                            <div class="funnel-step-value">${step.value.toLocaleString()}</div>
-                            <div class="funnel-step-percentage">${step.percentage}% del totale</div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // === PREDIZIONI AI ===
-        function updatePredictions() {
-            const container = document.getElementById('predictionGrid');
-            
-            const predictions = [
-                { label: 'Probabilità Conversione', value: '73%', color: '--secondary-color' },
-                { label: 'Lead Quality Score', value: '8.2/10', color: '--primary-color' },
-                { label: 'Engagement Prediction', value: '85%', color: '--info-color' },
-                { label: 'Churn Risk', value: '12%', color: '--danger-color' },
-                { label: 'Lifetime Value', value: '€2,400', color: '--warning-color' },
-                { label: 'Next Best Action', value: 'Email', color: '--secondary-color' }
-            ];
-            
-            let html = '';
-            predictions.forEach((pred, index) => {
-                html += `
-                    <div class="prediction-card" style="animation-delay: ${index * 0.1}s">
-                        <div class="prediction-score" style="color: var(${pred.color})">${pred.value}</div>
-                        <div class="prediction-label">${pred.label}</div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // === SENTIMENT ANALYSIS ===
-        function updateSentiment() {
-            // Simula sentiment basato sui dati reali
-            const total = chatsData.length || 10;
-            const positive = Math.round(total * 0.68);
-            const neutral = Math.round(total * 0.25);
-            const negative = total - positive - neutral;
-            
-            document.getElementById('sentimentPositive').textContent = Math.round((positive / total) * 100) + '%';
-            document.getElementById('sentimentNeutral').textContent = Math.round((neutral / total) * 100) + '%';
-            document.getElementById('sentimentNegative').textContent = Math.round((negative / total) * 100) + '%';
-        }
-
-        // === KEYWORD CLOUD ===
-        function updateKeywordCloud() {
-            const container = document.getElementById('keywordCloud');
-            
-            const keywords = [
-                { word: 'allenamento', count: 45, size: 1.5 },
-                { word: 'dieta', count: 38, size: 1.3 },
-                { word: 'massa', count: 32, size: 1.2 },
-                { word: 'perdita peso', count: 28, size: 1.1 },
-                { word: 'consulenza', count: 25, size: 1.0 },
-                { word: 'prezzi', count: 22, size: 0.9 },
-                { word: 'tonificazione', count: 20, size: 0.8 },
-                { word: 'principiante', count: 18, size: 0.8 },
-                { word: 'motivazione', count: 15, size: 0.7 },
-                { word: 'risultati', count: 12, size: 0.7 }
-            ];
-            
-            let html = '';
-            keywords.forEach(keyword => {
-                html += `
-                    <span class="keyword-tag" 
-                          style="font-size: ${keyword.size}rem" 
-                          onclick="searchKeyword('${keyword.word}')">
-                        ${keyword.word}
-                        <span class="keyword-count">${keyword.count}</span>
-                    </span>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function searchKeyword(keyword) {
-            showNotification(`🔍 Keyword: ${keyword}`, `Ricerca di tutte le conversazioni contenenti "${keyword}"`);
-        }
-
-        // === ML INSIGHTS ===
-        function updateMLInsights() {
-            const container = document.getElementById('mlInsights');
-            
-            const insights = [
-                {
-                    title: 'Pattern Comportamentale Ottimale',
-                    value: 'Martedì 14:00-16:00',
-                    prediction: 'Gli utenti mostrano 73% maggiore probabilità di conversione in questa fascia'
-                },
-                {
-                    title: 'Profilo Lead Ideale',
-                    value: 'Uomo 25-35 anni, Budget €150-250',
-                    prediction: 'Score medio 87%, tasso conversione 45%'
-                },
-                {
-                    title: 'Trigger di Abbandono',
-                    value: 'Domande sui prezzi > 3 volte',
-                    prediction: 'Rischio churn 85% se non contattato entro 24h'
-                },
-                {
-                    title: 'Cross-sell Opportunity',
-                    value: 'Integratori + Piani Nutrizionali',
-                    prediction: 'Revenue aggiuntivo stimato: €450/cliente'
-                },
-                {
-                    title: 'Seasonal Trend',
-                    value: 'Picco Gennaio-Marzo (+340%)',
-                    prediction: 'Preparare campagne intensive per Q1'
-                },
-                {
-                    title: 'Channel Performance',
-                    value: 'WhatsApp: 67% engagement',
-                    prediction: 'Email: 23%, SMS: 45%, Call: 89%'
-                }
-            ];
-            
-            let html = '';
-            insights.forEach(insight => {
-                html += `
-                    <div class="ml-insight">
-                        <div class="ml-insight-title">${insight.title}</div>
-                        <div class="ml-insight-value">${insight.value}</div>
-                        <div class="ml-insight-prediction">${insight.prediction}</div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        // === CHARTS ===
-        function createCharts() {
-            createTrendChart();
-            createChatbotChart();
-            createMiniCharts();
-        }
-
-        function createTrendChart() {
-            const ctx = document.getElementById('trendChart');
-            if (!ctx) return;
-            
-            // Distruggi chart esistente
-            if (charts.trend) {
-                charts.trend.destroy();
-            }
-            
-            const isDark = currentTheme === 'dark';
-            const textColor = isDark ? '#f1f5f9' : '#1e293b';
-            const gridColor = isDark ? '#374151' : '#e2e8f0';
-            
-            charts.trend = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'],
-                    datasets: [{
-                        label: 'Lead Generati',
-                        data: [12, 19, 8, 15, 25, 22, 18],
-                        borderColor: '#ff6600',
-                        backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: textColor }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            ticks: { color: textColor },
-                            grid: { color: gridColor }
-                        },
-                        x: {
-                            ticks: { color: textColor },
-                            grid: { color: gridColor }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createChatbotChart() {
-            const ctx = document.getElementById('chatbotChart');
-            if (!ctx) return;
-            
-            if (charts.chatbot) {
-                charts.chatbot.destroy();
-            }
-            
-            const isDark = currentTheme === 'dark';
-            const textColor = isDark ? '#f1f5f9' : '#1e293b';
-            
-            charts.chatbot = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Informazioni Prezzi', 'Supporto Nutrizionale', 'Prenotazioni', 'Allenamento', 'Altro'],
-                    datasets: [{
-                        data: [35, 25, 20, 15, 5],
-                        backgroundColor: [
-                            '#ff6600',
-                            '#10b981',
-                            '#3b82f6',
-                            '#f59e0b',
-                            '#ef4444'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: textColor }
-                        }
-                    }
-                }
-            });
-        }
-
-        function createMiniCharts() {
-            // Mini charts per le metriche
-            const miniCharts = ['leadsChart', 'scoreChart', 'chatsChart', 'premiumChart'];
-            
-            miniCharts.forEach(chartId => {
-                const ctx = document.getElementById(chartId);
-                if (!ctx) return;
-                
-                if (charts[chartId]) {
-                    charts[chartId].destroy();
-                }
-                
-                const data = Array.from({length: 7}, () => Math.floor(Math.random() * 100));
-                
-                charts[chartId] = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['', '', '', '', '', '', ''],
-                        datasets: [{
-                            data: data,
-                            borderColor: 'rgba(255, 102, 0, 0.3)',
-                            backgroundColor: 'rgba(255, 102, 0, 0.1)',
-                            borderWidth: 1,
-                            pointRadius: 0,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { display: false },
-                            y: { display: false }
-                        },
-                        elements: { point: { radius: 0 } }
-                    }
-                });
-            });
-        }
-
-        function changeChart(type) {
-            // Aggiorna stato bottoni
-            document.querySelectorAll('.chart-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Aggiorna dati chart
-            let newData, newLabel;
-            
-            switch(type) {
-                case 'leads':
-                    newData = [12, 19, 8, 15, 25, 22, 18];
-                    newLabel = 'Lead Generati';
-                    break;
-                case 'score':
-                    newData = [75, 78, 82, 79, 85, 88, 84];
-                    newLabel = 'Score Medio';
-                    break;
-                case 'conversions':
-                    newData = [2, 4, 1, 3, 6, 5, 4];
-                    newLabel = 'Conversioni';
-                    break;
-                case 'engagement':
-                    newData = [65, 70, 68, 75, 82, 78, 80];
-                    newLabel = 'Engagement %';
-                    break;
-            }
-            
-            charts.trend.data.datasets[0].data = newData;
-            charts.trend.data.datasets[0].label = newLabel;
-            charts.trend.update();
-        }
-
-        function updateChatbotPeriod(period) {
-            // Aggiorna periodo chatbot chart
-            document.querySelectorAll('.period-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            showNotification(`📊 Periodo Aggiornato`, `Chatbot analytics aggiornato per: ${period}`);
-        }
-
-        // === NOTIFICHE ===
-        function showNotification(title, message) {
-            const popup = document.getElementById('notificationPopup');
-            const titleEl = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-            
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-            
-            popup.classList.add('show');
-            
-            // Auto-hide dopo 4 secondi
-            setTimeout(() => {
-                popup.classList.remove('show');
-            }, 4000);
-        }
-
-        function closeNotification() {
-            document.getElementById('notificationPopup').classList.remove('show');
-        }
-
-        function toggleNotifications() {
-            showNotification('🔔 Centro Notifiche', 'Sistema notifiche smart attivo - 3 nuovi insights disponibili');
-        }
-
-        // Notifiche automatiche ogni 30 secondi
-        function startNotificationSystem() {
-            const messages = [
-                { title: '🎯 Nuovo Lead Premium', message: 'Lead con score 89% appena completato il quiz!' },
-                { title: '💬 Chat Attiva', message: 'Nuova conversazione da prospect interessato' },
-                { title: '📊 Picco Traffico', message: 'Traffico aumentato del 25% nell\'ultima ora' },
-                { title: '🤖 AI Alert', message: 'Pattern insolito rilevato - opportunity di upselling' },
-                { title: '⚡ Score Update', message: 'Score medio aumentato a 84% (+3% questa settimana)' }
-            ];
-            
-            let messageIndex = 0;
-            setInterval(() => {
-                const msg = messages[messageIndex % messages.length];
-                showNotification(msg.title, msg.message);
-                messageIndex++;
-                
-                // Aggiorna badge notifiche
-                const badge = document.getElementById('notificationBadge');
-                const currentCount = parseInt(badge.textContent) || 0;
-                badge.textContent = currentCount + 1;
-            }, 30000);
-        }
-
-        // === FILTRI ===
+        // === FILTERS ===
         function filterLeads(period) {
             currentLeadFilter = period;
             
-            // Aggiorna stati bottoni
-            document.querySelectorAll('.filters').forEach(container => {
-                if (container.querySelector('#searchLeads')) {
-                    const buttons = container.querySelectorAll('.filter-btn');
-                    buttons.forEach(btn => {
-                        btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
-                    });
-                }
+            // Aggiorna bottoni
+            document.querySelectorAll('.section:first-of-type .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
             });
             
             const now = new Date();
@@ -2315,7 +1022,7 @@
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             
             filteredLeads = leadsData.filter(lead => {
-                const leadDate = lead.timestamp instanceof Date ? lead.timestamp : new Date(lead.timestamp);
+                const leadDate = lead.timestamp;
                 
                 switch (period) {
                     case 'oggi': return leadDate >= today;
@@ -2331,14 +1038,9 @@
         function filterChats(period) {
             currentChatFilter = period;
             
-            // Aggiorna stati bottoni
-            document.querySelectorAll('.filters').forEach(container => {
-                if (container.querySelector('#searchChats')) {
-                    const buttons = container.querySelectorAll('.filter-btn');
-                    buttons.forEach(btn => {
-                        btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
-                    });
-                }
+            // Aggiorna bottoni
+            document.querySelectorAll('.section:nth-of-type(2) .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
             });
             
             const now = new Date();
@@ -2347,7 +1049,7 @@
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             
             filteredChats = chatsData.filter(chat => {
-                const chatDate = chat.timestamp instanceof Date ? chat.timestamp : new Date(chat.timestamp);
+                const chatDate = chat.timestamp;
                 
                 switch (period) {
                     case 'oggi': return chatDate >= today;
@@ -2420,7 +1122,7 @@
                                 <th>🎯 Profilo</th>
                                 <th>⭐ Score</th>
                                 <th>📅 Data</th>
-                                <th>⚡ Azioni</th>
+                                <th>🔗 Fonte</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2429,9 +1131,7 @@
             filteredLeads.forEach(lead => {
                 const score = lead.score || 0;
                 const badgeClass = score > 80 ? 'badge-success' : score >= 60 ? 'badge-warning' : 'badge-danger';
-                const date = lead.timestamp instanceof Date ? 
-                    lead.timestamp.toLocaleDateString('it-IT') : 
-                    new Date(lead.timestamp).toLocaleDateString('it-IT');
+                const date = lead.timestamp.toLocaleDateString('it-IT');
                 
                 html += `
                     <tr class="fade-in">
@@ -2441,16 +1141,7 @@
                         <td><span class="badge badge-info">${lead.profile}</span></td>
                         <td><span class="badge ${badgeClass}">${score}%</span></td>
                         <td><small>${date}</small></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" onclick="showLeadDetails('${lead.id}')">
-                                👁️ Dettagli
-                            </button>
-                            ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
-                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${lead.phone}')">
-                                    📱 WhatsApp
-                                </button>` : ''
-                            }
-                        </td>
+                        <td><span class="badge badge-info">${lead.source}</span></td>
                     </tr>
                 `;
             });
@@ -2479,20 +1170,18 @@
                             <tr>
                                 <th>👤 Cliente</th>
                                 <th>📱 Telefono</th>
-                                <th>📧 Email</th>
                                 <th>🏷️ Argomento</th>
                                 <th>💬 Ultimo Messaggio</th>
+                                <th>📊 Messaggi</th>
                                 <th>📅 Data</th>
-                                <th>⚡ Azioni</th>
+                                <th>🔗 Fonte</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
             
             filteredChats.forEach(chat => {
-                const date = chat.timestamp instanceof Date ? 
-                    chat.timestamp.toLocaleDateString('it-IT') : 
-                    new Date(chat.timestamp).toLocaleDateString('it-IT');
+                const date = chat.timestamp.toLocaleDateString('it-IT');
                 const preview = chat.lastMessage.length > 50 ? 
                     chat.lastMessage.substring(0, 50) + '...' : 
                     chat.lastMessage;
@@ -2501,23 +1190,11 @@
                     <tr class="fade-in">
                         <td><strong>${chat.clientName}</strong></td>
                         <td><small>${chat.phone}</small></td>
-                        <td><small>${chat.email}</small></td>
                         <td><span class="badge badge-info">${chat.topic}</span></td>
                         <td><small>${preview}</small></td>
+                        <td><span class="badge badge-success">${chat.messageCount}</span></td>
                         <td><small>${date}</small></td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" onclick="showChatDetails('${chat.id}')">
-                                👁️ Chat
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="exportChatToPDF('${chat.id}')">
-                                📄 PDF
-                            </button>
-                            ${chat.phone !== 'N/A' ? 
-                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${chat.phone}')">
-                                    📱 WhatsApp
-                                </button>` : ''
-                            }
-                        </td>
+                        <td><span class="badge badge-info">${chat.source}</span></td>
                     </tr>
                 `;
             });
@@ -2526,402 +1203,226 @@
             container.innerHTML = html;
         }
 
-        // === METRICHE ===
-        function updateMetrics() {
-            const totalLeads = leadsData.length;
-            const avgScore = totalLeads > 0 ? 
-                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
-            const totalChats = chatsData.length;
-            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
+        // === CHART ===
+        function createChart() {
+            const ctx = document.getElementById('analyticsChart');
+            if (!ctx) return;
             
-            // Calcola opportunità budget totale
-            const totalBudget = leadsData.reduce((sum, lead) => {
-                const budget = lead.budget || '';
-                const match = budget.match(/(\d+)/);
-                return sum + (match ? parseInt(match[1]) : 0);
-            }, 0);
-
-            // Aggiorna con animazioni
-            animateCountUp('totalLeads', totalLeads);
-            animateCountUp('avgScore', avgScore, '%');
-            animateCountUp('totalChats', totalChats);
-            animateCountUp('premiumLeads', premiumLeads);
-            animateCountUp('totalOpportunity', totalBudget, '€');
-        }
-
-        function animateCountUp(elementId, targetValue, suffix = '') {
-            const element = document.getElementById(elementId);
-            if (!element) return;
+            // Distruggi chart esistente
+            if (chart) {
+                chart.destroy();
+            }
             
-            const startValue = 0;
-            const duration = 2000;
-            const increment = targetValue / (duration / 16);
-            let currentValue = startValue;
+            const isDark = currentTheme === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#1e293b';
+            const gridColor = isDark ? '#374151' : '#e2e8f0';
             
-            const timer = setInterval(() => {
-                currentValue += increment;
-                if (currentValue >= targetValue) {
-                    currentValue = targetValue;
-                    clearInterval(timer);
-                }
+            // Dati per il grafico
+            const last7Days = [];
+            const leadsData7Days = [];
+            const chatsData7Days = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                last7Days.push(date.toLocaleDateString('it-IT', { weekday: 'short' }));
                 
-                let displayValue = Math.floor(currentValue);
-                if (suffix === '€') {
-                    displayValue = displayValue.toLocaleString();
-                }
+                const dayLeads = leadsData.filter(lead => {
+                    const leadDate = new Date(lead.timestamp);
+                    return leadDate.toDateString() === date.toDateString();
+                }).length;
                 
-                element.textContent = displayValue + suffix;
-            }, 16);
-        }
-
-        function updateInsights() {
-            const container = document.getElementById('insightsContainer');
-            const hotLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
-            const warmLeads = leadsData.filter(lead => (lead.score || 0) >= 60 && (lead.score || 0) <= 79).length;
-            const coldLeads = leadsData.filter(lead => (lead.score || 0) < 60).length;
+                const dayChats = chatsData.filter(chat => {
+                    const chatDate = new Date(chat.timestamp);
+                    return chatDate.toDateString() === date.toDateString();
+                }).length;
+                
+                leadsData7Days.push(dayLeads);
+                chatsData7Days.push(dayChats);
+            }
             
-            const totalBudget = leadsData.reduce((sum, lead) => {
-                const budget = lead.budget || '';
-                const match = budget.match(/(\d+)/);
-                return sum + (match ? parseInt(match[1]) : 0);
-            }, 0);
-
-            const chatsWithContacts = chatsData.filter(chat => chat.phone && chat.phone !== 'N/A').length;
-            const chatConversion = chatsData.length > 0 ? Math.round((chatsWithContacts / chatsData.length) * 100) : 0;
-
-            const insights = [
-                {
-                    title: '🎯 Lead Prioritari Immediati',
-                    value: hotLeads,
-                    action: 'Contatta entro 24h questi lead ad alto score per massimizzare le conversioni. Probabilità successo: 85%'
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last7Days,
+                    datasets: [
+                        {
+                            label: 'Lead Quiz',
+                            data: leadsData7Days,
+                            borderColor: '#ff6600',
+                            backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Conversazioni',
+                            data: chatsData7Days,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
                 },
-                {
-                    title: '🔄 Lead da Coltivare',
-                    value: warmLeads,
-                    action: 'Implementa sequenze di nurturing per questi lead con score medio. Potenziale conversione: 45%'
-                },
-                {
-                    title: '⚡ Lead da Riattivare',
-                    value: coldLeads,
-                    action: 'Crea campagne di riattivazione per questi lead con score basso. Strategia: contenuti educativi personalizzati'
-                },
-                {
-                    title: '💰 Opportunità Budget Totale',
-                    value: `€${totalBudget.toLocaleString()}`,
-                    action: 'Segmenta le offerte per fasce di budget e crea pacchetti mirati. Revenue potential mensile stimato'
-                },
-                {
-                    title: '📊 Efficacia Acquisizione Chat',
-                    value: `${chatConversion}%`,
-                    action: 'Ottimizza il chatbot per acquisire più contatti telefono ed email. Target: 80% contact acquisition rate'
-                },
-                {
-                    title: '⏰ Timing Ottimale Contatti',
-                    value: '14:00-16:00',
-                    action: 'Programma chiamate e outreach negli orari di maggior engagement. Tasso risposta +67% in questa fascia'
-                },
-                {
-                    title: '🤖 AI Automation Opportunity',
-                    value: '3 Processi',
-                    action: 'Follow-up automatico, scoring real-time, nurturing personalizzato. Efficienza stimata: +340%'
-                },
-                {
-                    title: '📈 Growth Prediction Q1',
-                    value: '+125%',
-                    action: 'Basato su trend attuali, preparare infrastruttura per gestire 2.5x lead volume. Scale-up necessario'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: textColor }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        },
+                        x: {
+                            ticks: { color: textColor },
+                            grid: { color: gridColor }
+                        }
+                    }
                 }
-            ];
-
-            let html = '';
-            insights.forEach((insight, index) => {
-                html += `
-                    <div class="insight-item slide-in" style="animation-delay: ${index * 0.1}s">
-                        <div class="insight-title">${insight.title}</div>
-                        <div class="insight-value">${insight.value}</div>
-                        <div class="insight-action">${insight.action}</div>
-                    </div>
-                `;
             });
-
-            container.innerHTML = html;
         }
 
-        // === MODAL FUNCTIONS ===
-        function showLeadDetails(leadId) {
-            const lead = leadsData.find(l => l.id === leadId);
-            if (!lead) return;
-
-            document.getElementById('modalTitle').textContent = `🎯 Profilo Lead: ${lead.name}`;
+        // === THEME ===
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', currentTheme);
             
-            const body = document.getElementById('modalBody');
-            body.innerHTML = `
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">👤 Nome Completo</span>
-                        <span class="info-value">${lead.name}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📧 Email</span>
-                        <span class="info-value">${lead.email}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📱 Telefono</span>
-                        <span class="info-value">${lead.phone}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🎂 Età</span>
-                        <span class="info-value">${lead.age} anni</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">⚧ Genere</span>
-                        <span class="info-value">${lead.gender}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">⭐ Lead Score</span>
-                        <span class="info-value">${lead.score}%</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🎯 Profilo Fitness</span>
-                        <span class="info-value">${lead.profile}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🏆 Obiettivi</span>
-                        <span class="info-value">${Array.isArray(lead.goals) ? lead.goals.join(', ') : lead.goals}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🚧 Ostacoli</span>
-                        <span class="info-value">${Array.isArray(lead.obstacles) ? lead.obstacles.join(', ') : lead.obstacles}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">💰 Budget</span>
-                        <span class="info-value">${lead.budget}</span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 2rem; padding: 1rem; background: rgba(255, 102, 0, 0.05); border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                    <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">🤖 AI Insights</h4>
-                    <p style="margin: 0; color: #64748b; font-size: 0.875rem;">
-                        Probabilità conversione: <strong>${lead.score > 80 ? '85%' : lead.score > 60 ? '65%' : '35%'}</strong> • 
-                        Timing ottimale contatto: <strong>14:00-16:00</strong> • 
-                        Canale preferito: <strong>WhatsApp</strong>
-                    </p>
-                </div>
-            `;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
             
-            const footer = document.getElementById('modalFooter');
-            footer.innerHTML = `
-                ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
-                    `<button class="btn btn-success" onclick="openWhatsApp('${lead.phone}')">
-                        📱 WhatsApp
-                    </button>` : ''
-                }
-                ${lead.email !== 'Non disponibile' ? 
-                    `<button class="btn btn-primary" onclick="window.open('mailto:${lead.email}')">
-                        📧 Email
-                    </button>` : ''
-                }
-                <button class="btn" onclick="closeModal()">Chiudi</button>
-            `;
-            
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function showChatDetails(chatId) {
-            const chat = chatsData.find(c => c.id === chatId);
-            if (!chat) return;
-
-            document.getElementById('modalTitle').textContent = `💬 Conversazione: ${chat.clientName}`;
-            
-            const body = document.getElementById('modalBody');
-            body.innerHTML = `
-                <div class="info-grid">
-                    <div class="info-item">
-                        <span class="info-label">👤 Cliente</span>
-                        <span class="info-value">${chat.clientName}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📱 Telefono</span>
-                        <span class="info-value">${chat.phone}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">📧 Email</span>
-                        <span class="info-value">${chat.email}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">🏷️ Argomento</span>
-                        <span class="info-value">${chat.topic}</span>
-                    </div>
-                </div>
-                
-                <h4 style="margin: 1.5rem 0 1rem 0; color: var(--text-color); display: flex; align-items: center; gap: 0.5rem;">
-                    📝 Cronologia Messaggi
-                    <span style="background: var(--primary-color); color: white; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">
-                        ${chat.messages.length} messaggi
-                    </span>
-                </h4>
-                <div class="chat-messages">
-                    ${chat.messages.map((msg, index) => `
-                        <div class="message ${msg.role}" style="animation-delay: ${index * 0.1}s">
-                            <div>${msg.content}</div>
-                            <div class="message-meta">
-                                ${msg.role === 'user' ? '👤 Cliente' : '🤖 Assistente'}
-                                ${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div style="margin-top: 1rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border-left: 4px solid var(--secondary-color);">
-                    <h4 style="margin-bottom: 0.5rem; color: var(--secondary-color);">📊 Analytics Conversazione</h4>
-                    <p style="margin: 0; color: #64748b; font-size: 0.875rem;">
-                        Sentiment: <strong>Positivo</strong> • 
-                        Intent: <strong>${chat.topic}</strong> • 
-                        Engagement: <strong>Alto</strong> • 
-                        Follow-up: <strong>Raccomandato entro 24h</strong>
-                    </p>
-                </div>
-            `;
-            
-            const footer = document.getElementById('modalFooter');
-            footer.innerHTML = `
-                <button class="btn btn-danger" onclick="exportChatToPDF('${chat.id}')">
-                    📄 Esporta PDF
-                </button>
-                ${chat.phone !== 'N/A' ? 
-                    `<button class="btn btn-success" onclick="openWhatsApp('${chat.phone}')">
-                        📱 WhatsApp
-                    </button>` : ''
-                }
-                <button class="btn" onclick="closeModal()">Chiudi</button>
-            `;
-            
-            document.getElementById('modal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-        }
-
-        // === UTILITY FUNCTIONS ===
-        function openWhatsApp(phone) {
-            if (!phone || phone === 'N/A' || phone === 'Non disponibile') {
-                showNotification('❌ Errore', 'Numero di telefono non disponibile');
-                return;
+            if (currentTheme === 'dark') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
             }
             
-            const cleanPhone = phone.replace(/[^\d+]/g, '');
-            window.open(`https://wa.me/${cleanPhone}`, '_blank');
-            showNotification('📱 WhatsApp', `Apertura chat con ${phone}`);
+            // Ricrea chart con nuovi colori
+            setTimeout(createChart, 100);
         }
 
-        function exportChatToPDF(chatId) {
-            const chat = chatsData.find(c => c.id === chatId);
-            if (!chat) return;
-
-            let content = `CONVERSAZIONE TRIBUCOACH - REPORT DETTAGLIATO\n`;
-            content += `================================================\n\n`;
-            content += `Cliente: ${chat.clientName}\n`;
-            content += `Telefono: ${chat.phone}\n`;
-            content += `Email: ${chat.email}\n`;
-            content += `Argomento: ${chat.topic}\n`;
-            content += `Data: ${new Date(chat.timestamp).toLocaleDateString('it-IT')}\n\n`;
-            content += `ANALYTICS:\n`;
-            content += `- Totale messaggi: ${chat.messages.length}\n`;
-            content += `- Sentiment: Positivo\n`;
-            content += `- Engagement: Alto\n`;
-            content += `- Follow-up: Raccomandato entro 24h\n\n`;
-            content += `CRONOLOGIA MESSAGGI:\n`;
-            content += `========================\n\n`;
+        // === NOTIFICATIONS ===
+        function showNotification(title, message) {
+            const popup = document.getElementById('notification');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
             
-            chat.messages.forEach((msg, index) => {
-                const role = msg.role === 'user' ? 'CLIENTE' : 'ASSISTENTE';
-                const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleString('it-IT') : 'N/A';
-                content += `[${index + 1}] ${role} (${timestamp}):\n`;
-                content += `${msg.content}\n\n`;
-            });
+            titleEl.textContent = title;
+            messageEl.textContent = message;
             
-            content += `\nReport generato: ${new Date().toLocaleString('it-IT')}\n`;
-            content += `Sistema: TribuCoach Dashboard Pro v2.0`;
-
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `TribuCoach_Chat_${chat.clientName}_${chat.id}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+            popup.classList.add('show');
             
-            showNotification('📄 Export Completato', `Chat esportata: ${chat.clientName}`);
+            // Auto-hide dopo 4 secondi
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 4000);
         }
 
-        // === EVENT LISTENERS ===
-        document.addEventListener('click', function(e) {
-            if (e.target.id === 'modal') {
-                closeModal();
-            }
-        });
+        function closeNotification() {
+            document.getElementById('notification').classList.remove('show');
+        }
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeNotification();
-            }
-        });
+        // === API PER INTEGRAZIONE ===
+        window.TribuCoachDashboard = {
+            // Salva quiz result
+            async saveQuizResult(quizData) {
+                try {
+                    if (isConnected && db) {
+                        const docRef = await db.collection('quiz_results').add({
+                            ...quizData,
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log('✅ Quiz salvato:', docRef.id);
+                        showNotification('📊 Quiz Salvato', 'Nuovo quiz completato e salvato');
+                        loadData(); // Ricarica i dati
+                        return docRef.id;
+                    } else {
+                        console.warn('⚠️ Firebase non connesso');
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('❌ Errore salvataggio quiz:', error);
+                    return null;
+                }
+            },
+            
+            // Salva conversazione
+            async saveChatConversation(chatData) {
+                try {
+                    if (isConnected && db) {
+                        const docRef = await db.collection('conversations').add({
+                            ...chatData,
+                            lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        console.log('✅ Chat salvata:', docRef.id);
+                        showNotification('💬 Chat Salvata', 'Nuova conversazione registrata');
+                        loadData(); // Ricarica i dati
+                        return docRef.id;
+                    } else {
+                        console.warn('⚠️ Firebase non connesso');
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('❌ Errore salvataggio chat:', error);
+                    return null;
+                }
+            },
+            
+            // Getter
+            get isConnected() { return isConnected; },
+            get leadsData() { return leadsData; },
+            get chatsData() { return chatsData; },
+            
+            // Controlli
+            refreshData: loadData,
+            showNotification
+        };
 
         // === INITIALIZATION ===
         async function init() {
-            console.log('🚀 Inizializzazione TribuCoach Dashboard Pro...');
+            console.log('🚀 Inizializzazione TribuCoach Dashboard...');
             
-            // Mostra splash di caricamento
-            showNotification('⚡ Sistema in Avvio', 'Caricamento analytics avanzate...');
+            showNotification('⚡ Avvio Sistema', 'Inizializzazione in corso...');
             
-            const firebaseOk = await initFirebase();
+            // Prova Firebase
+            const firebaseConnected = await initFirebase();
+            
+            // Carica dati
             await loadData();
             
-            // Inizializza sistemi avanzati
-            initDynamicScoring();
-            startNotificationSystem();
-            
-            if (firebaseOk) {
-                console.log('✅ Dashboard Pro connessa a Firebase');
-                showNotification('🟢 Sistema Online', 'Connessione Firebase stabilita - Dati real-time attivi');
+            // Messaggio finale
+            if (firebaseConnected) {
+                console.log('✅ Dashboard connessa a Firebase');
             } else {
-                console.log('🎭 Dashboard Pro in modalità demo avanzata');
-                showNotification('🎭 Modalità Demo', 'Sistema funzionante con dati dimostrativi avanzati');
+                console.log('🎭 Dashboard in modalità demo');
             }
             
-            // Applica animazioni di entrata
+            // Animazioni
             setTimeout(() => {
                 document.querySelectorAll('.section, .metric-card').forEach((el, index) => {
                     el.style.animationDelay = `${index * 0.1}s`;
                     el.classList.add('fade-in');
                 });
             }, 500);
+            
+            console.log('🔧 API esposta in window.TribuCoachDashboard');
         }
 
-        // Avvia quando Firebase è pronto
-        if (typeof firebase !== 'undefined') {
-            init();
-        } else {
-            window.addEventListener('load', function() {
-                setTimeout(init, 1000);
-            });
-        }
+        // Avvia quando la pagina è carica
+        document.addEventListener('DOMContentLoaded', init);
 
-        // Auto-refresh ogni 2 minuti con notifica
+        // Auto-refresh ogni 5 minuti
         setInterval(() => {
             if (isConnected) {
+                console.log('🔄 Auto-refresh...');
                 loadData();
-                showNotification('🔄 Aggiornamento', 'Dati refresh automatico completato');
             }
-        }, 120000);
-
-        // Performance monitoring
-        setInterval(() => {
-            const now = new Date();
-            const uptime = Math.round((now - lastRefresh) / 1000 / 60);
-            console.log(`📊 Dashboard uptime: ${uptime} minuti`);
-        }, 300000); // Ogni 5 minuti
+        }, 300000);
     </script>
 </body>
 </html>
