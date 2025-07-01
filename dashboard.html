@@ -1,10 +1,725 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TribuCoach Dashboard</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* METRICHE */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card h3 {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ff6600;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-card .change {
+            font-size: 0.875rem;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        /* SEZIONI */
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-content {
+            padding: 0;
+        }
+
+        /* FILTRI */
+        .filters {
+            padding: 1.5rem 2rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: #ff6600;
+            color: #ff6600;
+        }
+
+        .filter-btn.active {
+            background: #ff6600;
+            border-color: #ff6600;
+            color: white;
+        }
+
+        .search-input {
+            background: white;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            min-width: 250px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ff6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+        }
+
+        /* TABELLE */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* BOTTONI */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #ff6600;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e55a00;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* MODAL */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* INFO GRID */
+        .info-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .info-value {
+            color: #6b7280;
+        }
+
+        /* CHAT MESSAGES */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #ff6600;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: white;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-meta {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.25rem;
+        }
+
+        /* INSIGHTS */
+        .insights-grid {
+            display: grid;
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .insight-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border-left: 4px solid #ff6600;
+        }
+
+        .insight-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ff6600;
+            margin-bottom: 0.5rem;
+        }
+
+        .insight-action {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .table-container {
+                font-size: 0.875rem;
+            }
+            
+            .modal-content {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+        }
+
+        /* LOADING */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #ff6600;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🎯 TribuCoach Dashboard</h1>
+        <p>Gestione completa lead e conversazioni con analisi avanzate</p>
+    </header>
+
+    <div class="container">
+        <!-- METRICHE PRINCIPALI -->
+        <div class="metrics">
+            <div class="metric-card">
+                <h3>Lead Totali</h3>
+                <div class="value" id="totalLeads">0</div>
+                <div class="change">+12% questa settimana</div>
+            </div>
+            <div class="metric-card">
+                <h3>Score Medio</h3>
+                <div class="value" id="avgScore">0%</div>
+                <div class="change">+5% dal mese scorso</div>
+            </div>
+            <div class="metric-card">
+                <h3>Conversazioni</h3>
+                <div class="value" id="totalChats">0</div>
+                <div class="change">+8% questa settimana</div>
+            </div>
+            <div class="metric-card">
+                <h3>Lead Premium</h3>
+                <div class="value" id="premiumLeads">0</div>
+                <div class="change">Score > 80%</div>
+            </div>
+        </div>
+
+        <!-- LEAD QUIZ -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>🥇</span>
+                    Lead Quiz Completati
+                </h2>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <span class="filter-label">Periodo:</span>
+                    <button class="filter-btn active" onclick="filterLeads('tutti')">Tutti</button>
+                    <button class="filter-btn" onclick="filterLeads('oggi')">Oggi</button>
+                    <button class="filter-btn" onclick="filterLeads('settimana')">Settimana</button>
+                    <button class="filter-btn" onclick="filterLeads('mese')">Mese</button>
+                </div>
+                <input type="text" class="search-input" placeholder="🔍 Cerca per nome, email..." id="searchLeads" onkeyup="searchLeads()">
+            </div>
+            
+            <div class="section-content">
+                <div id="leadsContainer" class="loading">
+                    <div class="spinner"></div>
+                    Caricamento lead...
+                </div>
+            </div>
+        </div>
+
+        <!-- CONVERSAZIONI CHAT -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>💬</span>
+                    Conversazioni Chatbot
+                </h2>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <span class="filter-label">Periodo:</span>
+                    <button class="filter-btn active" onclick="filterChats('tutti')">Tutti</button>
+                    <button class="filter-btn" onclick="filterChats('oggi')">Oggi</button>
+                    <button class="filter-btn" onclick="filterChats('settimana')">Settimana</button>
+                    <button class="filter-btn" onclick="filterChats('mese')">Mese</button>
+                </div>
+                <input type="text" class="search-input" placeholder="🔍 Cerca conversazioni..." id="searchChats" onkeyup="searchChats()">
+            </div>
+            
+            <div class="section-content">
+                <div id="chatsContainer" class="loading">
+                    <div class="spinner"></div>
+                    Caricamento conversazioni...
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIGHTS ACTIONABLE -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <span>💡</span>
+                    Insights & Raccomandazioni
+                </h2>
+            </div>
+            
+            <div class="insights-grid" id="insightsContainer">
+                <!-- Popolato dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Dettagli</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenuto dinamico -->
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <!-- Azioni dinamiche -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === CONFIGURAZIONE ===
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
+
+        // === VARIABILI GLOBALI ===
+        let db = null;
+        let isConnected = false;
+        let leadsData = [];
+        let chatsData = [];
+        let filteredLeads = [];
+        let filteredChats = [];
+        let currentLeadFilter = 'tutti';
+        let currentChatFilter = 'tutti';
+
+        // === INIZIALIZZAZIONE ===
+        async function initFirebase() {
+            try {
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase non disponibile');
+                }
+
+                const app = firebase.initializeApp(FIREBASE_CONFIG);
+                db = firebase.firestore();
+                await db.collection('test').limit(1).get();
+                
+                isConnected = true;
+                console.log('✅ Firebase connesso');
+                return true;
             } catch (error) {
-                console.error('❌ Errore caricamento dati:', error);
+                console.error('❌ Firebase non disponibile:', error);
+                isConnected = false;
+                return false;
+            }
+        }
+
+        async function loadData() {
+            try {
+                if (isConnected) {
+                    // Carica dati reali da Firebase
+                    const [quizSnapshot, chatsSnapshot] = await Promise.all([
+                        db.collection('quiz_results').get(),
+                        db.collection('conversations').get()
+                    ]);
+
+                    leadsData = [];
+                    quizSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        leadsData.push({
+                            id: doc.id,
+                            name: data.userName || data.name || 'Nome non disponibile',
+                            email: data.userEmail || data.email || 'Non disponibile',
+                            phone: data.userWhatsApp || data.phone || 'Non disponibile',
+                            age: data.userAge || data.age || 'N/A',
+                            gender: data.userGender || data.gender || 'N/A',
+                            score: data.fitnessScore || data.score || 0,
+                            profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                            goals: data.fitnessGoals || data.goals || [],
+                            obstacles: data.fitnessObstacles || data.obstacles || [],
+                            budget: data.budget || 'Non specificato',
+                            timestamp: data.timestamp || data.completed_at
+                        });
+                    });
+
+                    chatsData = [];
+                    chatsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const messages = data.messages || [];
+                        chatsData.push({
+                            id: doc.id,
+                            clientName: extractNameFromMessages(messages) || data.customerName || 'Cliente Anonimo',
+                            phone: extractPhoneFromMessages(messages) || data.customerPhone || 'N/A',
+                            email: extractEmailFromMessages(messages) || data.customerEmail || 'N/A',
+                            topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
+                            lastMessage: messages.length > 0 ? messages[messages.length - 1].content : 'Nessun messaggio',
+                            messages: messages,
+                            timestamp: data.lastMessageAt || data.dateCreated || new Date()
+                        });
+                    });
+                } else {
+                    // Carica dati demo
+                    loadDemoData();
+                }
+
+                updateMetrics();
+                updateInsights();
+                filterLeads(currentLeadFilter);
+                filterChats(currentChatFilter);
+
+            } catch (error) {
+                console.error('Errore caricamento dati:', error);
                 loadDemoData();
             }
         }
 
-        // === DATI DEMO ===
         function loadDemoData() {
             leadsData = [
                 {
@@ -19,19 +734,10 @@
                     goals: ['Perdita peso', 'Tonificazione'],
                     obstacles: ['Tempo limitato', 'Motivazione'],
                     budget: '€150-200/mese',
-                    experience: 'Intermedio',
-                    frequency: '3-4 volte a settimana',
-                    trainingType: 'Palestra con personal trainer',
-                    dietStyle: 'Bilanciata con qualche sgarro',
-                    sleepHours: '6-7 ore',
-                    stressLevel: 'Medio',
-                    medicalConditions: 'Nessuna',
-                    supplements: 'Proteine whey',
-                    notes: 'Molto motivato ma ha poco tempo durante la settimana',
                     timestamp: new Date()
                 },
                 {
-                    id: 'demo_2',
+                    id: 'demo_2', 
                     name: 'Sara Bianchi',
                     email: 'sara.bianchi@email.com',
                     phone: '+39 334 5678901',
@@ -39,23 +745,14 @@
                     gender: 'Femmina',
                     score: 92,
                     profile: 'Atleta Esperto',
-                    goals: ['Aumento massa muscolare', 'Performance sportiva'],
-                    obstacles: ['Plateau risultati', 'Nutrizione avanzata'],
+                    goals: ['Aumento massa', 'Performance'],
+                    obstacles: ['Plateau risultati'],
                     budget: '€200-300/mese',
-                    experience: 'Avanzato',
-                    frequency: '5-6 volte a settimana',
-                    trainingType: 'Allenamento funzionale',
-                    dietStyle: 'Pianificata e strutturata',
-                    sleepHours: '8 ore',
-                    stressLevel: 'Basso',
-                    medicalConditions: 'Nessuna',
-                    supplements: 'Creatina, BCAA, Vitamine',
-                    notes: 'Atleta esperta che cerca ottimizzazione delle performance',
                     timestamp: new Date(Date.now() - 86400000)
                 },
                 {
                     id: 'demo_3',
-                    name: 'Luca Verdi',
+                    name: 'Luca Verdi', 
                     email: 'luca.verdi@email.com',
                     phone: '+39 335 9876543',
                     age: 25,
@@ -65,108 +762,79 @@
                     goals: ['Forza', 'Resistenza'],
                     obstacles: ['Dieta', 'Costanza'],
                     budget: '€100-150/mese',
-                    experience: 'Principiante',
-                    frequency: '2-3 volte a settimana',
-                    trainingType: 'Palestra tradizionale',
-                    dietStyle: 'Da migliorare',
-                    sleepHours: '7-8 ore',
-                    stressLevel: 'Alto',
-                    medicalConditions: 'Mal di schiena occasionale',
-                    supplements: 'Nessuno',
-                    notes: 'Nuovo al fitness, molto entusiasta ma ha bisogno di guida',
                     timestamp: new Date(Date.now() - 172800000)
                 }
             ];
-            
+
             chatsData = [
                 {
-                    id: 'chat_demo_1',
+                    id: 'chat_1',
                     clientName: 'Anna Neri',
                     phone: '+39 347 1111111',
                     email: 'anna.neri@email.com',
                     topic: 'Informazioni Prezzi',
-                    lastMessage: 'Vorrei sapere i costi per un programma personalizzato di tonificazione',
+                    lastMessage: 'Vorrei sapere i costi per un programma personalizzato',
                     messages: [
                         { role: 'user', content: 'Ciao, mi interessano i vostri servizi', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Anna! Sarò felice di aiutarti. Che obiettivi hai?', timestamp: new Date() },
-                        { role: 'user', content: 'Vorrei tonificare e perdere qualche chilo. Quanto costa?', timestamp: new Date() },
-                        { role: 'assistant', content: 'Perfetto! I nostri programmi partono da €99/mese. Vuoi una consulenza gratuita?', timestamp: new Date() },
-                        { role: 'user', content: 'Sì, mi interesserebbe. Il mio numero è 347 1111111', timestamp: new Date() }
+                        { role: 'assistant', content: 'Ciao Anna! Come posso aiutarti?', timestamp: new Date() },
+                        { role: 'user', content: 'Vorrei informazioni sui prezzi. Sono Anna, 347 1111111', timestamp: new Date() }
                     ],
                     timestamp: new Date()
                 },
                 {
-                    id: 'chat_demo_2',
+                    id: 'chat_2',
                     clientName: 'Giovanni Blu',
-                    phone: '+39 348 2222222',
+                    phone: '+39 348 2222222', 
                     email: 'N/A',
                     topic: 'Supporto Nutrizionale',
-                    lastMessage: 'Ho bisogno di aiuto con la dieta per aumentare massa muscolare',
+                    lastMessage: 'Ho bisogno di aiuto con la dieta per massa muscolare',
                     messages: [
-                        { role: 'user', content: 'Ciao, mi chiamo Giovanni e ho bisogno di supporto nutrizionale', timestamp: new Date() },
-                        { role: 'assistant', content: 'Ciao Giovanni! Come posso aiutarti con la nutrizione?', timestamp: new Date() },
-                        { role: 'user', content: 'Mi alleno da 6 mesi ma non vedo risultati nella massa muscolare', timestamp: new Date() },
-                        { role: 'assistant', content: 'Capisco. La nutrizione è fondamentale. Che tipo di dieta segui ora?', timestamp: new Date() },
-                        { role: 'user', content: 'Mangio quello che capita. Il mio numero è 348 2222222 se volete chiamarmi', timestamp: new Date() }
+                        { role: 'user', content: 'Mi chiamo Giovanni, numero 348 2222222', timestamp: new Date() },
+                        { role: 'assistant', content: 'Ciao Giovanni! Come posso aiutarti?', timestamp: new Date() },
+                        { role: 'user', content: 'Ho bisogno di supporto nutrizionale per la massa', timestamp: new Date() }
                     ],
                     timestamp: new Date(Date.now() - 86400000)
-                },
-                {
-                    id: 'chat_demo_3',
-                    clientName: 'Maria Rossi',
-                    phone: '+39 349 3333333',
-                    email: 'maria.rossi@email.com',
-                    topic: 'Prenotazione Consulenza',
-                    lastMessage: 'Quando posso prenotare una consulenza gratuita?',
-                    messages: [
-                        { role: 'user', content: 'Buongiorno, sono Maria e vorrei prenotare una consulenza', timestamp: new Date() },
-                        { role: 'assistant', content: 'Buongiorno Maria! Sarò felice di aiutarti. Quando saresti disponibile?', timestamp: new Date() },
-                        { role: 'user', content: 'Preferirei nel pomeriggio, dopo le 16. Email: maria.rossi@email.com', timestamp: new Date() },
-                        { role: 'assistant', content: 'Perfetto! Abbiamo disponibilità giovedì alle 16:30. Ti va bene?', timestamp: new Date() },
-                        { role: 'user', content: 'Sì, perfetto! Potete chiamarmi al 349 3333333?', timestamp: new Date() }
-                    ],
-                    timestamp: new Date(Date.now() - 172800000)
                 }
             ];
-            
+
             updateMetrics();
-            updateBusinessInsights();
-            updateActionableInsights();
+            updateInsights();
             filterLeads(currentLeadFilter);
             filterChats(currentChatFilter);
         }
 
         // === UTILITY FUNCTIONS ===
-        function extractContactFromMessages(messages) {
-            let name = null, phone = null, email = null;
-            
-            if (!messages) return { name, phone, email };
-            
-            const userMessages = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content || msg.message || '');
-            
-            for (const message of userMessages) {
-                // Nome
-                if (!name) {
-                    const nameMatch = message.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-ZÀ-ÿ\s]{2,30})/i);
-                    if (nameMatch) name = nameMatch[1].trim();
-                }
-                
-                // Telefono
-                if (!phone) {
-                    const phoneMatch = message.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-                    if (phoneMatch) phone = '+39 ' + phoneMatch[1].replace(/\s/g, '');
-                }
-                
-                // Email
-                if (!email) {
-                    const emailMatch = message.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-                    if (emailMatch) email = emailMatch[1];
+        function extractNameFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user') {
+                    const match = msg.content?.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
+                    if (match) return match[1].trim();
                 }
             }
-            
-            return { name, phone, email };
+            return null;
+        }
+
+        function extractPhoneFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user') {
+                    const match = msg.content?.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                }
+            }
+            return null;
+        }
+
+        function extractEmailFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user') {
+                    const match = msg.content?.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                    if (match) return match[1];
+                }
+            }
+            return null;
         }
 
         function extractTopicFromMessages(messages) {
@@ -174,16 +842,14 @@
             
             const allText = messages
                 .filter(msg => msg.role === 'user')
-                .map(msg => (msg.content || msg.message || '').toLowerCase())
+                .map(msg => msg.content?.toLowerCase() || '')
                 .join(' ');
             
             const topics = {
-                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe', 'pagamento'],
-                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione', 'mangiare'],
-                'Prenotazione Consulenza': ['consulenza', 'appuntamento', 'prenotare', 'disponibilità'],
-                'Supporto Principianti': ['principiante', 'iniziare', 'nuovo', 'primo'],
-                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra'],
-                'Obiettivi Fitness': ['perdere peso', 'massa', 'tonificare', 'dimagrire']
+                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto'],
+                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione'],
+                'Prenotazione Consulenza': ['consulenza', 'appuntamento'],
+                'Allenamento': ['allenamento', 'esercizi', 'workout']
             };
             
             for (const [topic, keywords] of Object.entries(topics)) {
@@ -199,11 +865,12 @@
         function filterLeads(period) {
             currentLeadFilter = period;
             
-            // Aggiorna button states
-            document.querySelectorAll('[data-filter]').forEach(btn => {
-                if (btn.closest('.filter-section').querySelector('#searchLeads')) {
-                    btn.classList.toggle('active', btn.dataset.filter === period);
-                }
+            // Aggiorna stati bottoni
+            document.querySelectorAll('#leadsContainer').forEach(container => {
+                const buttons = container.parentElement.parentElement.querySelectorAll('.filter-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
+                });
             });
             
             const now = new Date();
@@ -212,19 +879,13 @@
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             
             filteredLeads = leadsData.filter(lead => {
-                const leadDate = lead.timestamp ? 
-                    (lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) :
-                    new Date();
+                const leadDate = lead.timestamp instanceof Date ? lead.timestamp : new Date(lead.timestamp);
                 
                 switch (period) {
-                    case 'oggi':
-                        return leadDate >= today;
-                    case 'settimana':
-                        return leadDate >= weekAgo;
-                    case 'mese':
-                        return leadDate >= monthAgo;
-                    default:
-                        return true;
+                    case 'oggi': return leadDate >= today;
+                    case 'settimana': return leadDate >= weekAgo;
+                    case 'mese': return leadDate >= monthAgo;
+                    default: return true;
                 }
             });
             
@@ -234,11 +895,12 @@
         function filterChats(period) {
             currentChatFilter = period;
             
-            // Aggiorna button states
-            document.querySelectorAll('[data-filter]').forEach(btn => {
-                if (btn.closest('.filter-section').querySelector('#searchChats')) {
-                    btn.classList.toggle('active', btn.dataset.filter === period);
-                }
+            // Aggiorna stati bottoni
+            document.querySelectorAll('#chatsContainer').forEach(container => {
+                const buttons = container.parentElement.parentElement.querySelectorAll('.filter-btn');
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.textContent.toLowerCase() === period);
+                });
             });
             
             const now = new Date();
@@ -247,19 +909,13 @@
             const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
             
             filteredChats = chatsData.filter(chat => {
-                const chatDate = chat.timestamp ? 
-                    (chat.timestamp.toDate ? chat.timestamp.toDate() : new Date(chat.timestamp)) :
-                    new Date();
+                const chatDate = chat.timestamp instanceof Date ? chat.timestamp : new Date(chat.timestamp);
                 
                 switch (period) {
-                    case 'oggi':
-                        return chatDate >= today;
-                    case 'settimana':
-                        return chatDate >= weekAgo;
-                    case 'mese':
-                        return chatDate >= monthAgo;
-                    default:
-                        return true;
+                    case 'oggi': return chatDate >= today;
+                    case 'settimana': return chatDate >= weekAgo;
+                    case 'mese': return chatDate >= monthAgo;
+                    default: return true;
                 }
             });
             
@@ -269,42 +925,17 @@
         function searchLeads() {
             const searchTerm = document.getElementById('searchLeads').value.toLowerCase();
             
-            const baseFiltered = leadsData.filter(lead => {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                
-                const leadDate = lead.timestamp ? 
-                    (lead.timestamp.toDate ? lead.timestamp.toDate() : new Date(lead.timestamp)) :
-                    new Date();
-                
-                let dateMatch = true;
-                switch (currentLeadFilter) {
-                    case 'oggi':
-                        dateMatch = leadDate >= today;
-                        break;
-                    case 'settimana':
-                        dateMatch = leadDate >= weekAgo;
-                        break;
-                    case 'mese':
-                        dateMatch = leadDate >= monthAgo;
-                        break;
-                }
-                
-                return dateMatch;
-            });
-            
             if (!searchTerm) {
-                filteredLeads = baseFiltered;
-            } else {
-                filteredLeads = baseFiltered.filter(lead => 
-                    lead.name.toLowerCase().includes(searchTerm) ||
-                    lead.email.toLowerCase().includes(searchTerm) ||
-                    lead.phone.toLowerCase().includes(searchTerm) ||
-                    lead.profile.toLowerCase().includes(searchTerm)
-                );
+                filterLeads(currentLeadFilter);
+                return;
             }
+            
+            filteredLeads = leadsData.filter(lead => 
+                lead.name.toLowerCase().includes(searchTerm) ||
+                lead.email.toLowerCase().includes(searchTerm) ||
+                lead.phone.toLowerCase().includes(searchTerm) ||
+                lead.profile.toLowerCase().includes(searchTerm)
+            );
             
             renderLeads();
         }
@@ -312,90 +943,78 @@
         function searchChats() {
             const searchTerm = document.getElementById('searchChats').value.toLowerCase();
             
-            const baseFiltered = chatsData.filter(chat => {
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                
-                const chatDate = chat.timestamp ? 
-                    (chat.timestamp.toDate ? chat.timestamp.toDate() : new Date(chat.timestamp)) :
-                    new Date();
-                
-                let dateMatch = true;
-                switch (currentChatFilter) {
-                    case 'oggi':
-                        dateMatch = chatDate >= today;
-                        break;
-                    case 'settimana':
-                        dateMatch = chatDate >= weekAgo;
-                        break;
-                    case 'mese':
-                        dateMatch = chatDate >= monthAgo;
-                        break;
-                }
-                
-                return dateMatch;
-            });
-            
             if (!searchTerm) {
-                filteredChats = baseFiltered;
-            } else {
-                filteredChats = baseFiltered.filter(chat => 
-                    chat.clientName.toLowerCase().includes(searchTerm) ||
-                    chat.topic.toLowerCase().includes(searchTerm) ||
-                    chat.lastMessage.toLowerCase().includes(searchTerm) ||
-                    (chat.phone && chat.phone.toLowerCase().includes(searchTerm))
-                );
+                filterChats(currentChatFilter);
+                return;
             }
+            
+            filteredChats = chatsData.filter(chat => 
+                chat.clientName.toLowerCase().includes(searchTerm) ||
+                chat.topic.toLowerCase().includes(searchTerm) ||
+                chat.lastMessage.toLowerCase().includes(searchTerm)
+            );
             
             renderChats();
         }
 
         // === RENDERING ===
         function renderLeads() {
-            const container = document.getElementById('quizLeadsContainer');
+            const container = document.getElementById('leadsContainer');
             
             if (filteredLeads.length === 0) {
-                container.innerHTML = '<div class="error">📭 Nessun lead trovato per i filtri selezionati</div>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Nessun lead trovato per i filtri selezionati</p>
+                    </div>
+                `;
                 return;
             }
 
-            let html = '<div class="table-container"><table class="data-table">';
-            html += '<thead><tr>';
-            html += '<th>👤 Nome</th>';
-            html += '<th>📧 Email</th>';
-            html += '<th>📱 WhatsApp</th>';
-            html += '<th>🎭 Profilo</th>';
-            html += '<th>🎯 Obiettivi</th>';
-            html += '<th>⭐ Score</th>';
-            html += '<th>📅 Data</th>';
-            html += '<th>🔧 Azioni</th>';
-            html += '</tr></thead><tbody>';
+            let html = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefono</th>
+                                <th>Profilo</th>
+                                <th>Score</th>
+                                <th>Data</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
             
             filteredLeads.forEach(lead => {
                 const score = lead.score || 0;
-                const scoreClass = score > 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
-                const goals = Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'Non specificati');
-                const createdDate = lead.timestamp ? 
-                    (lead.timestamp.toDate ? new Date(lead.timestamp.toDate()).toLocaleDateString('it-IT') : new Date(lead.timestamp).toLocaleDateString('it-IT')) 
-                    : 'N/A';
+                const badgeClass = score > 80 ? 'badge-success' : score >= 60 ? 'badge-warning' : 'badge-danger';
+                const date = lead.timestamp instanceof Date ? 
+                    lead.timestamp.toLocaleDateString('it-IT') : 
+                    new Date(lead.timestamp).toLocaleDateString('it-IT');
                 
-                html += `<tr>`;
-                html += `<td><strong>${lead.name || 'Nome non disponibile'}</strong></td>`;
-                html += `<td><small>${lead.email || 'Non disponibile'}</small></td>`;
-                html += `<td><small>${lead.phone || 'Non disponibile'}</small></td>`;
-                html += `<td><span class="profile-badge">${getProfileIcon(lead.profile)} ${lead.profile || 'Non specificato'}</span></td>`;
-                html += `<td><small>${goals}</small></td>`;
-                html += `<td><span class="score-badge ${scoreClass}">${score}%</span></td>`;
-                html += `<td><small>${createdDate}</small></td>`;
-                html += `<td>`;
-                html += `<button class="action-button" onclick="showLeadDetails('${lead.id}')">👁️ Dettagli</button>`;
-                if (lead.phone && lead.phone !== 'Non disponibile' && lead.phone !== 'N/A') {
-                    html += `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>`;
-                }
-                html += `</td>`;
-                html += `</tr>`;
+                html += `
+                    <tr>
+                        <td><strong>${lead.name}</strong></td>
+                        <td><small>${lead.email}</small></td>
+                        <td><small>${lead.phone}</small></td>
+                        <td><span class="badge badge-info">${lead.profile}</span></td>
+                        <td><span class="badge ${badgeClass}">${score}%</span></td>
+                        <td><small>${date}</small></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showLeadDetails('${lead.id}')">
+                                👁️ Dettagli
+                            </button>
+                            ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
+                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${lead.phone}')">
+                                    📱 WhatsApp
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
             });
             
             html += '</tbody></table></div>';
@@ -403,55 +1022,77 @@
         }
 
         function renderChats() {
-            const container = document.getElementById('chatContainer');
+            const container = document.getElementById('chatsContainer');
             
             if (filteredChats.length === 0) {
-                container.innerHTML = '<div class="error">📭 Nessuna conversazione trovata per i filtri selezionati</div>';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <p>Nessuna conversazione trovata per i filtri selezionati</p>
+                    </div>
+                `;
                 return;
             }
 
-            let html = '<div class="table-container"><table class="data-table">';
-            html += '<thead><tr>';
-            html += '<th>👤 Cliente</th>';
-            html += '<th>📱 Telefono</th>';
-            html += '<th>📧 Email</th>';
-            html += '<th>🏷️ Argomento</th>';
-            html += '<th>💬 Ultimo Messaggio</th>';
-            html += '<th>📅 Data</th>';
-            html += '<th>🔧 Azioni</th>';
-            html += '</tr></thead><tbody>';
+            let html = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Telefono</th>
+                                <th>Email</th>
+                                <th>Argomento</th>
+                                <th>Ultimo Messaggio</th>
+                                <th>Data</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
             
             filteredChats.forEach(chat => {
-                const lastActivity = chat.timestamp ? 
-                    (chat.timestamp.toDate ? new Date(chat.timestamp.toDate()).toLocaleDateString('it-IT') : new Date(chat.timestamp).toLocaleDateString('it-IT'))
-                    : 'N/A';
-                const preview = chat.lastMessage || 'Nessun messaggio disponibile';
+                const date = chat.timestamp instanceof Date ? 
+                    chat.timestamp.toLocaleDateString('it-IT') : 
+                    new Date(chat.timestamp).toLocaleDateString('it-IT');
+                const preview = chat.lastMessage.length > 50 ? 
+                    chat.lastMessage.substring(0, 50) + '...' : 
+                    chat.lastMessage;
                 
-                html += `<tr>`;
-                html += `<td><strong>${chat.clientName || 'Cliente Anonimo'}</strong></td>`;
-                html += `<td><small>${chat.phone || 'N/A'}</small></td>`;
-                html += `<td><small>${chat.email || 'N/A'}</small></td>`;
-                html += `<td><span class="profile-badge">${chat.topic || 'Conversazione'}</span></td>`;
-                html += `<td><small>${preview.length > 50 ? preview.substring(0, 50) + '...' : preview}</small></td>`;
-                html += `<td><small>${lastActivity}</small></td>`;
-                html += `<td>`;
-                html += `<button class="action-button" onclick="showChatDetails('${chat.id}')">👁️ Conversazione</button>`;
-                html += `<button class="action-button pdf" onclick="exportChatToPDF('${chat.id}')">📄 PDF</button>`;
-                if (chat.phone && chat.phone !== 'N/A') {
-                    html += `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 WhatsApp</button>`;
-                }
-                html += `</td>`;
-                html += `</tr>`;
+                html += `
+                    <tr>
+                        <td><strong>${chat.clientName}</strong></td>
+                        <td><small>${chat.phone}</small></td>
+                        <td><small>${chat.email}</small></td>
+                        <td><span class="badge badge-info">${chat.topic}</span></td>
+                        <td><small>${preview}</small></td>
+                        <td><small>${date}</small></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="showChatDetails('${chat.id}')">
+                                👁️ Chat
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="exportChatToPDF('${chat.id}')">
+                                📄 PDF
+                            </button>
+                            ${chat.phone !== 'N/A' ? 
+                                `<button class="btn btn-success btn-sm" onclick="openWhatsApp('${chat.phone}')">
+                                    📱 WhatsApp
+                                </button>` : ''
+                            }
+                        </td>
+                    </tr>
+                `;
             });
             
             html += '</tbody></table></div>';
             container.innerHTML = html;
         }
 
-        // === METRICHE & INSIGHTS ===
+        // === METRICHE ===
         function updateMetrics() {
             const totalLeads = leadsData.length;
-            const avgScore = totalLeads > 0 ? Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const avgScore = totalLeads > 0 ? 
+                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
             const totalChats = chatsData.length;
             const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
 
@@ -461,172 +1102,66 @@
             document.getElementById('premiumLeads').textContent = premiumLeads;
         }
 
-        function updateBusinessInsights() {
-            const hotLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
-            const warmLeads = leadsData.filter(lead => (lead.score || 0) >= 60 && (lead.score || 0) <= 79).length;
-            const totalLeads = leadsData.length;
-            
-            const totalBudget = leadsData.reduce((sum, lead) => {
-                const budget = lead.budget || '';
-                const match = budget.match(/(\d+)/);
-                return sum + (match ? parseInt(match[1]) : 0);
-            }, 0);
-
-            const today = new Date().toISOString().split('T')[0];
-            const todayLeads = leadsData.filter(lead => {
-                const leadDate = lead.timestamp ? 
-                    (lead.timestamp.toDate ? new Date(lead.timestamp.toDate()).toISOString().split('T')[0] : new Date(lead.timestamp).toISOString().split('T')[0]) 
-                    : '';
-                return leadDate === today;
-            }).length;
-
-            const chatsWithContacts = chatsData.filter(chat => chat.phone && chat.phone !== 'N/A').length;
-            const chatConversion = chatsData.length > 0 ? Math.round((chatsWithContacts / chatsData.length) * 100) : 0;
-
-            document.getElementById('hotLeads').textContent = hotLeads;
-            document.getElementById('warmLeads').textContent = warmLeads;
-            document.getElementById('totalBudget').textContent = '€' + totalBudget.toLocaleString();
-            document.getElementById('chatConversion').textContent = chatConversion + '%';
-            document.getElementById('todayLeads').textContent = todayLeads;
-            document.getElementById('weeklyGrowth').textContent = '+' + Math.floor(Math.random() * 30 + 10) + '%';
-
-            if (totalLeads > 0) {
-                document.getElementById('hotLeadsProgress').style.width = (hotLeads / totalLeads * 100) + '%';
-                document.getElementById('warmLeadsProgress').style.width = (warmLeads / totalLeads * 100) + '%';
-            }
-        }
-
-        function updateActionableInsights() {
-            const container = document.getElementById('actionableInsights');
+        function updateInsights() {
+            const container = document.getElementById('insightsContainer');
             const hotLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
             const warmLeads = leadsData.filter(lead => (lead.score || 0) >= 60 && (lead.score || 0) <= 79).length;
             const coldLeads = leadsData.filter(lead => (lead.score || 0) < 60).length;
             
-            // Calcola budget totale
             const totalBudget = leadsData.reduce((sum, lead) => {
                 const budget = lead.budget || '';
                 const match = budget.match(/(\d+)/);
                 return sum + (match ? parseInt(match[1]) : 0);
             }, 0);
 
-            // Lead di oggi
-            const today = new Date().toISOString().split('T')[0];
-            const todayLeads = leadsData.filter(lead => {
-                const leadDate = lead.timestamp ? 
-                    (lead.timestamp.toDate ? new Date(lead.timestamp.toDate()).toISOString().split('T')[0] : new Date(lead.timestamp).toISOString().split('T')[0]) 
-                    : '';
-                return leadDate === today;
-            }).length;
-
-            // Chat con contatti
             const chatsWithContacts = chatsData.filter(chat => chat.phone && chat.phone !== 'N/A').length;
             const chatConversion = chatsData.length > 0 ? Math.round((chatsWithContacts / chatsData.length) * 100) : 0;
 
-            // Analisi obiettivi più comuni
-            const goalCounts = {};
-            leadsData.forEach(lead => {
-                if (Array.isArray(lead.goals)) {
-                    lead.goals.forEach(goal => {
-                        goalCounts[goal] = (goalCounts[goal] || 0) + 1;
-                    });
-                }
-            });
-            const topGoal = Object.keys(goalCounts).reduce((a, b) => goalCounts[a] > goalCounts[b] ? a : b, 'Perdita peso');
-
-            // Analisi ostacoli più comuni
-            const obstacleCounts = {};
-            leadsData.forEach(lead => {
-                if (Array.isArray(lead.obstacles)) {
-                    lead.obstacles.forEach(obstacle => {
-                        obstacleCounts[obstacle] = (obstacleCounts[obstacle] || 0) + 1;
-                    });
-                }
-            });
-            const topObstacle = Object.keys(obstacleCounts).reduce((a, b) => obstacleCounts[a] > obstacleCounts[b] ? a : b, 'Tempo limitato');
-
-            // Analisi argomenti chat più comuni
-            const topicCounts = {};
-            chatsData.forEach(chat => {
-                const topic = chat.topic || 'Generale';
-                topicCounts[topic] = (topicCounts[topic] || 0) + 1;
-            });
-            const topTopic = Object.keys(topicCounts).reduce((a, b) => topicCounts[a] > topicCounts[b] ? a : b, 'Informazioni Prezzi');
-
             const insights = [
                 {
-                    title: '🔥 Lead Prioritari Immediati',
+                    title: 'Lead Prioritari Immediati',
                     value: hotLeads,
-                    action: 'Contatta entro 24h questi lead ad alto score per massimizzare le conversioni. Preparati con offerte personalizzate.'
+                    action: 'Contatta entro 24h questi lead ad alto score per massimizzare le conversioni.'
                 },
                 {
-                    title: '🌡️ Lead da Coltivare',
+                    title: 'Lead da Coltivare',
                     value: warmLeads,
-                    action: 'Implementa una sequenza di nurturing email per questi lead con score medio. Fornisci contenuti di valore sui loro interessi.'
+                    action: 'Implementa sequenze di nurturing per questi lead con score medio.'
                 },
                 {
-                    title: '❄️ Lead da Riattivare',
+                    title: 'Lead da Riattivare',
                     value: coldLeads,
-                    action: 'Crea una campagna di riattivazione per questi lead con score basso. Offri consultazioni gratuite o contenuti motivazionali.'
+                    action: 'Crea campagne di riattivazione per questi lead con score basso.'
                 },
                 {
-                    title: '🎯 Trend Obiettivi Principali',
-                    value: topGoal,
-                    action: 'Crea contenuti specifici e landing page dedicate a questo obiettivo. Sviluppa pacchetti di servizi mirati.'
-                },
-                {
-                    title: '🚧 Ostacolo Principale da Risolvere',
-                    value: topObstacle,
-                    action: 'Sviluppa soluzioni specifiche per questo ostacolo comune. Crea guide pratiche e testimonianze di successo.'
-                },
-                {
-                    title: '💰 Opportunità Budget Totale',
+                    title: 'Opportunità Budget Totale',
                     value: `€${totalBudget.toLocaleString()}`,
-                    action: 'Segmenta le offerte per fasce di budget. Crea pacchetti premium per i budget più alti e opzioni accessibili per quelli più bassi.'
+                    action: 'Segmenta le offerte per fasce di budget e crea pacchetti mirati.'
                 },
                 {
-                    title: '📱 Efficacia Acquisizione Chat',
-                    value: `${chatConversion}% conversione`,
-                    action: 'Ottimizza il chatbot per acquisire più contatti. Aggiungi call-to-action specifiche per telefono ed email.'
+                    title: 'Efficacia Acquisizione Chat',
+                    value: `${chatConversion}%`,
+                    action: 'Ottimizza il chatbot per acquisire più contatti telefono ed email.'
                 },
                 {
-                    title: '📊 Argomento Chat Più Richiesto',
-                    value: topTopic,
-                    action: 'Crea contenuti automatici e FAQ dedicate a questo argomento. Prepara risposte rapide per il team commerciale.'
-                },
-                {
-                    title: '📅 Performance Giornaliera',
-                    value: `${todayLeads} lead oggi`,
-                    action: 'Mantieni questo ritmo di acquisizione. Se sotto la media, intensifica le campagne di marketing e le attività sui social.'
-                },
-                {
-                    title: '⏰ Timing Ottimale Contatti',
+                    title: 'Timing Ottimale Contatti',
                     value: '14:00-15:00',
-                    action: 'Programma le chiamate ai lead e le attività di outreach negli orari di maggior engagement per aumentare la risposta.'
+                    action: 'Programma chiamate e outreach negli orari di maggior engagement.'
                 }
             ];
 
             let html = '';
             insights.forEach(insight => {
                 html += `
-                    <li>
-                        <strong>${insight.title}:</strong> <span>${insight.value}</span>
-                        <br><em>${insight.action}</em>
-                    </li>
+                    <div class="insight-item">
+                        <div class="insight-title">${insight.title}</div>
+                        <div class="insight-value">${insight.value}</div>
+                        <div class="insight-action">${insight.action}</div>
+                    </div>
                 `;
             });
 
             container.innerHTML = html;
-        }
-
-        // === HELPER FUNCTIONS ===
-        function getProfileIcon(profile) {
-            const icons = {
-                'Guerriero Determinato': '💪',
-                'Atleta Esperto': '🏆',
-                'Principiante Motivato': '🌱',
-                'Nuovo Esploratore': '🌱'
-            };
-            return icons[profile] || '👤';
         }
 
         // === MODAL FUNCTIONS ===
@@ -634,251 +1169,174 @@
             const lead = leadsData.find(l => l.id === leadId);
             if (!lead) return;
 
-            const modal = document.getElementById('detailsModal');
-            const modalBody = document.getElementById('modal-body-content');
+            document.getElementById('modalTitle').textContent = `Profilo Lead: ${lead.name}`;
             
-            let html = `<h3>🎯 Profilo Completo Lead: ${lead.name || 'Sconosciuto'}</h3>`;
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Nome Completo</span>
+                        <span class="info-value">${lead.name}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">${lead.email}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Telefono</span>
+                        <span class="info-value">${lead.phone}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Età</span>
+                        <span class="info-value">${lead.age} anni</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Genere</span>
+                        <span class="info-value">${lead.gender}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lead Score</span>
+                        <span class="info-value">${lead.score}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Profilo Fitness</span>
+                        <span class="info-value">${lead.profile}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Obiettivi</span>
+                        <span class="info-value">${Array.isArray(lead.goals) ? lead.goals.join(', ') : lead.goals}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ostacoli</span>
+                        <span class="info-value">${Array.isArray(lead.obstacles) ? lead.obstacles.join(', ') : lead.obstacles}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Budget</span>
+                        <span class="info-value">${lead.budget}</span>
+                    </div>
+                </div>
+            `;
             
-            // Informazioni di base
-            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
-            html += '<h4 style="color: #ff6600; margin-bottom: 15px;">📋 Informazioni di Contatto</h4>';
-            html += `<p style="margin: 10px 0;"><strong>👤 Nome Completo:</strong> ${lead.name || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>📧 Email:</strong> ${lead.email || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>📱 WhatsApp:</strong> ${lead.phone || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>🎂 Età:</strong> ${lead.age || 'N/A'} anni</p>`;
-            html += `<p style="margin: 10px 0;"><strong>⚧ Genere:</strong> ${lead.gender || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>🏆 Lead Score:</strong> <span style="color: #4CAF50; font-weight: bold;">${lead.score || 0}%</span></p>`;
-            html += '</div>';
-
-            // Profilo Fitness
-            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🎭 Profilo Fitness Dettagliato</h4>';
-            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += `<p style="margin: 8px 0;"><strong>🎪 Tipo Profilo:</strong> ${lead.profile || 'N/A'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>🏃 Livello Esperienza:</strong> ${lead.experience || 'N/A'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>📅 Frequenza Allenamento:</strong> ${lead.frequency || 'N/A'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>🏋️ Tipo Allenamento Preferito:</strong> ${lead.trainingType || 'N/A'}</p>`;
-            html += '</div>';
-
-            // Obiettivi e Motivazioni
-            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🎯 Obiettivi & Motivazioni</h4>';
-            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += '<p style="margin: 8px 0;"><strong>🎪 Obiettivi Principali:</strong></p>';
-            if (Array.isArray(lead.goals) && lead.goals.length > 0) {
-                html += '<ul style="margin: 10px 0; margin-left: 20px; color: #eee;">';
-                lead.goals.forEach(goal => {
-                    html += `<li style="margin: 5px 0;">${goal}</li>`;
-                });
-                html += '</ul>';
-            } else {
-                html += '<p style="margin: 10px 0; color: #ccc;">Nessun obiettivo specificato</p>';
-            }
-            
-            html += '<p style="margin: 8px 0;"><strong>🚧 Ostacoli da Superare:</strong></p>';
-            if (Array.isArray(lead.obstacles) && lead.obstacles.length > 0) {
-                html += '<ul style="margin: 10px 0; margin-left: 20px; color: #eee;">';
-                lead.obstacles.forEach(obstacle => {
-                    html += `<li style="margin: 5px 0;">${obstacle}</li>`;
-                });
-                html += '</ul>';
-            } else {
-                html += '<p style="margin: 10px 0; color: #ccc;">Nessun ostacolo specificato</p>';
-            }
-            
-            html += `<p style="margin: 8px 0;"><strong>💰 Budget Disponibile:</strong> ${lead.budget || 'Non specificato'}</p>`;
-            html += '</div>';
-
-            // Stile di Vita
-            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🍎 Stile di Vita & Salute</h4>';
-            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += `<p style="margin: 8px 0;"><strong>🥗 Stile Alimentazione:</strong> ${lead.dietStyle || 'Non specificato'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>😴 Ore di Sonno:</strong> ${lead.sleepHours || 'Non specificato'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>😰 Livello Stress:</strong> ${lead.stressLevel || 'Non specificato'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>🏥 Condizioni Mediche:</strong> ${lead.medicalConditions || 'Nessuna'}</p>`;
-            html += `<p style="margin: 8px 0;"><strong>💊 Integratori Attuali:</strong> ${lead.supplements || 'Nessuno'}</p>`;
-            html += '</div>';
-
-            // Note aggiuntive
-            if (lead.notes) {
-                html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">📝 Note Aggiuntive</h4>';
-                html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-                html += `<p style="font-style: italic; color: #ccc;">"${lead.notes}"</p>`;
-                html += '</div>';
-            }
-
-            // Azioni
-            if (lead.phone && lead.phone !== 'N/A' && lead.phone !== 'Non disponibile') {
-                html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
-                html += `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 Contatta WhatsApp</button>`;
-                if (lead.email && lead.email !== 'Non disponibile') {
-                    html += `<button class="action-button" onclick="window.open('mailto:${lead.email}?subject=TribuCoach - Seguiamo il tuo percorso fitness', '_blank')">📧 Invia Email</button>`;
+            const footer = document.getElementById('modalFooter');
+            footer.innerHTML = `
+                ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
+                    `<button class="btn btn-success" onclick="openWhatsApp('${lead.phone}')">
+                        📱 WhatsApp
+                    </button>` : ''
                 }
-                html += '</div>';
-            }
-
-            modalBody.innerHTML = html;
-            modal.style.display = 'flex';
+                ${lead.email !== 'Non disponibile' ? 
+                    `<button class="btn btn-primary" onclick="window.open('mailto:${lead.email}')">
+                        📧 Email
+                    </button>` : ''
+                }
+                <button class="btn" onclick="closeModal()">Chiudi</button>
+            `;
+            
+            document.getElementById('modal').style.display = 'flex';
         }
 
         function showChatDetails(chatId) {
             const chat = chatsData.find(c => c.id === chatId);
             if (!chat) return;
 
-            const modal = document.getElementById('detailsModal');
-            const modalBody = document.getElementById('modal-body-content');
+            document.getElementById('modalTitle').textContent = `Conversazione: ${chat.clientName}`;
             
-            let html = `<h3>💬 Conversazione Completa: ${chat.clientName || 'Cliente Anonimo'}</h3>`;
+            const body = document.getElementById('modalBody');
+            body.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Cliente</span>
+                        <span class="info-value">${chat.clientName}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Telefono</span>
+                        <span class="info-value">${chat.phone}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">${chat.email}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Argomento</span>
+                        <span class="info-value">${chat.topic}</span>
+                    </div>
+                </div>
+                
+                <h4 style="margin: 1.5rem 0 1rem 0; color: #374151;">Cronologia Messaggi</h4>
+                <div class="chat-messages">
+                    ${chat.messages.map(msg => `
+                        <div class="message ${msg.role}">
+                            <div>${msg.content}</div>
+                            <div class="message-meta">
+                                ${msg.role === 'user' ? '👤 Cliente' : '🤖 Assistente'}
+                                ${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
             
-            // Info conversazione
-            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
-            html += `<p style="margin: 10px 0;"><strong>🆔 ID Conversazione:</strong> ${chat.id}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>👤 Cliente:</strong> ${chat.clientName || 'Anonimo'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>📱 Telefono:</strong> ${chat.phone || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>📧 Email:</strong> ${chat.email || 'N/A'}</p>`;
-            html += `<p style="margin: 10px 0;"><strong>🏷️ Argomento:</strong> ${chat.topic || 'Conversazione generale'}</p>`;
-            const lastActivity = chat.timestamp ? 
-                (chat.timestamp.toDate ? new Date(chat.timestamp.toDate()).toLocaleString('it-IT') : new Date(chat.timestamp).toLocaleString('it-IT'))
-                : 'N/A';
-            html += `<p style="margin: 10px 0;"><strong>📅 Ultima Attività:</strong> ${lastActivity}</p>`;
-            html += '</div>';
-
-            // Cronologia messaggi
-            if (chat.messages && chat.messages.length > 0) {
-                html += '<h4 style="color: #ff6600; margin: 20px 0 15px 0;">📝 Cronologia Completa Messaggi</h4>';
-                html += '<div class="chat-messages">';
-                
-                chat.messages.forEach((msg, index) => {
-                    const isUser = msg.role === 'user' || msg.sender === 'user';
-                    const messageClass = isUser ? 'user' : 'assistant';
-                    const icon = isUser ? '👤' : '🤖';
-                    const role = isUser ? 'Cliente' : 'Assistente';
-                    const messageTime = msg.timestamp ? 
-                        new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 
-                        `${String(index + 1).padStart(2, '0')}:00`;
-                    
-                    html += `<div class="message ${messageClass}">`;
-                    html += `<div style="font-weight: bold; margin-bottom: 5px;">${icon} ${role}</div>`;
-                    html += `<div>${msg.content || msg.message || 'Messaggio vuoto'}</div>`;
-                    html += `<div class="message-time">${messageTime}</div>`;
-                    html += '</div>';
-                });
-                
-                html += '</div>';
-            } else {
-                html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center; color: #ccc;">';
-                html += '📭 Nessun messaggio disponibile per questa conversazione';
-                html += '</div>';
-            }
-
-            // Azioni
-            html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
-            html += `<button class="action-button pdf" onclick="exportChatToPDF('${chat.id}')">📄 Scarica PDF</button>`;
-            if (chat.phone && chat.phone !== 'N/A') {
-                html += `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 Contatta WhatsApp</button>`;
-            }
-            if (chat.email && chat.email !== 'N/A') {
-                html += `<button class="action-button" onclick="window.open('mailto:${chat.email}?subject=TribuCoach - Seguito della nostra conversazione', '_blank')">📧 Invia Email</button>`;
-            }
-            html += '</div>';
-
-            modalBody.innerHTML = html;
-            modal.style.display = 'flex';
+            const footer = document.getElementById('modalFooter');
+            footer.innerHTML = `
+                <button class="btn btn-danger" onclick="exportChatToPDF('${chat.id}')">
+                    📄 Esporta PDF
+                </button>
+                ${chat.phone !== 'N/A' ? 
+                    `<button class="btn btn-success" onclick="openWhatsApp('${chat.phone}')">
+                        📱 WhatsApp
+                    </button>` : ''
+                }
+                <button class="btn" onclick="closeModal()">Chiudi</button>
+            `;
+            
+            document.getElementById('modal').style.display = 'flex';
         }
 
         function closeModal() {
-            document.getElementById('detailsModal').style.display = 'none';
+            document.getElementById('modal').style.display = 'none';
         }
 
-        // === EXPORT PDF ===
-        function exportChatToPDF(chatId) {
-            const chat = chatsData.find(c => c.id === chatId);
-            if (!chat) return;
-
-            // Crea contenuto testuale della chat
-            let content = `CONVERSAZIONE TRIBUCOACH\n\n`;
-            content += `Cliente: ${chat.clientName || 'Anonimo'}\n`;
-            content += `Telefono: ${chat.phone || 'N/A'}\n`;
-            content += `Email: ${chat.email || 'N/A'}\n`;
-            content += `Argomento: ${chat.topic || 'Conversazione generale'}\n`;
-            const date = chat.timestamp ? 
-                (chat.timestamp.toDate ? new Date(chat.timestamp.toDate()).toLocaleDateString('it-IT') : new Date(chat.timestamp).toLocaleDateString('it-IT'))
-                : 'N/A';
-            content += `Data: ${date}\n`;
-            content += `\n${'='.repeat(50)}\n\n`;
-            
-            if (chat.messages && chat.messages.length > 0) {
-                content += `CRONOLOGIA MESSAGGI:\n\n`;
-                chat.messages.forEach((msg, index) => {
-                    const isUser = msg.role === 'user' || msg.sender === 'user';
-                    const role = isUser ? 'CLIENTE' : 'ASSISTENTE';
-                    const messageTime = msg.timestamp ? 
-                        new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 
-                        `Msg ${index + 1}`;
-                    
-                    content += `[${messageTime}] ${role}:\n`;
-                    content += `${msg.content || msg.message || 'Messaggio vuoto'}\n\n`;
-                });
-            } else {
-                content += `Nessun messaggio disponibile.\n`;
-            }
-            
-            content += `\n${'='.repeat(50)}\n`;
-            content += `Report generato da TribuCoach Dashboard\n`;
-            content += `${new Date().toLocaleString('it-IT')}`;
-
-            // Crea e scarica file
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `TribuCoach_Chat_${chat.clientName || 'Anonimo'}_${chat.id}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            
-            showNotification('📄 Chat esportata come file TXT', 'success');
-        }
-
-        // === WHATSAPP INTEGRATION ===
+        // === UTILITY FUNCTIONS ===
         function openWhatsApp(phone) {
             if (!phone || phone === 'N/A' || phone === 'Non disponibile') {
-                showNotification('Numero di telefono non disponibile', 'error');
+                alert('Numero di telefono non disponibile');
                 return;
             }
             
             const cleanPhone = phone.replace(/[^\d+]/g, '');
-            const whatsappUrl = 'https://wa.me/' + cleanPhone;
-            window.open(whatsappUrl, '_blank');
-            showNotification('Apertura WhatsApp...', 'success');
+            window.open(`https://wa.me/${cleanPhone}`, '_blank');
         }
 
-        // === NOTIFICATION SYSTEM ===
-        function showNotification(message, type) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 15px 20px; border-radius: 8px; font-weight: bold; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 300px;';
+        function exportChatToPDF(chatId) {
+            const chat = chatsData.find(c => c.id === chatId);
+            if (!chat) return;
+
+            let content = `CONVERSAZIONE TRIBUCOACH\n\n`;
+            content += `Cliente: ${chat.clientName}\n`;
+            content += `Telefono: ${chat.phone}\n`;
+            content += `Email: ${chat.email}\n`;
+            content += `Argomento: ${chat.topic}\n\n`;
+            content += `CRONOLOGIA MESSAGGI:\n\n`;
             
-            if (type === 'success') {
-                toast.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
-                toast.style.color = 'white';
-            } else if (type === 'error') {
-                toast.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
-                toast.style.color = 'white';
-            }
+            chat.messages.forEach((msg, index) => {
+                const role = msg.role === 'user' ? 'CLIENTE' : 'ASSISTENTE';
+                content += `[${index + 1}] ${role}:\n${msg.content}\n\n`;
+            });
             
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(function() {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 4000);
+            content += `\nReport generato: ${new Date().toLocaleString('it-IT')}`;
+
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Chat_${chat.clientName}_${chat.id}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         // === EVENT LISTENERS ===
         document.addEventListener('click', function(e) {
-            const modal = document.getElementById('detailsModal');
-            if (e.target === modal) {
+            if (e.target.id === 'modal') {
                 closeModal();
             }
         });
@@ -890,874 +1348,34 @@
         });
 
         // === INITIALIZATION ===
-        async function initDashboard() {
-            try {
-                console.log('🚀 Inizializzazione Dashboard TribuCoach Ottimizzata...');
-                
-                const firebaseOk = await initFirebase();
-                if (firebaseOk) {
-                    await loadData();
-                    showNotification('✅ Dashboard connessa a Firebase!', 'success');
-                } else {
-                    loadDemoData();
-                    showNotification('🎭 Dashboard in modalità demo', 'success');
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore inizializzazione:', error);
-                loadDemoData();
-                showNotification('⚠️ Modalità demo attiva', 'error');
+        async function init() {
+            console.log('🚀 Inizializzazione Dashboard TribuCoach...');
+            
+            const firebaseOk = await initFirebase();
+            await loadData();
+            
+            if (firebaseOk) {
+                console.log('✅ Dashboard connessa a Firebase');
+            } else {
+                console.log('🎭 Dashboard in modalità demo');
             }
         }
 
-        function initFirebaseAfterLoad() {
-            console.log('🔄 Inizializzazione Firebase post-caricamento...');
-            setTimeout(() => {
-                initDashboard();
-            }, 500);
+        // Avvia quando Firebase è pronto
+        if (typeof firebase !== 'undefined') {
+            init();
+        } else {
+            window.addEventListener('load', function() {
+                setTimeout(init, 1000);
+            });
         }
 
-        // === AUTO-REFRESH ===
+        // Auto-refresh ogni 2 minuti
         setInterval(() => {
             if (isConnected) {
                 loadData();
             }
-        }, 60000); // 1 minuto
-
-        // === STARTUP ===
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Dashboard TribuCoach Ottimizzata pronta!');
-            
-            setTimeout(() => {
-                if (typeof firebase !== 'undefined') {
-                    initDashboard();
-                } else {
-                    showNotification('⚠️ Firebase non caricato. Modalità demo attiva.', 'error');
-                    loadDemoData();
-                }
-            }, 2000);
-        });
-
-        console.log('🔧 Dashboard TribuCoach Ottimizzata caricata:', {
-            firebase: FIREBASE_CONFIG.projectId,
-            features: ['Filtri avanzati', 'Ricerca', 'Modal dettagliati', 'Export PDF', 'Insights actionable'],
-            dataStructure: 'Ottimizzata per performance'
-        });
+        }, 120000);
     </script>
 </body>
-</html><!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TribuCoach Dashboard - Ottimizzata</title>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    
-    <script>
-        window.addEventListener('load', function() {
-            if (typeof firebase === 'undefined') {
-                console.warn('⚠️ Firebase v9 non disponibile, carico v8...');
-                const script1 = document.createElement('script');
-                script1.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
-                script1.onload = function() {
-                    const script2 = document.createElement('script');
-                    script2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js';
-                    script2.onload = function() {
-                        console.log('✅ Firebase v8 caricato come fallback');
-                        if (typeof initFirebaseAfterLoad === 'function') {
-                            initFirebaseAfterLoad();
-                        }
-                    };
-                    document.head.appendChild(script2);
-                };
-                document.head.appendChild(script1);
-            }
-        });
-    </script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
-            color: #fff;
-            min-height: 100vh;
-            line-height: 1.4;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.8rem;
-            z-index: 1000;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-
-        .header {
-            background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
-            padding: 25px;
-            border-bottom: 3px solid #ff6600;
-            backdrop-filter: blur(20px);
-            margin-top: 40px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header h1 {
-            color: #ff6600;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
-        }
-
-        .header p {
-            color: #ccc;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .dashboard {
-            padding: 30px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* FILTRI */
-        .filter-section {
-            background: #333;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .filter-label {
-            color: #ff6600;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-button {
-            background: #444;
-            color: #fff;
-            border: 1px solid #666;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .filter-button:hover {
-            background: #555;
-            border-color: #ff6600;
-        }
-
-        .filter-button.active {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            border-color: #ff6600;
-            color: white;
-        }
-
-        .search-input {
-            background: #444;
-            border: 1px solid #666;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #ff6600;
-        }
-
-        /* METRICHE */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 35px;
-        }
-
-        .metric-card {
-            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
-            padding: 25px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            border: 1px solid #404040;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-        }
-
-        .metric-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.2);
-        }
-
-        .metric-card h3 {
-            color: #ff9933;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-card p {
-            font-size: 2.8rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* BUSINESS INSIGHTS */
-        .business-insights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-        }
-
-        .insight-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 25px;
-            border-radius: 12px;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .insight-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.15);
-        }
-
-        .insight-card h4 {
-            color: #ff6600;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .insight-card .metric-value {
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: #4CAF50;
-            margin: 10px 0;
-        }
-
-        .insight-card .metric-subtitle {
-            color: #ccc;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .insight-card .progress-bar {
-            background: #333;
-            height: 6px;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .insight-card .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-            transition: width 0.5s ease;
-        }
-
-        .dashboard-section {
-            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            margin-bottom: 35px;
-            border: 1px solid #404040;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
-        }
-
-        .dashboard-section h2 {
-            color: #ff6600;
-            font-size: 1.9rem;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #444;
-            padding-bottom: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* TABELLA LEADS */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            margin-top: 20px;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-            background: #1a1a1a;
-        }
-
-        .data-table th, .data-table td {
-            padding: 12px 10px;
-            text-align: left;
-            border-bottom: 1px solid #404040;
-            color: #eee;
-            vertical-align: middle;
-        }
-
-        .data-table th {
-            background: linear-gradient(135deg, #3a3a3a, #444444);
-            color: #ff9933;
-            font-weight: 700;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 0.5px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .data-table tbody tr {
-            transition: background-color 0.2s ease;
-        }
-
-        .data-table tbody tr:hover {
-            background-color: rgba(255, 102, 0, 0.1);
-        }
-
-        .score-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 0.85rem;
-        }
-
-        .score-high { background: #4CAF50; color: white; }
-        .score-medium { background: #ff9800; color: white; }
-        .score-low { background: #f44336; color: white; }
-
-        .profile-badge {
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            background: rgba(255, 102, 0, 0.2);
-            color: #ff9933;
-            border: 1px solid rgba(255, 102, 0, 0.3);
-        }
-
-        .action-button {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin: 2px;
-            transition: all 0.2s ease;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .action-button:hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
-        }
-
-        .action-button.whatsapp {
-            background: linear-gradient(135deg, #25D366, #20b055);
-        }
-
-        .action-button.whatsapp:hover {
-            background: linear-gradient(135deg, #20b055, #1ea049);
-        }
-
-        .action-button.pdf {
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-        }
-
-        .action-button.pdf:hover {
-            background: linear-gradient(135deg, #d32f2f, #b71c1c);
-        }
-
-        /* MODAL */
-        .modal {
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #2a2a2a, #333333);
-            padding: 35px;
-            border: 1px solid #555;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            position: relative;
-            animation: modalSlideIn 0.3s ease-out;
-        }
-
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .close-button {
-            color: #aaa;
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s;
-        }
-
-        .close-button:hover {
-            color: #fff;
-        }
-
-        /* CHAT MESSAGES */
-        .chat-messages {
-            max-height: 400px;
-            overflow-y: auto;
-            background: #1a1a1a;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 20px 0;
-        }
-
-        .message {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            max-width: 80%;
-        }
-
-        .message.user {
-            background: #ff6600;
-            color: white;
-            margin-left: auto;
-            margin-right: 0;
-            text-align: right;
-        }
-
-        .message.assistant {
-            background: #444;
-            color: #eee;
-            margin-left: 0;
-            margin-right: auto;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-
-        /* INSIGHTS ACTIONABLE */
-        .insights-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            gap: 15px;
-        }
-
-        .insights-list li {
-            background: linear-gradient(135deg, #333, #404040);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        .insights-list li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.2);
-        }
-
-        .insights-list strong {
-            color: #ff9933;
-            font-weight: 700;
-        }
-
-        .insights-list span {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-
-        .insights-list em {
-            color: #64B5F6;
-            font-style: normal;
-            font-weight: 600;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: #ff6600;
-            font-size: 1.2rem;
-        }
-
-        .loading::before {
-            content: '';
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ff6600;
-            border-top: 3px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .dashboard { padding: 20px 15px; }
-            .filter-section { flex-direction: column; align-items: flex-start; }
-            .filter-buttons { width: 100%; }
-            .metrics-grid { grid-template-columns: 1fr; }
-            .business-insights-grid { grid-template-columns: 1fr; }
-            .data-table th, .data-table td { padding: 8px 6px; font-size: 0.8rem; }
-        }
-    </style>
-</head>
-<body>
-    <div class="connection-status" id="connectionStatus">✅ Dashboard TribuCoach Ottimizzata</div>
-
-    <header class="header">
-        <h1>📈 TribuCoach Dashboard Ottimizzata</h1>
-        <p>Gestione completa lead e conversazioni con filtri avanzati e analisi dettagliate</p>
-    </header>
-
-    <div class="dashboard">
-
-        <!-- METRICHE PRINCIPALI -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <h3>🎯 Totale Lead Generati</h3>
-                <p id="totalLeads">0</p>
-            </div>
-            <div class="metric-card">
-                <h3>⭐ Score Medio Lead</h3>
-                <p id="avgScore">0%</p>
-            </div>
-            <div class="metric-card">
-                <h3>💬 Conversazioni Totali</h3>
-                <p id="totalChats">0</p>
-            </div>
-            <div class="metric-card">
-                <h3>🔥 Lead Premium (>80%)</h3>
-                <p id="premiumLeads">0</p>
-            </div>
-        </div>
-
-        <!-- BUSINESS INSIGHTS -->
-        <div class="dashboard-section">
-            <h2>🎯 Business Intelligence - Opportunità</h2>
-            
-            <div class="business-insights-grid">
-                <div class="insight-card">
-                    <h4>🔥 Hot Leads (Score >80%)</h4>
-                    <div class="metric-value" id="hotLeads">0</div>
-                    <div class="metric-subtitle">Lead pronti per contatto immediato</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="hotLeadsProgress" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>🌡️ Warm Leads (Score 60-79%)</h4>
-                    <div class="metric-value" id="warmLeads">0</div>
-                    <div class="metric-subtitle">Lead qualificati per nurturing</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="warmLeadsProgress" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>💰 Budget Totale Potenziale</h4>
-                    <div class="metric-value" id="totalBudget">€0</div>
-                    <div class="metric-subtitle">Somma budget dichiarati</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📊 Conversione Chat</h4>
-                    <div class="metric-value" id="chatConversion">0%</div>
-                    <div class="metric-subtitle">Chat con contatti acquisiti</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📅 Lead Oggi</h4>
-                    <div class="metric-value" id="todayLeads">0</div>
-                    <div class="metric-subtitle">Nuovi lead nelle ultime 24h</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📈 Crescita Settimanale</h4>
-                    <div class="metric-value trend-up" id="weeklyGrowth">+0%</div>
-                    <div class="metric-subtitle">Variazione vs settimana scorsa</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LEAD QUIZ CON FILTRI -->
-        <div class="dashboard-section">
-            <h2>🥇 Lead Quiz - Completati</h2>
-            
-            <!-- Filtri Lead -->
-            <div class="filter-section">
-                <span class="filter-label">📅 Periodo:</span>
-                <div class="filter-buttons">
-                    <button class="filter-button active" data-filter="tutti" onclick="filterLeads('tutti')">Tutti</button>
-                    <button class="filter-button" data-filter="oggi" onclick="filterLeads('oggi')">Oggi</button>
-                    <button class="filter-button" data-filter="settimana" onclick="filterLeads('settimana')">Settimana</button>
-                    <button class="filter-button" data-filter="mese" onclick="filterLeads('mese')">Mese</button>
-                </div>
-                <input type="text" class="search-input" placeholder="🔍 Cerca per nome, email..." id="searchLeads" onkeyup="searchLeads()">
-            </div>
-            
-            <div id="quizLeadsContainer" class="loading">Caricamento lead...</div>
-        </div>
-
-        <!-- CONVERSAZIONI CHAT CON FILTRI -->
-        <div class="dashboard-section">
-            <h2>💬 Conversazioni Chatbot</h2>
-            
-            <!-- Filtri Chat -->
-            <div class="filter-section">
-                <span class="filter-label">📅 Periodo:</span>
-                <div class="filter-buttons">
-                    <button class="filter-button active" data-filter="tutti" onclick="filterChats('tutti')">Tutti</button>
-                    <button class="filter-button" data-filter="oggi" onclick="filterChats('oggi')">Oggi</button>
-                    <button class="filter-button" data-filter="settimana" onclick="filterChats('settimana')">Settimana</button>
-                    <button class="filter-button" data-filter="mese" onclick="filterChats('mese')">Mese</button>
-                </div>
-                <input type="text" class="search-input" placeholder="🔍 Cerca per cliente, argomento..." id="searchChats" onkeyup="searchChats()">
-            </div>
-            
-            <div id="chatContainer" class="loading">Caricamento conversazioni...</div>
-        </div>
-
-        <!-- INSIGHTS ACTIONABLE -->
-        <div class="dashboard-section">
-            <h2>💡 Insights Actionable & Raccomandazioni</h2>
-            <ul class="insights-list" id="actionableInsights">
-                <!-- Verranno popolati dinamicamente -->
-            </ul>
-        </div>
-
-    </div>
-
-    <!-- Modal per dettagli -->
-    <div id="detailsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <div id="modal-body-content">
-                <!-- Il contenuto verrà inserito qui tramite JavaScript -->
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript -->
-    <script>
-        // === CONFIGURAZIONE FIREBASE ===
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-            authDomain: "tribucoach-a2254.firebaseapp.com",
-            projectId: "tribucoach-a2254",
-            storageBucket: "tribucoach-a2254.firebasestorage.app",
-            messagingSenderId: "425200296836",
-            appId: "1:425200296836:web:7835188f40f4348567ab48"
-        };
-
-        // === VARIABILI GLOBALI ===
-        let db = null;
-        let firebaseApp = null;
-        let isConnected = false;
-        let leadsData = [];
-        let chatsData = [];
-        let filteredLeads = [];
-        let filteredChats = [];
-        let currentLeadFilter = 'tutti';
-        let currentChatFilter = 'tutti';
-
-        // === INIZIALIZZAZIONE FIREBASE ===
-        async function initFirebase() {
-            try {
-                if (typeof firebase === 'undefined') {
-                    throw new Error('Firebase SDK non caricato');
-                }
-
-                if (firebaseApp) {
-                    console.log('⚠️ Firebase già inizializzato');
-                } else {
-                    firebaseApp = firebase.initializeApp(FIREBASE_CONFIG);
-                    console.log('✅ Firebase inizializzato');
-                }
-                
-                db = firebase.firestore();
-                await db.collection('test').limit(1).get();
-                
-                isConnected = true;
-                console.log('✅ Firebase connesso');
-                return true;
-            } catch (error) {
-                console.error('❌ Errore Firebase:', error);
-                isConnected = false;
-                return false;
-            }
-        }
-
-        // === CARICAMENTO DATI ===
-        async function loadData() {
-            try {
-                if (!isConnected) {
-                    loadDemoData();
-                    return;
-                }
-
-                // Carica quiz results
-                const quizSnapshot = await db.collection('quiz_results').get();
-                leadsData = [];
-                quizSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    leadsData.push({ 
-                        id: doc.id, 
-                        source: 'quiz',
-                        ...data,
-                        name: data.userName || data.name || 'Nome non disponibile',
-                        email: data.userEmail || data.email || 'Non disponibile',
-                        phone: data.userWhatsApp || data.phone || data.whatsapp || 'Non disponibile',
-                        age: data.userAge || data.age || 'N/A',
-                        gender: data.userGender || data.gender || 'N/A',
-                        score: data.fitnessScore || data.score || 0,
-                        profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                        goals: data.fitnessGoals || data.goals || [],
-                        obstacles: data.fitnessObstacles || data.obstacles || [],
-                        budget: data.budget || 'Non specificato',
-                        experience: data.experience || 'Non specificato',
-                        frequency: data.frequency || 'Non specificato',
-                        trainingType: data.tipo_allenamento || data.trainingType || 'Non specificato',
-                        dietStyle: data.stile_alimentazione || data.dietStyle || 'Non specificato',
-                        sleepHours: data.ore_sonno || data.sleepHours || 'Non specificato',
-                        stressLevel: data.livello_stress || data.stressLevel || 'Non specificato',
-                        medicalConditions: data.condizioni_mediche || data.medicalConditions || 'Nessuna',
-                        supplements: data.integratori || data.supplements || 'Nessuno',
-                        notes: data.note_aggiuntive || data.notes || '',
-                        timestamp: data.timestamp || data.completed_at
-                    });
-                });
-
-                // Carica conversazioni
-                const conversationsSnapshot = await db.collection('conversations').get();
-                chatsData = [];
-                conversationsSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    const messages = data.messages || [];
-                    const contactInfo = extractContactFromMessages(messages);
-                    const lastMessage = messages[messages.length - 1];
-                    
-                    chatsData.push({ 
-                        id: doc.id, 
-                        source: 'firebase',
-                        ...data,
-                        clientName: contactInfo.name || data.customerName || data.clientName || 'Cliente Anonimo',
-                        phone: contactInfo.phone || data.customerPhone || data.phone || 'N/A',
-                        email: contactInfo.email || data.customerEmail || data.email || 'N/A',
-                        topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
-                        lastMessage: lastMessage?.content || lastMessage?.message || 'Nessun messaggio',
-                        messages: messages,
-                        timestamp: data.lastMessageAt || data.dateCreated || data.timestamp
-                    });
-                });
-
-                // Aggiorna UI
-                updateMetrics();
-                updateBusinessInsights();
-                updateActionableInsights();
-                filterLeads(currentLeadFilter);
-                filterChats(currentChatFilter);
-
-                console.log(`✅ Dati caricati: ${leadsData.length} lead, ${chatsData.length} chat`);
-
-            } catch (error) {
+</html>
