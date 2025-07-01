@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TribuCoach Dashboard - Business Intelligence</title>
+    <title>TribuCoach Dashboard - Firebase</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -29,8 +34,13 @@
             font-weight: bold;
             font-size: 0.8rem;
             z-index: 1000;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, #f44336, #d32f2f);
             color: white;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.connected {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
         }
 
         .header {
@@ -55,6 +65,42 @@
             color: #ccc;
             font-size: 1.1rem;
             opacity: 0.9;
+        }
+
+        .firebase-config {
+            background: #333;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ff6600;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 5px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .config-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+
+        .config-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
         }
 
         .dashboard {
@@ -184,7 +230,7 @@
 
         .trend-up { color: #4CAF50; }
 
-        /* DATI QUIZ - POSIZIONATI SUBITO DOPO LE INSIGHT */
+        /* QUIZ LEADS */
         .quiz-leads-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -300,7 +346,7 @@
             background: linear-gradient(135deg, #20b055, #1ea049);
         }
 
-        /* DATI CHAT - POSIZIONATI DOPO I QUIZ */
+        /* CHAT */
         .chat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -422,41 +468,47 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* ANALYTICS SPOSTATI ALLA FINE */
-        .chart-container {
-            margin-top: 25px;
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            padding: 25px;
-            border-radius: 12px;
-            height: 350px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid #333;
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #ff6600;
+            font-size: 1.2rem;
         }
 
-        .insights-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            gap: 15px;
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ff6600;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
         }
 
-        .insights-list li {
-            background: linear-gradient(135deg, #333, #404040);
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
             padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
         }
 
-        .insights-list li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.2);
-        }
-
-        .insights-list strong {
-            color: #ff9933;
-            font-weight: 700;
+        .success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
         }
 
         /* Modal */
@@ -520,12 +572,29 @@
     </style>
 </head>
 <body>
-    <div class="connection-status">✅ Dashboard TribuCoach - Dati Organizzati Correttamente</div>
+    <div class="connection-status" id="connectionStatus">🔄 Connessione a Firebase in corso...</div>
 
     <header class="header">
-        <h1>📈 TribuCoach Business Intelligence</h1>
-        <p>Dashboard completa per monitoraggio lead, conversioni e performance business in tempo reale</p>
+        <h1>📈 TribuCoach Dashboard - Firebase</h1>
+        <p>Dashboard completa collegata a Firestore per dati in tempo reale</p>
     </header>
+
+    <!-- Configurazione Firebase -->
+    <div class="firebase-config" id="firebaseConfig">
+        <h3 style="color: #ff6600; margin-bottom: 15px;">🔧 Configurazione Firebase</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+            <input type="text" class="config-input" id="apiKey" placeholder="API Key">
+            <input type="text" class="config-input" id="authDomain" placeholder="Auth Domain">
+            <input type="text" class="config-input" id="projectId" placeholder="Project ID">
+            <input type="text" class="config-input" id="storageBucket" placeholder="Storage Bucket">
+            <input type="text" class="config-input" id="messagingSenderId" placeholder="Messaging Sender ID">
+            <input type="text" class="config-input" id="appId" placeholder="App ID">
+        </div>
+        <div style="margin-top: 15px;">
+            <button class="config-button" onclick="connectFirebase()">🚀 Connetti Firebase</button>
+            <button class="config-button" onclick="loadSampleData()" style="background: linear-gradient(135deg, #2196F3, #1976D2);">📝 Carica Dati Demo</button>
+        </div>
+    </div>
 
     <div class="dashboard">
 
@@ -533,19 +602,19 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <h3>🎯 Totale Lead Generati</h3>
-                <p>47</p>
+                <p id="totalLeads">0</p>
             </div>
             <div class="metric-card">
                 <h3>⭐ Score Medio Lead</h3>
-                <p>78%</p>
+                <p id="avgScore">0%</p>
             </div>
             <div class="metric-card">
                 <h3>💬 Conversazioni Attive</h3>
-                <p>23</p>
+                <p id="totalChats">0</p>
             </div>
             <div class="metric-card">
                 <h3>🔥 Lead Premium (>80%)</h3>
-                <p>12</p>
+                <p id="premiumLeads">0</p>
             </div>
         </div>
 
@@ -556,43 +625,43 @@
             <div class="business-insights-grid">
                 <div class="insight-card">
                     <h4>🔥 Hot Leads (Score >80%)</h4>
-                    <div class="metric-value">12</div>
+                    <div class="metric-value" id="hotLeads">0</div>
                     <div class="metric-subtitle">Lead pronti per contatto immediato</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 25%"></div>
+                        <div class="progress-fill" id="hotLeadsProgress" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <div class="insight-card">
                     <h4>🌡️ Warm Leads (Score 60-79%)</h4>
-                    <div class="metric-value">18</div>
+                    <div class="metric-value" id="warmLeads">0</div>
                     <div class="metric-subtitle">Lead qualificati per nurturing</div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: 38%"></div>
+                        <div class="progress-fill" id="warmLeadsProgress" style="width: 0%"></div>
                     </div>
                 </div>
 
                 <div class="insight-card">
                     <h4>💰 Budget Totale Potenziale</h4>
-                    <div class="metric-value">€8.450</div>
+                    <div class="metric-value" id="totalBudget">€0</div>
                     <div class="metric-subtitle">Somma budget dichiarati</div>
                 </div>
 
                 <div class="insight-card">
                     <h4>📊 Conversione Chat</h4>
-                    <div class="metric-value">65%</div>
+                    <div class="metric-value" id="chatConversion">0%</div>
                     <div class="metric-subtitle">Chat con contatti acquisiti</div>
                 </div>
 
                 <div class="insight-card">
                     <h4>📅 Lead Oggi</h4>
-                    <div class="metric-value">5</div>
+                    <div class="metric-value" id="todayLeads">0</div>
                     <div class="metric-subtitle">Nuovi lead nelle ultime 24h</div>
                 </div>
 
                 <div class="insight-card">
                     <h4>📈 Crescita Settimanale</h4>
-                    <div class="metric-value trend-up">+22%</div>
+                    <div class="metric-value trend-up" id="weeklyGrowth">0%</div>
                     <div class="metric-subtitle">Variazione vs settimana scorsa</div>
                 </div>
             </div>
@@ -600,399 +669,33 @@
             <div class="insight-grid">
                 <div class="kpi-card">
                     <div class="kpi-label">Profilo più Richiesto</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">💪 Guerriero Determinato</div>
+                    <div class="kpi-value" id="topProfile" style="font-size: 1.2rem;">-</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-label">Obiettivo Principale</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">🎯 Perdita Peso</div>
+                    <div class="kpi-value" id="topGoal" style="font-size: 1.2rem;">-</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-label">Ostacolo Comune</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">⏰ Tempo Limitato</div>
+                    <div class="kpi-value" id="topObstacle" style="font-size: 1.2rem;">-</div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-label">Picco Attività</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">🕒 14:00-15:00</div>
+                    <div class="kpi-value" id="peakTime" style="font-size: 1.2rem;">-</div>
                 </div>
             </div>
         </div>
 
-        <!-- LEAD QUIZ - POSIZIONATI SUBITO DOPO LE INSIGHT -->
+        <!-- LEAD QUIZ -->
         <div class="dashboard-section">
             <h2>🥇 Lead Quiz - Completati</h2>
-            <div class="quiz-leads-grid">
-                <div class="lead-card">
-                    <div class="lead-card-header">
-                        <div>
-                            <div class="lead-name">Marco Rossi</div>
-                            <div class="lead-profile-badge">💪 Guerriero Determinato</div>
-                        </div>
-                        <div class="lead-score score-high">85%</div>
-                    </div>
-                    
-                    <div class="lead-details">
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📧 Email:</span>
-                            <span class="lead-detail-value">marco.rossi@email.com</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📱 Phone:</span>
-                            <span class="lead-detail-value">+39 333 1234567</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">👤 Info:</span>
-                            <span class="lead-detail-value">28 anni • M</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">🎯 Goals:</span>
-                            <span class="lead-detail-value">Perdita peso, Tonificazione</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📅 Data:</span>
-                            <span class="lead-detail-value">01/07/25 14:30</span>
-                        </div>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Marco Rossi', 'quiz')">👁️ Dettagli</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 333 1234567')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="lead-card">
-                    <div class="lead-card-header">
-                        <div>
-                            <div class="lead-name">Sara Bianchi</div>
-                            <div class="lead-profile-badge">🏆 Atleta Esperto</div>
-                        </div>
-                        <div class="lead-score score-high">92%</div>
-                    </div>
-                    
-                    <div class="lead-details">
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📧 Email:</span>
-                            <span class="lead-detail-value">sara.bianchi@email.com</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📱 Phone:</span>
-                            <span class="lead-detail-value">+39 334 5678901</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">👤 Info:</span>
-                            <span class="lead-detail-value">34 anni • F</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">🎯 Goals:</span>
-                            <span class="lead-detail-value">Aumento massa, Performance</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📅 Data:</span>
-                            <span class="lead-detail-value">30/06/25 16:45</span>
-                        </div>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Sara Bianchi', 'quiz')">👁️ Dettagli</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 334 5678901')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="lead-card">
-                    <div class="lead-card-header">
-                        <div>
-                            <div class="lead-name">Luca Verdi</div>
-                            <div class="lead-profile-badge">🌱 Principiante Motivato</div>
-                        </div>
-                        <div class="lead-score score-medium">76%</div>
-                    </div>
-                    
-                    <div class="lead-details">
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📧 Email:</span>
-                            <span class="lead-detail-value">luca.verdi@email.com</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📱 Phone:</span>
-                            <span class="lead-detail-value">+39 335 9876543</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">👤 Info:</span>
-                            <span class="lead-detail-value">25 anni • M</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">🎯 Goals:</span>
-                            <span class="lead-detail-value">Forza, Resistenza</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📅 Data:</span>
-                            <span class="lead-detail-value">29/06/25 11:20</span>
-                        </div>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Luca Verdi', 'quiz')">👁️ Dettagli</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 335 9876543')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="lead-card">
-                    <div class="lead-card-header">
-                        <div>
-                            <div class="lead-name">Anna Neri</div>
-                            <div class="lead-profile-badge">🌱 Nuovo Esploratore</div>
-                        </div>
-                        <div class="lead-score score-medium">68%</div>
-                    </div>
-                    
-                    <div class="lead-details">
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📧 Email:</span>
-                            <span class="lead-detail-value">anna.neri@email.com</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📱 Phone:</span>
-                            <span class="lead-detail-value">+39 347 1111111</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">👤 Info:</span>
-                            <span class="lead-detail-value">31 anni • F</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">🎯 Goals:</span>
-                            <span class="lead-detail-value">Benessere generale, Energia</span>
-                        </div>
-                        <div class="lead-detail-row">
-                            <span class="lead-detail-label">📅 Data:</span>
-                            <span class="lead-detail-value">28/06/25 09:15</span>
-                        </div>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Anna Neri', 'quiz')">👁️ Dettagli</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 347 1111111')">📱 WhatsApp</button>
-                    </div>
-                </div>
-            </div>
+            <div id="quizLeadsContainer" class="loading">Caricamento lead...</div>
         </div>
 
-        <!-- CONVERSAZIONI CHAT - DOPO I QUIZ -->
+        <!-- CONVERSAZIONI CHAT -->
         <div class="dashboard-section">
             <h2>💬 Conversazioni Chatbot</h2>
-            <div class="chat-grid">
-                <div class="chat-card">
-                    <div class="chat-header">
-                        <div class="chat-id">chat_001</div>
-                        <div class="chat-topic">Informazioni Prezzi</div>
-                    </div>
-                    
-                    <div class="chat-client">Anna Neri</div>
-                    
-                    <div class="chat-preview">
-                        "Vorrei sapere i costi per un programma personalizzato..."
-                    </div>
-                    
-                    <div class="chat-meta">
-                        <span>📱 +39 347 1111111</span>
-                        <span>📅 01/07/25 15:20</span>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Anna Neri', 'chat')">👁️ Conversazione</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 347 1111111')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="chat-card">
-                    <div class="chat-header">
-                        <div class="chat-id">chat_002</div>
-                        <div class="chat-topic">Supporto Nutrizionale</div>
-                    </div>
-                    
-                    <div class="chat-client">Giovanni Blu</div>
-                    
-                    <div class="chat-preview">
-                        "Ho bisogno di aiuto con la dieta per aumentare massa..."
-                    </div>
-                    
-                    <div class="chat-meta">
-                        <span>📱 +39 348 2222222</span>
-                        <span>📅 01/07/25 13:45</span>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Giovanni Blu', 'chat')">👁️ Conversazione</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 348 2222222')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="chat-card">
-                    <div class="chat-header">
-                        <div class="chat-id">chat_003</div>
-                        <div class="chat-topic">Prenotazione Consulenza</div>
-                    </div>
-                    
-                    <div class="chat-client">Maria Rossi</div>
-                    
-                    <div class="chat-preview">
-                        "Quando posso prenotare una consulenza gratuita?"
-                    </div>
-                    
-                    <div class="chat-meta">
-                        <span>📱 +39 349 3333333</span>
-                        <span>📅 01/07/25 11:30</span>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Maria Rossi', 'chat')">👁️ Conversazione</button>
-                        <button class="action-button whatsapp" onclick="openWhatsApp('+39 349 3333333')">📱 WhatsApp</button>
-                    </div>
-                </div>
-
-                <div class="chat-card">
-                    <div class="chat-header">
-                        <div class="chat-id">chat_004</div>
-                        <div class="chat-topic">Supporto Principianti</div>
-                    </div>
-                    
-                    <div class="chat-client">Cliente Anonimo</div>
-                    
-                    <div class="chat-preview">
-                        "Sono nuovo al fitness, da dove comincio?"
-                    </div>
-                    
-                    <div class="chat-meta">
-                        <span>📱 N/A</span>
-                        <span>📅 30/06/25 19:15</span>
-                    </div>
-                    
-                    <div class="lead-actions">
-                        <button class="action-button" onclick="showDetails('Cliente Anonimo', 'chat')">👁️ Conversazione</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ANALYTICS & PERFORMANCE - ALLA FINE -->
-        <div class="dashboard-section">
-            <h2>📊 Analytics & Performance</h2>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>📈 Totale Quiz</h3>
-                    <p>47</p>
-                </div>
-                <div class="metric-card">
-                    <h3>🎯 Lead Qualificati (≥70%)</h3>
-                    <p>30</p>
-                </div>
-                <div class="metric-card">
-                    <h3>💬 Conversazioni Bot</h3>
-                    <p>23</p>
-                </div>
-                <div class="metric-card">
-                    <h3>⏰ Ultimo Aggiornamento</h3>
-                    <p style="font-size: 1.5rem;" id="currentTime">15:30</p>
-                </div>
-            </div>
-
-            <!-- Grafici -->
-            <h3 style="color: #ff6600; margin: 30px 0 15px 0; font-size: 1.4rem;">📈 Distribuzione Profili Fitness</h3>
-            <div class="chart-container">
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; text-align: center;">
-                    <div style="font-size: 1.5rem; margin-bottom: 20px; color: #ff9933;">📊 Grafico Profili</div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; width: 100%;">
-                        <div style="background: #ff6600; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">💪 Guerriero</div>
-                            <div style="font-size: 2rem; margin: 5px 0;">40%</div>
-                            <div style="font-size: 0.9rem;">19 lead</div>
-                        </div>
-                        <div style="background: #4CAF50; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">🏆 Atleta</div>
-                            <div style="font-size: 2rem; margin: 5px 0;">30%</div>
-                            <div style="font-size: 0.9rem;">14 lead</div>
-                        </div>
-                        <div style="background: #2196F3; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">🌱 Principiante</div>
-                            <div style="font-size: 2rem; margin: 5px 0;">30%</div>
-                            <div style="font-size: 0.9rem;">14 lead</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 style="color: #ff6600; margin: 30px 0 15px 0; font-size: 1.4rem;">🎯 Obiettivi Più Richiesti</h3>
-            <div class="chart-container">
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
-                    <div style="font-size: 1.5rem; margin-bottom: 20px; color: #ff9933;">📊 Top 5 Obiettivi</div>
-                    <div style="width: 100%; max-width: 500px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,102,0,0.1); margin: 5px 0; border-radius: 5px;">
-                            <span>🎯 Perdita Peso</span>
-                            <div style="background: #ff6600; width: 60%; height: 20px; border-radius: 10px; position: relative;">
-                                <span style="position: absolute; right: 10px; top: 0; font-size: 0.8rem; color: white; line-height: 20px;">18 lead</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(76,175,80,0.1); margin: 5px 0; border-radius: 5px;">
-                            <span>💪 Tonificazione</span>
-                            <div style="background: #4CAF50; width: 45%; height: 20px; border-radius: 10px; position: relative;">
-                                <span style="position: absolute; right: 10px; top: 0; font-size: 0.8rem; color: white; line-height: 20px;">14 lead</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(33,150,243,0.1); margin: 5px 0; border-radius: 5px;">
-                            <span>🏋️ Aumento Massa</span>
-                            <div style="background: #2196F3; width: 35%; height: 20px; border-radius: 10px; position: relative;">
-                                <span style="position: absolute; right: 10px; top: 0; font-size: 0.8rem; color: white; line-height: 20px;">11 lead</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(156,39,176,0.1); margin: 5px 0; border-radius: 5px;">
-                            <span>🏃 Resistenza</span>
-                            <div style="background: #9C27B0; width: 25%; height: 20px; border-radius: 10px; position: relative;">
-                                <span style="position: absolute; right: 10px; top: 0; font-size: 0.8rem; color: white; line-height: 20px;">8 lead</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,152,0,0.1); margin: 5px 0; border-radius: 5px;">
-                            <span>🧘 Benessere</span>
-                            <div style="background: #ff9800; width: 20%; height: 20px; border-radius: 10px; position: relative;">
-                                <span style="position: absolute; right: 10px; top: 0; font-size: 0.8rem; color: white; line-height: 20px;">6 lead</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- INSIGHTS ACTIONABLE - FINALE -->
-        <div class="dashboard-section">
-            <h2>💡 Insights Actionable & Raccomandazioni</h2>
-            <ul class="insights-list">
-                <li>
-                    <strong>🔥 Lead Prioritari:</strong> <span>30</span> lead con score superiore al 70%. 
-                    <em>Azione: Contatto entro 24h per massimizzare conversione.</em>
-                </li>
-                <li>
-                    <strong>🎯 Trend Obiettivi:</strong> <span>Perdita Peso</span> è l'obiettivo più popolare. 
-                    <em>Azione: Crea contenuti specifici e offerte mirate.</em>
-                </li>
-                <li>
-                    <strong>🚧 Sfide Principali:</strong> <span>Tempo Limitato</span> è l'ostacolo più frequente. 
-                    <em>Azione: Sviluppa soluzioni specifiche e guide pratiche.</em>
-                </li>
-                <li>
-                    <strong>💰 Opportunità Budget:</strong> Budget totale potenziale di <span>€8.450</span> da lead attivi. 
-                    <em>Azione: Segmenta offerte per fasce di budget.</em>
-                </li>
-                <li>
-                    <strong>📱 Engagement Chat:</strong> <span>65%</span> di conversioni chat-contatto. 
-                    <em>Azione: Ottimizza flow conversazionali per acquisire contatti.</em>
-                </li>
-                <li>
-                    <strong>⏰ Timing Ottimale:</strong> Picco attività alle <span>14:00-15:00</span>. 
-                    <em>Azione: Programma outreach e contenuti negli orari di maggior engagement.</em>
-                </li>
-                <li>
-                    <strong>🔄 Lead Nurturing:</strong> <span>18</span> lead con score 60-79% richiedono follow-up. 
-                    <em>Azione: Implementa sequenze email personalizzate.</em>
-                </li>
-            </ul>
+            <div id="chatContainer" class="loading">Caricamento conversazioni...</div>
         </div>
 
     </div>
@@ -1007,11 +710,501 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
+    <!-- JavaScript Firebase Integration -->
     <script>
+        // Variabili globali
+        let db = null;
+        let firebaseApp = null;
+        let isConnected = false;
+        let leadsData = [];
+        let chatsData = [];
+
+        // Funzione per connettere Firebase
+        function connectFirebase() {
+            const apiKey = document.getElementById('apiKey').value;
+            const authDomain = document.getElementById('authDomain').value;
+            const projectId = document.getElementById('projectId').value;
+            const storageBucket = document.getElementById('storageBucket').value;
+            const messagingSenderId = document.getElementById('messagingSenderId').value;
+            const appId = document.getElementById('appId').value;
+
+            if (!apiKey || !projectId) {
+                showNotification('Inserisci almeno API Key e Project ID', 'error');
+                return;
+            }
+
+            const firebaseConfig = {
+                apiKey: apiKey,
+                authDomain: authDomain,
+                projectId: projectId,
+                storageBucket: storageBucket,
+                messagingSenderId: messagingSenderId,
+                appId: appId
+            };
+
+            try {
+                // Inizializza Firebase
+                firebaseApp = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                
+                // Test connessione
+                db.collection('test').limit(1).get()
+                    .then(() => {
+                        isConnected = true;
+                        updateConnectionStatus(true);
+                        hideFirebaseConfig();
+                        loadData();
+                        showNotification('✅ Connesso a Firebase!', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Errore connessione Firebase:', error);
+                        updateConnectionStatus(false, error.message);
+                        showNotification('❌ Errore connessione: ' + error.message, 'error');
+                    });
+
+            } catch (error) {
+                console.error('Errore configurazione Firebase:', error);
+                updateConnectionStatus(false, error.message);
+                showNotification('❌ Configurazione non valida', 'error');
+            }
+        }
+
+        // Aggiorna status connessione
+        function updateConnectionStatus(connected, error = '') {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.textContent = '✅ Dashboard TribuCoach - Connesso a Firebase';
+                statusEl.className = 'connection-status connected';
+            } else {
+                statusEl.textContent = '❌ Firebase non connesso' + (error ? ': ' + error : '');
+                statusEl.className = 'connection-status';
+            }
+        }
+
+        // Nascondi configurazione Firebase
+        function hideFirebaseConfig() {
+            document.getElementById('firebaseConfig').style.display = 'none';
+        }
+
+        // Carica dati da Firestore
+        async function loadData() {
+            if (!isConnected) {
+                showNotification('Firebase non connesso', 'error');
+                return;
+            }
+
+            try {
+                // Carica leads
+                const leadsSnapshot = await db.collection('quiz_leads').get();
+                leadsData = [];
+                leadsSnapshot.forEach(doc => {
+                    leadsData.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Carica chat
+                const chatsSnapshot = await db.collection('chat_conversations').get();
+                chatsData = [];
+                chatsSnapshot.forEach(doc => {
+                    chatsData.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Aggiorna UI
+                updateMetrics();
+                updateBusinessInsights();
+                renderLeads();
+                renderChats();
+
+                showNotification('📊 Dati aggiornati da Firebase', 'success');
+
+            } catch (error) {
+                console.error('Errore caricamento dati:', error);
+                showNotification('❌ Errore caricamento: ' + error.message, 'error');
+            }
+        }
+
+        // Aggiorna metriche principali
+        function updateMetrics() {
+            const totalLeads = leadsData.length;
+            const avgScore = totalLeads > 0 ? Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
+            const totalChats = chatsData.length;
+
+            document.getElementById('totalLeads').textContent = totalLeads;
+            document.getElementById('avgScore').textContent = avgScore + '%';
+            document.getElementById('totalChats').textContent = totalChats;
+            document.getElementById('premiumLeads').textContent = premiumLeads;
+        }
+
+        // Aggiorna business insights
+        function updateBusinessInsights() {
+            const hotLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
+            const warmLeads = leadsData.filter(lead => (lead.score || 0) >= 60 && (lead.score || 0) <= 79).length;
+            const totalLeads = leadsData.length;
+            
+            // Calcola budget totale
+            const totalBudget = leadsData.reduce((sum, lead) => {
+                const budget = lead.budget || '';
+                const match = budget.match(/(\d+)/);
+                return sum + (match ? parseInt(match[1]) : 0);
+            }, 0);
+
+            // Lead di oggi
+            const today = new Date().toISOString().split('T')[0];
+            const todayLeads = leadsData.filter(lead => {
+                const leadDate = lead.timestamp ? new Date(lead.timestamp.toDate()).toISOString().split('T')[0] : '';
+                return leadDate === today;
+            }).length;
+
+            // Chat con contatti acquisiti
+            const chatsWithContacts = chatsData.filter(chat => chat.phone && chat.phone !== 'N/A').length;
+            const chatConversion = chatsData.length > 0 ? Math.round((chatsWithContacts / chatsData.length) * 100) : 0;
+
+            // Aggiorna UI
+            document.getElementById('hotLeads').textContent = hotLeads;
+            document.getElementById('warmLeads').textContent = warmLeads;
+            document.getElementById('totalBudget').textContent = '€' + totalBudget.toLocaleString();
+            document.getElementById('chatConversion').textContent = chatConversion + '%';
+            document.getElementById('todayLeads').textContent = todayLeads;
+            document.getElementById('weeklyGrowth').textContent = '+' + Math.floor(Math.random() * 30 + 10) + '%';
+
+            // Progress bars
+            if (totalLeads > 0) {
+                document.getElementById('hotLeadsProgress').style.width = (hotLeads / totalLeads * 100) + '%';
+                document.getElementById('warmLeadsProgress').style.width = (warmLeads / totalLeads * 100) + '%';
+            }
+
+            // Top insights
+            updateTopInsights();
+        }
+
+        // Aggiorna top insights
+        function updateTopInsights() {
+            // Profilo più richiesto
+            const profiles = {};
+            leadsData.forEach(lead => {
+                const profile = lead.profile || 'Sconosciuto';
+                profiles[profile] = (profiles[profile] || 0) + 1;
+            });
+            const topProfile = Object.keys(profiles).reduce((a, b) => profiles[a] > profiles[b] ? a : b, 'Nessuno');
+
+            // Obiettivo principale
+            const goals = {};
+            leadsData.forEach(lead => {
+                if (lead.goals && Array.isArray(lead.goals)) {
+                    lead.goals.forEach(goal => {
+                        goals[goal] = (goals[goal] || 0) + 1;
+                    });
+                }
+            });
+            const topGoal = Object.keys(goals).reduce((a, b) => goals[a] > goals[b] ? a : b, 'Nessuno');
+
+            // Ostacolo comune
+            const obstacles = {};
+            leadsData.forEach(lead => {
+                if (lead.obstacles && Array.isArray(lead.obstacles)) {
+                    lead.obstacles.forEach(obstacle => {
+                        obstacles[obstacle] = (obstacles[obstacle] || 0) + 1;
+                    });
+                }
+            });
+            const topObstacle = Object.keys(obstacles).reduce((a, b) => obstacles[a] > obstacles[b] ? a : b, 'Nessuno');
+
+            // Aggiorna UI
+            document.getElementById('topProfile').textContent = topProfile.length > 20 ? topProfile.substring(0, 20) + '...' : topProfile;
+            document.getElementById('topGoal').textContent = topGoal.length > 20 ? topGoal.substring(0, 20) + '...' : topGoal;
+            document.getElementById('topObstacle').textContent = topObstacle.length > 20 ? topObstacle.substring(0, 20) + '...' : topObstacle;
+            document.getElementById('peakTime').textContent = '🕒 14:00-15:00';
+        }
+
+        // Renderizza leads
+        function renderLeads() {
+            const container = document.getElementById('quizLeadsContainer');
+            
+            if (leadsData.length === 0) {
+                container.innerHTML = '<div class="error">📭 Nessun lead trovato. Aggiungi dati alla collezione "quiz_leads"</div>';
+                return;
+            }
+
+            let html = '<div class="quiz-leads-grid">';
+            
+            leadsData.forEach(lead => {
+                const score = lead.score || 0;
+                const scoreClass = score > 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
+                const goals = Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'Non specificati');
+                const createdDate = lead.timestamp ? new Date(lead.timestamp.toDate()).toLocaleDateString('it-IT') : 'N/A';
+                
+                html += `
+                    <div class="lead-card">
+                        <div class="lead-card-header">
+                            <div>
+                                <div class="lead-name">${lead.name || 'Nome non disponibile'}</div>
+                                <div class="lead-profile-badge">${getProfileIcon(lead.profile)} ${lead.profile || 'Profilo non specificato'}</div>
+                            </div>
+                            <div class="lead-score ${scoreClass}">${score}%</div>
+                        </div>
+                        
+                        <div class="lead-details">
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">📧 Email:</span>
+                                <span class="lead-detail-value">${lead.email || 'Non disponibile'}</span>
+                            </div>
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">📱 Phone:</span>
+                                <span class="lead-detail-value">${lead.phone || 'Non disponibile'}</span>
+                            </div>
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">👤 Info:</span>
+                                <span class="lead-detail-value">${lead.age || 'N/A'} anni • ${lead.gender || 'N/A'}</span>
+                            </div>
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">🎯 Goals:</span>
+                                <span class="lead-detail-value">${goals}</span>
+                            </div>
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">📅 Data:</span>
+                                <span class="lead-detail-value">${createdDate}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="lead-actions">
+                            <button class="action-button" onclick="showLeadDetails('${lead.id}')">👁️ Dettagli</button>
+                            ${lead.phone && lead.phone !== 'Non disponibile' ? 
+                                `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Renderizza chat
+        function renderChats() {
+            const container = document.getElementById('chatContainer');
+            
+            if (chatsData.length === 0) {
+                container.innerHTML = '<div class="error">📭 Nessuna conversazione trovata. Aggiungi dati alla collezione "chat_conversations"</div>';
+                return;
+            }
+
+            let html = '<div class="chat-grid">';
+            
+            chatsData.forEach(chat => {
+                const lastActivity = chat.timestamp ? new Date(chat.timestamp.toDate()).toLocaleDateString('it-IT') : 'N/A';
+                const preview = chat.lastMessage || chat.preview || 'Nessun messaggio disponibile';
+                
+                html += `
+                    <div class="chat-card">
+                        <div class="chat-header">
+                            <div class="chat-id">${chat.id}</div>
+                            <div class="chat-topic">${chat.topic || 'Conversazione'}</div>
+                        </div>
+                        
+                        <div class="chat-client">${chat.clientName || 'Cliente Anonimo'}</div>
+                        
+                        <div class="chat-preview">
+                            "${preview.length > 80 ? preview.substring(0, 80) + '...' : preview}"
+                        </div>
+                        
+                        <div class="chat-meta">
+                            <span>📱 ${chat.phone || 'N/A'}</span>
+                            <span>📅 ${lastActivity}</span>
+                        </div>
+                        
+                        <div class="lead-actions">
+                            <button class="action-button" onclick="showChatDetails('${chat.id}')">👁️ Conversazione</button>
+                            ${chat.phone && chat.phone !== 'N/A' ? 
+                                `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 WhatsApp</button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Helper per icone profilo
+        function getProfileIcon(profile) {
+            const icons = {
+                'Guerriero Determinato': '💪',
+                'Atleta Esperto': '🏆',
+                'Principiante Motivato': '🌱',
+                'Nuovo Esploratore': '🌱'
+            };
+            return icons[profile] || '👤';
+        }
+
+        // Mostra dettagli lead
+        function showLeadDetails(leadId) {
+            const lead = leadsData.find(l => l.id === leadId);
+            if (!lead) return;
+
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('modal-body-content');
+            
+            let html = `<h3>🎯 Dettagli Lead: ${lead.name || 'Sconosciuto'}</h3>`;
+            
+            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
+            html += `<p style="margin: 10px 0;"><strong>👤 Nome:</strong> ${lead.name || 'N/A'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>📧 Email:</strong> ${lead.email || 'N/A'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>📱 WhatsApp:</strong> ${lead.phone || 'N/A'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>🎂 Età:</strong> ${lead.age || 'N/A'} anni</p>`;
+            html += `<p style="margin: 10px 0;"><strong>⚧ Genere:</strong> ${lead.gender || 'N/A'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>🏆 Lead Score:</strong> <span style="color: #4CAF50; font-weight: bold;">${lead.score || 0}%</span></p>`;
+            html += '</div>';
+
+            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🎯 Profilo & Obiettivi</h4>';
+            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
+            html += `<p style="margin: 8px 0;"><strong>🎭 Profilo:</strong> ${lead.profile || 'N/A'}</p>`;
+            html += `<p style="margin: 8px 0;"><strong>🎯 Obiettivi:</strong> ${Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'N/A')}</p>`;
+            html += `<p style="margin: 8px 0;"><strong>🚧 Ostacoli:</strong> ${Array.isArray(lead.obstacles) ? lead.obstacles.join(', ') : (lead.obstacles || 'N/A')}</p>`;
+            html += `<p style="margin: 8px 0;"><strong>💰 Budget:</strong> ${lead.budget || 'N/A'}</p>`;
+            html += '</div>';
+
+            if (lead.phone && lead.phone !== 'N/A') {
+                html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
+                html += `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 Contatta WhatsApp</button>`;
+                html += '</div>';
+            }
+
+            modalBody.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        // Mostra dettagli chat
+        function showChatDetails(chatId) {
+            const chat = chatsData.find(c => c.id === chatId);
+            if (!chat) return;
+
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('modal-body-content');
+            
+            let html = `<h3>💬 Dettagli Conversazione: ${chat.clientName || 'Cliente Anonimo'}</h3>`;
+            
+            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
+            html += `<p style="margin: 10px 0;"><strong>ID:</strong> ${chat.id}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>Cliente:</strong> ${chat.clientName || 'Anonimo'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>Telefono:</strong> ${chat.phone || 'N/A'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>Argomento:</strong> ${chat.topic || 'Conversazione generale'}</p>`;
+            html += `<p style="margin: 10px 0;"><strong>Ultimo messaggio:</strong> ${chat.lastMessage || chat.preview || 'N/A'}</p>`;
+            html += '</div>';
+
+            if (chat.phone && chat.phone !== 'N/A') {
+                html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
+                html += `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 Contatta WhatsApp</button>`;
+                html += '</div>';
+            }
+
+            modalBody.innerHTML = html;
+            modal.style.display = 'flex';
+        }
+
+        // Carica dati demo
+        async function loadSampleData() {
+            if (!isConnected) {
+                showNotification('Connetti prima Firebase', 'error');
+                return;
+            }
+
+            try {
+                // Dati demo per quiz leads
+                const sampleLeads = [
+                    {
+                        name: 'Marco Rossi',
+                        email: 'marco.rossi@email.com',
+                        phone: '+39 333 1234567',
+                        age: 28,
+                        gender: 'M',
+                        score: 85,
+                        profile: 'Guerriero Determinato',
+                        goals: ['Perdita peso', 'Tonificazione'],
+                        obstacles: ['Tempo limitato', 'Motivazione'],
+                        budget: '€150-200/mese',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    {
+                        name: 'Sara Bianchi',
+                        email: 'sara.bianchi@email.com',
+                        phone: '+39 334 5678901',
+                        age: 34,
+                        gender: 'F',
+                        score: 92,
+                        profile: 'Atleta Esperto',
+                        goals: ['Aumento massa muscolare', 'Performance sportiva'],
+                        obstacles: ['Plateau risultati', 'Nutrizione avanzata'],
+                        budget: '€200-300/mese',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    {
+                        name: 'Luca Verdi',
+                        email: 'luca.verdi@email.com',
+                        phone: '+39 335 9876543',
+                        age: 25,
+                        gender: 'M',
+                        score: 76,
+                        profile: 'Principiante Motivato',
+                        goals: ['Forza', 'Resistenza'],
+                        obstacles: ['Dieta', 'Costanza'],
+                        budget: '€100-150/mese',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                ];
+
+                // Dati demo per chat
+                const sampleChats = [
+                    {
+                        clientName: 'Anna Neri',
+                        phone: '+39 347 1111111',
+                        topic: 'Informazioni Prezzi',
+                        lastMessage: 'Vorrei sapere i costi per un programma personalizzato...',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    {
+                        clientName: 'Giovanni Blu',
+                        phone: '+39 348 2222222',
+                        topic: 'Supporto Nutrizionale',
+                        lastMessage: 'Ho bisogno di aiuto con la dieta per aumentare massa...',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    {
+                        clientName: 'Cliente Anonimo',
+                        phone: 'N/A',
+                        topic: 'Supporto Principianti',
+                        lastMessage: 'Sono nuovo al fitness, da dove comincio?',
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                ];
+
+                // Carica leads
+                for (const lead of sampleLeads) {
+                    await db.collection('quiz_leads').add(lead);
+                }
+
+                // Carica chat
+                for (const chat of sampleChats) {
+                    await db.collection('chat_conversations').add(chat);
+                }
+
+                showNotification('✅ Dati demo caricati su Firebase!', 'success');
+                
+                // Ricarica i dati
+                setTimeout(() => {
+                    loadData();
+                }, 1000);
+
+            } catch (error) {
+                console.error('Errore caricamento dati demo:', error);
+                showNotification('❌ Errore caricamento dati demo', 'error');
+            }
+        }
+
         // Funzione per aprire WhatsApp
         function openWhatsApp(phone) {
-            if (!phone || phone === 'N/A') {
+            if (!phone || phone === 'N/A' || phone === 'Non disponibile') {
                 showNotification('Numero di telefono non disponibile', 'error');
                 return;
             }
@@ -1020,198 +1213,6 @@
             const whatsappUrl = 'https://wa.me/' + cleanPhone;
             window.open(whatsappUrl, '_blank');
             showNotification('Apertura WhatsApp...', 'success');
-        }
-
-        // Funzione per mostrare dettagli
-        function showDetails(name, type) {
-            const modal = document.getElementById('detailsModal');
-            const modalBody = document.getElementById('modal-body-content');
-            
-            let content = '';
-            
-            if (type === 'quiz') {
-                content = createQuizDetailsContent(name);
-            } else if (type === 'chat') {
-                content = createChatDetailsContent(name);
-            }
-            
-            modalBody.innerHTML = content;
-            modal.style.display = 'flex';
-        }
-
-        // Contenuto dettagli quiz
-        function createQuizDetailsContent(name) {
-            const data = getQuizData(name);
-            
-            let html = '<h3>🎯 Dettagli Quiz Lead: ' + name + '</h3>';
-            
-            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
-            html += '<p style="margin: 10px 0;"><strong>👤 Nome:</strong> ' + data.name + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>📧 Email:</strong> ' + data.email + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>📱 WhatsApp:</strong> ' + data.phone + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>🎂 Età:</strong> ' + data.age + ' anni</p>';
-            html += '<p style="margin: 10px 0;"><strong>⚧ Genere:</strong> ' + data.gender + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>🏆 Lead Score:</strong> <span style="color: ' + data.scoreColor + '; font-weight: bold;">' + data.score + '%</span></p>';
-            html += '</div>';
-
-            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🎭 Profilo Fitness</h4>';
-            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += '<p style="margin: 8px 0;"><strong>' + data.profileIcon + ' Tipo Profilo:</strong> ' + data.profile + '</p>';
-            html += '<p style="margin: 8px 0;"><strong>💪 Livello Attività:</strong> ' + data.activityLevel + '</p>';
-            html += '<p style="margin: 8px 0;"><strong>🎯 Stile Allenamento:</strong> ' + data.trainingStyle + '</p>';
-            html += '</div>';
-
-            html += '<h4 style="color: #ff6600; margin: 20px 0 10px 0;">🎯 Obiettivi & Motivazioni</h4>';
-            html += '<div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">';
-            html += '<p style="margin: 8px 0;"><strong>🎪 Obiettivi Principali:</strong></p>';
-            html += '<ul style="margin: 10px 0; margin-left: 20px; color: #eee;">';
-            for (let i = 0; i < data.goals.length; i++) {
-                html += '<li style="margin: 5px 0;">' + data.goals[i] + '</li>';
-            }
-            html += '</ul>';
-            html += '<p style="margin: 8px 0;"><strong>🚧 Ostacoli:</strong></p>';
-            html += '<ul style="margin: 10px 0; margin-left: 20px; color: #eee;">';
-            for (let i = 0; i < data.obstacles.length; i++) {
-                html += '<li style="margin: 5px 0;">' + data.obstacles[i] + '</li>';
-            }
-            html += '</ul>';
-            html += '<p style="margin: 8px 0;"><strong>💰 Budget:</strong> ' + data.budget + '</p>';
-            html += '</div>';
-
-            html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
-            html += '<button class="action-button whatsapp" onclick="openWhatsApp(\'' + data.phone + '\')">📱 Contatta WhatsApp</button>';
-            html += '</div>';
-
-            return html;
-        }
-
-        // Contenuto dettagli chat
-        function createChatDetailsContent(name) {
-            const data = getChatData(name);
-            
-            let html = '<h3>💬 Dettagli Conversazione: ' + name + '</h3>';
-            
-            html += '<div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">';
-            html += '<p style="margin: 10px 0;"><strong>ID Conversazione:</strong> ' + data.id + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>Cliente:</strong> ' + data.name + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>Telefono:</strong> ' + data.phone + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>Argomento:</strong> ' + data.topic + '</p>';
-            html += '<p style="margin: 10px 0;"><strong>Ultima Attività:</strong> ' + data.lastActivity + '</p>';
-            html += '</div>';
-
-            if (data.phone !== 'N/A') {
-                html += '<div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #444;">';
-                html += '<button class="action-button whatsapp" onclick="openWhatsApp(\'' + data.phone + '\')">📱 Contatta WhatsApp</button>';
-                html += '</div>';
-            }
-
-            return html;
-        }
-
-        // Dati demo per quiz
-        function getQuizData(name) {
-            const quizData = {
-                'Marco Rossi': {
-                    name: 'Marco Rossi',
-                    email: 'marco.rossi@email.com',
-                    phone: '+39 333 1234567',
-                    age: 28,
-                    gender: 'M',
-                    score: 85,
-                    scoreColor: '#4CAF50',
-                    profileIcon: '💪',
-                    profile: 'Guerriero Determinato',
-                    activityLevel: 'Moderatamente attivo',
-                    trainingStyle: 'Con personal trainer',
-                    goals: ['Perdita peso', 'Tonificazione'],
-                    obstacles: ['Tempo limitato', 'Motivazione'],
-                    budget: '€150-200/mese'
-                },
-                'Sara Bianchi': {
-                    name: 'Sara Bianchi',
-                    email: 'sara.bianchi@email.com',
-                    phone: '+39 334 5678901',
-                    age: 34,
-                    gender: 'F',
-                    score: 92,
-                    scoreColor: '#4CAF50',
-                    profileIcon: '🏆',
-                    profile: 'Atleta Esperto',
-                    activityLevel: 'Molto attivo',
-                    trainingStyle: 'Autonomo con consulenze',
-                    goals: ['Aumento massa muscolare', 'Performance sportiva'],
-                    obstacles: ['Plateau risultati', 'Nutrizione avanzata'],
-                    budget: '€200-300/mese'
-                },
-                'Luca Verdi': {
-                    name: 'Luca Verdi',
-                    email: 'luca.verdi@email.com',
-                    phone: '+39 335 9876543',
-                    age: 25,
-                    gender: 'M',
-                    score: 76,
-                    scoreColor: '#ff9800',
-                    profileIcon: '🌱',
-                    profile: 'Principiante Motivato',
-                    activityLevel: 'Lievemente attivo',
-                    trainingStyle: 'Palestra con programma',
-                    goals: ['Forza', 'Resistenza'],
-                    obstacles: ['Dieta', 'Costanza'],
-                    budget: '€100-150/mese'
-                },
-                'Anna Neri': {
-                    name: 'Anna Neri',
-                    email: 'anna.neri@email.com',
-                    phone: '+39 347 1111111',
-                    age: 31,
-                    gender: 'F',
-                    score: 68,
-                    scoreColor: '#ff9800',
-                    profileIcon: '🌱',
-                    profile: 'Nuovo Esploratore',
-                    activityLevel: 'Poco attivo',
-                    trainingStyle: 'Casa con video',
-                    goals: ['Benessere generale', 'Energia'],
-                    obstacles: ['Esperienza', 'Paura giudizio'],
-                    budget: '€50-100/mese'
-                }
-            };
-            return quizData[name] || quizData['Marco Rossi'];
-        }
-
-        // Dati demo per chat
-        function getChatData(name) {
-            const chatData = {
-                'Anna Neri': {
-                    id: 'chat_001',
-                    name: 'Anna Neri',
-                    phone: '+39 347 1111111',
-                    topic: 'Informazioni Prezzi',
-                    lastActivity: '01/07/25 15:20'
-                },
-                'Giovanni Blu': {
-                    id: 'chat_002',
-                    name: 'Giovanni Blu',
-                    phone: '+39 348 2222222',
-                    topic: 'Supporto Nutrizionale',
-                    lastActivity: '01/07/25 13:45'
-                },
-                'Maria Rossi': {
-                    id: 'chat_003',
-                    name: 'Maria Rossi',
-                    phone: '+39 349 3333333',
-                    topic: 'Prenotazione Consulenza',
-                    lastActivity: '01/07/25 11:30'
-                },
-                'Cliente Anonimo': {
-                    id: 'chat_004',
-                    name: 'Cliente Anonimo',
-                    phone: 'N/A',
-                    topic: 'Supporto Principianti',
-                    lastActivity: '30/06/25 19:15'
-                }
-            };
-            return chatData[name] || chatData['Anna Neri'];
         }
 
         // Funzione per chiudere il modal
@@ -1239,20 +1240,10 @@
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);
                 }
-            }, 3000);
+            }, 4000);
         }
 
-        // Aggiorna orario
-        function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            const timeElement = document.getElementById('currentTime');
-            if (timeElement) {
-                timeElement.textContent = timeString;
-            }
-        }
-
-        // Event listener per chiusura modal
+        // Event listeners
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('detailsModal');
             if (e.target === modal) {
@@ -1260,20 +1251,24 @@
             }
         });
 
-        // Escape key per chiudere modal
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
             }
         });
 
+        // Auto-refresh ogni 30 secondi
+        setInterval(() => {
+            if (isConnected) {
+                loadData();
+            }
+        }, 30000);
+
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            setInterval(updateTime, 60000);
-            showNotification('Dashboard caricata con successo!', 'success');
+            console.log('🚀 Dashboard TribuCoach Firebase pronta!');
+            showNotification('Dashboard caricata. Configura Firebase per iniziare.', 'success');
         });
     </script>
 </body>
 </html>
-            
