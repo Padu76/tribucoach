@@ -5,9 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TribuCoach Dashboard - Firebase</title>
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- Firebase SDK v9 con fallback -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Fallback Firebase v8 se v9 non funziona -->
+    <script>
+        // Controlla se Firebase v9 è caricato, altrimenti carica v8
+        window.addEventListener('load', function() {
+            if (typeof firebase === 'undefined') {
+                console.warn('⚠️ Firebase v9 non disponibile, carico v8...');
+                
+                const script1 = document.createElement('script');
+                script1.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js';
+                script1.onload = function() {
+                    const script2 = document.createElement('script');
+                    script2.src = 'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js';
+                    script2.onload = function() {
+                        console.log('✅ Firebase v8 caricato come fallback');
+                        // Trigger inizializzazione
+                        if (typeof initFirebaseAfterLoad === 'function') {
+                            initFirebaseAfterLoad();
+                        }
+                    };
+                    document.head.appendChild(script2);
+                };
+                document.head.appendChild(script1);
+            } else {
+                console.log('✅ Firebase v9 caricato correttamente');
+            }
+        });
+    </script>
     
     <style>
         * {
@@ -581,18 +609,19 @@
 
     <!-- Configurazione Firebase -->
     <div class="firebase-config" id="firebaseConfig">
-        <h3 style="color: #ff6600; margin-bottom: 15px;">🔧 Configurazione Firebase</h3>
+        <h3 style="color: #ff6600; margin-bottom: 15px;">🔧 Configurazione Firebase TribuCoach</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
-            <input type="text" class="config-input" id="apiKey" placeholder="API Key">
-            <input type="text" class="config-input" id="authDomain" placeholder="Auth Domain">
-            <input type="text" class="config-input" id="projectId" placeholder="Project ID">
-            <input type="text" class="config-input" id="storageBucket" placeholder="Storage Bucket">
-            <input type="text" class="config-input" id="messagingSenderId" placeholder="Messaging Sender ID">
-            <input type="text" class="config-input" id="appId" placeholder="App ID">
+            <input type="text" class="config-input" id="apiKey" value="AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs" placeholder="API Key">
+            <input type="text" class="config-input" id="authDomain" value="tribucoach-a2254.firebaseapp.com" placeholder="Auth Domain">
+            <input type="text" class="config-input" id="projectId" value="tribucoach-a2254" placeholder="Project ID">
+            <input type="text" class="config-input" id="storageBucket" value="tribucoach-a2254.firebasestorage.app" placeholder="Storage Bucket">
+            <input type="text" class="config-input" id="messagingSenderId" value="425200296836" placeholder="Messaging Sender ID">
+            <input type="text" class="config-input" id="appId" value="1:425200296836:web:7835188f40f4348567ab48" placeholder="App ID">
         </div>
         <div style="margin-top: 15px;">
             <button class="config-button" onclick="connectFirebase()">🚀 Connetti Firebase</button>
             <button class="config-button" onclick="loadSampleData()" style="background: linear-gradient(135deg, #2196F3, #1976D2);">📝 Carica Dati Demo</button>
+            <button class="config-button" onclick="autoConnect()" style="background: linear-gradient(135deg, #4CAF50, #45a049);">⚡ Auto-Connetti</button>
         </div>
     </div>
 
@@ -718,54 +747,131 @@
         let isConnected = false;
         let leadsData = [];
         let chatsData = [];
+        let firebaseRetryCount = 0;
+        const maxRetries = 3;
 
-        // Funzione per connettere Firebase
-        function connectFirebase() {
-            const apiKey = document.getElementById('apiKey').value;
-            const authDomain = document.getElementById('authDomain').value;
-            const projectId = document.getElementById('projectId').value;
-            const storageBucket = document.getElementById('storageBucket').value;
-            const messagingSenderId = document.getElementById('messagingSenderId').value;
-            const appId = document.getElementById('appId').value;
+        // Aspetta che Firebase sia disponibile
+        function waitForFirebase() {
+            return new Promise((resolve, reject) => {
+                const checkFirebase = () => {
+                    if (typeof firebase !== 'undefined') {
+                        console.log('✅ Firebase rilevato');
+                        resolve();
+                    } else if (firebaseRetryCount < maxRetries) {
+                        firebaseRetryCount++;
+                        console.log(`🔄 Tentativo ${firebaseRetryCount}/${maxRetries} di caricare Firebase...`);
+                        setTimeout(checkFirebase, 1000);
+                    } else {
+                        reject(new Error('Firebase non disponibile dopo ' + maxRetries + ' tentativi'));
+                    }
+                };
+                checkFirebase();
+            });
+        }
 
-            if (!apiKey || !projectId) {
-                showNotification('Inserisci almeno API Key e Project ID', 'error');
-                return;
-            }
-
-            const firebaseConfig = {
-                apiKey: apiKey,
-                authDomain: authDomain,
-                projectId: projectId,
-                storageBucket: storageBucket,
-                messagingSenderId: messagingSenderId,
-                appId: appId
-            };
-
+        // Funzione per auto-connessione con credenziali TribuCoach
+        async function autoConnect() {
             try {
-                // Inizializza Firebase
-                firebaseApp = firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
+                showNotification('🔄 Connessione automatica in corso...', 'success');
                 
-                // Test connessione
-                db.collection('test').limit(1).get()
-                    .then(() => {
-                        isConnected = true;
-                        updateConnectionStatus(true);
-                        hideFirebaseConfig();
-                        loadData();
-                        showNotification('✅ Connesso a Firebase!', 'success');
-                    })
-                    .catch((error) => {
-                        console.error('Errore connessione Firebase:', error);
-                        updateConnectionStatus(false, error.message);
-                        showNotification('❌ Errore connessione: ' + error.message, 'error');
-                    });
+                // Aspetta che Firebase sia disponibile
+                await waitForFirebase();
+                
+                // Poi connetti
+                setTimeout(() => {
+                    connectFirebase();
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ Errore auto-connessione:', error);
+                showNotification('❌ Firebase non disponibile. Usa connessione manuale.', 'error');
+                updateConnectionStatus(false, 'Firebase SDK non caricato');
+            }
+        }
+
+        // Funzione inizializzazione post-caricamento Firebase
+        function initFirebaseAfterLoad() {
+            console.log('🔄 Inizializzazione Firebase post-caricamento...');
+            setTimeout(() => {
+                autoConnect();
+            }, 500);
+        }
+
+        // Funzione per connettere Firebase con controlli migliorati
+        async function connectFirebase() {
+            try {
+                // Controllo disponibilità Firebase
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK non caricato. Controlla la connessione internet.');
+                }
+
+                const apiKey = document.getElementById('apiKey').value;
+                const authDomain = document.getElementById('authDomain').value;
+                const projectId = document.getElementById('projectId').value;
+                const storageBucket = document.getElementById('storageBucket').value;
+                const messagingSenderId = document.getElementById('messagingSenderId').value;
+                const appId = document.getElementById('appId').value;
+
+                if (!apiKey || !projectId) {
+                    showNotification('Inserisci almeno API Key e Project ID', 'error');
+                    return;
+                }
+
+                const firebaseConfig = {
+                    apiKey: apiKey,
+                    authDomain: authDomain,
+                    projectId: projectId,
+                    storageBucket: storageBucket,
+                    messagingSenderId: messagingSenderId,
+                    appId: appId
+                };
+
+                console.log('🔧 Configurazione Firebase:', firebaseConfig);
+
+                // Controlla se Firebase è già inizializzato
+                if (firebaseApp) {
+                    console.log('⚠️ Firebase già inizializzato, riutilizzo app esistente');
+                } else {
+                    // Inizializza Firebase
+                    firebaseApp = firebase.initializeApp(firebaseConfig);
+                    console.log('✅ Firebase inizializzato');
+                }
+                
+                db = firebase.firestore();
+                console.log('✅ Firestore inizializzato');
+                
+                // Test connessione con timeout
+                const testPromise = db.collection('test').limit(1).get();
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout connessione (10s)')), 10000)
+                );
+
+                await Promise.race([testPromise, timeoutPromise]);
+                
+                isConnected = true;
+                updateConnectionStatus(true);
+                hideFirebaseConfig();
+                
+                showNotification('✅ Connesso a Firebase TribuCoach!', 'success');
+                
+                // Carica dati dopo breve pausa
+                setTimeout(() => {
+                    loadData();
+                }, 1000);
 
             } catch (error) {
-                console.error('Errore configurazione Firebase:', error);
+                console.error('❌ Errore connessione Firebase:', error);
                 updateConnectionStatus(false, error.message);
-                showNotification('❌ Configurazione non valida', 'error');
+                
+                if (error.message.includes('Permission denied')) {
+                    showNotification('❌ Permessi negati. Controlla le regole Firestore.', 'error');
+                } else if (error.message.includes('not found')) {
+                    showNotification('❌ Progetto non trovato. Controlla Project ID.', 'error');
+                } else if (error.message.includes('Invalid API key')) {
+                    showNotification('❌ API Key non valida.', 'error');
+                } else {
+                    showNotification('❌ Errore: ' + error.message, 'error');
+                }
             }
         }
 
@@ -786,7 +892,7 @@
             document.getElementById('firebaseConfig').style.display = 'none';
         }
 
-        // Carica dati da Firestore
+        // Carica dati da Firestore con struttura TribuCoach
         async function loadData() {
             if (!isConnected) {
                 showNotification('Firebase non connesso', 'error');
@@ -794,19 +900,90 @@
             }
 
             try {
-                // Carica leads
-                const leadsSnapshot = await db.collection('quiz_leads').get();
+                // Carica quiz results dalla collezione corretta
+                const quizSnapshot = await db.collection('quiz_results').get();
                 leadsData = [];
-                leadsSnapshot.forEach(doc => {
-                    leadsData.push({ id: doc.id, ...doc.data() });
+                quizSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    leadsData.push({ 
+                        id: doc.id, 
+                        ...data,
+                        // Mappa i campi dalla struttura TribuCoach
+                        name: data.userName || data.name || 'Nome non disponibile',
+                        email: data.userEmail || data.email || 'Non disponibile',
+                        phone: data.userWhatsApp || data.phone || data.whatsapp || 'Non disponibile',
+                        age: data.userAge || data.age || 'N/A',
+                        gender: data.userGender || data.gender || 'N/A',
+                        score: data.fitnessScore || data.score || 0,
+                        profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                        goals: data.fitnessGoals || data.goals || [],
+                        obstacles: data.fitnessObstacles || data.obstacles || [],
+                        budget: data.budget || 'Non specificato',
+                        timestamp: data.timestamp || data.createdAt
+                    });
                 });
 
-                // Carica chat
-                const chatsSnapshot = await db.collection('chat_conversations').get();
+                // Carica conversazioni dalla collezione corretta
+                const conversationsSnapshot = await db.collection('conversations').get();
                 chatsData = [];
-                chatsSnapshot.forEach(doc => {
-                    chatsData.push({ id: doc.id, ...doc.data() });
+                conversationsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Estrai informazioni dalla conversazione
+                    const messages = data.messages || [];
+                    const firstUserMessage = messages.find(msg => msg.role === 'user' || msg.sender === 'user');
+                    const lastMessage = messages[messages.length - 1];
+                    
+                    chatsData.push({ 
+                        id: doc.id, 
+                        ...data,
+                        clientName: data.customerName || data.clientName || 'Cliente Anonimo',
+                        phone: data.customerPhone || data.phone || extractPhoneFromMessages(messages) || 'N/A',
+                        topic: data.topic || extractTopicFromMessages(messages) || 'Conversazione generale',
+                        lastMessage: lastMessage?.content || lastMessage?.message || 'Nessun messaggio',
+                        timestamp: data.lastMessageAt || data.dateCreated || data.timestamp
+                    });
                 });
+
+                // Prova anche collezioni alternative
+                if (leadsData.length === 0) {
+                    try {
+                        const usersSnapshot = await db.collection('users').where('quiz_completed', '==', true).get();
+                        usersSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            leadsData.push({
+                                id: doc.id,
+                                name: data.name || 'Nome non disponibile',
+                                email: data.email || 'Non disponibile',
+                                phone: data.whatsapp || data.phone || 'Non disponibile',
+                                score: data.score || Math.floor(Math.random() * 40) + 60,
+                                profile: data.profile || 'Profilo non specificato',
+                                timestamp: data.created_at || data.last_activity
+                            });
+                        });
+                    } catch (error) {
+                        console.warn('Collezione users non accessibile:', error);
+                    }
+                }
+
+                if (chatsData.length === 0) {
+                    try {
+                        const chatbotSnapshot = await db.collection('chatbot_conversations').get();
+                        chatbotSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            chatsData.push({
+                                id: doc.id,
+                                clientName: 'Cliente da Chatbot',
+                                phone: data.user_phone || 'N/A',
+                                topic: data.topics_discussed?.join(', ') || 'Conversazione chatbot',
+                                lastMessage: `Conversazione di ${data.messages_count || 0} messaggi`,
+                                timestamp: data.created_at
+                            });
+                        });
+                    } catch (error) {
+                        console.warn('Collezione chatbot_conversations non accessibile:', error);
+                    }
+                }
 
                 // Aggiorna UI
                 updateMetrics();
@@ -814,12 +991,92 @@
                 renderLeads();
                 renderChats();
 
-                showNotification('📊 Dati aggiornati da Firebase', 'success');
+                showNotification(`📊 Caricati ${leadsData.length} quiz e ${chatsData.length} chat`, 'success');
 
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
                 showNotification('❌ Errore caricamento: ' + error.message, 'error');
+                
+                // Carica dati demo se non ci sono dati reali
+                loadDemoData();
             }
+        }
+
+        // Funzione per estrarre il telefono dai messaggi
+        function extractPhoneFromMessages(messages) {
+            if (!messages) return null;
+            
+            for (const msg of messages) {
+                const text = msg.content || msg.message || '';
+                const phoneMatch = text.match(/(?:\+39|39)?[\s\-]?([3]\d{2}[\s\-]?\d{3}[\s\-]?\d{4})/);
+                if (phoneMatch) {
+                    return '+39 ' + phoneMatch[1];
+                }
+            }
+            return null;
+        }
+
+        // Funzione per estrarre topic dai messaggi (migliorata)
+        function extractTopicFromMessages(messages) {
+            if (!messages || messages.length === 0) return null;
+            
+            const allText = messages
+                .filter(msg => msg.role === 'user' || msg.sender === 'user')
+                .map(msg => (msg.content || msg.message || '').toLowerCase())
+                .join(' ');
+            
+            const topics = {
+                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe', 'pagamento'],
+                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione', 'cibo'],
+                'Prenotazione Consulenza': ['consulenza', 'appuntamento', 'prenotare', 'incontro'],
+                'Supporto Principianti': ['principiante', 'iniziare', 'nuovo', 'primo'],
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra'],
+                'Obiettivi Fitness': ['perdere peso', 'dimagrire', 'massa', 'tonificare']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Conversazione Generale';
+        }
+
+        // Carica dati demo se necessario
+        function loadDemoData() {
+            leadsData = [
+                {
+                    id: 'demo_1',
+                    name: 'Marco Rossi (Demo)',
+                    email: 'marco.demo@email.com',
+                    phone: '+39 333 1234567',
+                    age: 28,
+                    gender: 'M',
+                    score: 85,
+                    profile: 'Guerriero Determinato',
+                    goals: ['Perdita peso', 'Tonificazione'],
+                    obstacles: ['Tempo limitato'],
+                    budget: '€150/mese'
+                }
+            ];
+            
+            chatsData = [
+                {
+                    id: 'chat_demo_1',
+                    clientName: 'Anna Neri (Demo)',
+                    phone: '+39 347 1111111',
+                    topic: 'Informazioni Prezzi',
+                    lastMessage: 'Vorrei informazioni sui vostri servizi...'
+                }
+            ];
+            
+            updateMetrics();
+            updateBusinessInsights();
+            renderLeads();
+            renderChats();
+            
+            showNotification('📝 Caricati dati demo - Connetti Firebase per dati reali', 'success');
         }
 
         // Aggiorna metriche principali
@@ -1103,7 +1360,7 @@
             modal.style.display = 'flex';
         }
 
-        // Carica dati demo
+        // Carica dati demo con struttura TribuCoach
         async function loadSampleData() {
             if (!isConnected) {
                 showNotification('Connetti prima Firebase', 'error');
@@ -1111,94 +1368,150 @@
             }
 
             try {
-                // Dati demo per quiz leads
-                const sampleLeads = [
+                showNotification('📝 Caricamento dati demo...', 'success');
+
+                // Dati demo per quiz_results (struttura TribuCoach)
+                const sampleQuizResults = [
                     {
-                        name: 'Marco Rossi',
-                        email: 'marco.rossi@email.com',
-                        phone: '+39 333 1234567',
-                        age: 28,
-                        gender: 'M',
-                        score: 85,
-                        profile: 'Guerriero Determinato',
-                        goals: ['Perdita peso', 'Tonificazione'],
-                        obstacles: ['Tempo limitato', 'Motivazione'],
+                        userName: 'Marco Rossi',
+                        userEmail: 'marco.rossi@email.com',
+                        userWhatsApp: '+39 333 1234567',
+                        userAge: 28,
+                        userGender: 'Maschio',
+                        fitnessScore: 85,
+                        fitnessPersonality: 'Guerriero Determinato',
+                        fitnessGoals: ['Perdita peso', 'Tonificazione'],
+                        fitnessObstacles: ['Tempo limitato', 'Motivazione'],
                         budget: '€150-200/mese',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        quizVersion: '1.0',
+                        source: 'dashboard_demo'
                     },
                     {
-                        name: 'Sara Bianchi',
-                        email: 'sara.bianchi@email.com',
-                        phone: '+39 334 5678901',
-                        age: 34,
-                        gender: 'F',
-                        score: 92,
-                        profile: 'Atleta Esperto',
-                        goals: ['Aumento massa muscolare', 'Performance sportiva'],
-                        obstacles: ['Plateau risultati', 'Nutrizione avanzata'],
+                        userName: 'Sara Bianchi',
+                        userEmail: 'sara.bianchi@email.com',
+                        userWhatsApp: '+39 334 5678901',
+                        userAge: 34,
+                        userGender: 'Femmina',
+                        fitnessScore: 92,
+                        fitnessPersonality: 'Atleta Esperto',
+                        fitnessGoals: ['Aumento massa muscolare', 'Performance sportiva'],
+                        fitnessObstacles: ['Plateau risultati', 'Nutrizione avanzata'],
                         budget: '€200-300/mese',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        quizVersion: '1.0',
+                        source: 'dashboard_demo'
                     },
                     {
-                        name: 'Luca Verdi',
-                        email: 'luca.verdi@email.com',
-                        phone: '+39 335 9876543',
-                        age: 25,
-                        gender: 'M',
-                        score: 76,
-                        profile: 'Principiante Motivato',
-                        goals: ['Forza', 'Resistenza'],
-                        obstacles: ['Dieta', 'Costanza'],
+                        userName: 'Luca Verdi',
+                        userEmail: 'luca.verdi@email.com',
+                        userWhatsApp: '+39 335 9876543',
+                        userAge: 25,
+                        userGender: 'Maschio',
+                        fitnessScore: 76,
+                        fitnessPersonality: 'Principiante Motivato',
+                        fitnessGoals: ['Forza', 'Resistenza'],
+                        fitnessObstacles: ['Dieta', 'Costanza'],
                         budget: '€100-150/mese',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        quizVersion: '1.0',
+                        source: 'dashboard_demo'
                     }
                 ];
 
-                // Dati demo per chat
-                const sampleChats = [
+                // Dati demo per conversations (struttura TribuCoach)
+                const sampleConversations = [
                     {
-                        clientName: 'Anna Neri',
-                        phone: '+39 347 1111111',
+                        customerName: 'Anna Neri',
+                        customerPhone: '+39 347 1111111',
                         topic: 'Informazioni Prezzi',
-                        lastMessage: 'Vorrei sapere i costi per un programma personalizzato...',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Ciao, vorrei sapere i costi per un programma personalizzato',
+                                timestamp: new Date().toISOString()
+                            },
+                            {
+                                role: 'assistant',
+                                content: 'Ciao Anna! Sarò felice di aiutarti con le informazioni sui nostri programmi.',
+                                timestamp: new Date().toISOString()
+                            }
+                        ],
+                        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
+                        source: 'dashboard_demo'
                     },
                     {
-                        clientName: 'Giovanni Blu',
-                        phone: '+39 348 2222222',
+                        customerName: 'Giovanni Blu',
+                        customerPhone: '+39 348 2222222',
                         topic: 'Supporto Nutrizionale',
-                        lastMessage: 'Ho bisogno di aiuto con la dieta per aumentare massa...',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Ho bisogno di aiuto con la dieta per aumentare massa muscolare',
+                                timestamp: new Date().toISOString()
+                            }
+                        ],
+                        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
+                        source: 'dashboard_demo'
                     },
                     {
-                        clientName: 'Cliente Anonimo',
-                        phone: 'N/A',
-                        topic: 'Supporto Principianti',
-                        lastMessage: 'Sono nuovo al fitness, da dove comincio?',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        customerName: 'Maria Rossi',
+                        customerPhone: '+39 349 3333333',
+                        topic: 'Prenotazione Consulenza',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Quando posso prenotare una consulenza gratuita?',
+                                timestamp: new Date().toISOString()
+                            }
+                        ],
+                        lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        dateCreated: firebase.firestore.FieldValue.serverTimestamp(),
+                        source: 'dashboard_demo'
                     }
                 ];
 
-                // Carica leads
-                for (const lead of sampleLeads) {
-                    await db.collection('quiz_leads').add(lead);
+                // Carica quiz results
+                for (const quizResult of sampleQuizResults) {
+                    await db.collection('quiz_results').add(quizResult);
                 }
+                console.log('✅ Quiz results caricati');
 
-                // Carica chat
-                for (const chat of sampleChats) {
-                    await db.collection('chat_conversations').add(chat);
+                // Carica conversazioni
+                for (const conversation of sampleConversations) {
+                    await db.collection('conversations').add(conversation);
                 }
+                console.log('✅ Conversazioni caricate');
 
-                showNotification('✅ Dati demo caricati su Firebase!', 'success');
+                // Aggiungi anche alla collezione users per completezza
+                for (const quiz of sampleQuizResults) {
+                    const userId = btoa(quiz.userWhatsApp).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+                    await db.collection('users').doc(userId).set({
+                        name: quiz.userName,
+                        whatsapp: quiz.userWhatsApp,
+                        email: quiz.userEmail,
+                        source: 'quiz',
+                        profile: quiz.fitnessPersonality,
+                        score: quiz.fitnessScore,
+                        quiz_completed: true,
+                        created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                        last_activity: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+                console.log('✅ Users aggiornati');
+
+                showNotification('✅ Dati demo caricati con successo!', 'success');
                 
                 // Ricarica i dati
                 setTimeout(() => {
                     loadData();
-                }, 1000);
+                }, 2000);
 
             } catch (error) {
                 console.error('Errore caricamento dati demo:', error);
-                showNotification('❌ Errore caricamento dati demo', 'error');
+                showNotification('❌ Errore caricamento dati demo: ' + error.message, 'error');
             }
         }
 
@@ -1264,11 +1577,30 @@
             }
         }, 30000);
 
-        // Inizializzazione
+        // Inizializzazione con controlli migliorati
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Dashboard TribuCoach Firebase pronta!');
-            showNotification('Dashboard caricata. Configura Firebase per iniziare.', 'success');
+            showNotification('Dashboard caricata. Controllo Firebase...', 'success');
+            
+            // Controlla Firebase dopo 2 secondi
+            setTimeout(() => {
+                if (typeof firebase !== 'undefined') {
+                    showNotification('✅ Firebase SDK caricato, connessione in corso...', 'success');
+                    autoConnect();
+                } else {
+                    showNotification('⚠️ Firebase non caricato. Clicca "Auto-Connetti" quando pronto.', 'error');
+                    updateConnectionStatus(false, 'Firebase SDK non caricato - Riprova tra poco');
+                }
+            }, 2000);
         });
+
+        // Gestione errori globali
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            if (msg.includes('firebase')) {
+                console.error('❌ Errore Firebase globale:', msg);
+                updateConnectionStatus(false, 'Errore Firebase - Ricarica la pagina');
+            }
+        };
     </script>
 </body>
 </html>
