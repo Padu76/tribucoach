@@ -339,106 +339,69 @@
             updateStatus('loading', '🔄 Caricando conversazioni da Chatbase...');
             
             try {
-                console.log('🔍 Provo diversi endpoint Chatbase...');
+                console.log('🔍 Chiamata API Chatbase con endpoint corretto...');
                 
-                // Prova endpoint diversi
-                const endpoints = [
-                    `/conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}`,
-                    `/chatbots/${CHATBASE_CONFIG.chatbotId}/conversations`,
-                    `/get-conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}`,
-                    `/conversations/${CHATBASE_CONFIG.chatbotId}`
-                ];
+                // Endpoint corretto secondo documentazione ufficiale
+                const url = `${CHATBASE_CONFIG.apiBase}/get-conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}&size=50`;
+                console.log('🔍 URL:', url);
                 
-                let response = null;
-                let successfulEndpoint = null;
-                
-                for (const endpoint of endpoints) {
-                    try {
-                        console.log(`🔍 Provo: ${CHATBASE_CONFIG.apiBase}${endpoint}`);
-                        
-                        response = await fetch(`${CHATBASE_CONFIG.apiBase}${endpoint}`, {
-                            method: 'GET',
-                            headers: {
-                                'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        console.log(`📊 Status ${endpoint}:`, response.status);
-                        
-                        if (response.ok) {
-                            successfulEndpoint = endpoint;
-                            break;
-                        }
-                        
-                    } catch (endpointError) {
-                        console.log(`❌ Errore endpoint ${endpoint}:`, endpointError.message);
-                        continue;
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
                     }
-                }
+                });
+                
+                console.log('📊 Response status:', response.status);
+                console.log('📊 Response headers:', [...response.headers.entries()]);
 
-                if (!response || !response.ok) {
-                    throw new Error(`Tutti gli endpoint falliti. Ultimo status: ${response?.status || 'N/A'}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
                 }
 
                 const data = await response.json();
                 console.log('✅ Risposta Chatbase:', data);
-                console.log('✅ Endpoint funzionante:', successfulEndpoint);
 
-                // Gestisci diverse strutture di risposta
+                // Gestisci la struttura della risposta secondo la documentazione
                 let conversations = [];
                 
-                if (data.conversations) {
-                    conversations = data.conversations;
-                } else if (data.data && Array.isArray(data.data)) {
+                if (data.data && Array.isArray(data.data)) {
                     conversations = data.data;
+                    console.log(`📊 Trovate ${conversations.length} conversazioni`);
                 } else if (Array.isArray(data)) {
                     conversations = data;
                 } else {
-                    console.log('📊 Struttura risposta sconosciuta:', Object.keys(data));
-                    
-                    // Prova a usare conversazioni mock per test
-                    conversations = [
-                        {
-                            id: 'mock-1',
-                            messages: [
-                                { role: 'user', content: 'Ciao, sono Marco e vorrei un allenamento per i glutei' },
-                                { role: 'assistant', content: 'Ciao Marco! Sarò felice di aiutarti...' }
-                            ],
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        {
-                            id: 'mock-2', 
-                            messages: [
-                                { role: 'user', content: 'Salve, mi chiamo Laura. Ho bisogno di una dieta' },
-                                { role: 'assistant', content: 'Ciao Laura! Ti aiuto volentieri...' }
-                            ],
-                            created_at: new Date(Date.now() - 2*60*60*1000).toISOString(),
-                            updated_at: new Date(Date.now() - 2*60*60*1000).toISOString()
-                        }
-                    ];
-                    
-                    updateStatus('connected', '⚠️ Usando dati mock - Endpoint non restituisce conversazioni');
+                    console.log('📊 Struttura risposta:', Object.keys(data));
+                    throw new Error('Formato risposta API inaspettato');
                 }
 
                 if (conversations.length > 0) {
                     conversationsData = conversations.map(conv => ({
                         id: conv.id || `conv-${Date.now()}`,
-                        clientName: extractNameFromMessages(conv.messages) || 'Cliente Anonimo',
+                        clientName: extractNameFromMessages(conv.messages) || conv.customer || 'Cliente Anonimo',
                         phone: extractPhoneFromMessages(conv.messages) || 'N/A',
                         topic: extractTopicFromMessages(conv.messages) || 'Generale',
                         lastMessage: getLastUserMessage(conv.messages),
-                        timestamp: new Date(conv.updated_at || conv.created_at || Date.now()),
+                        timestamp: new Date(conv.created_at || Date.now()),
                         messagesCount: conv.messages?.length || 0,
-                        source: 'Chatbase'
+                        source: conv.source || 'Chatbase'
                     }));
 
                     renderConversations();
                     updateMetrics();
                     updateStatus('connected', `✅ ${conversations.length} conversazioni caricate da Chatbase`);
                 } else {
-                    throw new Error('Nessuna conversazione trovata nella risposta');
+                    updateStatus('connected', '⚠️ Nessuna conversazione trovata');
+                    document.getElementById('conversationsContainer').innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">💬</div>
+                            <p>Nessuna conversazione trovata nel chatbot</p>
+                            <small>Le conversazioni appariranno qui quando gli utenti interagiranno con il chatbot</small>
+                        </div>
+                    `;
                 }
 
             } catch (error) {
