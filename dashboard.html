@@ -289,6 +289,7 @@
                 <button class="btn primary" onclick="loadChatbaseConversations()">🔄 Carica Conversazioni</button>
                 <button class="btn" onclick="loadFirebaseQuiz()">📊 Carica Quiz</button>
                 <button class="btn" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
+                <button class="btn" onclick="debugChatbase()">🔍 Debug Chatbase</button>
             </div>
             <div id="conversationsContainer" class="chats-grid">
                 <div class="loading">
@@ -700,6 +701,106 @@
             const conv = conversationsData.find(c => c.id === conversationId);
             if (conv) {
                 alert(`Conversazione ${conversationId}\nCliente: ${conv.clientName}\nTopic: ${conv.topic}`);
+            }
+        }
+
+        // === DEBUG CHATBASE ===
+        async function debugChatbase() {
+            updateStatus('loading', '🔍 Debug Chatbase in corso...');
+            console.log('🔍 Debug completo Chatbase...');
+            
+            try {
+                // Test 1: Verifica se il chatbot esiste
+                console.log('🔍 Test 1: Verifica esistenza chatbot');
+                const chatbotUrl = `${CHATBASE_CONFIG.apiBase}/chatbots`;
+                const chatbotResponse = await fetch(chatbotUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Status chatbots:', chatbotResponse.status);
+                if (chatbotResponse.ok) {
+                    const chatbots = await chatbotResponse.json();
+                    console.log('📊 I tuoi chatbots:', chatbots);
+                    
+                    // Verifica se il nostro chatbot è nella lista
+                    if (chatbots.data) {
+                        const ourBot = chatbots.data.find(bot => bot.id === CHATBASE_CONFIG.chatbotId);
+                        if (ourBot) {
+                            console.log('✅ Chatbot trovato:', ourBot);
+                        } else {
+                            console.log('❌ Chatbot NON trovato nella lista');
+                            console.log('📊 Chatbots disponibili:', chatbots.data.map(bot => ({id: bot.id, name: bot.name})));
+                        }
+                    }
+                } else {
+                    console.log('❌ Errore nel recuperare chatbots:', await chatbotResponse.text());
+                }
+                
+                // Test 2: Prova endpoint conversazioni senza parametri
+                console.log('🔍 Test 2: Conversazioni senza parametri');
+                const convUrl1 = `${CHATBASE_CONFIG.apiBase}/get-conversations`;
+                const convResponse1 = await fetch(convUrl1, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Status conv senza params:', convResponse1.status);
+                const convText1 = await convResponse1.text();
+                console.log('📊 Response conv senza params:', convText1);
+                
+                // Test 3: Prova con parametri diversi
+                console.log('🔍 Test 3: Conversazioni con page=1&size=5');
+                const convUrl2 = `${CHATBASE_CONFIG.apiBase}/get-conversations?page=1&size=5`;
+                const convResponse2 = await fetch(convUrl2, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Status conv con page/size:', convResponse2.status);
+                const convText2 = await convResponse2.text();
+                console.log('📊 Response conv con page/size:', convText2);
+                
+                // Test 4: Prova a inviare un messaggio di test per creare una conversazione
+                console.log('🔍 Test 4: Invio messaggio di test');
+                const messageUrl = `${CHATBASE_CONFIG.apiBase}/chat`;
+                const messagePayload = {
+                    chatbotId: CHATBASE_CONFIG.chatbotId,
+                    messages: [
+                        { role: "user", content: "Test messaggio per dashboard" }
+                    ],
+                    conversationId: "dashboard-test-" + Date.now()
+                };
+                
+                const messageResponse = await fetch(messageUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(messagePayload)
+                });
+                
+                console.log('📊 Status test message:', messageResponse.status);
+                const messageText = await messageResponse.text();
+                console.log('📊 Response test message:', messageText);
+                
+                if (messageResponse.ok) {
+                    console.log('✅ Messaggio di test inviato! Ora prova a ricaricare le conversazioni.');
+                    alert('✅ Messaggio di test inviato!\nOra riprova a caricare le conversazioni.');
+                }
+                
+                updateStatus('connected', '✅ Debug completato - Controlla console per dettagli');
+                
+            } catch (error) {
+                console.error('❌ Errore durante debug:', error);
+                updateStatus('error', `❌ Errore debug: ${error.message}`);
             }
         }
 
