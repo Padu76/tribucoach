@@ -315,6 +315,79 @@
             secretKey: '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo',
             chatbotId: 'EjoHCEogMfkkrVzIK6V07',
             apiBase: 'https://www.chatbase.co/api/v1'
+        // Test endpoint alternativi
+        window.testAlternativeEndpoint = async function() {
+            updateStatus('loading', '🚀 Testando endpoint alternativi...');
+            
+            try {
+                // Prova senza parametri chatbotId (forse restituisce tutti i chatbot dell'utente)
+                console.log('🔍 Test: get-conversations senza chatbotId');
+                const url1 = `${CHATBASE_CONFIG.apiBase}/get-conversations`;
+                const response1 = await fetch(url1, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Status senza chatbotId:', response1.status);
+                if (response1.ok) {
+                    const data1 = await response1.json();
+                    console.log('✅ Risposta senza chatbotId:', data1);
+                    
+                    // Se funziona, filtra per il nostro chatbot
+                    if (data1.data && Array.isArray(data1.data)) {
+                        const ourConversations = data1.data.filter(conv => 
+                            conv.chatbot_id === CHATBASE_CONFIG.chatbotId
+                        );
+                        console.log(`📊 Conversazioni del nostro chatbot: ${ourConversations.length}`);
+                        
+                        if (ourConversations.length > 0) {
+                            conversationsData = ourConversations.map(conv => ({
+                                id: conv.id,
+                                clientName: extractNameFromMessages(conv.messages) || conv.customer || 'Cliente Anonimo',
+                                phone: extractPhoneFromMessages(conv.messages) || 'N/A',
+                                topic: extractTopicFromMessages(conv.messages) || 'Generale',
+                                lastMessage: getLastUserMessage(conv.messages),
+                                timestamp: new Date(conv.created_at),
+                                messagesCount: conv.messages?.length || 0,
+                                source: conv.source || 'Chatbase'
+                            }));
+                            
+                            renderConversations();
+                            updateMetrics();
+                            updateStatus('connected', `✅ ${ourConversations.length} conversazioni trovate!`);
+                            return;
+                        }
+                    }
+                } else {
+                    console.log('❌ Errore senza chatbotId:', await response1.text());
+                }
+                
+                // Prova con parametri minimi
+                console.log('🔍 Test: parametri minimi');
+                const url2 = `${CHATBASE_CONFIG.apiBase}/get-conversations?size=10`;
+                const response2 = await fetch(url2, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Status parametri minimi:', response2.status);
+                if (response2.ok) {
+                    const data2 = await response2.json();
+                    console.log('✅ Risposta parametri minimi:', data2);
+                } else {
+                    console.log('❌ Errore parametri minimi:', await response2.text());
+                }
+                
+                updateStatus('error', '❌ Nessun endpoint alternativo ha funzionato');
+                
+            } catch (error) {
+                console.error('❌ Errore test alternativi:', error);
+                updateStatus('error', `❌ Errore: ${error.message}`);
+            }
         };
 
         const FIREBASE_CONFIG = {
@@ -419,7 +492,8 @@
                         <div style="margin-top: 15px;">
                             <button class="btn" onclick="loadChatbaseConversations()">🔄 Riprova</button>
                             <button class="btn primary" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
-                            <button class="btn" onclick="debugChatbaseAPI()">🔍 Debug API</button>
+                            <button class="btn" onclick="debugChatbaseAPI()">🔍 Debug Completo</button>
+                            <button class="btn" onclick="testAlternativeEndpoint()">🚀 Test Endpoint Alternativi</button>
                         </div>
                     </div>
                 `;
@@ -470,32 +544,76 @@
 
         // Debug function per testare l'API
         window.debugChatbaseAPI = async function() {
-            console.log('🔍 Debug API Chatbase...');
+            console.log('🔍 Debug API Chatbase completo...');
+            updateStatus('loading', '🔍 Debug API in corso...');
             
             try {
-                // Test di base
-                const testUrl = `${CHATBASE_CONFIG.apiBase}/chatbots/${CHATBASE_CONFIG.chatbotId}`;
-                console.log('🔍 Test URL:', testUrl);
-                
-                const response = await fetch(testUrl, {
-                    method: 'GET',
+                // Test 1: Verifica chatbot esistente
+                console.log('🔍 Test 1: Verifica chatbot esistente');
+                const chatbotUrl = `${CHATBASE_CONFIG.apiBase}/chatbots`;
+                const chatbotResponse = await fetch(chatbotUrl, {
                     headers: {
                         'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Content-Type': 'application/json'
+                        'Accept': 'application/json'
                     }
                 });
                 
-                console.log('📊 Response status:', response.status);
-                console.log('📊 Response headers:', [...response.headers.entries()]);
+                console.log('📊 Chatbots Response:', chatbotResponse.status);
+                if (chatbotResponse.ok) {
+                    const chatbots = await chatbotResponse.json();
+                    console.log('📊 I tuoi chatbots:', chatbots);
+                } else {
+                    console.log('❌ Errore chatbots:', await chatbotResponse.text());
+                }
                 
-                const text = await response.text();
-                console.log('📊 Response text:', text);
+                // Test 2: Prova diversi parametri per get-conversations
+                console.log('🔍 Test 2: Prova parametri diversi');
+                const testParams = [
+                    `chatbotId=${CHATBASE_CONFIG.chatbotId}`,
+                    `chatbotId=${CHATBASE_CONFIG.chatbotId}&page=1&size=10`,
+                    `chatbotId=${CHATBASE_CONFIG.chatbotId}&size=10`,
+                    ''  // senza parametri
+                ];
                 
-                alert(`Debug completato!\nStatus: ${response.status}\nVedi console per dettagli.`);
+                for (const params of testParams) {
+                    const testUrl = `${CHATBASE_CONFIG.apiBase}/get-conversations${params ? '?' + params : ''}`;
+                    console.log(`🔍 Test URL: ${testUrl}`);
+                    
+                    const testResponse = await fetch(testUrl, {
+                        headers: {
+                            'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    console.log(`📊 Status per ${params || 'no params'}:`, testResponse.status);
+                    const responseText = await testResponse.text();
+                    console.log(`📊 Response per ${params || 'no params'}:`, responseText);
+                    
+                    if (testResponse.ok) {
+                        console.log('✅ Questo set di parametri funziona!');
+                        break;
+                    }
+                }
+                
+                // Test 3: Verifica secret key
+                console.log('🔍 Test 3: Verifica autenticazione');
+                const authUrl = `${CHATBASE_CONFIG.apiBase}/auth/verify` || `${CHATBASE_CONFIG.apiBase}/me`;
+                const authResponse = await fetch(authUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('📊 Auth Status:', authResponse.status);
+                console.log('📊 Auth Response:', await authResponse.text());
+                
+                updateStatus('connected', '✅ Debug completato - Controlla console');
                 
             } catch (error) {
                 console.error('❌ Debug error:', error);
-                alert(`Debug error: ${error.message}`);
+                updateStatus('error', `❌ Debug error: ${error.message}`);
             }
         };
 
