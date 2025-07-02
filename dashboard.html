@@ -977,44 +977,91 @@
                     const CHATBASE_API_KEY = '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo';
                     const CHATBOT_ID = 'EjoHCEogMfkkrVzIK6V07';
                     
-                    const response = await fetch(`https://www.chatbase.co/api/v1/get-conversations?chatbotId=${CHATBOT_ID}&page=1&size=20`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${CHATBASE_API_KEY}`,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        }
-                    });
+                    // Prova endpoint diversi
+                    const endpoints = [
+                        `https://www.chatbase.co/api/v1/get-conversations/${CHATBOT_ID}`,
+                        `https://www.chatbase.co/api/v1/conversations?chatbotId=${CHATBOT_ID}`,
+                        `https://api.chatbase.co/api/v1/conversations/${CHATBOT_ID}`,
+                        `https://www.chatbase.co/api/conversations?chatbotId=${CHATBOT_ID}`
+                    ];
                     
-                    if (response.ok) {
-                        const chatbaseData = await response.json();
-                        console.log('✅ Risposta Chatbase:', chatbaseData);
+                    let successfulResponse = null;
+                    
+                    for (const endpoint of endpoints) {
+                        try {
+                            console.log(`🔍 Tentativo endpoint: ${endpoint}`);
+                            
+                            const response = await fetch(endpoint, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${CHATBASE_API_KEY}`,
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            console.log(`📊 Status ${endpoint}: ${response.status}`);
+                            
+                            if (response.ok) {
+                                const chatbaseData = await response.json();
+                                console.log('✅ Successo con endpoint:', endpoint);
+                                console.log('✅ Dati Chatbase:', chatbaseData);
+                                successfulResponse = chatbaseData;
+                                break;
+                            } else {
+                                const errorText = await response.text();
+                                console.log(`❌ Errore ${response.status}:`, errorText.substring(0, 100));
+                            }
+                            
+                        } catch (endpointError) {
+                            console.log(`❌ Errore endpoint ${endpoint}:`, endpointError.message);
+                        }
+                    }
+                    
+                    if (successfulResponse) {
+                        // Gestisci diversi formati di risposta
+                        let conversations = [];
                         
-                        if (chatbaseData.data && Array.isArray(chatbaseData.data)) {
-                            chatbaseChats = chatbaseData.data.map(conv => {
-                                const contactInfo = extractContactInfoFromChatbase(conv.messages);
+                        if (successfulResponse.data && Array.isArray(successfulResponse.data)) {
+                            conversations = successfulResponse.data;
+                        } else if (Array.isArray(successfulResponse)) {
+                            conversations = successfulResponse;
+                        } else if (successfulResponse.conversations && Array.isArray(successfulResponse.conversations)) {
+                            conversations = successfulResponse.conversations;
+                        }
+                        
+                        console.log(`🎯 Trovate ${conversations.length} conversazioni in Chatbase`);
+                        
+                        if (conversations.length > 0) {
+                            chatbaseChats = conversations.map((conv, index) => {
+                                const contactInfo = extractContactInfoFromChatbase(conv.messages || []);
                                 
                                 return {
-                                    id: conv.id || conv.conversationId || `chatbase_${Date.now()}`,
-                                    clientName: contactInfo.name || conv.customer || 'Cliente Chatbase',
-                                    phone: contactInfo.phone || 'N/A',
-                                    email: contactInfo.email || 'N/A',
-                                    topic: extractTopicFromChatbase(conv.messages) || 'Conversazione Chatbase',
-                                    lastMessage: getLastMessageFromChatbase(conv.messages),
+                                    id: conv.id || conv.conversationId || `chatbase_${index}_${Date.now()}`,
+                                    clientName: contactInfo.name || conv.customer || conv.customerName || `Cliente Chatbase ${index + 1}`,
+                                    phone: contactInfo.phone || conv.phone || conv.customerPhone || 'N/A',
+                                    email: contactInfo.email || conv.email || conv.customerEmail || 'N/A',
+                                    topic: extractTopicFromChatbase(conv.messages || []) || 'Conversazione Chatbase',
+                                    lastMessage: getLastMessageFromChatbase(conv.messages || []),
                                     messages: conv.messages || [],
-                                    timestamp: new Date(conv.updated_at || conv.created_at || Date.now()),
+                                    timestamp: new Date(conv.updated_at || conv.created_at || conv.lastMessageAt || Date.now()),
                                     source: 'Chatbase API'
                                 };
                             });
                             
-                            console.log(`🌐 Caricate ${chatbaseChats.length} conversazioni da Chatbase API`);
+                            console.log(`🌐 Trasformate ${chatbaseChats.length} conversazioni da Chatbase`);
+                            
+                            // Log della prima conversazione per debug
+                            if (chatbaseChats.length > 0) {
+                                console.log('🔍 Prima conversazione Chatbase:', chatbaseChats[0]);
+                            }
                         }
                     } else {
-                        console.warn('⚠️ Chatbase API risposta non OK:', response.status, response.statusText);
+                        console.warn('⚠️ Nessun endpoint Chatbase funzionante trovato');
                     }
                     
                 } catch (chatbaseError) {
-                    console.warn('⚠️ Errore Chatbase API:', chatbaseError.message);
+                    console.warn('⚠️ Errore generale Chatbase API:', chatbaseError.message);
                 }
                 
                 // Combina i risultati
