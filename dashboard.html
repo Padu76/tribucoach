@@ -542,7 +542,7 @@
             
             <button class="btn" onclick="resetFilters()">🔄 Reset</button>
             <button class="btn secondary" onclick="exportData()">📊 Export Excel</button>
-            <button class="btn" onclick="importFromChatbase()" style="background: linear-gradient(135deg, #9C27B0, #673AB7);">📥 Importa da Chatbase</button>
+            <button class="btn" onclick="showImportModal()" style="background: linear-gradient(135deg, #9C27B0, #673AB7);">📥 Import Conversazioni</button>
         </div>
 
         <!-- METRICHE PRINCIPALI -->
@@ -615,6 +615,61 @@
         </div>
     </div>
 
+    <!-- MODAL IMPORT -->
+    <div id="importModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeImportModal()">&times;</span>
+            <h3>📥 Import Conversazioni</h3>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #ff9933; margin-bottom: 15px;">Metodo 1: Aggiungi Conversazione Manuale</h4>
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: #ff9933; display: block; margin-bottom: 5px;">👤 Nome Cliente:</label>
+                        <input type="text" id="manualName" placeholder="Es: Marco Rossi" style="width: 100%; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: #ff9933; display: block; margin-bottom: 5px;">📱 Telefono:</label>
+                        <input type="text" id="manualPhone" placeholder="Es: +39 333 1234567" style="width: 100%; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: #ff9933; display: block; margin-bottom: 5px;">🏷️ Argomento:</label>
+                        <select id="manualTopic" style="width: 100%; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px;">
+                            <option value="Allenamento">Allenamento</option>
+                            <option value="Dieta">Dieta</option>
+                            <option value="Obiettivi">Obiettivi</option>
+                            <option value="Consulenza">Consulenza</option>
+                            <option value="Generale">Generale</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: #ff9933; display: block; margin-bottom: 5px;">💬 Messaggio Principale:</label>
+                        <textarea id="manualMessage" placeholder="Es: Ciao! Vorrei un allenamento per i glutei..." style="width: 100%; height: 80px; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; resize: vertical;"></textarea>
+                    </div>
+                    <button class="btn" onclick="addManualConversation()" style="width: 100%;">➕ Aggiungi Conversazione</button>
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #ff9933; margin-bottom: 15px;">Metodo 2: Import da File JSON</h4>
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <p style="color: #ccc; margin-bottom: 15px;">Se riesci a esportare le conversazioni da Chatbase in formato JSON, caricale qui:</p>
+                    <input type="file" id="jsonFileInput" accept=".json" style="width: 100%; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; margin-bottom: 10px;">
+                    <button class="btn secondary" onclick="importFromJSON()" style="width: 100%;">📂 Carica da File JSON</button>
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #ff9933; margin-bottom: 15px;">Metodo 3: Copia/Incolla JSON</h4>
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 8px;">
+                    <p style="color: #ccc; margin-bottom: 15px;">Incolla qui il JSON delle conversazioni esportate da Chatbase:</p>
+                    <textarea id="jsonTextArea" placeholder='[{"id": "conv1", "messages": [...], "created_at": "2024-01-01"}]' style="width: 100%; height: 120px; padding: 8px; background: #333; border: 1px solid #555; color: white; border-radius: 4px; font-family: monospace; font-size: 0.9rem;"></textarea>
+                    <button class="btn secondary" onclick="importFromTextArea()" style="width: 100%; margin-top: 10px;">📋 Import da Testo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DETTAGLI -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
@@ -652,6 +707,158 @@
             startDate: null,
             endDate: null
         };
+
+        // === IMPORT ALTERNATIVO ===
+        function showImportModal() {
+            document.getElementById('importModal').style.display = 'block';
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').style.display = 'none';
+        }
+
+        async function addManualConversation() {
+            const name = document.getElementById('manualName').value.trim();
+            const phone = document.getElementById('manualPhone').value.trim();
+            const topic = document.getElementById('manualTopic').value;
+            const message = document.getElementById('manualMessage').value.trim();
+            
+            if (!name || !message) {
+                alert('Nome e messaggio sono obbligatori!');
+                return;
+            }
+            
+            try {
+                updateStatus('loading', '💾 Salvando conversazione...');
+                
+                const conversationData = {
+                    chatbaseId: 'manual-' + Date.now(),
+                    messages: [
+                        {
+                            role: 'user',
+                            message: message
+                        },
+                        {
+                            role: 'assistant', 
+                            message: 'Grazie per il tuo messaggio! Ti risponderò a breve.'
+                        }
+                    ],
+                    dateCreated: firebase.firestore.Timestamp.now(),
+                    lastMessageAt: firebase.firestore.Timestamp.now(),
+                    importedAt: firebase.firestore.Timestamp.now(),
+                    source: 'Manual Import',
+                    customer: name,
+                    phone: phone || null,
+                    topic: topic
+                };
+                
+                await db.collection('conversations').add(conversationData);
+                
+                // Reset form
+                document.getElementById('manualName').value = '';
+                document.getElementById('manualPhone').value = '';
+                document.getElementById('manualMessage').value = '';
+                
+                updateStatus('connected', '✅ Conversazione aggiunta!');
+                await loadAllData();
+                closeImportModal();
+                
+                alert('✅ Conversazione aggiunta con successo!');
+                
+            } catch (error) {
+                console.error('❌ Errore salvando conversazione:', error);
+                updateStatus('error', '❌ Errore nel salvataggio');
+                alert('❌ Errore nel salvare la conversazione: ' + error.message);
+            }
+        }
+
+        async function importFromJSON() {
+            const fileInput = document.getElementById('jsonFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Seleziona un file JSON!');
+                return;
+            }
+            
+            try {
+                updateStatus('loading', '📂 Leggendo file JSON...');
+                
+                const text = await file.text();
+                const conversations = JSON.parse(text);
+                
+                await processConversationsArray(conversations);
+                
+            } catch (error) {
+                console.error('❌ Errore lettura file:', error);
+                updateStatus('error', '❌ Errore lettura file');
+                alert('❌ Errore nel leggere il file JSON: ' + error.message);
+            }
+        }
+
+        async function importFromTextArea() {
+            const jsonText = document.getElementById('jsonTextArea').value.trim();
+            
+            if (!jsonText) {
+                alert('Incolla il JSON delle conversazioni!');
+                return;
+            }
+            
+            try {
+                updateStatus('loading', '📋 Processando JSON...');
+                
+                const conversations = JSON.parse(jsonText);
+                await processConversationsArray(conversations);
+                
+            } catch (error) {
+                console.error('❌ Errore parsing JSON:', error);
+                updateStatus('error', '❌ Errore parsing JSON');
+                alert('❌ Errore nel parsing del JSON: ' + error.message);
+            }
+        }
+
+        async function processConversationsArray(conversations) {
+            if (!Array.isArray(conversations)) {
+                conversations = [conversations];
+            }
+            
+            let importedCount = 0;
+            let errorCount = 0;
+            
+            for (const conv of conversations) {
+                try {
+                    const conversationData = {
+                        chatbaseId: conv.id || conv.conversation_id || 'imported-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                        messages: conv.messages || [
+                            { role: 'user', message: conv.message || conv.content || 'Messaggio importato' }
+                        ],
+                        dateCreated: conv.created_at ? 
+                            firebase.firestore.Timestamp.fromDate(new Date(conv.created_at)) : 
+                            firebase.firestore.Timestamp.now(),
+                        lastMessageAt: conv.updated_at ? 
+                            firebase.firestore.Timestamp.fromDate(new Date(conv.updated_at)) : 
+                            firebase.firestore.Timestamp.now(),
+                        importedAt: firebase.firestore.Timestamp.now(),
+                        source: 'JSON Import',
+                        customer: conv.customer || conv.client_name || extractNameFromText(conv.messages?.[0]?.message || ''),
+                        chatbot_id: conv.chatbot_id || conv.chatbotId
+                    };
+                    
+                    await db.collection('conversations').add(conversationData);
+                    importedCount++;
+                    
+                } catch (error) {
+                    console.error('❌ Errore importando conversazione:', error);
+                    errorCount++;
+                }
+            }
+            
+            updateStatus('connected', `✅ Import completato! ${importedCount} conversazioni, ${errorCount} errori`);
+            await loadAllData();
+            closeImportModal();
+            
+            alert(`🎉 Import completato!\n\n✅ Conversazioni importate: ${importedCount}\n❌ Errori: ${errorCount}`);
+        }
 
         // === IMPORT DA CHATBASE ===
         async function importFromChatbase() {
@@ -1522,9 +1729,14 @@ ${Array.isArray(quiz.obstacles) ? quiz.obstacles.map(o => `• ${o}`).join('\n')
 
         // Close modal on click outside
         window.onclick = function(event) {
-            const modal = document.getElementById('detailModal');
-            if (event.target == modal) {
-                modal.style.display = 'none';
+            const detailModal = document.getElementById('detailModal');
+            const importModal = document.getElementById('importModal');
+            
+            if (event.target == detailModal) {
+                detailModal.style.display = 'none';
+            }
+            if (event.target == importModal) {
+                importModal.style.display = 'none';
             }
         }
     </script>
