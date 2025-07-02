@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TribuCoach Dashboard - Business Intelligence</title>
-    
+    <title>TribuCoach Dashboard - Chatbase + Firebase</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,30 +21,29 @@
             line-height: 1.4;
         }
 
-        .connection-status {
+        .status {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            padding: 8px;
+            padding: 12px;
             text-align: center;
             font-weight: bold;
-            font-size: 0.8rem;
             z-index: 1000;
             transition: all 0.3s ease;
         }
 
-        .connection-status.connected {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-        }
-
-        .connection-status.loading {
+        .status.loading {
             background: linear-gradient(135deg, #ff9800, #f57c00);
             color: white;
         }
 
-        .connection-status.error {
+        .status.connected {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .status.error {
             background: linear-gradient(135deg, #f44336, #d32f2f);
             color: white;
         }
@@ -52,8 +52,7 @@
             background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
             padding: 25px;
             border-bottom: 3px solid #ff6600;
-            backdrop-filter: blur(20px);
-            margin-top: 40px;
+            margin-top: 50px;
         }
 
         .header h1 {
@@ -61,24 +60,22 @@
             font-size: 2.2rem;
             margin-bottom: 8px;
             font-weight: 700;
-            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
         }
 
         .header p {
             color: #ccc;
             font-size: 1.1rem;
-            opacity: 0.9;
         }
 
         .dashboard {
             padding: 30px;
-            max-width: 1600px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
             margin-bottom: 35px;
         }
@@ -90,7 +87,6 @@
             text-align: center;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             border: 1px solid #404040;
-            transition: transform 0.3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -105,10 +101,6 @@
             background: linear-gradient(90deg, #ff6600, #ff9933);
         }
 
-        .metric-card:hover {
-            transform: translateY(-3px);
-        }
-
         .metric-card h3 {
             color: #ff9933;
             font-size: 1.1rem;
@@ -117,7 +109,7 @@
         }
 
         .metric-card p {
-            font-size: 2.8rem;
+            font-size: 2.5rem;
             font-weight: 800;
             color: #fff;
         }
@@ -129,18 +121,6 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             margin-bottom: 35px;
             border: 1px solid #404040;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
         }
 
         .section h2 {
@@ -152,88 +132,64 @@
             font-weight: 700;
         }
 
-        .leads-grid {
+        .chats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 25px;
         }
 
-        .lead-card {
+        .chat-card {
             background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
             border: 1px solid #444;
             border-radius: 12px;
             padding: 25px;
-            border-left: 5px solid #ff6600;
+            border-left: 5px solid #2196F3;
             transition: all 0.3s ease;
         }
 
-        .lead-card:hover {
+        .chat-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
         }
 
-        .lead-header {
+        .chat-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        .lead-name {
-            font-size: 1.3rem;
+        .chat-client {
+            font-size: 1.2rem;
             font-weight: bold;
-            color: #ff6600;
-            margin-bottom: 5px;
+            color: #2196F3;
         }
 
-        .lead-profile {
-            background: rgba(255, 102, 0, 0.2);
-            color: #ff9933;
+        .chat-topic {
+            background: rgba(33, 150, 243, 0.2);
+            color: #64B5F6;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 0.8rem;
             font-weight: 600;
         }
 
-        .lead-score {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .score-high { background: #4CAF50; color: white; }
-        .score-medium { background: #ff9800; color: white; }
-        .score-low { background: #f44336; color: white; }
-
-        .lead-details {
+        .chat-preview {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
             margin: 15px 0;
+            color: #ccc;
+            font-style: italic;
+            border-left: 3px solid #2196F3;
         }
 
-        .detail-row {
+        .chat-meta {
             display: flex;
-            margin: 8px 0;
-            align-items: center;
-        }
-
-        .detail-row .label {
-            color: #ff9933;
-            font-weight: 600;
-            min-width: 80px;
-            font-size: 0.9rem;
-        }
-
-        .detail-row .value {
-            color: #eee;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
-
-        .lead-actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            color: #aaa;
         }
 
         .btn {
@@ -246,8 +202,7 @@
             font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
+            margin: 5px;
         }
 
         .btn:hover {
@@ -255,12 +210,12 @@
             transform: translateY(-1px);
         }
 
-        .btn.whatsapp {
-            background: linear-gradient(135deg, #25D366, #20b055);
+        .btn.primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
         }
 
-        .btn.whatsapp:hover {
-            background: linear-gradient(135deg, #20b055, #1ea049);
+        .btn.primary:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
         }
 
         .empty-state {
@@ -274,94 +229,95 @@
             margin-bottom: 15px;
         }
 
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-            transition: all 0.3s ease;
-            z-index: 100;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #ff9933;
         }
 
-        .refresh-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        .error {
+            background: #4a1a1a;
+            border: 1px solid #f44336;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #ffcdd2;
         }
 
         @media (max-width: 768px) {
-            .dashboard { 
-                padding: 20px 15px; 
-            }
-            .leads-grid { 
-                grid-template-columns: 1fr; 
-            }
-            .metrics-grid { 
-                grid-template-columns: 1fr; 
-            }
+            .dashboard { padding: 20px 15px; }
+            .chats-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="connection-status loading" id="connectionStatus">
-        🔄 Connessione a Firebase in corso...
+    <div class="status loading" id="status">
+        🔄 Connessione in corso...
     </div>
 
     <header class="header">
-        <h1>📈 TribuCoach Business Intelligence</h1>
-        <p>Dashboard semplice per monitoraggio lead e conversazioni</p>
+        <h1>📈 TribuCoach Dashboard</h1>
+        <p>Conversazioni Chatbase + Quiz Firebase</p>
     </header>
 
     <div class="dashboard">
-
-        <!-- METRICHE PRINCIPALI -->
+        <!-- METRICHE -->
         <div class="metrics-grid">
             <div class="metric-card">
-                <h3>🎯 Totale Lead Generati</h3>
-                <p id="totalLeads">0</p>
+                <h3>💬 Conversazioni Totali</h3>
+                <p id="totalConversations">0</p>
             </div>
             <div class="metric-card">
-                <h3>⭐ Score Medio Lead</h3>
+                <h3>📊 Quiz Completati</h3>
+                <p id="totalQuiz">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>🔥 Oggi</h3>
+                <p id="todayChats">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>⭐ Score Medio</h3>
                 <p id="avgScore">0%</p>
-            </div>
-            <div class="metric-card">
-                <h3>💬 Conversazioni Attive</h3>
-                <p id="totalChats">0</p>
-            </div>
-            <div class="metric-card">
-                <h3>🔥 Lead Premium (>80%)</h3>
-                <p id="premiumLeads">0</p>
             </div>
         </div>
 
-        <!-- LEAD QUIZ -->
+        <!-- CONVERSAZIONI CHATBASE -->
         <div class="section">
-            <h2>🥇 Lead Quiz - Completati</h2>
-            <div class="leads-grid" id="leadsContainer">
-                <div class="empty-state">
-                    <div class="icon">📊</div>
-                    <p>Caricamento lead...</p>
+            <h2>💬 Conversazioni Chatbase Reali</h2>
+            <div class="chat-actions" style="margin-bottom: 20px;">
+                <button class="btn primary" onclick="loadChatbaseConversations()">🔄 Carica Conversazioni</button>
+                <button class="btn" onclick="loadFirebaseQuiz()">📊 Carica Quiz</button>
+            </div>
+            <div id="conversationsContainer" class="chats-grid">
+                <div class="loading">
+                    <div class="icon">🔄</div>
+                    <p>Clicca "Carica Conversazioni" per iniziare</p>
                 </div>
             </div>
         </div>
 
+        <!-- QUIZ FIREBASE -->
+        <div class="section">
+            <h2>📊 Quiz Firebase</h2>
+            <div id="quizContainer" class="chats-grid">
+                <div class="loading">
+                    <div class="icon">📊</div>
+                    <p>Clicca "Carica Quiz" per vedere i risultati</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <button class="refresh-btn" onclick="refreshData()">🔄 Aggiorna</button>
+    <script>
+        // Configurazioni reali
+        const CHATBASE_CONFIG = {
+            secretKey: '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo',
+            chatbotId: 'EjoHCEogMfkkrVzIK6V07',
+            apiBase: 'https://www.chatbase.co/api/v1'
+        };
 
-    <!-- Firebase SDK e JavaScript -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, getDocs, addDoc, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-        // Configurazione Firebase
-        const firebaseConfig = {
+        const FIREBASE_CONFIG = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-a2254.firebaseapp.com",
             projectId: "tribucoach-a2254",
@@ -371,174 +327,189 @@
         };
 
         // Inizializza Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const db = firebase.firestore();
 
-        // Dati globali
-        let leadsData = [];
+        // Variabili globali
+        let conversationsData = [];
+        let quizData = [];
 
-        // === UTILITY FUNCTIONS ===
-        function calculateScore(data) {
-            let score = 50;
-            if (data.email && data.email.length > 5) score += 15;
-            if (data.name && data.name.length > 2) score += 10;
-            if (data.whatsapp || data.phone) score += 20;
-            if (data.goals && data.goals.length > 0) score += 5;
-            return Math.min(score, 100);
-        }
-
-        function extractArray(value) {
-            if (Array.isArray(value)) return value;
-            if (typeof value === 'string') return value.split(',').map(v => v.trim());
-            return ['Non specificato'];
-        }
-
-        // === CARICAMENTO DATI ===
-        async function loadQuizResults() {
+        // === CHATBASE API ===
+        async function loadChatbaseConversations() {
+            updateStatus('loading', '🔄 Caricando conversazioni da Chatbase...');
+            
             try {
-                console.log('📊 Caricamento quiz results...');
-                const q = query(collection(db, 'quiz_results'), orderBy('timestamp', 'desc'), limit(50));
-                const querySnapshot = await getDocs(q);
+                console.log('🔍 Chiamata API Chatbase...');
                 
-                leadsData = [];
-                querySnapshot.forEach((doc) => {
+                const response = await fetch(`${CHATBASE_CONFIG.apiBase}/get-conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}&size=50`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Risposta Chatbase:', data);
+
+                if (data.success && data.data) {
+                    conversationsData = data.data.map(conv => ({
+                        id: conv.id,
+                        clientName: extractNameFromMessages(conv.messages) || 'Cliente Anonimo',
+                        phone: extractPhoneFromMessages(conv.messages) || 'N/A',
+                        topic: extractTopicFromMessages(conv.messages) || 'Generale',
+                        lastMessage: getLastUserMessage(conv.messages),
+                        timestamp: new Date(conv.updated_at || conv.created_at),
+                        messagesCount: conv.messages?.length || 0,
+                        source: 'Chatbase'
+                    }));
+
+                    renderConversations();
+                    updateMetrics();
+                    updateStatus('connected', '✅ Conversazioni Chatbase caricate');
+                } else {
+                    throw new Error('Nessun dato nelle conversazioni');
+                }
+
+            } catch (error) {
+                console.error('❌ Errore Chatbase:', error);
+                updateStatus('error', `❌ Errore: ${error.message}`);
+                
+                // Mostra errore dettagliato
+                document.getElementById('conversationsContainer').innerHTML = `
+                    <div class="error">
+                        <h3>❌ Errore API Chatbase</h3>
+                        <p><strong>Errore:</strong> ${error.message}</p>
+                        <p><strong>Endpoint:</strong> ${CHATBASE_CONFIG.apiBase}/get-conversations</p>
+                        <p><strong>ChatbotId:</strong> ${CHATBASE_CONFIG.chatbotId}</p>
+                        <button class="btn" onclick="loadChatbaseConversations()">🔄 Riprova</button>
+                    </div>
+                `;
+            }
+        }
+
+        // === FIREBASE QUIZ ===
+        async function loadFirebaseQuiz() {
+            updateStatus('loading', '📊 Caricando quiz da Firebase...');
+            
+            try {
+                console.log('📊 Recupero quiz da Firebase...');
+                
+                const querySnapshot = await db.collection('quiz_results').orderBy('timestamp', 'desc').limit(20).get();
+                
+                quizData = [];
+                querySnapshot.forEach(doc => {
                     const data = doc.data();
-                    leadsData.push({
+                    quizData.push({
                         id: doc.id,
                         name: data.name || data.userName || 'Nome non disponibile',
                         email: data.email || data.userEmail || 'Non disponibile',
-                        phone: data.whatsapp || data.userWhatsApp || data.phone || 'Non disponibile',
-                        age: data.age || data.userAge || 'N/A',
-                        gender: data.gender || data.userGender || 'N/A',
-                        score: data.score || data.fitnessScore || calculateScore(data),
+                        phone: data.whatsapp || data.phone || 'Non disponibile',
+                        score: data.score || calculateScore(data),
                         profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                        goals: extractArray(data.goals || data.fitnessGoals),
-                        obstacles: extractArray(data.obstacles || data.challenges),
-                        budget: data.budget || 'Non specificato',
-                        timestamp: data.timestamp?.toDate() || new Date(),
-                        source: 'Firebase'
+                        timestamp: data.timestamp?.toDate() || new Date()
                     });
                 });
+
+                renderQuiz();
+                updateMetrics();
+                updateStatus('connected', '✅ Quiz Firebase caricati');
                 
-                console.log(`📊 Caricati ${leadsData.length} lead da Firebase`);
-                return leadsData;
             } catch (error) {
-                console.error('❌ Errore caricamento quiz:', error);
-                return [];
+                console.error('❌ Errore Firebase:', error);
+                updateStatus('error', `❌ Errore Firebase: ${error.message}`);
+                
+                document.getElementById('quizContainer').innerHTML = `
+                    <div class="error">
+                        <h3>❌ Errore Firebase</h3>
+                        <p>${error.message}</p>
+                        <button class="btn" onclick="loadFirebaseQuiz()">🔄 Riprova</button>
+                    </div>
+                `;
             }
         }
 
-        // === FUNZIONE AGGIUNTA CHAT ===
-        async function addTestChat() {
-            try {
-                console.log('🔄 Aggiunta chat di test...');
-                
-                const testChat = {
-                    customerName: 'Cliente Test',
-                    customerPhone: 'N/A',
-                    customerEmail: 'N/A',
-                    topic: 'Allenamento',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: 'Allenamento glutei?',
-                            timestamp: new Date()
-                        },
-                        {
-                            role: 'assistant',
-                            content: 'Un altro allenamento glutei?',
-                            timestamp: new Date()
-                        },
-                        {
-                            role: 'user',
-                            content: 'Sono sempre stanca non ho voglia di allenarmi cosa faccio?',
-                            timestamp: new Date()
-                        }
-                    ],
-                    dateCreated: new Date(),
-                    lastMessageAt: new Date(),
-                    source: 'Manual'
-                };
-                
-                const docRef = await addDoc(collection(db, 'conversations'), testChat);
-                console.log('✅ Chat aggiunta con ID:', docRef.id);
-                
-                await loadAllData();
-                console.log('🔄 Dashboard aggiornata');
-                
-                return docRef.id;
-            } catch (error) {
-                console.error('❌ Errore aggiunta chat:', error);
-            }
-        }
-
-        // === UI UPDATES ===
-        function updateStatus(type, message) {
-            const statusEl = document.getElementById('connectionStatus');
-            statusEl.className = `connection-status ${type}`;
-            statusEl.textContent = message;
-        }
-
-        function updateMetrics() {
-            const totalLeads = leadsData.length;
-            const avgScore = totalLeads > 0 ? 
-                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
-            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
-
-            document.getElementById('totalLeads').textContent = totalLeads;
-            document.getElementById('avgScore').textContent = avgScore + '%';
-            document.getElementById('totalChats').textContent = 0; // Semplificato
-            document.getElementById('premiumLeads').textContent = premiumLeads;
-        }
-
-        function renderLeads() {
-            const container = document.getElementById('leadsContainer');
+        // === RENDERING ===
+        function renderConversations() {
+            const container = document.getElementById('conversationsContainer');
             
-            if (leadsData.length === 0) {
+            if (conversationsData.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <p>Nessun lead trovato</p>
+                        <div class="icon">💬</div>
+                        <p>Nessuna conversazione trovata</p>
                     </div>
                 `;
                 return;
             }
 
-            const html = leadsData.slice(0, 8).map(lead => {
-                const scoreClass = lead.score > 80 ? 'score-high' : lead.score >= 60 ? 'score-medium' : 'score-low';
-                
+            const html = conversationsData.map(conv => `
+                <div class="chat-card">
+                    <div class="chat-header">
+                        <div class="chat-client">${conv.clientName}</div>
+                        <div class="chat-topic">${conv.topic}</div>
+                    </div>
+                    
+                    <div class="chat-preview">"${conv.lastMessage}"</div>
+                    
+                    <div class="chat-meta">
+                        <span>📱 ${conv.phone}</span>
+                        <span>💬 ${conv.messagesCount} msg</span>
+                        <span>📅 ${conv.timestamp.toLocaleDateString('it-IT')}</span>
+                    </div>
+                    
+                    <div class="chat-actions">
+                        ${conv.phone !== 'N/A' ? 
+                            `<button class="btn" onclick="openWhatsApp('${conv.phone}')">📱 WhatsApp</button>` : ''
+                        }
+                        <button class="btn primary" onclick="viewConversation('${conv.id}')">👁️ Dettagli</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quizContainer');
+            
+            if (quizData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📊</div>
+                        <p>Nessun quiz trovato</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = quizData.map(quiz => {
+                const scoreClass = quiz.score > 80 ? 'high' : quiz.score >= 60 ? 'medium' : 'low';
                 return `
-                    <div class="lead-card">
-                        <div class="lead-header">
-                            <div>
-                                <div class="lead-name">${lead.name}</div>
-                                <div class="lead-profile">${lead.profile}</div>
-                            </div>
-                            <div class="lead-score ${scoreClass}">${lead.score}%</div>
+                    <div class="chat-card">
+                        <div class="chat-header">
+                            <div class="chat-client">${quiz.name}</div>
+                            <div class="chat-topic score-${scoreClass}">${quiz.score}%</div>
                         </div>
                         
-                        <div class="lead-details">
-                            <div class="detail-row">
-                                <span class="label">📧 Email:</span>
-                                <span class="value">${lead.email}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">📱 Phone:</span>
-                                <span class="value">${lead.phone}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">🎯 Goals:</span>
-                                <span class="value">${lead.goals.join(', ')}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">📅 Data:</span>
-                                <span class="value">${lead.timestamp.toLocaleDateString('it-IT')}</span>
-                            </div>
+                        <div class="chat-preview">
+                            <strong>📧 Email:</strong> ${quiz.email}<br>
+                            <strong>📱 Phone:</strong> ${quiz.phone}<br>
+                            <strong>👤 Profile:</strong> ${quiz.profile}
                         </div>
                         
-                        <div class="lead-actions">
-                            ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
-                                `<button class="btn whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''
+                        <div class="chat-meta">
+                            <span>📅 ${quiz.timestamp.toLocaleDateString('it-IT')}</span>
+                            <span>⭐ Score: ${quiz.score}%</span>
+                        </div>
+                        
+                        <div class="chat-actions">
+                            ${quiz.phone !== 'Non disponibile' ? 
+                                `<button class="btn" onclick="openWhatsApp('${quiz.phone}')">📱 WhatsApp</button>` : ''
                             }
                         </div>
                     </div>
@@ -548,28 +519,102 @@
             container.innerHTML = html;
         }
 
-        // === CARICAMENTO PRINCIPALE ===
-        async function loadAllData() {
-            try {
-                updateStatus('loading', '📊 Caricamento dati da Firebase...');
-                
-                await loadQuizResults();
-                
-                updateMetrics();
-                renderLeads();
-                
-                updateStatus('connected', '✅ Dati caricati da Firebase');
-                console.log('✅ Tutti i dati caricati con successo');
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento dati:', error);
-                updateStatus('error', '❌ Errore caricamento dati');
+        // === UTILITY FUNCTIONS ===
+        function extractNameFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-Z\s]{2,20})/i);
+                    if (match) return match[1].trim();
+                }
+            }
+            return null;
+        }
+
+        function extractPhoneFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                }
+            }
+            return null;
+        }
+
+        function extractTopicFromMessages(messages) {
+            if (!messages) return 'Generale';
+            
+            const allText = messages
+                .filter(msg => msg.role === 'user')
+                .map(msg => msg.content?.toLowerCase() || '')
+                .join(' ');
+            
+            const topics = {
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra', 'training'],
+                'Dieta': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare'],
+                'Obiettivi': ['obiettivo', 'perdere peso', 'dimagrire', 'massa'],
+                'Consulenza': ['consulenza', 'personal', 'appuntamento', 'coach']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Generale';
+        }
+
+        function getLastUserMessage(messages) {
+            if (!messages) return 'Nessun messaggio';
+            
+            const userMessages = messages.filter(msg => msg.role === 'user');
+            if (userMessages.length === 0) return 'Nessun messaggio utente';
+            
+            const lastMsg = userMessages[userMessages.length - 1];
+            const content = lastMsg.content || 'Messaggio vuoto';
+            return content.length > 100 ? content.substring(0, 100) + '...' : content;
+        }
+
+        function calculateScore(data) {
+            let score = 50;
+            if (data.email && data.email.length > 5) score += 15;
+            if (data.name && data.name.length > 2) score += 10;
+            if (data.whatsapp || data.phone) score += 20;
+            if (data.goals && data.goals.length > 0) score += 5;
+            return Math.min(score, 100);
+        }
+
+        function updateMetrics() {
+            document.getElementById('totalConversations').textContent = conversationsData.length;
+            document.getElementById('totalQuiz').textContent = quizData.length;
+            
+            // Conversazioni di oggi
+            const today = new Date().toDateString();
+            const todayConversations = conversationsData.filter(conv => 
+                conv.timestamp.toDateString() === today
+            ).length;
+            document.getElementById('todayChats').textContent = todayConversations;
+            
+            // Score medio quiz
+            if (quizData.length > 0) {
+                const avgScore = Math.round(
+                    quizData.reduce((sum, quiz) => sum + quiz.score, 0) / quizData.length
+                );
+                document.getElementById('avgScore').textContent = avgScore + '%';
             }
         }
 
-        // === UTILITY FUNCTIONS GLOBALI ===
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+
+        // === ACTIONS ===
         window.openWhatsApp = function(phone) {
-            if (!phone || phone === 'N/A') {
+            if (!phone || phone === 'N/A' || phone === 'Non disponibile') {
                 alert('Numero non disponibile');
                 return;
             }
@@ -577,31 +622,22 @@
             window.open(`https://wa.me/${cleanPhone}`, '_blank');
         };
 
-        window.refreshData = async function() {
-            await loadAllData();
+        window.viewConversation = function(conversationId) {
+            const conv = conversationsData.find(c => c.id === conversationId);
+            if (conv) {
+                alert(`Conversazione ${conversationId}\nCliente: ${conv.clientName}\nTopic: ${conv.topic}`);
+            }
         };
 
-        window.addTestChat = addTestChat;
-
         // === INIZIALIZZAZIONE ===
-        async function init() {
-            console.log('🚀 Inizializzazione TribuCoach Dashboard...');
-            updateStatus('loading', '🔄 Connessione a Firebase...');
-            
-            try {
-                await loadAllData();
-            } catch (error) {
-                console.error('❌ Errore inizializzazione:', error);
-                updateStatus('error', '❌ Errore connessione Firebase');
-            }
-        }
-
-        // Avvia quando DOM è pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('connected', '✅ Dashboard pronta - Clicca i pulsanti per caricare i dati');
+            console.log('🚀 TribuCoach Dashboard inizializzata');
+            console.log('🔧 Configurazioni:', { 
+                chatbaseConfigured: !!CHATBASE_CONFIG.secretKey,
+                firebaseConfigured: !!FIREBASE_CONFIG.projectId 
+            });
+        });
     </script>
 </body>
 </html>
