@@ -179,21 +179,7 @@
     }
   }
 
-  function updateCharts() {
-    const ctx = document.getElementById('chartLeads').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Lead', 'Conversazioni'],
-        datasets: [{
-          label: 'Totali',
-          data: [leadsData.length, chatsData.length],
-          backgroundColor: ['#4CAF50', '#2196F3']
-        }]
-      },
-      options: { responsive: true }
-    });
-  }
+  window.loadAllData = loadAllData;
 </script>
 <script type="module">
   function updateStatus(type, message) {
@@ -258,7 +244,7 @@
   async function init() {
     console.log('🚀 Inizializzazione TribuCoach Dashboard...');
     updateStatus('loading', '🔄 Connessione a Firebase...');
-    await loadAllData();
+    await window.loadAllData();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
@@ -280,5 +266,6 @@
 
   <section><h2>💬 Conversazioni Chatbot</h2><div id="chatsContainer"></div></section>
 </body></html>
+
 
 
