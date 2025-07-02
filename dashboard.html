@@ -940,42 +940,174 @@
         async function loadConversations() {
             try {
                 console.log('💬 Caricamento conversazioni...');
-                const collections = ['conversations', 'chatbot_conversations', 'chats'];
                 
-                for (const collectionName of collections) {
-                    try {
-                        const q = query(collection(db, collectionName), limit(30));
-                        const querySnapshot = await getDocs(q);
-                        
-                        if (querySnapshot.size > 0) {
-                            chatsData = [];
-                            querySnapshot.forEach((doc) => {
-                                const data = doc.data();
-                                chatsData.push({
-                                    id: doc.id,
-                                    clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
-                                    phone: data.customerPhone || extractPhoneFromMessages(data.messages) || 'N/A',
-                                    email: data.customerEmail || 'N/A',
-                                    topic: data.topic || 'Conversazione generale',
-                                    lastMessage: getLastMessage(data.messages),
-                                    messages: data.messages || [],
-                                    timestamp: data.timestamp?.toDate() || data.lastMessageAt?.toDate() || new Date(),
-                                    source: 'Firebase'
-                                });
-                            });
-                            console.log(`💬 Caricate ${chatsData.length} conversazioni da ${collectionName}`);
-                            break;
-                        }
-                    } catch (e) {
-                        console.log(`Collection ${collectionName} non trovata`);
+                // Prima prova Firebase
+                let firebaseChats = [];
+                try {
+                    const q = query(collection(db, 'conversations'), limit(30));
+                    const querySnapshot = await getDocs(q);
+                    
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        firebaseChats.push({
+                            id: doc.id,
+                            clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
+                            phone: data.customerPhone || extractPhoneFromMessages(data.messages) || 'N/A',
+                            email: data.customerEmail || 'N/A',
+                            topic: data.topic || 'Conversazione generale',
+                            lastMessage: getLastMessage(data.messages),
+                            messages: data.messages || [],
+                            timestamp: data.timestamp?.toDate() || data.lastMessageAt?.toDate() || new Date(),
+                            source: 'Firebase'
+                        });
+                    });
+                    
+                    if (firebaseChats.length > 0) {
+                        console.log(`💬 Caricate ${firebaseChats.length} conversazioni da Firebase`);
                     }
+                } catch (fbError) {
+                    console.log('⚠️ Firebase conversations non accessibile:', fbError.message);
                 }
+                
+                // Poi prova API Chatbase
+                let chatbaseChats = [];
+                try {
+                    console.log('🔄 Tentativo caricamento da Chatbase API...');
+                    
+                    const CHATBASE_API_KEY = '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo';
+                    const CHATBOT_ID = 'EjoHCEogMfkkrVzIK6V07';
+                    
+                    const response = await fetch(`https://www.chatbase.co/api/v1/get-conversations?chatbotId=${CHATBOT_ID}&page=1&size=20`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${CHATBASE_API_KEY}`,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const chatbaseData = await response.json();
+                        console.log('✅ Risposta Chatbase:', chatbaseData);
+                        
+                        if (chatbaseData.data && Array.isArray(chatbaseData.data)) {
+                            chatbaseChats = chatbaseData.data.map(conv => {
+                                const contactInfo = extractContactInfoFromChatbase(conv.messages);
+                                
+                                return {
+                                    id: conv.id || conv.conversationId || `chatbase_${Date.now()}`,
+                                    clientName: contactInfo.name || conv.customer || 'Cliente Chatbase',
+                                    phone: contactInfo.phone || 'N/A',
+                                    email: contactInfo.email || 'N/A',
+                                    topic: extractTopicFromChatbase(conv.messages) || 'Conversazione Chatbase',
+                                    lastMessage: getLastMessageFromChatbase(conv.messages),
+                                    messages: conv.messages || [],
+                                    timestamp: new Date(conv.updated_at || conv.created_at || Date.now()),
+                                    source: 'Chatbase API'
+                                };
+                            });
+                            
+                            console.log(`🌐 Caricate ${chatbaseChats.length} conversazioni da Chatbase API`);
+                        }
+                    } else {
+                        console.warn('⚠️ Chatbase API risposta non OK:', response.status, response.statusText);
+                    }
+                    
+                } catch (chatbaseError) {
+                    console.warn('⚠️ Errore Chatbase API:', chatbaseError.message);
+                }
+                
+                // Combina i risultati
+                chatsData = [...firebaseChats, ...chatbaseChats];
+                
+                // Rimuovi duplicati basati su ID
+                chatsData = chatsData.reduce((acc, chat) => {
+                    if (!acc.find(existing => existing.id === chat.id)) {
+                        acc.push(chat);
+                    }
+                    return acc;
+                }, []);
+                
+                console.log(`💬 Totale conversazioni caricate: ${chatsData.length} (Firebase: ${firebaseChats.length}, Chatbase: ${chatbaseChats.length})`);
                 
                 return chatsData;
             } catch (error) {
                 console.error('❌ Errore caricamento conversazioni:', error);
                 return [];
             }
+        }
+        
+        // === UTILITY FUNCTIONS PER CHATBASE ===
+        function extractContactInfoFromChatbase(messages) {
+            if (!messages || !Array.isArray(messages)) return { name: null, phone: null, email: null };
+            
+            let name = null;
+            let phone = null;
+            let email = null;
+            
+            for (const msg of messages) {
+                const content = msg.content || msg.message || msg.text || '';
+                
+                // Estrai nome
+                if (!name) {
+                    const nameMatch = content.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-ZÀ-ÿ\s]{2,30})/i);
+                    if (nameMatch) {
+                        name = nameMatch[1].trim();
+                    }
+                }
+                
+                // Estrai telefono
+                if (!phone) {
+                    const phoneMatch = content.match(/([0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/);
+                    if (phoneMatch) {
+                        phone = '+39 ' + phoneMatch[1].replace(/[\s\-]/g, '');
+                    }
+                }
+                
+                // Estrai email
+                if (!email) {
+                    const emailMatch = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                    if (emailMatch) {
+                        email = emailMatch[1];
+                    }
+                }
+            }
+            
+            return { name, phone, email };
+        }
+        
+        function extractTopicFromChatbase(messages) {
+            if (!messages || !Array.isArray(messages)) return null;
+            
+            const allText = messages
+                .filter(msg => msg.role === 'user' || msg.sender === 'user')
+                .map(msg => (msg.content || msg.message || msg.text || '').toLowerCase())
+                .join(' ');
+            
+            const topics = {
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra', 'training'],
+                'Dieta': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare'],
+                'Obiettivi': ['obiettivo', 'perdere peso', 'dimagrire', 'massa', 'forma'],
+                'Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe', 'consulenza'],
+                'Supporto': ['aiuto', 'supporto', 'problema', 'difficoltà']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Conversazione Generale';
+        }
+        
+        function getLastMessageFromChatbase(messages) {
+            if (!messages || !Array.isArray(messages) || messages.length === 0) {
+                return 'Nessun messaggio disponibile';
+            }
+            
+            const lastMsg = messages[messages.length - 1];
+            return lastMsg.content || lastMsg.message || lastMsg.text || 'Messaggio vuoto';
         }
 
         // === UTILITY FUNCTIONS ===
