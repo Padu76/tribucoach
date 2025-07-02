@@ -284,17 +284,16 @@
 
         <!-- CONVERSAZIONI CHATBASE -->
         <div class="section">
-            <h2>💬 Conversazioni Chatbase Reali</h2>
+            <h2>💬 Conversazioni Chatbase da Firebase</h2>
             <div class="chat-actions" style="margin-bottom: 20px;">
                 <button class="btn primary" onclick="loadChatbaseConversations()">🔄 Carica Conversazioni</button>
                 <button class="btn" onclick="loadFirebaseQuiz()">📊 Carica Quiz</button>
                 <button class="btn" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
-                <button class="btn" onclick="debugChatbase()">🔍 Debug Chatbase</button>
             </div>
             <div id="conversationsContainer" class="chats-grid">
                 <div class="loading">
                     <div class="icon">🔄</div>
-                    <p>Clicca "Carica Conversazioni" per iniziare</p>
+                    <p>Clicca "Carica Conversazioni" per vedere le chat reali da Firebase</p>
                 </div>
             </div>
         </div>
@@ -336,68 +335,45 @@
         let conversationsData = [];
         let quizData = [];
 
-        // === CHATBASE API ===
+        // === FIREBASE CONVERSATIONS ===
         async function loadChatbaseConversations() {
-            updateStatus('loading', '🔄 Caricando conversazioni da Chatbase...');
+            updateStatus('loading', '🔄 Caricando conversazioni da Firebase...');
             
             try {
-                console.log('🔍 Chiamata API Chatbase...');
+                console.log('💬 Recupero conversazioni da Firebase...');
                 
-                const url = `${CHATBASE_CONFIG.apiBase}/get-conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}&size=50`;
-                console.log('🔍 URL:', url);
+                const querySnapshot = await db.collection('conversations').orderBy('lastMessageAt', 'desc').limit(50).get();
                 
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Accept': 'application/json'
-                    }
+                conversationsData = [];
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    
+                    // Estrai info dal primo messaggio utente
+                    const userMessages = data.messages?.filter(msg => msg.role === 'user') || [];
+                    const firstUserMessage = userMessages[0]?.message || 'Nessun messaggio';
+                    const lastUserMessage = userMessages[userMessages.length - 1]?.message || firstUserMessage;
+                    
+                    conversationsData.push({
+                        id: doc.id,
+                        clientName: extractNameFromText(firstUserMessage) || 'Cliente Anonimo',
+                        phone: extractPhoneFromText(firstUserMessage) || extractPhoneFromText(lastUserMessage) || 'N/A',
+                        topic: extractTopicFromText(firstUserMessage + ' ' + lastUserMessage) || 'Generale',
+                        lastMessage: lastUserMessage,
+                        timestamp: data.lastMessageAt?.toDate() || data.dateCreated?.toDate() || new Date(),
+                        messagesCount: data.messages?.length || 0,
+                        source: 'Firebase',
+                        chatbaseId: data.chatbaseId
+                    });
                 });
+
+                console.log(`💬 Caricate ${conversationsData.length} conversazioni da Firebase`);
+                renderConversations();
+                updateMetrics();
+                updateStatus('connected', `✅ ${conversationsData.length} conversazioni caricate da Firebase`);
                 
-                console.log('📊 Response status:', response.status);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ Error response:', errorText);
-                    throw new Error(`API Error: ${response.status} - ${errorText}`);
-                }
-
-                const data = await response.json();
-                console.log('✅ Risposta Chatbase:', data);
-
-                let conversations = [];
-                
-                if (data.data && Array.isArray(data.data)) {
-                    conversations = data.data;
-                } else if (Array.isArray(data)) {
-                    conversations = data;
-                } else {
-                    throw new Error('Formato risposta API inaspettato');
-                }
-
-                if (conversations.length > 0) {
-                    conversationsData = conversations.map(conv => ({
-                        id: conv.id || `conv-${Date.now()}`,
-                        clientName: extractNameFromMessages(conv.messages) || conv.customer || 'Cliente Anonimo',
-                        phone: extractPhoneFromMessages(conv.messages) || 'N/A',
-                        topic: extractTopicFromMessages(conv.messages) || 'Generale',
-                        lastMessage: getLastUserMessage(conv.messages),
-                        timestamp: new Date(conv.created_at || Date.now()),
-                        messagesCount: conv.messages?.length || 0,
-                        source: conv.source || 'Chatbase'
-                    }));
-
-                    renderConversations();
-                    updateMetrics();
-                    updateStatus('connected', `✅ ${conversations.length} conversazioni caricate`);
-                } else {
-                    updateStatus('connected', '⚠️ Nessuna conversazione trovata');
-                    showEmptyConversations();
-                }
-
             } catch (error) {
-                console.error('❌ Errore Chatbase:', error);
-                updateStatus('error', `❌ Errore: ${error.message}`);
+                console.error('❌ Errore Firebase conversations:', error);
+                updateStatus('error', `❌ Errore Firebase: ${error.message}`);
                 showChatbaseError(error.message);
             }
         }
@@ -594,62 +570,65 @@
             `;
         }
 
-        // === UTILITY FUNCTIONS ===
-        function extractNameFromMessages(messages) {
-            if (!messages) return null;
-            for (const msg of messages) {
-                if (msg.role === 'user' && msg.content) {
-                    const match = msg.content.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-Z\s]{2,20})/i);
-                    if (match) return match[1].trim();
+        // === UTILITY FUNCTIONS AGGIORNATE ===
+        function extractNameFromText(text) {
+            if (!text) return null;
+            const patterns = [
+                /(?:mi chiamo|sono|il mio nome è)\s+([a-zA-Z\s]{2,20})/i,
+                /^([a-zA-Z]{2,15})\s*[,.]?\s*(?:qui|ciao|salve)/i,
+                /ciao\s+([a-zA-Z]{2,15})/i
+            ];
+            
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    let name = match[1].trim();
+                    name = name.replace(/\b(qui|ciao|salve|sono|io)\b/gi, '').trim();
+                    if (name.length >= 2) return name;
                 }
             }
             return null;
         }
 
-        function extractPhoneFromMessages(messages) {
-            if (!messages) return null;
-            for (const msg of messages) {
-                if (msg.role === 'user' && msg.content) {
-                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+        function extractPhoneFromText(text) {
+            if (!text) return null;
+            const patterns = [
+                /([+]?39[\s\-]?[0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+                /([0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+                /([+][0-9]{1,3}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4})/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match) {
+                    let phone = match[1].replace(/[\s\-\.]/g, '');
+                    if (phone.length >= 8 && phone.length <= 15) {
+                        return phone.startsWith('+') ? phone : '+39' + phone.replace(/^39/, '');
+                    }
                 }
             }
             return null;
         }
 
-        function extractTopicFromMessages(messages) {
-            if (!messages) return 'Generale';
+        function extractTopicFromText(text) {
+            if (!text) return 'Generale';
             
-            const allText = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content?.toLowerCase() || '')
-                .join(' ');
-            
+            const lowerText = text.toLowerCase();
             const topics = {
-                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra', 'training'],
-                'Dieta': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare'],
-                'Obiettivi': ['obiettivo', 'perdere peso', 'dimagrire', 'massa'],
-                'Consulenza': ['consulenza', 'personal', 'appuntamento', 'coach']
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra', 'training', 'glutei', 'braccia', 'gambe', 'addominali'],
+                'Dieta': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare', 'calorie', 'proteine', 'carboidrati'],
+                'Obiettivi': ['obiettivo', 'perdere peso', 'dimagrire', 'massa', 'tonificare', 'forma', 'risultati'],
+                'Consulenza': ['consulenza', 'personal', 'appuntamento', 'coach', 'prenotare', 'incontro'],
+                'Salute': ['dolore', 'male', 'infortunio', 'problema', 'medico', 'fisioterapia']
             };
             
             for (const [topic, keywords] of Object.entries(topics)) {
-                if (keywords.some(keyword => allText.includes(keyword))) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
                     return topic;
                 }
             }
             
             return 'Generale';
-        }
-
-        function getLastUserMessage(messages) {
-            if (!messages) return 'Nessun messaggio';
-            
-            const userMessages = messages.filter(msg => msg.role === 'user');
-            if (userMessages.length === 0) return 'Nessun messaggio utente';
-            
-            const lastMsg = userMessages[userMessages.length - 1];
-            const content = lastMsg.content || 'Messaggio vuoto';
-            return content.length > 100 ? content.substring(0, 100) + '...' : content;
         }
 
         function calculateScore(data) {
