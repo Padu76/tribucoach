@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TribuCoach Dashboard - Business Intelligence</title>
 
-  <!-- Firebase SDK v9 modular -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
     import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -182,21 +181,18 @@
 
     function renderLeads() {
       const container = document.getElementById('leadsContainer');
-
       if (leadsData.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="icon">📭</div>
             <p>Nessun lead trovato</p>
             <small>I lead appariranno qui quando completati i quiz</small>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
       const html = leadsData.slice(0, 8).map(lead => {
         const scoreClass = lead.score > 80 ? 'score-high' : lead.score >= 60 ? 'score-medium' : 'score-low';
-
         return `
           <div class="lead-card">
             <div class="lead-header">
@@ -207,53 +203,34 @@
               <div class="lead-score ${scoreClass}">${lead.score}%</div>
             </div>
             <div class="lead-details">
-              <div class="detail-row">
-                <span class="label">📧 Email:</span>
-                <span class="value">${lead.email}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">📱 Phone:</span>
-                <span class="value">${lead.phone}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">🎯 Goals:</span>
-                <span class="value">${lead.goals.join(', ')}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">📅 Data:</span>
-                <span class="value">${lead.timestamp.toLocaleDateString('it-IT')}</span>
-              </div>
+              <div class="detail-row"><span class="label">📧 Email:</span><span class="value">${lead.email}</span></div>
+              <div class="detail-row"><span class="label">📱 Phone:</span><span class="value">${lead.phone}</span></div>
+              <div class="detail-row"><span class="label">🎯 Goals:</span><span class="value">${lead.goals.join(', ')}</span></div>
+              <div class="detail-row"><span class="label">📅 Data:</span><span class="value">${lead.timestamp.toLocaleDateString('it-IT')}</span></div>
             </div>
             <div class="lead-actions">
               ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
                 `<button class="btn whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''}
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
-
       container.innerHTML = html;
     }
 
     function renderChats() {
       const container = document.getElementById('chatsContainer');
-
       if (chatsData.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
             <div class="icon">💬</div>
             <p>Nessuna conversazione trovata</p>
             <small>Le conversazioni appariranno qui</small>
-          </div>
-        `;
+          </div>`;
         return;
       }
 
       const html = chatsData.slice(0, 6).map(chat => {
-        const preview = chat.lastMessage.length > 60 ? 
-          chat.lastMessage.substring(0, 60) + '...' : 
-          chat.lastMessage;
-
+        const preview = chat.lastMessage.length > 60 ? chat.lastMessage.substring(0, 60) + '...' : chat.lastMessage;
         return `
           <div class="chat-card">
             <div class="chat-header">
@@ -270,10 +247,8 @@
               ${chat.phone !== 'N/A' ? 
                 `<button class="btn whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 WhatsApp</button>` : ''}
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
-
       container.innerHTML = html;
     }
 
@@ -296,8 +271,7 @@
       try {
         await loadAllData();
         setInterval(() => {
-          document.getElementById('currentTime').textContent = 
-            new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+          document.getElementById('currentTime').textContent = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
         }, 60000);
       } catch (error) {
         console.error('❌ Errore inizializzazione:', error);
@@ -311,17 +285,30 @@
       init();
     }
   </script>
-
-  <style>
-    /* ... [mantieni qui il tuo CSS attuale senza modifiche] ... */
-  </style>
 </head>
 <body>
   <div class="connection-status loading" id="connectionStatus">
     🔄 Connessione a Firebase in corso...
   </div>
+<div class="metrics-grid">
+  <div class="metric-card"><h3>🎯 Totale Lead Generati</h3><p id="totalLeads">0</p></div>
+  <div class="metric-card"><h3>⭐ Score Medio Lead</h3><p id="avgScore">0%</p></div>
+  <div class="metric-card"><h3>💬 Conversazioni Attive</h3><p id="totalChats">0</p></div>
+  <div class="metric-card"><h3>🔥 Lead Premium (&gt;80%)</h3><p id="premiumLeads">0</p></div>
+</div>
 
-  <!-- Il resto dell'HTML delle metriche, sezioni leads, chats, analytics ecc. rimane invariato come nel tuo file -->
-  <!-- Incluso tutto il layout e i container con gli ID: leadsContainer, chatsContainer, ecc. -->
+<section>
+  <h2>📋 Lead Recenti</h2>
+  <div id="leadsContainer"></div>
+</section>
+
+<section>
+  <h2>💬 Conversazioni Chatbot</h2>
+  <div id="chatsContainer"></div>
+</section>
+
+  <!-- Qui inserisci il resto del markup come metriche, sezioni leads, conversazioni, insights ecc.
+       Usa la tua ultima versione funzionante, lasciando intatti gli ID: totalLeads, avgScore, totalChats, premiumLeads, leadsContainer, chatsContainer ecc. -->
 </body>
 </html>
+
