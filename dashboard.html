@@ -973,6 +973,7 @@
         // === FUNZIONE PER SALVARE CHAT MANUALMENTE ===
         async function saveChatToFirebase(chatData) {
             try {
+                const { addDoc } = await import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js');
                 const docRef = await addDoc(collection(db, 'conversations'), {
                     ...chatData,
                     dateCreated: new Date(),
@@ -1001,6 +1002,36 @@
                     timestamp: new Date()
                 }))
             };
+        }
+
+        // === FUNZIONE PER AGGIUNGERE LA TUA CHAT RECENTE ===
+        async function addRecentChatbaseConversation() {
+            console.log('🔄 Aggiunta conversazione Chatbase recente...');
+            
+            const recentChat = createManualChat(
+                'Cliente Anonimo', // Nome (non fornito)
+                'N/A', // Telefono (non fornito)
+                'N/A', // Email (non fornita)
+                'Allenamento', // Topic
+                [
+                    { role: 'user', content: 'Allenamento glutei?' },
+                    { role: 'assistant', content: 'Un altro allenamento glutei?' },
+                    { role: 'user', content: 'Sono sempre stanca non ho voglia di allenarmi cosa faccio?' }
+                ]
+            );
+            
+            try {
+                const chatId = await saveChatToFirebase(recentChat);
+                console.log('✅ Chat aggiunta con ID:', chatId);
+                
+                // Ricarica i dati
+                await refreshData();
+                console.log('🔄 Dashboard aggiornata');
+                
+                return chatId;
+            } catch (error) {
+                console.error('❌ Errore aggiunta chat:', error);
+            }
         }
         
         // === UTILITY FUNCTIONS PER CHATBASE ===
@@ -1112,6 +1143,64 @@
                 }
             }
             return null;
+        }
+
+        function extractNameFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
+                    if (match) return match[1].trim();
+                }
+            }
+            return null;
+        }
+
+        function extractPhoneFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                }
+            }
+            return null;
+        }
+
+        function extractEmailFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                    if (match) return match[1];
+                }
+            }
+            return null;
+        }
+
+        function extractTopicFromMessages(messages) {
+            if (!messages) return 'Conversazione Generale';
+            
+            const allText = messages
+                .filter(msg => msg.role === 'user')
+                .map(msg => msg.content?.toLowerCase() || '')
+                .join(' ');
+            
+            const topics = {
+                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto'],
+                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione'],
+                'Prenotazione Consulenza': ['consulenza', 'appuntamento'],
+                'Allenamento': ['allenamento', 'esercizi', 'workout', 'glutei', 'muscoli'],
+                'Motivazione': ['stanca', 'motivazione', 'voglia', 'difficoltà']
+            };
+            
+            for (const [topic, keywords] of Object.entries(topics)) {
+                if (keywords.some(keyword => allText.includes(keyword))) {
+                    return topic;
+                }
+            }
+            
+            return 'Conversazione Generale';
         }
 
         function getLastMessage(messages) {
