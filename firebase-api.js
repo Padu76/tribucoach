@@ -1,4 +1,4 @@
-import { db } from './firebase.js'; // Assicurati sia presente in alto al file
+import { db } from './firebase.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 /**
@@ -76,3 +76,93 @@ async function getChatbotConversationsFromAPI(filters = {}) {
         throw error;
     }
 }
+
+/**
+ * 🧠 Estrae l'argomento principale dai messaggi
+ * @param {Array} messages - Array dei messaggi
+ * @returns {string} Argomento rilevato
+ */
+function extractTopicFromMessages(messages) {
+    if (!messages || messages.length === 0) return null;
+
+    const allText = messages
+        .filter(msg => msg.role === 'user' || msg.sender === 'user')
+        .map(msg => (msg.content || msg.message || msg.text || '').toLowerCase())
+        .join(' ');
+
+    const topics = {
+        'Allenamento': ['allenamento', 'esercizi', 'workout', 'palestra', 'training', 'fitness', 'muscoli'],
+        'Dieta': ['dieta', 'alimentazione', 'cibo', 'nutrizione', 'mangiare', 'calorie', 'proteine'],
+        'Obiettivi': ['obiettivo', 'perdere peso', 'dimagrire', 'massa', 'tonificare', 'forma', 'risultati'],
+        'Salute': ['salute', 'dolore', 'infortunio', 'medico', 'fisioterapia', 'riposo', 'recupero'],
+        'Motivazione': ['motivazione', 'difficoltà', 'aiuto', 'supporto', 'scoraggiato', 'stanco'],
+        'Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe', 'pagamento', 'abbonamento', 'consulenza'],
+        'Programmi': ['programma', 'piano', 'scheda', 'routine', 'settimane', 'mesi']
+    };
+
+    for (const [topic, keywords] of Object.entries(topics)) {
+        if (keywords.some(keyword => allText.includes(keyword))) {
+            return topic;
+        }
+    }
+
+    return 'Generale';
+}
+
+/**
+ * 🔥 Estrae nome e telefono dai messaggi della conversazione
+ * @param {Array} messages - Array dei messaggi
+ * @returns {Object} {name: string, phone: string}
+ */
+function extractContactInfo(messages) {
+    if (!messages || messages.length === 0) return { name: null, phone: null };
+
+    let extractedName = null;
+    let extractedPhone = null;
+
+    const userMessages = messages
+        .filter(msg => msg.role === 'user' || msg.sender === 'user')
+        .map(msg => msg.content || msg.message || msg.text || '');
+
+    for (const message of userMessages) {
+        const namePatterns = [
+            /(?:mi chiamo|sono|il mio nome è|nome)\s+([a-zA-ZÀ-ÿ\s]{2,30})/i,
+            /^([a-zA-ZÀ-ÿ]{2,20})\s*[,.]?\s*(?:qui|ciao|salve)?/i,
+            /ciao\s+([a-zA-ZÀ-ÿ]{2,20})/i
+        ];
+        for (const pattern of namePatterns) {
+            const match = message.match(pattern);
+            if (match && !extractedName) {
+                extractedName = match[1].trim();
+                extractedName = extractedName.replace(/\b(qui|ciao|salve|sono|io)\b/gi, '').trim();
+                if (extractedName.length < 2) extractedName = null;
+                break;
+            }
+        }
+
+        const phonePatterns = [
+            /(?:telefono|cellulare|numero|contatto|chiamami|tel)[:\s]*([+]?[0-9\s\-\.]{8,15})/i,
+            /([+]?39[\s\-]?[0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+            /([0-9]{3}[\s\-]?[0-9]{3}[\s\-]?[0-9]{4})/,
+            /([+][0-9]{1,3}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4}[\s\-]?[0-9]{3,4})/
+        ];
+        for (const pattern of phonePatterns) {
+            const match = message.match(pattern);
+            if (match && !extractedPhone) {
+                extractedPhone = match[1].replace(/[\s\-\.]/g, '');
+                if (extractedPhone.length >= 8 && extractedPhone.length <= 15) {
+                    break;
+                } else {
+                    extractedPhone = null;
+                }
+            }
+        }
+    }
+
+    return { name: extractedName, phone: extractedPhone };
+}
+
+// Espone le funzioni globalmente per poterle chiamare da console
+window.firebaseAPI = {
+    getChatbotConversationsFromAPI
+};
