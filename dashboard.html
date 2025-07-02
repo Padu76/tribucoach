@@ -552,7 +552,7 @@
         <div class="header-content">
             <div>
                 <h1>🚀 TribuCoach Dashboard Pro</h1>
-                <p>Sistema integrato con Firebase per gestione lead e conversazioni</p>
+                <p>Sistema integrato con Firebase - Dati Reali in Tempo Reale</p>
             </div>
             <div class="header-controls">
                 <div class="connection-status" id="connectionStatus">
@@ -571,7 +571,7 @@
             <div class="metric-card">
                 <h3><span>🎯</span> Lead Totali</h3>
                 <div class="value" id="totalLeads">0</div>
-                <div class="change">📈 Ultima settimana</div>
+                <div class="change">📈 Dati reali Firebase</div>
             </div>
             <div class="metric-card">
                 <h3><span>⭐</span> Score Medio</h3>
@@ -595,7 +595,7 @@
             <div class="section-header">
                 <h2 class="section-title">
                     <span>🥇</span>
-                    Lead Quiz Completati
+                    Lead Quiz Completati (Firebase)
                 </h2>
             </div>
             
@@ -613,7 +613,7 @@
             <div class="section-content">
                 <div id="leadsContainer" class="loading">
                     <div class="spinner"></div>
-                    Caricamento lead...
+                    Caricamento lead reali da Firebase...
                 </div>
             </div>
         </div>
@@ -623,7 +623,7 @@
             <div class="section-header">
                 <h2 class="section-title">
                     <span>💬</span>
-                    Conversazioni Chatbot
+                    Conversazioni Chatbot (Firebase)
                 </h2>
             </div>
             
@@ -641,7 +641,7 @@
             <div class="section-content">
                 <div id="chatsContainer" class="loading">
                     <div class="spinner"></div>
-                    Caricamento conversazioni...
+                    Caricamento conversazioni reali da Firebase...
                 </div>
             </div>
         </div>
@@ -710,426 +710,174 @@
             }
         }
 
-        // === FIREBASE INITIALIZATION CON DEBUG ===
-        async function initFirebase() {
-            return new Promise((resolve) => {
-                // Timeout aumentato a 10 secondi
-                const timeout = setTimeout(() => {
-                    console.warn('⏰ Firebase timeout - ma provo comunque a connettermi');
-                    // Non risolvo false, continuo a provare
-                }, 10000);
-
-                function tryInit() {
-                    try {
-                        if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
-                            app = firebase.initializeApp(FIREBASE_CONFIG);
-                            db = firebase.firestore();
-                            
-                            // Test connessione SENZA timeout
-                            db.collection('quiz_results').limit(1).get()
-                                .then((snapshot) => {
-                                    clearTimeout(timeout);
-                                    isConnected = true;
-                                    console.log('✅ Firebase connesso - documenti trovati:', snapshot.size);
-                                    updateConnectionStatus(true);
-                                    resolve(true);
-                                })
-                                .catch((error) => {
-                                    console.error('❌ Firebase test fallito:', error);
-                                    // Prova comunque a caricare
-                                    isConnected = true; // Forza la connessione
-                                    updateConnectionStatus(true);
-                                    resolve(true);
-                                });
-                        } else if (typeof firebase === 'undefined') {
-                            setTimeout(tryInit, 500);
-                        } else {
-                            clearTimeout(timeout);
-                            isConnected = true;
-                            resolve(true);
-                        }
-                    } catch (error) {
-                        console.error('❌ Firebase error:', error);
-                        // Prova comunque
-                        isConnected = true;
-                        updateConnectionStatus(true);
-                        resolve(true);
-                    }
-                }
-                
-                tryInit();
-            });
-        }
-
-        // === LOAD FIREBASE DATA CON DEBUG COMPLETO ===
-        async function loadFirebaseData() {
-            console.log('🔥 INIZIO Caricamento da Firebase...');
+        // === FIREBASE INIT E CARICAMENTO SEMPLIFICATO ===
+        async function initAndLoadData() {
+            console.log('🚀 === AVVIO SEMPLIFICATO DASHBOARD ===');
             
             try {
-                // === DEBUG: CONTROLLA TUTTE LE COLLECTIONS ===
-                console.log('🔍 Debug: Controllo collections disponibili...');
-                
-                // Prova diverse collection che potrebbero esistere
-                const collections = ['quiz_results', 'quizResults', 'leads', 'users', 'submissions'];
-                
-                for (const collectionName of collections) {
-                    try {
-                        const snapshot = await db.collection(collectionName).limit(5).get();
-                        console.log(`📊 Collection "${collectionName}": ${snapshot.size} documenti`);
-                        
-                        if (snapshot.size > 0) {
-                            snapshot.forEach(doc => {
-                                console.log(`📄 Doc ID: ${doc.id}`, doc.data());
-                            });
-                        }
-                    } catch (error) {
-                        console.log(`⚠️ Collection "${collectionName}" non trovata o errore:`, error.message);
+                // 1. Inizializza Firebase
+                if (typeof firebase !== 'undefined') {
+                    if (firebase.apps.length === 0) {
+                        app = firebase.initializeApp(FIREBASE_CONFIG);
                     }
-                }
-                
-                // === CARICA QUIZ RESULTS ===
-                console.log('🎯 Caricamento quiz_results...');
-                let quizSnapshot;
-                
-                try {
-                    // Prova prima senza orderBy
-                    quizSnapshot = await db.collection('quiz_results').limit(100).get();
-                    console.log(`📊 Quiz trovati: ${quizSnapshot.size}`);
-                } catch (error) {
-                    console.warn('⚠️ Errore con quiz_results, provo altre collection...', error);
+                    db = firebase.firestore();
+                    console.log('🔥 Firebase inizializzato');
                     
-                    // Prova con nomi alternativi
-                    try {
-                        quizSnapshot = await db.collection('leads').limit(100).get();
-                        console.log(`📊 Leads trovati: ${quizSnapshot.size}`);
-                    } catch (error2) {
-                        try {
-                            quizSnapshot = await db.collection('users').limit(100).get();
-                            console.log(`📊 Users trovati: ${quizSnapshot.size}`);
-                        } catch (error3) {
-                            console.error('❌ Nessuna collection di lead trovata');
-                            quizSnapshot = { empty: true, forEach: () => {} };
-                        }
-                    }
-                }
-                
-                leadsData = [];
-                if (!quizSnapshot.empty) {
-                    quizSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        console.log('🔍 Lead data:', doc.id, data);
-                        
-                        // Processa con tutti i possibili nomi di campo
-                        const processedLead = processLeadDataAdvanced(doc.id, data);
-                        leadsData.push(processedLead);
-                    });
-                }
-                
-                // === CARICA CONVERSATIONS ===
-                console.log('💬 Caricamento conversations...');
-                let chatsSnapshot;
-                
-                try {
-                    chatsSnapshot = await db.collection('conversations').limit(100).get();
-                    console.log(`💬 Conversations trovate: ${chatsSnapshot.size}`);
-                } catch (error) {
-                    console.warn('⚠️ Errore con conversations, provo altri nomi...', error);
+                    // 2. Carica dati
+                    await loadRealData();
                     
-                    try {
-                        chatsSnapshot = await db.collection('chats').limit(100).get();
-                        console.log(`💬 Chats trovati: ${chatsSnapshot.size}`);
-                    } catch (error2) {
-                        try {
-                            chatsSnapshot = await db.collection('messages').limit(100).get();
-                            console.log(`💬 Messages trovati: ${chatsSnapshot.size}`);
-                        } catch (error3) {
-                            console.error('❌ Nessuna collection di chat trovata');
-                            chatsSnapshot = { empty: true, forEach: () => {} };
-                        }
+                    if (leadsData.length > 0 || chatsData.length > 0) {
+                        isConnected = true;
+                        updateConnectionStatus(true);
+                        showNotification('🟢 Dati Reali Caricati!', `${leadsData.length} lead + ${chatsData.length} chat da Firebase`);
+                    } else {
+                        loadDemoData();
+                        showNotification('🎭 Modalità Demo', 'Nessun dato reale trovato');
                     }
-                }
-                
-                chatsData = [];
-                if (!chatsSnapshot.empty) {
-                    chatsSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        console.log('🔍 Chat data:', doc.id, data);
-                        
-                        const processedChat = processChatDataAdvanced(doc.id, data);
-                        chatsData.push(processedChat);
-                    });
-                }
-                
-                console.log(`✅ RISULTATO FIREBASE: ${leadsData.length} lead, ${chatsData.length} chat caricati`);
-                
-                // Se non ci sono dati, forza il caricamento demo
-                if (leadsData.length === 0 && chatsData.length === 0) {
-                    console.warn('⚠️ Nessun dato trovato su Firebase, carico dati demo come backup');
+                } else {
+                    console.log('❌ Firebase non disponibile');
                     loadDemoData();
+                    showNotification('🎭 Modalità Demo', 'Firebase non disponibile');
                 }
                 
             } catch (error) {
-                console.error('❌ Errore generale caricamento Firebase:', error);
+                console.error('❌ Errore:', error);
                 loadDemoData();
+                showNotification('❌ Errore', 'Caricati dati demo');
+            }
+            
+            // 3. Aggiorna UI
+            updateUI();
+        }
+
+        // === CARICAMENTO DATI REALI ===
+        async function loadRealData() {
+            console.log('📊 Caricamento dati reali...');
+            
+            leadsData = [];
+            chatsData = [];
+            
+            try {
+                // Carica quiz_results
+                console.log('🎯 Carico quiz_results...');
+                const quizSnapshot = await db.collection('quiz_results').get();
+                console.log(`Quiz trovati: ${quizSnapshot.size}`);
+                
+                quizSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log('Quiz:', doc.id, data);
+                    
+                    // Processa lead
+                    const lead = {
+                        id: doc.id,
+                        name: data.name || data.userName || 'Nome non disponibile',
+                        email: data.email || data.userEmail || 'Non disponibile',
+                        phone: data.whatsapp || data.userWhatsApp || data.phone || 'Non disponibile',
+                        age: data.age || data.userAge || 'N/A',
+                        gender: data.gender || data.userGender || 'N/A',
+                        score: data.lead_score || data.fitnessScore || data.score || calculateScore(data),
+                        profile: data.profile || deriveProfile(data),
+                        goals: Array.isArray(data.goals) ? data.goals : [],
+                        budget: data.budget || 'Non specificato',
+                        city: data.city || 'Non specificato',
+                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
+                        source: 'Firebase'
+                    };
+                    
+                    leadsData.push(lead);
+                });
+                
+                // Carica conversations
+                console.log('💬 Carico conversations...');
+                const chatsSnapshot = await db.collection('conversations').get();
+                console.log(`Conversazioni trovate: ${chatsSnapshot.size}`);
+                
+                chatsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    console.log('Chat:', doc.id, data);
+                    
+                    const messages = data.messages || [];
+                    let lastMessage = 'Nessun messaggio';
+                    if (messages.length > 0) {
+                        const lastMsg = messages[messages.length - 1];
+                        lastMessage = lastMsg.content || lastMsg.message || 'Nessun messaggio';
+                    }
+                    
+                    const chat = {
+                        id: doc.id,
+                        clientName: data.customerName || extractNameFromMessages(messages) || 'Cliente Anonimo',
+                        phone: data.customerPhone || extractPhoneFromMessages(messages) || 'N/A',
+                        email: data.customerEmail || extractEmailFromMessages(messages) || 'N/A',
+                        topic: data.topic || 'Conversazione generale',
+                        lastMessage: lastMessage,
+                        messageCount: messages.length,
+                        sentiment: data.sentiment || 'Neutrale',
+                        timestamp: data.lastMessageAt?.toDate ? data.lastMessageAt.toDate() : 
+                                  data.dateCreated?.toDate ? data.dateCreated.toDate() : new Date(),
+                        source: 'Firebase'
+                    };
+                    
+                    chatsData.push(chat);
+                });
+                
+                console.log(`✅ CARICAMENTO COMPLETATO: ${leadsData.length} lead, ${chatsData.length} chat`);
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento Firebase:', error);
+                throw error;
             }
         }
 
-        // === PROCESS LEAD DATA AVANZATO (BASATO SUI TUOI DATI REALI) ===
-        function processLeadDataAdvanced(docId, data) {
-            console.log('🔍 Processing lead:', docId, Object.keys(data));
-            
-            // Dai tuoi dati reali vedo questi campi:
-            // - name, email, whatsapp, age, gender, lead_score, city, goals, challenges, etc.
-            
-            const name = data.name || data.userName || data.user_name || data.nome || 'Nome non disponibile';
-            const email = data.email || data.userEmail || data.user_email || 'Non disponibile';
-            const phone = data.whatsapp || data.userWhatsApp || data.phone || data.telefono || 'Non disponibile';
-            const age = data.age || data.userAge || data.eta || 'N/A';
-            const gender = data.gender || data.userGender || data.genere || 'N/A';
-            
-            // Score - dai tuoi dati vedo "lead_score"
-            let score = data.lead_score || data.fitnessScore || data.score || 0;
-            if (!score) {
-                score = calculateScoreFromYourData(data);
-            }
-            
-            // Profile - dai tuoi dati potrebbe essere derivato da personality_traits o altri campi
-            let profile = data.profile || data.personality || 'Non specificato';
-            if (!profile || profile === 'Non specificato') {
-                profile = deriveProfileFromData(data);
-            }
-            
-            // Goals - dai tuoi dati vedo "goals" array
-            let goals = data.goals || data.fitnessGoals || data.obiettivi || [];
-            if (typeof goals === 'string') {
-                goals = [goals];
-            }
-            if (!Array.isArray(goals)) {
-                goals = [];
-            }
-            
-            // Obstacles/Challenges - dai tuoi dati vedo "challenges"
-            let obstacles = data.challenges || data.obstacles || data.ostacoli || [];
-            if (typeof obstacles === 'string') {
-                obstacles = [obstacles];
-            }
-            if (!Array.isArray(obstacles)) {
-                obstacles = [];
-            }
-            
-            // Budget - dai tuoi dati vedo "budget"
-            const budget = data.budget || data.budget_range || 'Non specificato';
-            
-            // City - dai tuoi dati vedo "city"
-            const city = data.city || data.citta || 'Non specificato';
-            
-            // Timestamp
-            let timestamp;
-            if (data.timestamp && data.timestamp.toDate) {
-                timestamp = data.timestamp.toDate();
-            } else if (data.created_at && data.created_at.toDate) {
-                timestamp = data.created_at.toDate();
-            } else if (data.date) {
-                timestamp = new Date(data.date);
-            } else {
-                timestamp = new Date();
-            }
-            
-            const result = {
-                id: docId,
-                name,
-                email,
-                phone,
-                age,
-                gender,
-                score,
-                profile,
-                goals,
-                obstacles,
-                budget,
-                city,
-                timestamp,
-                source: 'Firebase',
-                rawData: data // Per debug
-            };
-            
-            console.log('✅ Lead processato:', result);
-            return result;
-        }
-
-        // === CALCOLA SCORE DAI TUOI DATI ===
-        function calculateScoreFromYourData(data) {
-            let score = 50; // Base score
-            
-            // Basato sui campi che vedo nei tuoi dati
+        function calculateScore(data) {
+            let score = 50;
             if (data.motivation === 'risultati_fisici') score += 15;
-            if (data.nutrition === 'ottima' || data.nutrition_level === 'alimentazione_ottima') score += 10;
+            if (data.nutrition === 'ottima') score += 10;
             if (data.budget === 'budget_premium') score += 15;
-            if (data.time_available === '30-60' || data.time_available === '60+') score += 10;
-            if (data.workout_preferences && data.workout_preferences.length > 0) score += 5;
-            if (data.goals && data.goals.length > 0) score += data.goals.length * 3;
-            if (data.email && data.email.includes('@')) score += 10;
+            if (data.goals && data.goals.length > 0) score += data.goals.length * 5;
+            if (data.email) score += 10;
             if (data.whatsapp) score += 10;
-            
             return Math.min(Math.max(score, 0), 100);
         }
 
-        // === DERIVA PROFILO DAI DATI ===
-        function deriveProfileFromData(data) {
-            // Basato sui tuoi dati, creo profili logici
-            if (data.budget === 'budget_premium') {
-                return 'Cliente Premium';
-            }
-            if (data.motivation === 'risultati_fisici') {
-                return 'Orientato ai Risultati';
-            }
-            if (data.nutrition === 'ottima') {
-                return 'Esperto Nutrizione';
-            }
-            if (data.age && data.age > 50) {
-                return 'Senior Motivato';
-            }
-            if (data.time_available === '15-30') {
-                return 'Busy Professional';
-            }
-            if (data.goals && data.goals.includes('perdita_peso')) {
-                return 'Weight Loss Focused';
-            }
-            
+        function deriveProfile(data) {
+            if (data.budget === 'budget_premium') return 'Cliente Premium';
+            if (data.age && data.age > 50) return 'Senior Motivato';
+            if (data.motivation === 'risultati_fisici') return 'Orientato ai Risultati';
+            if (data.nutrition === 'ottima') return 'Esperto Nutrizione';
             return 'Nuovo Esploratore';
         }
 
-        // === PROCESS CHAT DATA AVANZATO (BASATO SUI TUOI DATI REALI) ===
-        function processChatDataAdvanced(docId, data) {
-            console.log('🔍 Processing chat:', docId, Object.keys(data));
-            
-            // Dai tuoi dati vedo: messages, sentiment, source, topic, dateCreated, etc.
-            
-            const messages = data.messages || data.conversation || [];
-            
-            // Nome cliente - cerca nei messaggi o usa campo esistente
-            let clientName = data.customerName || data.customer_name || 'Cliente Anonimo';
-            if (clientName === 'Cliente Anonimo' && messages.length > 0) {
-                clientName = extractClientNameFromYourMessages(messages) || 'Cliente Anonimo';
-            }
-            
-            // Phone - cerca nei messaggi
-            let phone = data.customerPhone || data.phone || 'N/A';
-            if (phone === 'N/A' && messages.length > 0) {
-                phone = extractPhoneFromYourMessages(messages) || 'N/A';
-            }
-            
-            // Email - cerca nei messaggi  
-            let email = data.customerEmail || data.email || 'N/A';
-            if (email === 'N/A' && messages.length > 0) {
-                email = extractEmailFromYourMessages(messages) || 'N/A';
-            }
-            
-            // Topic - dai tuoi dati vedo che hai già "topic"
-            const topic = data.topic || extractTopicFromYourMessages(messages) || 'Conversazione generale';
-            
-            // Ultimo messaggio
-            let lastMessage = 'Nessun messaggio';
-            if (messages.length > 0) {
-                const lastMsg = messages[messages.length - 1];
-                lastMessage = lastMsg.content || lastMsg.message || lastMsg.text || 'Nessun messaggio';
-            }
-            
-            // Sentiment - dai tuoi dati vedo che hai già "sentiment"
-            const sentiment = data.sentiment || 'Neutrale';
-            
-            // Source - dai tuoi dati vedo "source"
-            const source = data.source || 'Firebase';
-            
-            // Timestamp - dai tuoi dati vedo "dateCreated" e "lastMessageAt"
-            let timestamp;
-            if (data.lastMessageAt && data.lastMessageAt.toDate) {
-                timestamp = data.lastMessageAt.toDate();
-            } else if (data.dateCreated && data.dateCreated.toDate) {
-                timestamp = data.dateCreated.toDate();
-            } else if (data.created_at && data.created_at.toDate) {
-                timestamp = data.created_at.toDate();
-            } else {
-                timestamp = new Date();
-            }
-            
-            const result = {
-                id: docId,
-                clientName,
-                phone,
-                email,
-                topic,
-                lastMessage,
-                messageCount: messages.length,
-                sentiment,
-                timestamp,
-                source: 'Firebase',
-                chatbaseId: data.chatbaseId || null, // Dai tuoi dati
-                totalMessages: data.totalMessages || messages.length, // Dai tuoi dati
-                rawData: data // Per debug
-            };
-            
-            console.log('✅ Chat processata:', result);
-            return result;
-        }
-
-        // === ESTRAI INFO DAI TUOI MESSAGGI ===
-        function extractClientNameFromYourMessages(messages) {
+        function extractNameFromMessages(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user' || msg.sender === 'user') {
-                    const content = msg.content || msg.message || msg.text || '';
-                    const match = content.match(/(?:mi chiamo|sono|il mio nome è)\s+([a-zA-Z\s]{2,20})/i);
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
                     if (match) return match[1].trim();
                 }
             }
             return null;
         }
 
-        function extractPhoneFromYourMessages(messages) {
+        function extractPhoneFromMessages(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user' || msg.sender === 'user') {
-                    const content = msg.content || msg.message || msg.text || '';
-                    const match = content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1];
                 }
             }
             return null;
         }
 
-        function extractEmailFromYourMessages(messages) {
+        function extractEmailFromMessages(messages) {
             for (const msg of messages) {
-                if (msg.role === 'user' || msg.sender === 'user') {
-                    const content = msg.content || msg.message || msg.text || '';
-                    const match = content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
                     if (match) return match[1];
                 }
             }
             return null;
         }
 
-        function extractTopicFromYourMessages(messages) {
-            const allText = messages
-                .filter(msg => msg.role === 'user' || msg.sender === 'user')
-                .map(msg => (msg.content || msg.message || msg.text || '').toLowerCase())
-                .join(' ');
-            
-            const topics = {
-                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto', 'tariffe'],
-                'Alimentazione': ['dieta', 'alimentazione', 'nutrizione', 'cibo'],
-                'Allenamento': ['allenamento', 'esercizi', 'workout', 'training'],
-                'Consulenza': ['consulenza', 'appuntamento', 'incontro'],
-                'Supporto': ['aiuto', 'supporto', 'problema', 'difficoltà']
-            };
-            
-            for (const [topic, keywords] of Object.entries(topics)) {
-                if (keywords.some(keyword => allText.includes(keyword))) {
-                    return topic;
-                }
-            }
-            
-            return 'Conversazione generale';
-        }
-
+        // === CARICAMENTO DATI DEMO ===
         function loadDemoData() {
             console.log('🎭 Caricamento dati demo...');
             
@@ -1144,6 +892,8 @@
                     score: 85,
                     profile: 'Guerriero Determinato',
                     goals: ['Perdita peso', 'Tonificazione'],
+                    budget: '€150-200/mese',
+                    city: 'Milano',
                     timestamp: new Date(),
                     source: 'Demo'
                 },
@@ -1157,20 +907,9 @@
                     score: 92,
                     profile: 'Atleta Esperto',
                     goals: ['Aumento massa', 'Performance'],
+                    budget: '€200-300/mese',
+                    city: 'Roma',
                     timestamp: new Date(Date.now() - 86400000),
-                    source: 'Demo'
-                },
-                {
-                    id: 'demo_3',
-                    name: 'Luca Verdi',
-                    email: 'luca.verdi@email.com',
-                    phone: '+39 335 9876543',
-                    age: 25,
-                    gender: 'Maschio',
-                    score: 76,
-                    profile: 'Principiante Motivato',
-                    goals: ['Forza', 'Resistenza'],
-                    timestamp: new Date(Date.now() - 172800000),
                     source: 'Demo'
                 }
             ];
@@ -1184,125 +923,13 @@
                     topic: 'Informazioni Prezzi',
                     lastMessage: 'Vorrei sapere i costi per un programma personalizzato',
                     messageCount: 3,
+                    sentiment: 'Positivo',
                     timestamp: new Date(),
-                    source: 'Demo'
-                },
-                {
-                    id: 'chat_2',
-                    clientName: 'Giovanni Blu',
-                    phone: '+39 348 2222222',
-                    email: 'N/A',
-                    topic: 'Supporto Nutrizionale',
-                    lastMessage: 'Ho bisogno di aiuto con la dieta per massa muscolare',
-                    messageCount: 4,
-                    timestamp: new Date(Date.now() - 86400000),
                     source: 'Demo'
                 }
             ];
             
-            console.log(`🎭 Demo: ${leadsData.length} lead, ${chatsData.length} chat`);
-        }
-
-        // === DATA PROCESSING ===
-        function processLeadData(docId, data) {
-            return {
-                id: docId,
-                name: data.userName || data.name || 'Nome non disponibile',
-                email: data.userEmail || data.email || 'Non disponibile',
-                phone: data.userWhatsApp || data.phone || 'Non disponibile',
-                age: data.userAge || data.age || 'N/A',
-                gender: data.userGender || data.gender || 'N/A',
-                score: data.fitnessScore || data.score || calculateScore(data),
-                profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                goals: Array.isArray(data.fitnessGoals) ? data.fitnessGoals : 
-                       Array.isArray(data.goals) ? data.goals : [],
-                timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : 
-                          data.timestamp ? new Date(data.timestamp) : new Date(),
-                source: 'Firebase'
-            };
-        }
-
-        function processChatData(docId, data) {
-            const messages = data.messages || [];
-            return {
-                id: docId,
-                clientName: extractClientName(messages) || data.customerName || 'Cliente Anonimo',
-                phone: extractPhone(messages) || data.customerPhone || 'N/A',
-                email: extractEmail(messages) || data.customerEmail || 'N/A',
-                topic: data.topic || extractTopic(messages) || 'Conversazione generale',
-                lastMessage: messages.length > 0 ? 
-                    (messages[messages.length - 1].content || 'Nessun messaggio') : 
-                    'Nessun messaggio',
-                messageCount: messages.length,
-                timestamp: data.lastMessageAt?.toDate ? data.lastMessageAt.toDate() : 
-                          data.timestamp ? new Date(data.timestamp) : new Date(),
-                source: 'Firebase'
-            };
-        }
-
-        function calculateScore(data) {
-            let score = 50; // Base score
-            
-            if (data.experience === 'avanzato') score += 20;
-            if (data.experience === 'intermedio') score += 10;
-            
-            if (data.goals && data.goals.length > 0) score += data.goals.length * 5;
-            if (data.userEmail || data.email) score += 10;
-            if (data.userWhatsApp || data.phone) score += 15;
-            
-            return Math.min(Math.max(score, 0), 100);
-        }
-
-        function extractClientName(messages) {
-            for (const msg of messages) {
-                if (msg.role === 'user' && msg.content) {
-                    const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
-                    if (match) return match[1].trim();
-                }
-            }
-            return null;
-        }
-
-        function extractPhone(messages) {
-            for (const msg of messages) {
-                if (msg.role === 'user' && msg.content) {
-                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-                    if (match) return '+39 ' + match[1];
-                }
-            }
-            return null;
-        }
-
-        function extractEmail(messages) {
-            for (const msg of messages) {
-                if (msg.role === 'user' && msg.content) {
-                    const match = msg.content.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-                    if (match) return match[1];
-                }
-            }
-            return null;
-        }
-
-        function extractTopic(messages) {
-            const allText = messages
-                .filter(msg => msg.role === 'user')
-                .map(msg => msg.content?.toLowerCase() || '')
-                .join(' ');
-            
-            const topics = {
-                'Informazioni Prezzi': ['prezzo', 'costo', 'quanto'],
-                'Supporto Nutrizionale': ['dieta', 'alimentazione', 'nutrizione'],
-                'Prenotazione Consulenza': ['consulenza', 'appuntamento'],
-                'Allenamento': ['allenamento', 'esercizi', 'workout']
-            };
-            
-            for (const [topic, keywords] of Object.entries(topics)) {
-                if (keywords.some(keyword => allText.includes(keyword))) {
-                    return topic;
-                }
-            }
-            
-            return 'Conversazione generale';
+            console.log(`🎭 Demo caricato: ${leadsData.length} lead, ${chatsData.length} chat`);
         }
 
         // === UI UPDATE ===
@@ -1311,9 +938,6 @@
             filterLeads(currentLeadFilter);
             filterChats(currentChatFilter);
             createChart();
-            
-            showNotification('✅ Aggiornamento Completato', 
-                `Caricati ${leadsData.length} lead e ${chatsData.length} conversazioni`);
         }
 
         function updateMetrics() {
@@ -1443,6 +1067,7 @@
                                 <th>📱 Telefono</th>
                                 <th>🎯 Profilo</th>
                                 <th>⭐ Score</th>
+                                <th>🏙️ Città</th>
                                 <th>📅 Data</th>
                                 <th>🔗 Fonte</th>
                             </tr>
@@ -1454,6 +1079,7 @@
                 const score = lead.score || 0;
                 const badgeClass = score > 80 ? 'badge-success' : score >= 60 ? 'badge-warning' : 'badge-danger';
                 const date = lead.timestamp.toLocaleDateString('it-IT');
+                const sourceClass = lead.source === 'Firebase' ? 'badge-success' : 'badge-warning';
                 
                 html += `
                     <tr class="fade-in">
@@ -1462,8 +1088,9 @@
                         <td><small>${lead.phone}</small></td>
                         <td><span class="badge badge-info">${lead.profile}</span></td>
                         <td><span class="badge ${badgeClass}">${score}%</span></td>
+                        <td><small>${lead.city}</small></td>
                         <td><small>${date}</small></td>
-                        <td><span class="badge badge-info">${lead.source}</span></td>
+                        <td><span class="badge ${sourceClass}">${lead.source}</span></td>
                     </tr>
                 `;
             });
@@ -1495,6 +1122,7 @@
                                 <th>🏷️ Argomento</th>
                                 <th>💬 Ultimo Messaggio</th>
                                 <th>📊 Messaggi</th>
+                                <th>😊 Sentiment</th>
                                 <th>📅 Data</th>
                                 <th>🔗 Fonte</th>
                             </tr>
@@ -1507,6 +1135,9 @@
                 const preview = chat.lastMessage.length > 50 ? 
                     chat.lastMessage.substring(0, 50) + '...' : 
                     chat.lastMessage;
+                const sourceClass = chat.source === 'Firebase' ? 'badge-success' : 'badge-warning';
+                const sentimentClass = chat.sentiment === 'Positivo' ? 'badge-success' : 
+                                     chat.sentiment === 'Negativo' ? 'badge-danger' : 'badge-info';
                 
                 html += `
                     <tr class="fade-in">
@@ -1515,8 +1146,9 @@
                         <td><span class="badge badge-info">${chat.topic}</span></td>
                         <td><small>${preview}</small></td>
                         <td><span class="badge badge-success">${chat.messageCount}</span></td>
+                        <td><span class="badge ${sentimentClass}">${chat.sentiment}</span></td>
                         <td><small>${date}</small></td>
-                        <td><span class="badge badge-info">${chat.source}</span></td>
+                        <td><span class="badge ${sourceClass}">${chat.source}</span></td>
                     </tr>
                 `;
             });
@@ -1530,7 +1162,6 @@
             const ctx = document.getElementById('analyticsChart');
             if (!ctx) return;
             
-            // Distruggi chart esistente
             if (chart) {
                 chart.destroy();
             }
@@ -1539,7 +1170,6 @@
             const textColor = isDark ? '#f1f5f9' : '#1e293b';
             const gridColor = isDark ? '#374151' : '#e2e8f0';
             
-            // Dati per il grafico
             const last7Days = [];
             const leadsData7Days = [];
             const chatsData7Days = [];
@@ -1624,7 +1254,6 @@
                 text.textContent = 'Dark Mode';
             }
             
-            // Ricrea chart con nuovi colori
             setTimeout(createChart, 100);
         }
 
@@ -1639,7 +1268,6 @@
             
             popup.classList.add('show');
             
-            // Auto-hide dopo 4 secondi
             setTimeout(() => {
                 popup.classList.remove('show');
             }, 4000);
@@ -1649,49 +1277,8 @@
             document.getElementById('notification').classList.remove('show');
         }
 
-        // === INIZIALIZZAZIONE MIGLIORATA ===
-        async function init() {
-            console.log('🚀 Inizializzazione TribuCoach Dashboard...');
-            
-            showNotification('⚡ Avvio Sistema', 'Inizializzazione in corso...');
-            
-            try {
-                // Prova Firebase
-                const firebaseConnected = await initFirebase();
-                console.log('🔥 Firebase init result:', firebaseConnected);
-                
-                // Carica dati
-                await loadData();
-                
-                // Messaggio finale
-                if (firebaseConnected && (leadsData.length > 0 || chatsData.length > 0)) {
-                    console.log('✅ Dashboard connessa a Firebase con dati');
-                    showNotification('🟢 Firebase Connesso', `Caricati ${leadsData.length} lead e ${chatsData.length} chat`);
-                } else {
-                    console.log('🎭 Dashboard in modalità demo');
-                    showNotification('🎭 Modalità Demo', 'Dati dimostrativi caricati');
-                }
-                
-                // Animazioni
-                setTimeout(() => {
-                    document.querySelectorAll('.section, .metric-card').forEach((el, index) => {
-                        el.style.animationDelay = `${index * 0.1}s`;
-                        el.classList.add('fade-in');
-                    });
-                }, 500);
-                
-                console.log('🔧 API esposta in window.TribuCoachDashboard');
-            } catch (error) {
-                console.error('❌ Errore inizializzazione:', error);
-                showNotification('❌ Errore', 'Errore inizializzazione - carico dati demo');
-                loadDemoData();
-                updateUI();
-            }
-        }
-
-        // === API PER INTEGRAZIONE ===
+        // === API ===
         window.TribuCoachDashboard = {
-            // Salva quiz result
             async saveQuizResult(quizData) {
                 try {
                     if (isConnected && db) {
@@ -1700,8 +1287,8 @@
                             timestamp: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         console.log('✅ Quiz salvato:', docRef.id);
-                        showNotification('📊 Quiz Salvato', 'Nuovo quiz completato e salvato');
-                        await loadData(); // Ricarica i dati
+                        showNotification('📊 Quiz Salvato', 'Nuovo quiz completato');
+                        await initAndLoadData();
                         return docRef.id;
                     } else {
                         console.warn('⚠️ Firebase non connesso');
@@ -1713,7 +1300,6 @@
                 }
             },
             
-            // Salva conversazione
             async saveChatConversation(chatData) {
                 try {
                     if (isConnected && db) {
@@ -1722,8 +1308,8 @@
                             lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         console.log('✅ Chat salvata:', docRef.id);
-                        showNotification('💬 Chat Salvata', 'Nuova conversazione registrata');
-                        await loadData(); // Ricarica i dati
+                        showNotification('💬 Chat Salvata', 'Nuova conversazione');
+                        await initAndLoadData();
                         return docRef.id;
                     } else {
                         console.warn('⚠️ Firebase non connesso');
@@ -1735,23 +1321,20 @@
                 }
             },
             
-            // Getter
             get isConnected() { return isConnected; },
             get leadsData() { return leadsData; },
             get chatsData() { return chatsData; },
             
-            // Controlli
-            refreshData: () => loadData(),
+            refreshData: initAndLoadData,
             showNotification,
             
-            // Debug
-            debugFirebase: async () => {
+            async debugFirebase() {
                 console.log('🔍 Debug Firebase...');
                 if (db) {
                     try {
-                        const collections = ['quiz_results', 'leads', 'users', 'conversations', 'chats'];
+                        const collections = ['quiz_results', 'conversations'];
                         for (const coll of collections) {
-                            const snapshot = await db.collection(coll).limit(3).get();
+                            const snapshot = await db.collection(coll).limit(5).get();
                             console.log(`📊 ${coll}:`, snapshot.size, 'documenti');
                             snapshot.forEach(doc => console.log(doc.id, doc.data()));
                         }
@@ -1764,14 +1347,31 @@
             }
         };
 
-        // Avvia quando la pagina è carica
-        document.addEventListener('DOMContentLoaded', init);
+        // === INITIALIZATION ===
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Avvio Dashboard...');
+            
+            showNotification('⚡ Avvio Sistema', 'Caricamento dati Firebase...');
+            
+            // Avvia tutto
+            initAndLoadData().then(() => {
+                // Animazioni dopo caricamento
+                setTimeout(() => {
+                    document.querySelectorAll('.section, .metric-card').forEach((el, index) => {
+                        el.style.animationDelay = `${index * 0.1}s`;
+                        el.classList.add('fade-in');
+                    });
+                }, 500);
+                
+                console.log('🔧 API esposta in window.TribuCoachDashboard');
+            });
+        });
 
         // Auto-refresh ogni 5 minuti
         setInterval(() => {
             if (isConnected) {
                 console.log('🔄 Auto-refresh...');
-                loadData();
+                initAndLoadData();
             }
         }, 300000);
     </script>
