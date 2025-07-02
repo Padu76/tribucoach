@@ -288,6 +288,7 @@
             <div class="chat-actions" style="margin-bottom: 20px;">
                 <button class="btn primary" onclick="loadChatbaseConversations()">🔄 Carica Conversazioni</button>
                 <button class="btn" onclick="loadFirebaseQuiz()">📊 Carica Quiz</button>
+                <button class="btn" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
             </div>
             <div id="conversationsContainer" class="chats-grid">
                 <div class="loading">
@@ -315,79 +316,6 @@
             secretKey: '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo',
             chatbotId: 'EjoHCEogMfkkrVzIK6V07',
             apiBase: 'https://www.chatbase.co/api/v1'
-        // Test endpoint alternativi
-        window.testAlternativeEndpoint = async function() {
-            updateStatus('loading', '🚀 Testando endpoint alternativi...');
-            
-            try {
-                // Prova senza parametri chatbotId (forse restituisce tutti i chatbot dell'utente)
-                console.log('🔍 Test: get-conversations senza chatbotId');
-                const url1 = `${CHATBASE_CONFIG.apiBase}/get-conversations`;
-                const response1 = await fetch(url1, {
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                console.log('📊 Status senza chatbotId:', response1.status);
-                if (response1.ok) {
-                    const data1 = await response1.json();
-                    console.log('✅ Risposta senza chatbotId:', data1);
-                    
-                    // Se funziona, filtra per il nostro chatbot
-                    if (data1.data && Array.isArray(data1.data)) {
-                        const ourConversations = data1.data.filter(conv => 
-                            conv.chatbot_id === CHATBASE_CONFIG.chatbotId
-                        );
-                        console.log(`📊 Conversazioni del nostro chatbot: ${ourConversations.length}`);
-                        
-                        if (ourConversations.length > 0) {
-                            conversationsData = ourConversations.map(conv => ({
-                                id: conv.id,
-                                clientName: extractNameFromMessages(conv.messages) || conv.customer || 'Cliente Anonimo',
-                                phone: extractPhoneFromMessages(conv.messages) || 'N/A',
-                                topic: extractTopicFromMessages(conv.messages) || 'Generale',
-                                lastMessage: getLastUserMessage(conv.messages),
-                                timestamp: new Date(conv.created_at),
-                                messagesCount: conv.messages?.length || 0,
-                                source: conv.source || 'Chatbase'
-                            }));
-                            
-                            renderConversations();
-                            updateMetrics();
-                            updateStatus('connected', `✅ ${ourConversations.length} conversazioni trovate!`);
-                            return;
-                        }
-                    }
-                } else {
-                    console.log('❌ Errore senza chatbotId:', await response1.text());
-                }
-                
-                // Prova con parametri minimi
-                console.log('🔍 Test: parametri minimi');
-                const url2 = `${CHATBASE_CONFIG.apiBase}/get-conversations?size=10`;
-                const response2 = await fetch(url2, {
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                console.log('📊 Status parametri minimi:', response2.status);
-                if (response2.ok) {
-                    const data2 = await response2.json();
-                    console.log('✅ Risposta parametri minimi:', data2);
-                } else {
-                    console.log('❌ Errore parametri minimi:', await response2.text());
-                }
-                
-                updateStatus('error', '❌ Nessun endpoint alternativo ha funzionato');
-                
-            } catch (error) {
-                console.error('❌ Errore test alternativi:', error);
-                updateStatus('error', `❌ Errore: ${error.message}`);
-            }
         };
 
         const FIREBASE_CONFIG = {
@@ -412,9 +340,8 @@
             updateStatus('loading', '🔄 Caricando conversazioni da Chatbase...');
             
             try {
-                console.log('🔍 Chiamata API Chatbase con endpoint corretto...');
+                console.log('🔍 Chiamata API Chatbase...');
                 
-                // Endpoint corretto secondo documentazione ufficiale
                 const url = `${CHATBASE_CONFIG.apiBase}/get-conversations?chatbotId=${CHATBASE_CONFIG.chatbotId}&size=50`;
                 console.log('🔍 URL:', url);
                 
@@ -427,27 +354,23 @@
                 });
                 
                 console.log('📊 Response status:', response.status);
-                console.log('📊 Response headers:', [...response.headers.entries()]);
 
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error('❌ Error response:', errorText);
-                    throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+                    throw new Error(`API Error: ${response.status} - ${errorText}`);
                 }
 
                 const data = await response.json();
                 console.log('✅ Risposta Chatbase:', data);
 
-                // Gestisci la struttura della risposta secondo la documentazione
                 let conversations = [];
                 
                 if (data.data && Array.isArray(data.data)) {
                     conversations = data.data;
-                    console.log(`📊 Trovate ${conversations.length} conversazioni`);
                 } else if (Array.isArray(data)) {
                     conversations = data;
                 } else {
-                    console.log('📊 Struttura risposta:', Object.keys(data));
                     throw new Error('Formato risposta API inaspettato');
                 }
 
@@ -465,43 +388,55 @@
 
                     renderConversations();
                     updateMetrics();
-                    updateStatus('connected', `✅ ${conversations.length} conversazioni caricate da Chatbase`);
+                    updateStatus('connected', `✅ ${conversations.length} conversazioni caricate`);
                 } else {
                     updateStatus('connected', '⚠️ Nessuna conversazione trovata');
-                    document.getElementById('conversationsContainer').innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">💬</div>
-                            <p>Nessuna conversazione trovata nel chatbot</p>
-                            <small>Le conversazioni appariranno qui quando gli utenti interagiranno con il chatbot</small>
-                        </div>
-                    `;
+                    showEmptyConversations();
                 }
 
             } catch (error) {
-                console.error('❌ Errore Chatbase completo:', error);
+                console.error('❌ Errore Chatbase:', error);
                 updateStatus('error', `❌ Errore: ${error.message}`);
-                
-                // Mostra errore dettagliato + pulsante per usare dati mock
-                document.getElementById('conversationsContainer').innerHTML = `
-                    <div class="error">
-                        <h3>❌ Errore API Chatbase</h3>
-                        <p><strong>Errore:</strong> ${error.message}</p>
-                        <p><strong>API Base:</strong> ${CHATBASE_CONFIG.apiBase}</p>
-                        <p><strong>ChatbotId:</strong> ${CHATBASE_CONFIG.chatbotId}</p>
-                        <p><strong>Secret Key (primi 10 char):</strong> ${CHATBASE_CONFIG.secretKey.substring(0,10)}...</p>
-                        <div style="margin-top: 15px;">
-                            <button class="btn" onclick="loadChatbaseConversations()">🔄 Riprova</button>
-                            <button class="btn primary" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
-                            <button class="btn" onclick="debugChatbaseAPI()">🔍 Debug Completo</button>
-                            <button class="btn" onclick="testAlternativeEndpoint()">🚀 Test Endpoint Alternativi</button>
-                        </div>
-                    </div>
-                `;
+                showChatbaseError(error.message);
             }
         }
 
-        // Funzione per usare dati mock quando API non funziona
-        window.useMockConversations = function() {
+        // === FIREBASE QUIZ ===
+        async function loadFirebaseQuiz() {
+            updateStatus('loading', '📊 Caricando quiz da Firebase...');
+            
+            try {
+                console.log('📊 Recupero quiz da Firebase...');
+                
+                const querySnapshot = await db.collection('quiz_results').orderBy('timestamp', 'desc').limit(20).get();
+                
+                quizData = [];
+                querySnapshot.forEach(doc => {
+                    const data = doc.data();
+                    quizData.push({
+                        id: doc.id,
+                        name: data.name || data.userName || 'Nome non disponibile',
+                        email: data.email || data.userEmail || 'Non disponibile',
+                        phone: data.whatsapp || data.phone || 'Non disponibile',
+                        score: data.score || calculateScore(data),
+                        profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                        timestamp: data.timestamp?.toDate() || new Date()
+                    });
+                });
+
+                renderQuiz();
+                updateMetrics();
+                updateStatus('connected', `✅ ${quizData.length} quiz caricati da Firebase`);
+                
+            } catch (error) {
+                console.error('❌ Errore Firebase:', error);
+                updateStatus('error', `❌ Errore Firebase: ${error.message}`);
+                showFirebaseError(error.message);
+            }
+        }
+
+        // === MOCK DATA ===
+        function useMockConversations() {
             updateStatus('loading', '🧪 Caricando conversazioni mock...');
             
             conversationsData = [
@@ -540,122 +475,6 @@
             renderConversations();
             updateMetrics();
             updateStatus('connected', '✅ 3 conversazioni mock caricate per test');
-        };
-
-        // Debug function per testare l'API
-        window.debugChatbaseAPI = async function() {
-            console.log('🔍 Debug API Chatbase completo...');
-            updateStatus('loading', '🔍 Debug API in corso...');
-            
-            try {
-                // Test 1: Verifica chatbot esistente
-                console.log('🔍 Test 1: Verifica chatbot esistente');
-                const chatbotUrl = `${CHATBASE_CONFIG.apiBase}/chatbots`;
-                const chatbotResponse = await fetch(chatbotUrl, {
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                console.log('📊 Chatbots Response:', chatbotResponse.status);
-                if (chatbotResponse.ok) {
-                    const chatbots = await chatbotResponse.json();
-                    console.log('📊 I tuoi chatbots:', chatbots);
-                } else {
-                    console.log('❌ Errore chatbots:', await chatbotResponse.text());
-                }
-                
-                // Test 2: Prova diversi parametri per get-conversations
-                console.log('🔍 Test 2: Prova parametri diversi');
-                const testParams = [
-                    `chatbotId=${CHATBASE_CONFIG.chatbotId}`,
-                    `chatbotId=${CHATBASE_CONFIG.chatbotId}&page=1&size=10`,
-                    `chatbotId=${CHATBASE_CONFIG.chatbotId}&size=10`,
-                    ''  // senza parametri
-                ];
-                
-                for (const params of testParams) {
-                    const testUrl = `${CHATBASE_CONFIG.apiBase}/get-conversations${params ? '?' + params : ''}`;
-                    console.log(`🔍 Test URL: ${testUrl}`);
-                    
-                    const testResponse = await fetch(testUrl, {
-                        headers: {
-                            'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    console.log(`📊 Status per ${params || 'no params'}:`, testResponse.status);
-                    const responseText = await testResponse.text();
-                    console.log(`📊 Response per ${params || 'no params'}:`, responseText);
-                    
-                    if (testResponse.ok) {
-                        console.log('✅ Questo set di parametri funziona!');
-                        break;
-                    }
-                }
-                
-                // Test 3: Verifica secret key
-                console.log('🔍 Test 3: Verifica autenticazione');
-                const authUrl = `${CHATBASE_CONFIG.apiBase}/auth/verify` || `${CHATBASE_CONFIG.apiBase}/me`;
-                const authResponse = await fetch(authUrl, {
-                    headers: {
-                        'Authorization': `Bearer ${CHATBASE_CONFIG.secretKey}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                console.log('📊 Auth Status:', authResponse.status);
-                console.log('📊 Auth Response:', await authResponse.text());
-                
-                updateStatus('connected', '✅ Debug completato - Controlla console');
-                
-            } catch (error) {
-                console.error('❌ Debug error:', error);
-                updateStatus('error', `❌ Debug error: ${error.message}`);
-            }
-        };
-
-        // === FIREBASE QUIZ ===
-        async function loadFirebaseQuiz() {
-            updateStatus('loading', '📊 Caricando quiz da Firebase...');
-            
-            try {
-                console.log('📊 Recupero quiz da Firebase...');
-                
-                const querySnapshot = await db.collection('quiz_results').orderBy('timestamp', 'desc').limit(20).get();
-                
-                quizData = [];
-                querySnapshot.forEach(doc => {
-                    const data = doc.data();
-                    quizData.push({
-                        id: doc.id,
-                        name: data.name || data.userName || 'Nome non disponibile',
-                        email: data.email || data.userEmail || 'Non disponibile',
-                        phone: data.whatsapp || data.phone || 'Non disponibile',
-                        score: data.score || calculateScore(data),
-                        profile: data.fitnessPersonality || data.profile || 'Non specificato',
-                        timestamp: data.timestamp?.toDate() || new Date()
-                    });
-                });
-
-                renderQuiz();
-                updateMetrics();
-                updateStatus('connected', '✅ Quiz Firebase caricati');
-                
-            } catch (error) {
-                console.error('❌ Errore Firebase:', error);
-                updateStatus('error', `❌ Errore Firebase: ${error.message}`);
-                
-                document.getElementById('quizContainer').innerHTML = `
-                    <div class="error">
-                        <h3>❌ Errore Firebase</h3>
-                        <p>${error.message}</p>
-                        <button class="btn" onclick="loadFirebaseQuiz()">🔄 Riprova</button>
-                    </div>
-                `;
-            }
         }
 
         // === RENDERING ===
@@ -663,12 +482,7 @@
             const container = document.getElementById('conversationsContainer');
             
             if (conversationsData.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">💬</div>
-                        <p>Nessuna conversazione trovata</p>
-                    </div>
-                `;
+                showEmptyConversations();
                 return;
             }
 
@@ -742,6 +556,41 @@
             }).join('');
 
             container.innerHTML = html;
+        }
+
+        // === ERROR HANDLERS ===
+        function showEmptyConversations() {
+            document.getElementById('conversationsContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">💬</div>
+                    <p>Nessuna conversazione trovata</p>
+                    <small>Le conversazioni appariranno qui quando gli utenti interagiranno con il chatbot</small>
+                </div>
+            `;
+        }
+
+        function showChatbaseError(errorMessage) {
+            document.getElementById('conversationsContainer').innerHTML = `
+                <div class="error">
+                    <h3>❌ Errore API Chatbase</h3>
+                    <p><strong>Errore:</strong> ${errorMessage}</p>
+                    <p><strong>ChatbotId:</strong> ${CHATBASE_CONFIG.chatbotId}</p>
+                    <div style="margin-top: 15px;">
+                        <button class="btn" onclick="loadChatbaseConversations()">🔄 Riprova</button>
+                        <button class="btn primary" onclick="useMockConversations()">🧪 Usa Dati Mock</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showFirebaseError(errorMessage) {
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="error">
+                    <h3>❌ Errore Firebase</h3>
+                    <p>${errorMessage}</p>
+                    <button class="btn" onclick="loadFirebaseQuiz()">🔄 Riprova</button>
+                </div>
+            `;
         }
 
         // === UTILITY FUNCTIONS ===
@@ -838,21 +687,21 @@
         }
 
         // === ACTIONS ===
-        window.openWhatsApp = function(phone) {
+        function openWhatsApp(phone) {
             if (!phone || phone === 'N/A' || phone === 'Non disponibile') {
                 alert('Numero non disponibile');
                 return;
             }
             const cleanPhone = phone.replace(/[^\d+]/g, '');
             window.open(`https://wa.me/${cleanPhone}`, '_blank');
-        };
+        }
 
-        window.viewConversation = function(conversationId) {
+        function viewConversation(conversationId) {
             const conv = conversationsData.find(c => c.id === conversationId);
             if (conv) {
                 alert(`Conversazione ${conversationId}\nCliente: ${conv.clientName}\nTopic: ${conv.topic}`);
             }
-        };
+        }
 
         // === INIZIALIZZAZIONE ===
         document.addEventListener('DOMContentLoaded', function() {
