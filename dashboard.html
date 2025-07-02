@@ -939,149 +939,68 @@
 
         async function loadConversations() {
             try {
-                console.log('💬 Caricamento conversazioni...');
+                console.log('💬 Caricamento conversazioni da Firebase...');
                 
-                // Prima prova Firebase
-                let firebaseChats = [];
-                try {
-                    const q = query(collection(db, 'conversations'), limit(30));
-                    const querySnapshot = await getDocs(q);
-                    
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        firebaseChats.push({
-                            id: doc.id,
-                            clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
-                            phone: data.customerPhone || extractPhoneFromMessages(data.messages) || 'N/A',
-                            email: data.customerEmail || 'N/A',
-                            topic: data.topic || 'Conversazione generale',
-                            lastMessage: getLastMessage(data.messages),
-                            messages: data.messages || [],
-                            timestamp: data.timestamp?.toDate() || data.lastMessageAt?.toDate() || new Date(),
-                            source: 'Firebase'
-                        });
+                // Carica solo da Firebase (più affidabile)
+                chatsData = [];
+                const q = query(collection(db, 'conversations'), limit(50));
+                const querySnapshot = await getDocs(q);
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    chatsData.push({
+                        id: doc.id,
+                        clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
+                        phone: data.customerPhone || extractPhoneFromMessages(data.messages) || 'N/A',
+                        email: data.customerEmail || extractEmailFromMessages(data.messages) || 'N/A',
+                        topic: data.topic || extractTopicFromMessages(data.messages) || 'Conversazione generale',
+                        lastMessage: getLastMessage(data.messages),
+                        messages: data.messages || [],
+                        timestamp: data.timestamp?.toDate() || data.lastMessageAt?.toDate() || data.dateCreated?.toDate() || new Date(),
+                        source: 'Firebase'
                     });
-                    
-                    if (firebaseChats.length > 0) {
-                        console.log(`💬 Caricate ${firebaseChats.length} conversazioni da Firebase`);
-                    }
-                } catch (fbError) {
-                    console.log('⚠️ Firebase conversations non accessibile:', fbError.message);
-                }
+                });
                 
-                // Poi prova API Chatbase
-                let chatbaseChats = [];
-                try {
-                    console.log('🔄 Tentativo caricamento da Chatbase API...');
-                    
-                    const CHATBASE_API_KEY = '0uk17rpq8vkvbw1nvnhvupwm0zc8iwjo';
-                    const CHATBOT_ID = 'EjoHCEogMfkkrVzIK6V07';
-                    
-                    // Prova endpoint diversi
-                    const endpoints = [
-                        `https://www.chatbase.co/api/v1/get-conversations/${CHATBOT_ID}`,
-                        `https://www.chatbase.co/api/v1/conversations?chatbotId=${CHATBOT_ID}`,
-                        `https://api.chatbase.co/api/v1/conversations/${CHATBOT_ID}`,
-                        `https://www.chatbase.co/api/conversations?chatbotId=${CHATBOT_ID}`
-                    ];
-                    
-                    let successfulResponse = null;
-                    
-                    for (const endpoint of endpoints) {
-                        try {
-                            console.log(`🔍 Tentativo endpoint: ${endpoint}`);
-                            
-                            const response = await fetch(endpoint, {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': `Bearer ${CHATBASE_API_KEY}`,
-                                    'Accept': 'application/json',
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                            
-                            console.log(`📊 Status ${endpoint}: ${response.status}`);
-                            
-                            if (response.ok) {
-                                const chatbaseData = await response.json();
-                                console.log('✅ Successo con endpoint:', endpoint);
-                                console.log('✅ Dati Chatbase:', chatbaseData);
-                                successfulResponse = chatbaseData;
-                                break;
-                            } else {
-                                const errorText = await response.text();
-                                console.log(`❌ Errore ${response.status}:`, errorText.substring(0, 100));
-                            }
-                            
-                        } catch (endpointError) {
-                            console.log(`❌ Errore endpoint ${endpoint}:`, endpointError.message);
-                        }
-                    }
-                    
-                    if (successfulResponse) {
-                        // Gestisci diversi formati di risposta
-                        let conversations = [];
-                        
-                        if (successfulResponse.data && Array.isArray(successfulResponse.data)) {
-                            conversations = successfulResponse.data;
-                        } else if (Array.isArray(successfulResponse)) {
-                            conversations = successfulResponse;
-                        } else if (successfulResponse.conversations && Array.isArray(successfulResponse.conversations)) {
-                            conversations = successfulResponse.conversations;
-                        }
-                        
-                        console.log(`🎯 Trovate ${conversations.length} conversazioni in Chatbase`);
-                        
-                        if (conversations.length > 0) {
-                            chatbaseChats = conversations.map((conv, index) => {
-                                const contactInfo = extractContactInfoFromChatbase(conv.messages || []);
-                                
-                                return {
-                                    id: conv.id || conv.conversationId || `chatbase_${index}_${Date.now()}`,
-                                    clientName: contactInfo.name || conv.customer || conv.customerName || `Cliente Chatbase ${index + 1}`,
-                                    phone: contactInfo.phone || conv.phone || conv.customerPhone || 'N/A',
-                                    email: contactInfo.email || conv.email || conv.customerEmail || 'N/A',
-                                    topic: extractTopicFromChatbase(conv.messages || []) || 'Conversazione Chatbase',
-                                    lastMessage: getLastMessageFromChatbase(conv.messages || []),
-                                    messages: conv.messages || [],
-                                    timestamp: new Date(conv.updated_at || conv.created_at || conv.lastMessageAt || Date.now()),
-                                    source: 'Chatbase API'
-                                };
-                            });
-                            
-                            console.log(`🌐 Trasformate ${chatbaseChats.length} conversazioni da Chatbase`);
-                            
-                            // Log della prima conversazione per debug
-                            if (chatbaseChats.length > 0) {
-                                console.log('🔍 Prima conversazione Chatbase:', chatbaseChats[0]);
-                            }
-                        }
-                    } else {
-                        console.warn('⚠️ Nessun endpoint Chatbase funzionante trovato');
-                    }
-                    
-                } catch (chatbaseError) {
-                    console.warn('⚠️ Errore generale Chatbase API:', chatbaseError.message);
-                }
-                
-                // Combina i risultati
-                chatsData = [...firebaseChats, ...chatbaseChats];
-                
-                // Rimuovi duplicati basati su ID
-                chatsData = chatsData.reduce((acc, chat) => {
-                    if (!acc.find(existing => existing.id === chat.id)) {
-                        acc.push(chat);
-                    }
-                    return acc;
-                }, []);
-                
-                console.log(`💬 Totale conversazioni caricate: ${chatsData.length} (Firebase: ${firebaseChats.length}, Chatbase: ${chatbaseChats.length})`);
+                console.log(`💬 Caricate ${chatsData.length} conversazioni da Firebase`);
                 
                 return chatsData;
             } catch (error) {
                 console.error('❌ Errore caricamento conversazioni:', error);
                 return [];
             }
+        }
+
+        // === FUNZIONE PER SALVARE CHAT MANUALMENTE ===
+        async function saveChatToFirebase(chatData) {
+            try {
+                const docRef = await addDoc(collection(db, 'conversations'), {
+                    ...chatData,
+                    dateCreated: new Date(),
+                    lastMessageAt: new Date(),
+                    source: 'Manual'
+                });
+                
+                console.log('✅ Chat salvata in Firebase:', docRef.id);
+                return docRef.id;
+            } catch (error) {
+                console.error('❌ Errore salvataggio chat:', error);
+                throw error;
+            }
+        }
+
+        // === HELPER PER AGGIUNGERE CHAT MANUALMENTE ===
+        function createManualChat(clientName, phone, email, topic, messages) {
+            return {
+                customerName: clientName,
+                customerPhone: phone || 'N/A',
+                customerEmail: email || 'N/A',
+                topic: topic || 'Conversazione generale',
+                messages: messages.map((msg, index) => ({
+                    role: msg.role || (index % 2 === 0 ? 'user' : 'assistant'),
+                    content: msg.content || msg.message || msg,
+                    timestamp: new Date()
+                }))
+            };
         }
         
         // === UTILITY FUNCTIONS PER CHATBASE ===
