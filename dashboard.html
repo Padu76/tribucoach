@@ -5,28 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TribuCoach Dashboard - Business Intelligence</title>
 
-  <!-- Firebase SDK v9 -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-    import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-      authDomain: "tribucoach-a2254.firebaseapp.com",
-      projectId: "tribucoach-a2254",
-      storageBucket: "tribucoach-a2254.firebasestorage.app",
-      messagingSenderId: "425200296836",
-      appId: "1:425200296836:web:7835188f40f4348567ab48"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    let leadsData = [];
-    let chatsData = [];
-  </script>
-
-  <!-- Chart.js CDN -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -47,8 +26,31 @@
     .connection-status.connected { background: green; color: white; }
     .connection-status.error { background: red; color: white; }
   </style>
-</head>
 <script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+  import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+    authDomain: "tribucoach-a2254.firebaseapp.com",
+    projectId: "tribucoach-a2254",
+    storageBucket: "tribucoach-a2254.firebasestorage.app",
+    messagingSenderId: "425200296836",
+    appId: "1:425200296836:web:7835188f40f4348567ab48"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let leadsData = [];
+  let chatsData = [];
+
+  function updateStatus(type, message) {
+    const statusEl = document.getElementById('connectionStatus');
+    statusEl.className = `connection-status ${type}`;
+    statusEl.textContent = message;
+  }
+
   async function loadQuizResults() {
     try {
       console.log('📊 Caricamento quiz results...');
@@ -73,10 +75,8 @@
         });
       });
       console.log(`📊 Caricati ${leadsData.length} lead da Firebase`);
-      return leadsData;
     } catch (error) {
       console.error('❌ Errore caricamento quiz:', error);
-      return [];
     }
   }
 
@@ -111,10 +111,8 @@
           console.log(`Collection ${collectionName} non trovata`);
         }
       }
-      return chatsData;
     } catch (error) {
       console.error('❌ Errore caricamento conversazioni:', error);
-      return [];
     }
   }
 
@@ -162,34 +160,6 @@
     }
     return 'Nessun messaggio';
   }
-
-  async function loadAllData() {
-    try {
-      updateStatus('loading', '📊 Caricamento dati da Firebase...');
-      await Promise.all([loadQuizResults(), loadConversations()]);
-      updateMetrics();
-      renderLeads();
-      renderChats();
-      updateCharts();
-      updateStatus('connected', '✅ Dati caricati da Firebase');
-      console.log('✅ Tutti i dati caricati con successo');
-    } catch (error) {
-      console.error('❌ Errore caricamento dati:', error);
-      updateStatus('error', '❌ Errore caricamento dati');
-    }
-  }
-
-  window.loadAllData = loadAllData;
-  window.loadQuizResults = loadQuizResults;
-  window.loadConversations = loadConversations;
-</script>
-<script type="module">
-  function updateStatus(type, message) {
-    const statusEl = document.getElementById('connectionStatus');
-    statusEl.className = `connection-status ${type}`;
-    statusEl.textContent = message;
-  }
-
   function updateMetrics() {
     const totalLeads = leadsData.length;
     const avgScore = totalLeads > 0 ? Math.round(leadsData.reduce((sum, l) => sum + (l.score || 0), 0) / totalLeads) : 0;
@@ -208,7 +178,7 @@
       container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Nessun lead trovato</p></div>`;
       return;
     }
-    const html = leadsData.slice(0, 8).map(l => `
+    container.innerHTML = leadsData.slice(0, 8).map(l => `
       <div class="lead-card">
         <div class="lead-header"><div><div class="lead-name">${l.name}</div><div class="lead-profile">${l.profile}</div></div><div class="lead-score">${l.score}%</div></div>
         <div class="lead-details">
@@ -219,7 +189,6 @@
         </div>
         <div class="lead-actions">${l.phone !== 'Non disponibile' && l.phone !== 'N/A' ? `<button class="btn whatsapp" onclick="openWhatsApp('${l.phone}')">📱 WhatsApp</button>` : ''}</div>
       </div>`).join('');
-    container.innerHTML = html;
   }
 
   function renderChats() {
@@ -228,14 +197,29 @@
       container.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>Nessuna conversazione trovata</p></div>`;
       return;
     }
-    const html = chatsData.slice(0, 6).map(c => `
+    container.innerHTML = chatsData.slice(0, 6).map(c => `
       <div class="chat-card">
         <div class="chat-header"><div class="chat-client">${c.clientName}</div><div class="chat-topic">${c.topic}</div><div class="chat-source">🔗 ${c.source}</div></div>
         <div class="chat-preview">"${c.lastMessage.substring(0, 60)}..."</div>
         <div class="chat-meta"><span>📱 ${c.phone}</span><span>📅 ${c.timestamp.toLocaleDateString('it-IT')}</span></div>
         <div class="chat-actions">${c.phone !== 'N/A' ? `<button class="btn whatsapp" onclick="openWhatsApp('${c.phone}')">📱 WhatsApp</button>` : ''}</div>
       </div>`).join('');
-    container.innerHTML = html;
+  }
+
+  function updateCharts() {
+    const ctx = document.getElementById('chartLeads').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Lead', 'Conversazioni'],
+        datasets: [{
+          label: 'Totali',
+          data: [leadsData.length, chatsData.length],
+          backgroundColor: ['#4CAF50', '#2196F3']
+        }]
+      },
+      options: { responsive: true }
+    });
   }
 
   window.openWhatsApp = phone => {
@@ -243,12 +227,26 @@
     window.open(`https://wa.me/${phone.replace(/[^\d+]/g, '')}`, '_blank');
   };
 
-  window.updateStatus = updateStatus;
+  async function loadAllData() {
+    try {
+      updateStatus('loading', '📊 Caricamento dati da Firebase...');
+      await Promise.all([loadQuizResults(), loadConversations()]);
+      updateMetrics();
+      renderLeads();
+      renderChats();
+      updateCharts();
+      updateStatus('connected', '✅ Dati caricati da Firebase');
+      console.log('✅ Tutti i dati caricati con successo');
+    } catch (error) {
+      console.error('❌ Errore caricamento dati:', error);
+      updateStatus('error', '❌ Errore caricamento dati');
+    }
+  }
 
   async function init() {
     console.log('🚀 Inizializzazione TribuCoach Dashboard...');
     updateStatus('loading', '🔄 Connessione a Firebase...');
-    await window.loadAllData();
+    await loadAllData();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
