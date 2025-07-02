@@ -1,273 +1,904 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TribuCoach Dashboard - Business Intelligence</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TribuCoach Dashboard - Business Intelligence</title>
+    
+    <!-- Firebase SDK v9 modular -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
 
-  <style>
-    body { font-family: sans-serif; background: #f5f5f5; margin: 0; color: #333; }
-    .metrics-grid { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem; }
-    .metric-card { background: white; border-radius: 8px; padding: 1rem; flex: 1; min-width: 200px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .metric-card h3 { margin-top: 0; font-size: 1.2rem; }
-    section { background: white; margin: 1rem; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .lead-card, .chat-card { background: #fff; margin-bottom: 1rem; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .lead-header, .chat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-    .lead-name, .chat-client { font-weight: bold; }
-    .lead-score { font-weight: bold; }
-    .lead-details, .chat-preview, .chat-meta { font-size: 0.9rem; }
-    .lead-actions, .chat-actions { margin-top: 0.5rem; }
-    .btn.whatsapp { background: #25D366; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
-    .connection-status { text-align: center; padding: 0.5rem; font-weight: bold; }
-    .connection-status.loading { background: orange; color: white; }
-    .connection-status.connected { background: green; color: white; }
-    .connection-status.error { background: red; color: white; }
-  </style>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-  import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-    authDomain: "tribucoach-a2254.firebaseapp.com",
-    projectId: "tribucoach-a2254",
-    storageBucket: "tribucoach-a2254.firebasestorage.app",
-    messagingSenderId: "425200296836",
-    appId: "1:425200296836:web:7835188f40f4348567ab48"
-  };
+        // Dati globali
+        let leadsData = [];
+        let chatsData = [];
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  let leadsData = [];
-  let chatsData = [];
-
-  function updateStatus(type, message) {
-    const statusEl = document.getElementById('connectionStatus');
-    statusEl.className = `connection-status ${type}`;
-    statusEl.textContent = message;
-  }
-
-  async function loadQuizResults() {
-    try {
-      console.log('📊 Caricamento quiz results...');
-      const q = query(collection(db, 'quiz_results'), orderBy('timestamp', 'desc'), limit(50));
-      const querySnapshot = await getDocs(q);
-
-      leadsData = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        leadsData.push({
-          id: doc.id,
-          name: data.name || 'Nome non disponibile',
-          email: data.email || 'Non disponibile',
-          phone: data.whatsapp || data.phone || 'Non disponibile',
-          age: data.age || 'N/A',
-          gender: data.gender || 'N/A',
-          score: data.score || calculateScore(data),
-          profile: data.fitnessPersonality || data.profile || 'Non specificato',
-          goals: extractArray(data.goals || data.fitnessGoals),
-          timestamp: data.timestamp?.toDate() || new Date(),
-          source: 'Firebase'
-        });
-      });
-      console.log(`📊 Caricati ${leadsData.length} lead da Firebase`);
-    } catch (error) {
-      console.error('❌ Errore caricamento quiz:', error);
-    }
-  }
-
-  async function loadConversations() {
-    try {
-      console.log('💬 Caricamento conversazioni...');
-      const collections = ['chatbase_conversations', 'conversations', 'chatbot_conversations', 'chats'];
-
-      for (const collectionName of collections) {
-        try {
-          const q = query(collection(db, collectionName), limit(30));
-          const querySnapshot = await getDocs(q);
-
-          if (querySnapshot.size > 0) {
-            chatsData = [];
-            querySnapshot.forEach((doc) => {
-              const data = doc.data();
-              chatsData.push({
-                id: doc.id,
-                clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
-                phone: data.phone || extractPhoneFromMessages(data.messages) || 'N/A',
-                topic: data.topic || 'Conversazione generale',
-                lastMessage: getLastMessage(data.messages),
-                timestamp: data.timestamp?.toDate() || new Date(),
-                source: collectionName === 'chatbase_conversations' ? 'Chatbase' : 'Firebase'
-              });
-            });
-            console.log(`💬 Caricate ${chatsData.length} conversazioni da ${collectionName}`);
-            break;
-          }
-        } catch (e) {
-          console.log(`Collection ${collectionName} non trovata`);
+        // === FUNZIONI FIREBASE ===
+        async function loadQuizResults() {
+            try {
+                console.log('📊 Caricamento quiz results...');
+                const q = query(collection(db, 'quiz_results'), orderBy('timestamp', 'desc'), limit(50));
+                const querySnapshot = await getDocs(q);
+                
+                leadsData = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    leadsData.push({
+                        id: doc.id,
+                        name: data.name || data.userName || 'Nome non disponibile',
+                        email: data.email || data.userEmail || 'Non disponibile',
+                        phone: data.whatsapp || data.userWhatsApp || data.phone || 'Non disponibile',
+                        age: data.age || data.userAge || 'N/A',
+                        gender: data.gender || data.userGender || 'N/A',
+                        score: data.score || data.fitnessScore || calculateScore(data),
+                        profile: data.fitnessPersonality || data.profile || 'Non specificato',
+                        goals: extractArray(data.goals || data.fitnessGoals),
+                        obstacles: extractArray(data.obstacles || data.challenges),
+                        budget: data.budget || 'Non specificato',
+                        timestamp: data.timestamp?.toDate() || new Date(),
+                        source: 'Firebase'
+                    });
+                });
+                
+                console.log(`📊 Caricati ${leadsData.length} lead da Firebase`);
+                return leadsData;
+            } catch (error) {
+                console.error('❌ Errore caricamento quiz:', error);
+                return [];
+            }
         }
-      }
-    } catch (error) {
-      console.error('❌ Errore caricamento conversazioni:', error);
-    }
-  }
 
-  function calculateScore(data) {
-    let score = 50;
-    if (data.email && data.email.length > 5) score += 15;
-    if (data.name && data.name.length > 2) score += 10;
-    if (data.whatsapp || data.phone) score += 20;
-    if (data.goals && data.goals.length > 0) score += 5;
-    return Math.min(score, 100);
-  }
+        async function loadConversations() {
+            try {
+                console.log('💬 Caricamento conversazioni...');
+                const collections = ['conversations', 'chatbot_conversations', 'chats'];
+                
+                for (const collectionName of collections) {
+                    try {
+                        const q = query(collection(db, collectionName), limit(30));
+                        const querySnapshot = await getDocs(q);
+                        
+                        if (querySnapshot.size > 0) {
+                            chatsData = [];
+                            querySnapshot.forEach((doc) => {
+                                const data = doc.data();
+                                chatsData.push({
+                                    id: doc.id,
+                                    clientName: data.customerName || extractNameFromMessages(data.messages) || 'Cliente Anonimo',
+                                    phone: data.customerPhone || extractPhoneFromMessages(data.messages) || 'N/A',
+                                    email: data.customerEmail || 'N/A',
+                                    topic: data.topic || 'Conversazione generale',
+                                    lastMessage: getLastMessage(data.messages),
+                                    timestamp: data.timestamp?.toDate() || data.lastMessageAt?.toDate() || new Date(),
+                                    source: 'Firebase'
+                                });
+                            });
+                            console.log(`💬 Caricate ${chatsData.length} conversazioni da ${collectionName}`);
+                            break;
+                        }
+                    } catch (e) {
+                        console.log(`Collection ${collectionName} non trovata`);
+                    }
+                }
+                
+                return chatsData;
+            } catch (error) {
+                console.error('❌ Errore caricamento conversazioni:', error);
+                return [];
+            }
+        }
 
-  function extractArray(value) {
-    if (Array.isArray(value)) return value;
-    if (typeof value === 'string') return value.split(',').map(v => v.trim());
-    return ['Non specificato'];
-  }
+        // === UTILITY FUNCTIONS ===
+        function calculateScore(data) {
+            let score = 50;
+            if (data.email && data.email.length > 5) score += 15;
+            if (data.name && data.name.length > 2) score += 10;
+            if (data.whatsapp || data.phone) score += 20;
+            if (data.goals && data.goals.length > 0) score += 5;
+            return Math.min(score, 100);
+        }
 
-  function extractNameFromMessages(messages) {
-    if (!messages) return null;
-    for (const msg of messages) {
-      if (msg.role === 'user' && msg.content) {
-        const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
-        if (match) return match[1].trim();
-      }
-    }
-    return null;
-  }
+        function extractArray(value) {
+            if (Array.isArray(value)) return value;
+            if (typeof value === 'string') return value.split(',').map(v => v.trim());
+            return ['Non specificato'];
+        }
 
-  function extractPhoneFromMessages(messages) {
-    if (!messages) return null;
-    for (const msg of messages) {
-      if (msg.role === 'user' && msg.content) {
-        const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
-        if (match) return '+39 ' + match[1].replace(/\s/g, '');
-      }
-    }
-    return null;
-  }
+        function extractNameFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/(?:mi chiamo|sono)\s+([a-zA-Z\s]{2,20})/i);
+                    if (match) return match[1].trim();
+                }
+            }
+            return null;
+        }
 
-  function getLastMessage(messages) {
-    if (messages && messages.length > 0) {
-      const lastMsg = messages[messages.length - 1];
-      return lastMsg.content || lastMsg.message || 'Nessun contenuto';
-    }
-    return 'Nessun messaggio';
-  }
-  function updateMetrics() {
-    const totalLeads = leadsData.length;
-    const avgScore = totalLeads > 0 ? Math.round(leadsData.reduce((sum, l) => sum + (l.score || 0), 0) / totalLeads) : 0;
-    const totalChats = chatsData.length;
-    const premiumLeads = leadsData.filter(l => (l.score || 0) > 80).length;
+        function extractPhoneFromMessages(messages) {
+            if (!messages) return null;
+            for (const msg of messages) {
+                if (msg.role === 'user' && msg.content) {
+                    const match = msg.content.match(/([0-9]{3}\s?[0-9]{3}\s?[0-9]{4})/);
+                    if (match) return '+39 ' + match[1].replace(/\s/g, '');
+                }
+            }
+            return null;
+        }
 
-    document.getElementById('totalLeads').textContent = totalLeads;
-    document.getElementById('avgScore').textContent = avgScore + '%';
-    document.getElementById('totalChats').textContent = totalChats;
-    document.getElementById('premiumLeads').textContent = premiumLeads;
-  }
+        function getLastMessage(messages) {
+            if (messages && messages.length > 0) {
+                const lastMsg = messages[messages.length - 1];
+                return lastMsg.content || lastMsg.message || 'Nessun contenuto';
+            }
+            return 'Nessun messaggio';
+        }
 
-  function renderLeads() {
-    const container = document.getElementById('leadsContainer');
-    if (leadsData.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>Nessun lead trovato</p></div>`;
-      return;
-    }
-    container.innerHTML = leadsData.slice(0, 8).map(l => `
-      <div class="lead-card">
-        <div class="lead-header"><div><div class="lead-name">${l.name}</div><div class="lead-profile">${l.profile}</div></div><div class="lead-score">${l.score}%</div></div>
-        <div class="lead-details">
-          <div><span class="label">📧 Email:</span> ${l.email}</div>
-          <div><span class="label">📱 Phone:</span> ${l.phone}</div>
-          <div><span class="label">🎯 Goals:</span> ${l.goals.join(', ')}</div>
-          <div><span class="label">📅 Data:</span> ${l.timestamp.toLocaleDateString('it-IT')}</div>
-        </div>
-        <div class="lead-actions">${l.phone !== 'Non disponibile' && l.phone !== 'N/A' ? `<button class="btn whatsapp" onclick="openWhatsApp('${l.phone}')">📱 WhatsApp</button>` : ''}</div>
-      </div>`).join('');
-  }
+        // === CARICAMENTO DATI ===
+        async function loadAllData() {
+            try {
+                updateStatus('loading', '📊 Caricamento dati da Firebase...');
+                
+                await Promise.all([
+                    loadQuizResults(),
+                    loadConversations()
+                ]);
+                
+                updateMetrics();
+                renderLeads();
+                renderChats();
+                updateCharts();
+                updateInsights();
+                
+                updateStatus('connected', '✅ Dati caricati da Firebase');
+                console.log('✅ Tutti i dati caricati con successo');
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento dati:', error);
+                updateStatus('error', '❌ Errore caricamento dati');
+            }
+        }
 
-  function renderChats() {
-    const container = document.getElementById('chatsContainer');
-    if (chatsData.length === 0) {
-      container.innerHTML = `<div class="empty-state"><div class="icon">💬</div><p>Nessuna conversazione trovata</p></div>`;
-      return;
-    }
-    container.innerHTML = chatsData.slice(0, 6).map(c => `
-      <div class="chat-card">
-        <div class="chat-header"><div class="chat-client">${c.clientName}</div><div class="chat-topic">${c.topic}</div><div class="chat-source">🔗 ${c.source}</div></div>
-        <div class="chat-preview">"${c.lastMessage.substring(0, 60)}..."</div>
-        <div class="chat-meta"><span>📱 ${c.phone}</span><span>📅 ${c.timestamp.toLocaleDateString('it-IT')}</span></div>
-        <div class="chat-actions">${c.phone !== 'N/A' ? `<button class="btn whatsapp" onclick="openWhatsApp('${c.phone}')">📱 WhatsApp</button>` : ''}</div>
-      </div>`).join('');
-  }
+        // === UI UPDATES ===
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${type}`;
+            statusEl.textContent = message;
+        }
 
-  function updateCharts() {
-    const ctx = document.getElementById('chartLeads').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Lead', 'Conversazioni'],
-        datasets: [{
-          label: 'Totali',
-          data: [leadsData.length, chatsData.length],
-          backgroundColor: ['#4CAF50', '#2196F3']
-        }]
-      },
-      options: { responsive: true }
-    });
-  }
+        function updateMetrics() {
+            const totalLeads = leadsData.length;
+            const avgScore = totalLeads > 0 ? 
+                Math.round(leadsData.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const totalChats = chatsData.length;
+            const premiumLeads = leadsData.filter(lead => (lead.score || 0) > 80).length;
 
-  window.openWhatsApp = phone => {
-    if (!phone || phone === 'N/A') return alert('Numero non disponibile');
-    window.open(`https://wa.me/${phone.replace(/[^\d+]/g, '')}`, '_blank');
-  };
+            document.getElementById('totalLeads').textContent = totalLeads;
+            document.getElementById('avgScore').textContent = avgScore + '%';
+            document.getElementById('totalChats').textContent = totalChats;
+            document.getElementById('premiumLeads').textContent = premiumLeads;
+        }
 
-  async function loadAllData() {
-    try {
-      updateStatus('loading', '📊 Caricamento dati da Firebase...');
-      await Promise.all([loadQuizResults(), loadConversations()]);
-      updateMetrics();
-      renderLeads();
-      renderChats();
-      updateCharts();
-      updateStatus('connected', '✅ Dati caricati da Firebase');
-      console.log('✅ Tutti i dati caricati con successo');
-    } catch (error) {
-      console.error('❌ Errore caricamento dati:', error);
-      updateStatus('error', '❌ Errore caricamento dati');
-    }
-  }
+        function renderLeads() {
+            const container = document.getElementById('leadsContainer');
+            
+            if (leadsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>Nessun lead trovato</p>
+                        <small>I lead appariranno qui quando completati i quiz</small>
+                    </div>
+                `;
+                return;
+            }
 
-  async function init() {
-    console.log('🚀 Inizializzazione TribuCoach Dashboard...');
-    updateStatus('loading', '🔄 Connessione a Firebase...');
-    await loadAllData();
-  }
+            const html = leadsData.slice(0, 8).map(lead => {
+                const scoreClass = lead.score > 80 ? 'score-high' : lead.score >= 60 ? 'score-medium' : 'score-low';
+                
+                return `
+                    <div class="lead-card">
+                        <div class="lead-header">
+                            <div>
+                                <div class="lead-name">${lead.name}</div>
+                                <div class="lead-profile">${lead.profile}</div>
+                            </div>
+                            <div class="lead-score ${scoreClass}">${lead.score}%</div>
+                        </div>
+                        
+                        <div class="lead-details">
+                            <div class="detail-row">
+                                <span class="label">📧 Email:</span>
+                                <span class="value">${lead.email}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">📱 Phone:</span>
+                                <span class="value">${lead.phone}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">🎯 Goals:</span>
+                                <span class="value">${lead.goals.join(', ')}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">📅 Data:</span>
+                                <span class="value">${lead.timestamp.toLocaleDateString('it-IT')}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="lead-actions">
+                            ${lead.phone !== 'Non disponibile' && lead.phone !== 'N/A' ? 
+                                `<button class="btn whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-</script>
+            container.innerHTML = html;
+        }
+
+        function renderChats() {
+            const container = document.getElementById('chatsContainer');
+            
+            if (chatsData.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">💬</div>
+                        <p>Nessuna conversazione trovata</p>
+                        <small>Le conversazioni appariranno qui</small>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = chatsData.slice(0, 6).map(chat => {
+                const preview = chat.lastMessage.length > 60 ? 
+                    chat.lastMessage.substring(0, 60) + '...' : 
+                    chat.lastMessage;
+                
+                return `
+                    <div class="chat-card">
+                        <div class="chat-header">
+                            <div class="chat-client">${chat.clientName}</div>
+                            <div class="chat-topic">${chat.topic}</div>
+                        </div>
+                        
+                        <div class="chat-preview">"${preview}"</div>
+                        
+                        <div class="chat-meta">
+                            <span>📱 ${chat.phone}</span>
+                            <span>📅 ${chat.timestamp.toLocaleDateString('it-IT')}</span>
+                        </div>
+                        
+                        <div class="chat-actions">
+                            ${chat.phone !== 'N/A' ? 
+                                `<button class="btn whatsapp" onclick="openWhatsApp('${chat.phone}')">📱 WhatsApp</button>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function updateCharts() {
+            // Grafico profili
+            const profileCounts = {};
+            leadsData.forEach(lead => {
+                profileCounts[lead.profile] = (profileCounts[lead.profile] || 0) + 1;
+            });
+
+            const profileChart = document.getElementById('profileChart');
+            const total = leadsData.length;
+            
+            if (total > 0) {
+                const profilesHtml = Object.entries(profileCounts).map(([profile, count]) => {
+                    const percentage = Math.round((count / total) * 100);
+                    return `
+                        <div class="chart-bar">
+                            <div class="bar-label">${profile}</div>
+                            <div class="bar" style="width: ${percentage}%">${percentage}%</div>
+                        </div>
+                    `;
+                }).join('');
+
+                profileChart.innerHTML = `
+                    <h4>📊 Distribuzione Profili</h4>
+                    <div class="chart-bars">${profilesHtml}</div>
+                `;
+            }
+        }
+
+        function updateInsights() {
+            const hotLeads = leadsData.filter(lead => lead.score > 80).length;
+            const warmLeads = leadsData.filter(lead => lead.score >= 60 && lead.score <= 79).length;
+            
+            const insights = [
+                `🔥 <strong>${hotLeads} Lead Prioritari</strong> - Contatta entro 24h`,
+                `🌡️ <strong>${warmLeads} Lead da Coltivare</strong> - Implementa nurturing`,
+                `📊 <strong>${leadsData.length} Lead Totali</strong> - Database in crescita`,
+                `💬 <strong>${chatsData.length} Conversazioni</strong> - Engagement attivo`
+            ];
+
+            document.getElementById('insightsList').innerHTML = insights.map(insight => 
+                `<li>${insight}</li>`
+            ).join('');
+        }
+
+        // === UTILITY FUNCTIONS ===
+        window.openWhatsApp = function(phone) {
+            if (!phone || phone === 'N/A') {
+                alert('Numero non disponibile');
+                return;
+            }
+            const cleanPhone = phone.replace(/[^\d+]/g, '');
+            window.open(`https://wa.me/${cleanPhone}`, '_blank');
+        };
+
+        window.refreshData = async function() {
+            await loadAllData();
+        };
+
+        // === INIZIALIZZAZIONE ===
+        async function init() {
+            console.log('🚀 Inizializzazione TribuCoach Dashboard...');
+            updateStatus('loading', '🔄 Connessione a Firebase...');
+            
+            try {
+                await loadAllData();
+                setInterval(() => {
+                    document.getElementById('currentTime').textContent = 
+                        new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                }, 60000);
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+                updateStatus('error', '❌ Errore connessione Firebase');
+            }
+        }
+
+        // Avvia quando DOM è pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.4;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .connection-status.connected {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .connection-status.loading {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+        }
+
+        .connection-status.error {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
+            padding: 25px;
+            border-bottom: 3px solid #ff6600;
+            backdrop-filter: blur(20px);
+            margin-top: 40px;
+        }
+
+        .header h1 {
+            color: #ff6600;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
+        }
+
+        .header p {
+            color: #ccc;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid #404040;
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .metric-card h3 {
+            color: #ff9933;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .metric-card p {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .section {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            margin-bottom: 35px;
+            border: 1px solid #404040;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
+        }
+
+        .section h2 {
+            color: #ff6600;
+            font-size: 1.9rem;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .leads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .lead-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid #ff6600;
+            transition: all 0.3s ease;
+        }
+
+        .lead-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 102, 0, 0.2);
+        }
+
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .lead-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 5px;
+        }
+
+        .lead-profile {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .lead-score {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .score-high { background: #4CAF50; color: white; }
+        .score-medium { background: #ff9800; color: white; }
+        .score-low { background: #f44336; color: white; }
+
+        .lead-details {
+            margin: 15px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            margin: 8px 0;
+            align-items: center;
+        }
+
+        .detail-row .label {
+            color: #ff9933;
+            font-weight: 600;
+            min-width: 80px;
+            font-size: 0.9rem;
+        }
+
+        .detail-row .value {
+            color: #eee;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+
+        .lead-actions {
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-1px);
+        }
+
+        .btn.whatsapp {
+            background: linear-gradient(135deg, #25D366, #20b055);
+        }
+
+        .btn.whatsapp:hover {
+            background: linear-gradient(135deg, #20b055, #1ea049);
+        }
+
+        .chats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .chat-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 25px;
+            border-left: 5px solid #2196F3;
+            transition: all 0.3s ease;
+        }
+
+        .chat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .chat-client {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .chat-topic {
+            background: rgba(33, 150, 243, 0.2);
+            color: #64B5F6;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .chat-preview {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #ccc;
+            font-style: italic;
+            border-left: 3px solid #2196F3;
+        }
+
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .chat-actions {
+            margin-top: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .chart-container h4 {
+            color: #ff6600;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .chart-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bar-label {
+            min-width: 120px;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .bar {
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            height: 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 50px;
+        }
+
+        .insights-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 15px;
+        }
+
+        .insights-list li {
+            background: linear-gradient(135deg, #333, #404040);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ff6600;
+            transition: all 0.3s ease;
+        }
+
+        .insights-list li:hover {
+            transform: translateX(5px);
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard { padding: 20px 15px; }
+            .leads-grid { grid-template-columns: 1fr; }
+            .chats-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
-  <div class="connection-status loading" id="connectionStatus">🔄 Connessione a Firebase in corso...</div>
+    <div class="connection-status loading" id="connectionStatus">
+        🔄 Connessione a Firebase in corso...
+    </div>
 
-  <div class="metrics-grid">
-    <div class="metric-card"><h3>🎯 Totale Lead Generati</h3><p id="totalLeads">0</p></div>
-    <div class="metric-card"><h3>⭐ Score Medio Lead</h3><p id="avgScore">0%</p></div>
-    <div class="metric-card"><h3>💬 Conversazioni Attive</h3><p id="totalChats">0</p></div>
-    <div class="metric-card"><h3>🔥 Lead Premium (&gt;80%)</h3><p id="premiumLeads">0</p></div>
-  </div>
+    <header class="header">
+        <h1>📈 TribuCoach Business Intelligence</h1>
+        <p>Dashboard completa per monitoraggio lead, conversioni e performance business in tempo reale</p>
+    </header>
 
-  <section><h2>📈 Analytics Lead & Chat</h2><canvas id="chartLeads" height="100"></canvas></section>
+    <div class="dashboard">
 
-  <section><h2>📋 Lead Recenti</h2><div id="leadsContainer"></div></section>
+        <!-- METRICHE PRINCIPALI -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>🎯 Totale Lead Generati</h3>
+                <p id="totalLeads">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>⭐ Score Medio Lead</h3>
+                <p id="avgScore">0%</p>
+            </div>
+            <div class="metric-card">
+                <h3>💬 Conversazioni Attive</h3>
+                <p id="totalChats">0</p>
+            </div>
+            <div class="metric-card">
+                <h3>🔥 Lead Premium (>80%)</h3>
+                <p id="premiumLeads">0</p>
+            </div>
+        </div>
 
-  <section><h2>💬 Conversazioni Chatbot</h2><div id="chatsContainer"></div></section>
-</body></html>
+        <!-- LEAD QUIZ -->
+        <div class="section">
+            <h2>🥇 Lead Quiz - Completati</h2>
+            <div class="leads-grid" id="leadsContainer">
+                <div class="empty-state">
+                    <div class="icon">📊</div>
+                    <p>Caricamento lead...</p>
+                </div>
+            </div>
+        </div>
 
+        <!-- CONVERSAZIONI CHAT -->
+        <div class="section">
+            <h2>💬 Conversazioni Chatbot</h2>
+        <!-- CONVERSAZIONI CHAT -->
+        <div class="section">
+            <h2>💬 Conversazioni Chatbot</h2>
+            <div class="chats-grid" id="chatsContainer">
+                <div class="empty-state">
+                    <div class="icon">💬</div>
+                    <p>Caricamento conversazioni...</p>
+                </div>
+            </div>
+        </div>
 
+        <!-- ANALYTICS & PERFORMANCE -->
+        <div class="section">
+            <h2>📊 Analytics & Performance</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>📈 Totale Quiz</h3>
+                    <p id="totalQuizzes">0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>🎯 Lead Qualificati (≥70%)</h3>
+                    <p id="qualifiedLeads">0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>💬 Conversazioni Bot</h3>
+                    <p id="totalConversations">0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>⏰ Ultimo Aggiornamento</h3>
+                    <p style="font-size: 1.5rem;" id="currentTime">--:--</p>
+                </div>
+            </div>
 
+            <!-- Grafici -->
+            <div class="chart-container" id="profileChart">
+                <h4>📊 Caricamento dati grafici...</h4>
+            </div>
+        </div>
+
+        <!-- INSIGHTS ACTIONABLE -->
+        <div class="section">
+            <h2>💡 Insights Actionable & Raccomandazioni</h2>
+            <ul class="insights-list" id="insightsList">
+                <li>📊 Caricamento insights...</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Pulsante refresh flottante -->
+    <button class="refresh-btn" onclick="refreshData()">🔄 Aggiorna</button>
+
+</body>
+</html>
