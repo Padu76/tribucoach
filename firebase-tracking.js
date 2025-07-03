@@ -1,396 +1,378 @@
-// firebase-tracking.js - Sistema di tracking completo per TribuCoach
+// firebase-tracking.js - Sistema di tracking TribuCoach
+// Updated: Rimossa integrazione Chatbase, ora usa OpenAI diretto
+
+// === IMPORTS ===
 import { db } from './firebase.js';
 import {
     collection,
     addDoc,
-    updateDoc,
-    doc,
-    getDoc,
     getDocs,
+    updateDoc,
+    deleteDoc,
+    doc,
     query,
     where,
     orderBy,
     limit,
-    serverTimestamp,
-    increment,
-    arrayUnion
+    onSnapshot,
+    serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-// === STRUTTURA COLLECTIONS FIREBASE ===
-/*
-COLLECTIONS PRINCIPALI:
+// === CONFIGURAZIONE ===
+const TRACKING_CONFIG = {
+    enableAnalytics: true,
+    enableUserSessions: true,
+    enableQuizTracking: true,
+    enableChatTracking: true, // Ora via OpenAI Functions
+    enableConversions: true
+};
 
-1. users
-   - id: user_id (hash whatsapp)
-   - whatsapp: string
-   - name: string
-   - source: string ("quiz", "chatbot", "landing")
-   - profile: string (dal quiz)
-   - score: number (dal quiz)
-   - created_at: timestamp
-   - last_activity: timestamp
-   - total_sessions: number
-   - quiz_completed: boolean
-   - consultation_booked: boolean
-
-2. chatbot_conversations
-   - id: auto-generated
-   - user_id: string
-   - session_id: string
-   - messages_count: number
-   - duration_minutes: number
-   - topics_discussed: array
-   - sentiment: string ("positive", "neutral", "negative")
-   - satisfaction_rating: number (1-5)
-   - lead_generated: boolean
-   - created_at: timestamp
-   - updated_at: timestamp
-
-3. user_sessions
-   - id: auto-generated
-   - user_id: string
-   - session_type: string ("quiz", "chatbot", "landing_visit")
-   - duration_seconds: number
-   - pages_visited: array
-   - actions_taken: array
-   - referrer: string
-   - device_info: object
-   - created_at: timestamp
-
-4. analytics_events
-   - id: auto-generated
-   - user_id: string (optional)
-   - event_type: string
-   - event_data: object
-   - page_url: string
-   - user_agent: string
-   - ip_hash: string (privacy-safe)
-   - created_at: timestamp
-
-5. business_metrics
-   - id: date (YYYY-MM-DD)
-   - total_visitors: number
-   - quiz_completions: number
-   - chatbot_interactions: number
-   - consultations_booked: number
-   - conversion_rate: number
-   - avg_session_duration: number
-   - top_topics: array
-   - created_at: timestamp
-   - updated_at: timestamp
-*/
-
-// === USER TRACKING ===
-export async function trackUser(userData) {
+// === TRACKING SESSIONI UTENTE ===
+export function initUserTracking() {
+    console.log('🔄 Inizializzazione tracking utente...');
+    
     try {
-        const userId = generateUserId(userData.whatsapp || userData.email || userData.name);
-        const userRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userRef);
-
-        if (userDoc.exists()) {
-            // Aggiorna utente esistente
-            await updateDoc(userRef, {
-                last_activity: serverTimestamp(),
-                total_sessions: increment(1),
-                ...userData
-            });
-        } else {
-            // Crea nuovo utente
-            await updateDoc(userRef, {
-                ...userData,
-                user_id: userId,
-                created_at: serverTimestamp(),
-                last_activity: serverTimestamp(),
-                total_sessions: 1,
-                quiz_completed: userData.source === 'quiz',
-                consultation_booked: false
-            });
-        }
+        // Genera session ID unico
+        const sessionId = generateSessionId();
         
-        console.log('✅ User tracked:', userId);
-        return userId;
-    } catch (error) {
-        console.error('❌ Errore tracking user:', error);
-        throw error;
-    }
-}
-
-// === CHATBOT TRACKING ===
-export async function trackChatbotConversation(conversationData) {
-    try {
-        const docRef = await addDoc(collection(db, 'chatbot_conversations'), {
-            ...conversationData,
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp()
-        });
-        
-        // Aggiorna metriche utente se presente
-        if (conversationData.user_id) {
-            await updateUserActivity(conversationData.user_id, 'chatbot_conversation');
-        }
-        
-        console.log('✅ Chatbot conversation tracked:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('❌ Errore tracking chatbot:', error);
-        throw error;
-    }
-}
-
-// === SESSION TRACKING ===
-export async function trackSession(sessionData) {
-    try {
-        const docRef = await addDoc(collection(db, 'user_sessions'), {
-            ...sessionData,
-            created_at: serverTimestamp()
-        });
-        
-        console.log('✅ Session tracked:', docRef.id);
-        return docRef.id;
-    } catch (error) {
-        console.error('❌ Errore tracking session:', error);
-        throw error;
-    }
-}
-
-// === EVENTI ANALYTICS ===
-export async function trackEvent(eventType, eventData = {}, userId = null) {
-    try {
-        const docRef = await addDoc(collection(db, 'analytics_events'), {
-            user_id: userId,
-            event_type: eventType,
-            event_data: eventData,
-            page_url: window.location.href,
-            user_agent: navigator.userAgent,
-            ip_hash: generateIpHash(), // Privacy-safe
-            created_at: serverTimestamp()
-        });
-        
-        console.log('✅ Event tracked:', eventType);
-        return docRef.id;
-    } catch (error) {
-        console.error('❌ Errore tracking event:', error);
-        throw error;
-    }
-}
-
-// === METRICHE BUSINESS ===
-export async function updateBusinessMetrics() {
-    try {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        const metricsRef = doc(db, 'business_metrics', today);
-        
-        // Calcola metriche del giorno
-        const metrics = await calculateDailyMetrics();
-        
-        await updateDoc(metricsRef, {
-            ...metrics,
-            updated_at: serverTimestamp()
-        });
-        
-        console.log('✅ Business metrics updated for:', today);
-        return metrics;
-    } catch (error) {
-        console.error('❌ Errore updating business metrics:', error);
-        throw error;
-    }
-}
-
-// === WEBHOOK HANDLERS (per Chatbase) ===
-export async function handleChatbaseWebhook(webhookData) {
-    try {
-        const conversationData = {
-            user_id: webhookData.user_id || null,
-            session_id: webhookData.conversation_id,
-            messages_count: webhookData.messages?.length || 0,
-            duration_minutes: calculateDuration(webhookData.start_time, webhookData.end_time),
-            topics_discussed: extractTopics(webhookData.messages),
-            sentiment: analyzeSentiment(webhookData.messages),
-            satisfaction_rating: webhookData.rating || null,
-            lead_generated: checkLeadGeneration(webhookData.messages)
+        // Salva session data
+        const sessionData = {
+            sessionId: sessionId,
+            startTime: new Date(),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer,
+            currentPage: window.location.pathname,
+            timestamp: serverTimestamp()
         };
         
-        await trackChatbotConversation(conversationData);
-        await trackEvent('chatbot_conversation_completed', conversationData, conversationData.user_id);
+        // Salva sessione
+        saveUserSession(sessionData);
         
-        return { success: true };
+        // Track page views
+        trackPageView();
+        
+        console.log('✅ User tracking inizializzato:', sessionId);
+        return sessionId;
+        
     } catch (error) {
-        console.error('❌ Errore webhook handler:', error);
-        return { success: false, error: error.message };
+        console.error('❌ Errore inizializzazione tracking:', error);
+        return null;
     }
 }
 
-// === AUTO-TRACKING INIZIALIZZAZIONE ===
-export function initializeTracking() {
-    console.log('🔍 Inizializzazione tracking TribuCoach...');
-    
-    // Auto-track page views
-    trackEvent('page_view', {
-        page: window.location.pathname,
-        referrer: document.referrer,
-        title: document.title
-    });
-    
-    // Auto-track quiz completion (se nella pagina quiz)
-    if (window.location.pathname.includes('quiz')) {
-        // Il tracking del quiz è già implementato nel quiz.html
-        console.log('📊 Quiz tracking attivo');
+async function saveUserSession(sessionData) {
+    try {
+        await addDoc(collection(db, 'user_sessions'), sessionData);
+        console.log('📊 Sessione utente salvata');
+    } catch (error) {
+        console.error('❌ Errore salvataggio sessione:', error);
     }
-    
-    // Auto-track session start
-    const sessionData = {
-        session_type: getSessionType(),
-        user_id: getUserIdFromStorage(),
-        device_info: {
-            screen: `${screen.width}x${screen.height}`,
-            language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-        },
-        referrer: document.referrer
+}
+
+function generateSessionId() {
+    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// === TRACKING QUIZ ===
+export async function trackQuizStart(quizType = 'fitness') {
+    try {
+        const eventData = {
+            event: 'quiz_started',
+            quizType: quizType,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            page: window.location.pathname
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('📊 Quiz start tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking quiz start:', error);
+    }
+}
+
+export async function trackQuizCompletion(quizData, results) {
+    try {
+        const eventData = {
+            event: 'quiz_completed',
+            quizData: quizData,
+            results: results,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            completionTime: new Date()
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('📊 Quiz completion tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking quiz completion:', error);
+    }
+}
+
+// === TRACKING CONVERSAZIONI (OpenAI Integration) ===
+export async function trackChatStart() {
+    try {
+        const eventData = {
+            event: 'chat_started',
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            source: 'openai_direct'
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('💬 Chat start tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking chat start:', error);
+    }
+}
+
+export async function trackChatMessage(messageData) {
+    try {
+        const eventData = {
+            event: 'chat_message',
+            messageType: messageData.role,
+            messageLength: messageData.content.length,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            conversationId: messageData.conversationId
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('💬 Chat message tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking chat message:', error);
+    }
+}
+
+// === TRACKING CONVERSIONI ===
+export async function trackLeadConversion(leadData) {
+    try {
+        const eventData = {
+            event: 'lead_conversion',
+            leadData: leadData,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            source: leadData.source || 'unknown'
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('🎯 Lead conversion tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking conversion:', error);
+    }
+}
+
+export async function trackFormSubmission(formType, formData) {
+    try {
+        const eventData = {
+            event: 'form_submission',
+            formType: formType,
+            formData: formData,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId()
+        };
+        
+        await addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('📝 Form submission tracked');
+    } catch (error) {
+        console.error('❌ Errore tracking form:', error);
+    }
+}
+
+// === TRACKING NAVIGAZIONE ===
+export function trackPageView() {
+    try {
+        const eventData = {
+            event: 'page_view',
+            page: window.location.pathname,
+            title: document.title,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId()
+        };
+        
+        addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('📄 Page view tracked:', window.location.pathname);
+    } catch (error) {
+        console.error('❌ Errore tracking page view:', error);
+    }
+}
+
+export function trackButtonClick(buttonName, buttonLocation) {
+    try {
+        const eventData = {
+            event: 'button_click',
+            buttonName: buttonName,
+            buttonLocation: buttonLocation,
+            timestamp: serverTimestamp(),
+            sessionId: getCurrentSessionId(),
+            page: window.location.pathname
+        };
+        
+        addDoc(collection(db, 'analytics_events'), eventData);
+        console.log('🔘 Button click tracked:', buttonName);
+    } catch (error) {
+        console.error('❌ Errore tracking button click:', error);
+    }
+}
+
+// === ANALYTICS E METRICHE ===
+export async function getAnalyticsData(timeRange = '7d') {
+    try {
+        console.log('📊 Recupero analytics data...');
+        
+        const startDate = getDateFromRange(timeRange);
+        const q = query(
+            collection(db, 'analytics_events'),
+            where('timestamp', '>=', startDate),
+            orderBy('timestamp', 'desc'),
+            limit(1000)
+        );
+        
+        const snapshot = await getDocs(q);
+        const events = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate() || new Date()
+        }));
+        
+        console.log(`📊 Analytics recuperati: ${events.length} eventi`);
+        return processAnalyticsData(events);
+        
+    } catch (error) {
+        console.error('❌ Errore recupero analytics:', error);
+        return null;
+    }
+}
+
+function processAnalyticsData(events) {
+    const analytics = {
+        totalEvents: events.length,
+        uniqueSessions: new Set(events.map(e => e.sessionId)).size,
+        eventsByType: {},
+        dailyStats: {},
+        conversionFunnel: {
+            pageViews: 0,
+            quizStarts: 0,
+            quizCompletions: 0,
+            chatStarts: 0,
+            leadConversions: 0
+        }
     };
     
-    trackSession(sessionData);
+    // Processa eventi
+    events.forEach(event => {
+        // Count by type
+        analytics.eventsByType[event.event] = (analytics.eventsByType[event.event] || 0) + 1;
+        
+        // Daily stats
+        const day = event.timestamp.toDateString();
+        if (!analytics.dailyStats[day]) {
+            analytics.dailyStats[day] = { events: 0, sessions: new Set() };
+        }
+        analytics.dailyStats[day].events++;
+        analytics.dailyStats[day].sessions.add(event.sessionId);
+        
+        // Conversion funnel
+        switch(event.event) {
+            case 'page_view': analytics.conversionFunnel.pageViews++; break;
+            case 'quiz_started': analytics.conversionFunnel.quizStarts++; break;
+            case 'quiz_completed': analytics.conversionFunnel.quizCompletions++; break;
+            case 'chat_started': analytics.conversionFunnel.chatStarts++; break;
+            case 'lead_conversion': analytics.conversionFunnel.leadConversions++; break;
+        }
+    });
     
-    console.log('✅ Tracking inizializzato');
+    // Calcola conversion rates
+    analytics.conversionRates = {
+        quizCompletion: analytics.conversionFunnel.quizStarts > 0 ? 
+            (analytics.conversionFunnel.quizCompletions / analytics.conversionFunnel.quizStarts * 100).toFixed(1) : 0,
+        leadConversion: analytics.conversionFunnel.pageViews > 0 ? 
+            (analytics.conversionFunnel.leadConversions / analytics.conversionFunnel.pageViews * 100).toFixed(1) : 0
+    };
+    
+    return analytics;
+}
+
+function getDateFromRange(range) {
+    const now = new Date();
+    switch(range) {
+        case '1d': return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        case '7d': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        case '30d': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        default: return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    }
 }
 
 // === UTILITY FUNCTIONS ===
-function generateUserId(identifier) {
-    // Crea hash privacy-safe dell'identificatore (whatsapp/email/nome)
-    if (!identifier) return 'anonymous_' + Math.random().toString(36).substring(2, 12);
-    return btoa(identifier.toLowerCase()).replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+function getCurrentSessionId() {
+    return sessionStorage.getItem('tribucoach_session_id') || 'unknown';
 }
 
-function generateIpHash() {
-    // Privacy-safe browser fingerprint (sincrono)
-    try {
-        // Genera un hash basato su dati del browser per privacy
-        const browserFingerprint = navigator.userAgent + navigator.language + screen.width + screen.height + Date.now();
-        const hash = btoa(browserFingerprint).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
-        return hash;
-    } catch {
-        return 'unknown_' + Math.random().toString(36).substring(2, 8);
-    }
+export function setSessionId(sessionId) {
+    sessionStorage.setItem('tribucoach_session_id', sessionId);
 }
 
-async function updateUserActivity(userId, activityType) {
-    try {
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, {
-            last_activity: serverTimestamp(),
-            [`activity_${activityType}`]: increment(1)
-        });
-    } catch (error) {
-        console.error('❌ Errore updating user activity:', error);
-    }
-}
-
-async function calculateDailyMetrics() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+// === PAGE NAVIGATION TRACKING ===
+export function initNavigationTracking() {
+    // Track initial page load
+    trackPageView();
     
-    try {
-        // Query per metriche giornaliere
-        const [visitors, quizzes, chats, consultations] = await Promise.all([
-            getDocs(query(collection(db, 'user_sessions'), where('created_at', '>=', today))),
-            getDocs(query(collection(db, 'quiz_results'), where('timestamp', '>=', today))),
-            getDocs(query(collection(db, 'chatbot_conversations'), where('created_at', '>=', today))),
-            getDocs(query(collection(db, 'users'), where('consultation_booked', '==', true)))
-        ]);
+    // Track navigation changes (SPA)
+    let currentPath = window.location.pathname;
+    
+    // Listen for URL changes
+    setInterval(() => {
+        if (window.location.pathname !== currentPath) {
+            currentPath = window.location.pathname;
+            trackPageView();
+        }
+    }, 1000);
+    
+    // Track clicks on important elements
+    document.addEventListener('click', (e) => {
+        const target = e.target;
         
-        const totalVisitors = new Set(visitors.docs.map(doc => doc.data().user_id)).size;
-        const quizCompletions = quizzes.size;
-        const chatbotInteractions = chats.size;
-        const consultationsBooked = consultations.size;
+        // Track CTA clicks
+        if (target.classList.contains('cta-primary') || target.classList.contains('cta-secondary')) {
+            trackButtonClick(target.textContent.trim(), target.className);
+        }
         
-        return {
-            total_visitors: totalVisitors,
-            quiz_completions: quizCompletions,
-            chatbot_interactions: chatbotInteractions,
-            consultations_booked: consultationsBooked,
-            conversion_rate: totalVisitors > 0 ? (consultationsBooked / totalVisitors * 100).toFixed(2) : 0,
-            created_at: serverTimestamp()
-        };
-    } catch (error) {
-        console.error('❌ Errore calculating metrics:', error);
-        return {};
-    }
-}
-
-// === ANALYTICS HELPERS ===
-function calculateDuration(startTime, endTime) {
-    if (!startTime || !endTime) return 0;
-    return Math.round((new Date(endTime) - new Date(startTime)) / 60000); // minuti
-}
-
-function extractTopics(messages) {
-    if (!messages) return [];
-    
-    const topics = [];
-    const keywords = {
-        'fitness': ['allenamento', 'workout', 'esercizi', 'palestra'],
-        'nutrition': ['alimentazione', 'dieta', 'cibo', 'nutrizione'],
-        'goals': ['obiettivi', 'goal', 'target', 'risultati'],
-        'consultation': ['consulenza', 'appuntamento', 'incontro', 'personal']
-    };
-    
-    messages.forEach(msg => {
-        const text = msg.content?.toLowerCase() || '';
-        Object.entries(keywords).forEach(([topic, words]) => {
-            if (words.some(word => text.includes(word)) && !topics.includes(topic)) {
-                topics.push(topic);
-            }
-        });
+        // Track navigation clicks
+        if (target.tagName === 'A' && target.href) {
+            trackButtonClick(`Link: ${target.textContent.trim()}`, 'navigation');
+        }
     });
-    
-    return topics;
 }
 
-function analyzeSentiment(messages) {
-    // Semplice sentiment analysis basata su parole chiave
-    if (!messages) return 'neutral';
-    
-    const positiveWords = ['grazie', 'perfetto', 'ottimo', 'bene', 'fantastico'];
-    const negativeWords = ['problema', 'difficile', 'male', 'non funziona'];
-    
-    let score = 0;
-    messages.forEach(msg => {
-        const text = msg.content?.toLowerCase() || '';
-        positiveWords.forEach(word => {
-            if (text.includes(word)) score += 1;
-        });
-        negativeWords.forEach(word => {
-            if (text.includes(word)) score -= 1;
-        });
+// === CHATBASE INTEGRATION REMOVED ===
+// Il sistema ora usa direttamente OpenAI + Firebase Functions
+// Le conversazioni vengono salvate automaticamente tramite chatWithOpenAI function
+console.log('🔄 Firebase Tracking attivo - Chatbase integration rimossa, ora usa OpenAI diretto');
+
+// === EXPORTS ===
+export {
+    TRACKING_CONFIG,
+    initUserTracking,
+    initNavigationTracking,
+    trackQuizStart,
+    trackQuizCompletion,
+    trackChatStart,
+    trackChatMessage,
+    trackLeadConversion,
+    trackFormSubmission,
+    trackPageView,
+    trackButtonClick,
+    getAnalyticsData
+};
+
+// === AUTO-INIT ===
+// Inizializza tracking quando il modulo viene caricato
+if (typeof window !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const sessionId = initUserTracking();
+        if (sessionId) {
+            setSessionId(sessionId);
+            initNavigationTracking();
+        }
     });
-    
-    if (score > 0) return 'positive';
-    if (score < 0) return 'negative';
-    return 'neutral';
-}
-
-function checkLeadGeneration(messages) {
-    if (!messages) return false;
-    
-    const leadIndicators = ['consulenza', 'contatto', 'whatsapp', 'telefono', 'appuntamento'];
-    return messages.some(msg => 
-        leadIndicators.some(indicator => 
-            msg.content?.toLowerCase().includes(indicator)
-        )
-    );
-}
-
-function getSessionType() {
-    const path = window.location.pathname.toLowerCase();
-    if (path.includes('quiz')) return 'quiz';
-    if (path.includes('chat')) return 'chatbot';
-    if (path.includes('dashboard')) return 'dashboard';
-    return 'landing_visit';
-}
-
-function getUserIdFromStorage() {
-    // Cerca user ID in localStorage o sessionStorage
-    return localStorage.getItem('tribucoach_user_id') || 
-           sessionStorage.getItem('tribucoach_user_id') || 
-           null;
 }
