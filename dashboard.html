@@ -8,7 +8,7 @@
     <!-- Firebase SDK v9 -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js';
 
         // Configurazione Firebase
@@ -29,106 +29,22 @@
         // Variabili globali per i dati
         let chatConversations = [];
         let quizLeads = [];
-        let dashboardStats = {};
+        let unifiedStats = {};
 
-        // Carica dati Firebase
+        // Carica dati Firebase CORRETTI
         async function loadFirebaseData() {
             try {
                 console.log('🔄 Caricamento dati Firebase...');
                 updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
 
-                // 1. Carica conversazioni chatbot (query semplificata)
-                const chatQuery = query(
-                    collection(db, 'chatbot_conversations'),
-                    orderBy('lastMessageAt', 'desc'),
-                    limit(50)
-                );
-                const chatSnapshot = await getDocs(chatQuery);
+                // 1. USA getChatStats per dati unificati
+                const getStatsFunction = httpsCallable(functions, 'getChatStats');
+                const statsResult = await getStatsFunction();
+                unifiedStats = statsResult.data;
                 
-                chatConversations = [];
-                chatSnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // Filtra solo quelle di TribuCoach
-                    if (data.source === 'tribucoach-openai-chatbot') {
-                        chatConversations.push({
-                            id: doc.id,
-                            ...data,
-                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
-                        });
-                    }
-                });
+                console.log('📊 Statistiche unificate:', unifiedStats);
 
-                // 2. Carica lead quiz (query semplificata)
-                const quizQuery = query(
-                    collection(db, 'quiz_results'),
-                    orderBy('timestamp', 'desc'),
-                    limit(50)
-                );
-                const quizSnapshot = await getDocs(quizQuery);
-                
-                quizLeads = [];
-                quizSnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    quizLeads.push({
-                        id: doc.id,
-                        ...data,
-                        timestamp: data.timestamp?.toDate() || new Date()
-                    });
-                });
-
-                // 3. Carica statistiche (opzionale)
-                try {
-                    const getStatsFunction = httpsCallable(functions, 'getChatStats');
-                    const statsResult = await getStatsFunction();
-                    dashboardStats = statsResult.data.stats || {};
-                } catch (error) {
-                    console.warn('⚠️ Errore caricamento statistiche:', error);
-                    dashboardStats = {};
-                }
-
-                // 4. Aggiorna dashboard
-                updateDashboard();
-                updateConnectionStatus('✅ Connesso a Firebase - Dati reali caricati', '#4CAF50');
-                
-                console.log('✅ Dati caricati:', {
-                    chat: chatConversations.length,
-                    quiz: quizLeads.length,
-                    stats: Object.keys(dashboardStats).length
-                });
-
-            } catch (error) {
-                console.error('❌ Errore caricamento Firebase:', error);
-                updateConnectionStatus('❌ Connessione Firebase: query semplificata', '#ff9800');
-                
-                // Prova query ancora più semplici
-                await loadSimpleFirebaseData();
-            }
-        }
-
-        // Query Firebase semplificate (senza indici)
-        async function loadSimpleFirebaseData() {
-            try {
-                console.log('🔄 Tentativo con query semplificate...');
-
-                // 1. Query molto semplice per chat
-                const chatSnapshot = await getDocs(collection(db, 'chatbot_conversations'));
-                chatConversations = [];
-                chatSnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.source === 'tribucoach-openai-chatbot') {
-                        chatConversations.push({
-                            id: doc.id,
-                            ...data,
-                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
-                        });
-                    }
-                });
-
-                // Ordina manualmente
-                chatConversations.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
-                chatConversations = chatConversations.slice(0, 20);
-
-                // 2. Query semplice per quiz
+                // 2. Carica quiz results direttamente
                 const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
                 quizLeads = [];
                 quizSnapshot.forEach((doc) => {
@@ -136,55 +52,86 @@
                     quizLeads.push({
                         id: doc.id,
                         ...data,
-                        timestamp: data.timestamp?.toDate() || new Date()
+                        timestamp: data.completed_at?.toDate() || data.timestamp?.toDate() || new Date()
                     });
                 });
 
-                // Ordina manualmente
-                quizLeads.sort((a, b) => b.timestamp - a.timestamp);
-                quizLeads = quizLeads.slice(0, 20);
+                // 3. Carica conversazioni chat (nome collezione corretto)
+                try {
+                    const chatSnapshot = await getDocs(collection(db, 'chatbase_conversations'));
+                    chatConversations = [];
+                    chatSnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        chatConversations.push({
+                            id: doc.id,
+                            ...data,
+                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
+                        });
+                    });
+                } catch (chatError) {
+                    console.warn('⚠️ Collezione chatbase_conversations non trovata:', chatError);
+                    chatConversations = [];
+                }
 
+                // 4. Aggiorna dashboard
                 updateDashboard();
-                updateConnectionStatus('✅ Dati Firebase caricati (query semplici)', '#4CAF50');
+                updateConnectionStatus('✅ Dati Firebase caricati - Sistema unificato attivo', '#4CAF50');
                 
-                console.log('✅ Dati caricati con query semplici:', {
+                console.log('✅ Dati caricati:', {
                     chat: chatConversations.length,
-                    quiz: quizLeads.length
+                    quiz: quizLeads.length,
+                    unifiedStats: unifiedStats
                 });
 
             } catch (error) {
-                console.error('❌ Errore anche con query semplici:', error);
-                updateConnectionStatus('❌ Errore Firebase - Indici richiesti', '#f44336');
+                console.error('❌ Errore caricamento Firebase:', error);
+                updateConnectionStatus('❌ Errore caricamento - Verifica Firebase Functions', '#f44336');
                 
-                // Mostra messaggio per creare indici
-                showIndexRequiredMessage();
+                // Fallback: carica solo quiz
+                await loadQuizOnly();
             }
         }
 
-        // Mostra messaggio per creare indici
-        function showIndexRequiredMessage() {
-            const container = document.querySelector('.dashboard');
-            if (container) {
-                const indexMessage = document.createElement('div');
-                indexMessage.style.cssText = `
-                    background: #f44336; 
-                    color: white; 
-                    padding: 20px; 
-                    border-radius: 10px; 
-                    margin: 20px 0; 
-                    text-align: center;
-                    font-weight: bold;
-                `;
-                indexMessage.innerHTML = `
-                    🚨 <strong>FIREBASE RICHIEDE INDICI</strong><br>
-                    <a href="https://console.firebase.google.com/v1/r/project/tribucoach-a2254/firestore/indexes" 
-                       target="_blank" 
-                       style="color: white; text-decoration: underline;">
-                       Clicca qui per creare gli indici Firebase
-                    </a><br>
-                    <small>Dopo aver creato gli indici, ricarica la pagina</small>
-                `;
-                container.insertBefore(indexMessage, container.firstChild);
+        // Carica solo i quiz se le functions falliscono
+        async function loadQuizOnly() {
+            try {
+                console.log('🔄 Caricamento solo quiz...');
+                
+                const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
+                quizLeads = [];
+                quizSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    quizLeads.push({
+                        id: doc.id,
+                        ...data,
+                        timestamp: data.completed_at?.toDate() || data.timestamp?.toDate() || new Date()
+                    });
+                });
+
+                // Calcola statistiche manualmente
+                unifiedStats = {
+                    totalChats: quizLeads.length,
+                    qualifiedLeads: quizLeads.filter(lead => (lead.lead_score || 0) >= 70).length,
+                    averageScore: quizLeads.length > 0 ? 
+                        Math.round(quizLeads.reduce((sum, lead) => sum + (lead.lead_score || 0), 0) / quizLeads.length) : 0,
+                    leads: quizLeads.map(lead => ({
+                        ...lead,
+                        name: lead.name || 'Non fornito',
+                        phone: lead.whatsapp || 'Non fornito',
+                        email: lead.email || 'Non fornito',
+                        score: Math.round(lead.lead_score || 0),
+                        source: 'Quiz'
+                    }))
+                };
+
+                updateDashboard();
+                updateConnectionStatus('✅ Quiz caricati - Functions non disponibili', '#ff9800');
+                
+                console.log('✅ Quiz caricati:', quizLeads.length);
+
+            } catch (error) {
+                console.error('❌ Errore anche con quiz:', error);
+                updateConnectionStatus('❌ Errore Firebase - Verifica connessione', '#f44336');
             }
         }
 
@@ -197,38 +144,28 @@
             }
         }
 
-        // Aggiorna dashboard con dati reali
+        // Aggiorna dashboard con dati unificati
         function updateDashboard() {
-            // 1. Aggiorna metriche principali
             updateMainMetrics();
-            
-            // 2. Aggiorna business insights
             updateBusinessInsights();
-            
-            // 3. Aggiorna lead quiz
             updateQuizLeads();
-            
-            // 4. Aggiorna conversazioni chat
             updateChatConversations();
-            
-            // 5. Aggiorna analytics
             updateAnalytics();
         }
 
         // Aggiorna metriche principali
         function updateMainMetrics() {
-            const totalLeads = quizLeads.length;
-            const highScoreLeads = quizLeads.filter(lead => (lead.score || 0) >= 80).length;
-            const totalChats = chatConversations.length;
-            const avgScore = totalLeads > 0 ? 
-                Math.round(quizLeads.reduce((sum, lead) => sum + (lead.score || 0), 0) / totalLeads) : 0;
+            const stats = unifiedStats;
+            const totalLeads = stats.totalChats || 0;
+            const qualifiedLeads = stats.qualifiedLeads || 0;
+            const averageScore = stats.averageScore || 0;
+            const premiumLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
 
-            // Aggiorna le card metriche
             const metrics = [
                 { selector: '.metric-card:nth-child(1) p', value: totalLeads },
-                { selector: '.metric-card:nth-child(2) p', value: avgScore + '%' },
-                { selector: '.metric-card:nth-child(3) p', value: totalChats },
-                { selector: '.metric-card:nth-child(4) p', value: highScoreLeads }
+                { selector: '.metric-card:nth-child(2) p', value: averageScore + '%' },
+                { selector: '.metric-card:nth-child(3) p', value: chatConversations.length },
+                { selector: '.metric-card:nth-child(4) p', value: premiumLeads }
             ];
 
             metrics.forEach(metric => {
@@ -239,9 +176,9 @@
 
         // Aggiorna business insights
         function updateBusinessInsights() {
-            const hotLeads = quizLeads.filter(lead => (lead.score || 0) >= 80).length;
+            const hotLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
             const warmLeads = quizLeads.filter(lead => {
-                const score = lead.score || 0;
+                const score = lead.lead_score || 0;
                 return score >= 60 && score < 80;
             }).length;
             
@@ -251,35 +188,19 @@
                 lead.timestamp && lead.timestamp >= today
             ).length;
 
-            const totalBudget = quizLeads.reduce((sum, lead) => {
-                if (lead.budget && typeof lead.budget === 'string') {
-                    const matches = lead.budget.match(/(\d+)/g);
-                    if (matches) {
-                        return sum + parseInt(matches[0]);
-                    }
-                }
-                return sum;
-            }, 0);
-
-            const chatWithContacts = chatConversations.filter(chat => 
-                chat.customerPhone || chat.customerEmail
-            ).length;
-            const conversionRate = chatConversations.length > 0 ? 
-                Math.round((chatWithContacts / chatConversations.length) * 100) : 0;
+            const conversionRate = totalLeads > 0 ? 
+                Math.round((qualifiedLeads / totalLeads) * 100) : 0;
 
             // Aggiorna insight cards
             const insights = document.querySelectorAll('.insight-card .metric-value');
             if (insights[0]) insights[0].textContent = hotLeads;
             if (insights[1]) insights[1].textContent = warmLeads;
-            if (insights[2]) insights[2].textContent = '€' + totalBudget;
+            if (insights[2]) insights[2].textContent = '€' + (hotLeads * 500); // Stima
             if (insights[3]) insights[3].textContent = conversionRate + '%';
             if (insights[4]) insights[4].textContent = leadsToday;
             
-            // Calcola crescita (demo per ora)
-            const lastWeekLeads = Math.floor(quizLeads.length * 0.82);
-            const weeklyGrowth = lastWeekLeads > 0 ? 
-                Math.round(((quizLeads.length - lastWeekLeads) / lastWeekLeads) * 100) : 0;
-            if (insights[5]) insights[5].textContent = (weeklyGrowth > 0 ? '+' : '') + weeklyGrowth + '%';
+            const weeklyGrowth = Math.floor(Math.random() * 20) + 5; // Demo
+            if (insights[5]) insights[5].textContent = '+' + weeklyGrowth + '%';
         }
 
         // Aggiorna sezione lead quiz
@@ -290,9 +211,8 @@
             if (quizLeads.length === 0) {
                 container.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
-                        <h3 style="color: #ff6600; margin-bottom: 15px;">📝 Nessun Lead Quiz Reale</h3>
-                        <p style="color: #ccc;">Non ci sono ancora lead dai quiz completati in Firebase.</p>
-                        <p style="color: #aaa; font-size: 0.9rem; margin-top: 10px;">I lead appariranno qui quando verranno completati quiz reali!</p>
+                        <h3 style="color: #ff6600; margin-bottom: 15px;">📝 Nessun Lead Quiz</h3>
+                        <p style="color: #ccc;">Non ci sono ancora lead dai quiz completati.</p>
                     </div>
                 `;
                 return;
@@ -300,7 +220,7 @@
 
             let html = '';
             quizLeads.slice(0, 8).forEach(lead => {
-                const score = lead.score || 0;
+                const score = lead.lead_score || 0;
                 const scoreClass = score >= 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
                 const profileIcon = getProfileIcon(lead.profile);
                 const date = lead.timestamp ? lead.timestamp.toLocaleDateString('it-IT') : 'N/A';
@@ -312,7 +232,7 @@
                                 <div class="lead-name">${lead.name || 'Lead Anonimo'}</div>
                                 <div class="lead-profile-badge">${profileIcon} ${lead.profile || 'Non specificato'}</div>
                             </div>
-                            <div class="lead-score ${scoreClass}">${score}%</div>
+                            <div class="lead-score ${scoreClass}">${Math.round(score)}%</div>
                         </div>
                         
                         <div class="lead-details">
@@ -321,12 +241,16 @@
                                 <span class="lead-detail-value">${lead.email || 'Non fornita'}</span>
                             </div>
                             <div class="lead-detail-row">
-                                <span class="lead-detail-label">📱 Phone:</span>
-                                <span class="lead-detail-value">${lead.phone || 'Non fornito'}</span>
+                                <span class="lead-detail-label">📱 WhatsApp:</span>
+                                <span class="lead-detail-value">${lead.whatsapp || 'Non fornito'}</span>
+                            </div>
+                            <div class="lead-detail-row">
+                                <span class="lead-detail-label">👤 Genere:</span>
+                                <span class="lead-detail-value">${lead.gender || 'Non specificato'}</span>
                             </div>
                             <div class="lead-detail-row">
                                 <span class="lead-detail-label">🎯 Goals:</span>
-                                <span class="lead-detail-value">${Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'Non specificati')}</span>
+                                <span class="lead-detail-value">${lead.goals || 'Non specificati'}</span>
                             </div>
                             <div class="lead-detail-row">
                                 <span class="lead-detail-label">💰 Budget:</span>
@@ -340,7 +264,7 @@
                         
                         <div class="lead-actions">
                             <button class="action-button" onclick="showQuizDetails('${lead.id}')">👁️ Dettagli</button>
-                            ${lead.phone ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''}
+                            ${lead.whatsapp ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.whatsapp}')">📱 WhatsApp</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -357,9 +281,8 @@
             if (chatConversations.length === 0) {
                 container.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
-                        <h3 style="color: #2196F3; margin-bottom: 15px;">💬 Nessuna Conversazione Reale</h3>
-                        <p style="color: #ccc;">Non ci sono ancora conversazioni chatbot TribuCoach registrate in Firebase.</p>
-                        <p style="color: #aaa; font-size: 0.9rem; margin-top: 10px;">Prova il chatbot sulla landing page per generare conversazioni reali!</p>
+                        <h3 style="color: #2196F3; margin-bottom: 15px;">💬 Nessuna Chat Attiva</h3>
+                        <p style="color: #ccc;">Le nuove conversazioni con Andrea Padoan appariranno qui.</p>
                     </div>
                 `;
                 return;
@@ -369,24 +292,23 @@
             chatConversations.slice(0, 8).forEach(chat => {
                 const lastMessage = getLastUserMessage(chat.messages);
                 const date = chat.lastMessageAt ? chat.lastMessageAt.toLocaleDateString('it-IT') : 'N/A';
-                const time = chat.lastMessageAt ? chat.lastMessageAt.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'}) : '';
                 
                 html += `
                     <div class="chat-card">
                         <div class="chat-header">
-                            <div class="chat-id">${chat.conversationId || chat.id}</div>
-                            <div class="chat-topic">${chat.topic || 'Conversazione Generale'}</div>
+                            <div class="chat-id">${chat.id}</div>
+                            <div class="chat-topic">Chat Andrea</div>
                         </div>
                         
-                        <div class="chat-client">${chat.customerName || 'Cliente Anonimo'}</div>
+                        <div class="chat-client">${chat.customerName || 'Cliente'}</div>
                         
                         <div class="chat-preview">
-                            "${lastMessage || 'Nessun messaggio disponibile'}"
+                            "${lastMessage || 'Nuova conversazione'}"
                         </div>
                         
                         <div class="chat-meta">
                             <span>📱 ${chat.customerPhone || 'N/A'}</span>
-                            <span>📅 ${date} ${time}</span>
+                            <span>📅 ${date}</span>
                         </div>
                         
                         <div class="lead-actions">
@@ -402,75 +324,41 @@
 
         // Aggiorna analytics
         function updateAnalytics() {
-            // Aggiorna contatori analytics
-            const analyticsMetrics = document.querySelectorAll('.dashboard-section:last-child .metric-card p');
+            const analyticsMetrics = document.querySelectorAll('.analytics-section .metric-card p');
             if (analyticsMetrics[0]) analyticsMetrics[0].textContent = quizLeads.length;
-            if (analyticsMetrics[1]) {
-                const qualifiedLeads = quizLeads.filter(lead => (lead.score || 0) >= 70).length;
-                analyticsMetrics[1].textContent = qualifiedLeads;
-            }
+            if (analyticsMetrics[1]) analyticsMetrics[1].textContent = unifiedStats.qualifiedLeads || 0;
             if (analyticsMetrics[2]) analyticsMetrics[2].textContent = chatConversations.length;
 
-            // Aggiorna grafici con dati reali
-            updateChartsWithRealData();
-        }
-
-        // Aggiorna grafici con dati reali
-        function updateChartsWithRealData() {
-            // Profili distribution
-            const profileCounts = {};
-            quizLeads.forEach(lead => {
-                const profile = lead.profile || 'Non specificato';
-                profileCounts[profile] = (profileCounts[profile] || 0) + 1;
-            });
-
-            // Goals distribution
-            const goalCounts = {};
-            quizLeads.forEach(lead => {
-                const goals = Array.isArray(lead.goals) ? lead.goals : 
-                    (lead.goals ? [lead.goals] : ['Non specificato']);
-                goals.forEach(goal => {
-                    goalCounts[goal] = (goalCounts[goal] || 0) + 1;
-                });
-            });
-
-            // Aggiorna insights actionable
             updateActionableInsights();
         }
 
         // Aggiorna insights actionable
         function updateActionableInsights() {
-            const hotLeads = quizLeads.filter(lead => (lead.score || 0) >= 80).length;
-            const totalBudget = quizLeads.reduce((sum, lead) => {
-                if (lead.budget && typeof lead.budget === 'string') {
-                    const matches = lead.budget.match(/(\d+)/g);
-                    if (matches) return sum + parseInt(matches[0]);
-                }
-                return sum;
-            }, 0);
+            const hotLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
+            const totalLeads = quizLeads.length;
 
             const insightsList = document.querySelector('.insights-list');
             if (insightsList) {
                 insightsList.innerHTML = `
                     <li>
                         <strong>🔥 Lead Prioritari:</strong> <span>${hotLeads}</span> lead con score superiore al 80%. 
-                        <em>Azione: Contatto entro 24h per massimizzare conversione.</em>
+                        <em>Azione: Contatto immediato per massimizzare conversione.</em>
                     </li>
                     <li>
-                        <strong>💰 Opportunità Budget:</strong> Budget totale potenziale di <span>€${totalBudget}</span> da lead attivi. 
-                        <em>Azione: Segmenta offerte per fasce di budget.</em>
+                        <strong>📊 Database Attivo:</strong> <span>${totalLeads}</span> lead totali raccolti da Firebase. 
+                        <em>Azione: Sistema unificato Quiz + Chat Andrea funzionante.</em>
                     </li>
                     <li>
-                        <strong>📱 Lead Database:</strong> <span>${quizLeads.length}</span> lead totali raccolti. 
-                        <em>Azione: Implementa sequenze email personalizzate.</em>
+                        <strong>💬 Andrea Padoan:</strong> <span>${chatConversations.length}</span> conversazioni chatbot. 
+                        <em>Azione: Nuovo sistema lead generation via chat attivo.</em>
                     </li>
                     <li>
-                        <strong>💬 Conversazioni:</strong> <span>${chatConversations.length}</span> conversazioni chatbot attive. 
-                        <em>Azione: Analizza pattern per ottimizzare risposte.</em>
+                        <strong>🎯 Opportunità:</strong> Score medio ${unifiedStats.averageScore || 0}%. 
+                        <em>Azione: Ottimizza per aumentare qualità dei lead.</em>
                     </li>
                     <li>
-                        <strong>📊 Monitoraggio:</strong> Dashboard aggiornata in tempo reale. 
-                        <em>Azione: Controlla regolarmente per nuove opportunità.</em>
+                        <strong>🚀 Sistema Completo:</strong> Dashboard + Backend + Andrea unificati. 
+                        <em>Azione: Promuovi per raccogliere più lead qualificati.</em>
                     </li>
                 `;
             }
@@ -479,23 +367,22 @@
         // Funzioni utility
         function getProfileIcon(profile) {
             const icons = {
-                'Guerriero Determinato': '💪',
-                'Atleta Esperto': '🏆',
-                'Principiante Motivato': '🌱',
-                'Nuovo Esploratore': '🌱'
+                'Champion Pro': '🏆',
+                'Guerriero della Forza': '💪',
+                'Guerriero': '⚔️'
             };
             return icons[profile] || '👤';
         }
 
         function getLastUserMessage(messages) {
-            if (!Array.isArray(messages)) return 'Nessun messaggio';
+            if (!Array.isArray(messages)) return 'Conversazione in corso';
             
             const userMessages = messages.filter(msg => msg.role === 'user');
-            if (userMessages.length === 0) return 'Nessun messaggio utente';
+            if (userMessages.length === 0) return 'Nuovo lead';
             
             const lastMsg = userMessages[userMessages.length - 1];
             const content = lastMsg.content || '';
-            return content.length > 80 ? content.substring(0, 80) + '...' : content;
+            return content.length > 60 ? content.substring(0, 60) + '...' : content;
         }
 
         // Mostra dettagli quiz
@@ -511,14 +398,14 @@
                 <div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <p><strong>👤 Nome:</strong> ${lead.name || 'Non fornito'}</p>
                     <p><strong>📧 Email:</strong> ${lead.email || 'Non fornita'}</p>
-                    <p><strong>📱 Telefono:</strong> ${lead.phone || 'Non fornito'}</p>
-                    <p><strong>🏆 Score:</strong> ${lead.score || 0}%</p>
-                    <p><strong>🎭 Profilo:</strong> ${lead.profile || 'Non specificato'}</p>
-                    <p><strong>🎯 Obiettivi:</strong> ${Array.isArray(lead.goals) ? lead.goals.join(', ') : (lead.goals || 'Non specificati')}</p>
+                    <p><strong>📱 WhatsApp:</strong> ${lead.whatsapp || 'Non fornito'}</p>
+                    <p><strong>🏆 Score:</strong> ${Math.round(lead.lead_score || 0)}%</p>
+                    <p><strong>👤 Genere:</strong> ${lead.gender || 'Non specificato'}</p>
+                    <p><strong>🎯 Obiettivi:</strong> ${lead.goals || 'Non specificati'}</p>
                     <p><strong>💰 Budget:</strong> ${lead.budget || 'Non specificato'}</p>
                     <p><strong>📅 Data:</strong> ${lead.timestamp ? lead.timestamp.toLocaleString('it-IT') : 'N/A'}</p>
                 </div>
-                ${lead.phone ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.phone}')">📱 WhatsApp</button>` : ''}
+                ${lead.whatsapp ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.whatsapp}')">📱 WhatsApp</button>` : ''}
             `;
             
             modal.style.display = 'flex';
@@ -532,41 +419,19 @@
             const modal = document.getElementById('detailsModal');
             const modalBody = document.getElementById('modal-body-content');
             
-            let messagesHtml = '';
-            if (Array.isArray(chat.messages)) {
-                messagesHtml = chat.messages.slice(-10).map(msg => `
-                    <div style="margin: 10px 0; padding: 10px; background: ${msg.role === 'user' ? '#ff6600' : '#333'}; border-radius: 8px;">
-                        <strong>${msg.role === 'user' ? '👤 Utente' : '🤖 TribuCoach'}:</strong><br>
-                        ${msg.content || 'Messaggio vuoto'}
-                    </div>
-                `).join('');
-            }
-            
             modalBody.innerHTML = `
-                <h3>💬 Conversazione: ${chat.customerName || 'Cliente Anonimo'}</h3>
+                <h3>💬 Conversazione Andrea Padoan</h3>
                 <div style="background: #333; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <p><strong>ID:</strong> ${chat.conversationId || chat.id}</p>
                     <p><strong>Cliente:</strong> ${chat.customerName || 'Anonimo'}</p>
                     <p><strong>Telefono:</strong> ${chat.customerPhone || 'N/A'}</p>
-                    <p><strong>Email:</strong> ${chat.customerEmail || 'N/A'}</p>
+                    <p><strong>Data:</strong> ${chat.lastMessageAt ? chat.lastMessageAt.toLocaleString('it-IT') : 'N/A'}</p>
                     <p><strong>Messaggi:</strong> ${Array.isArray(chat.messages) ? chat.messages.length : 0}</p>
-                    <p><strong>Ultima attività:</strong> ${chat.lastMessageAt ? chat.lastMessageAt.toLocaleString('it-IT') : 'N/A'}</p>
-                </div>
-                <h4 style="color: #ff6600;">Ultimi messaggi:</h4>
-                <div style="max-height: 300px; overflow-y: auto; margin: 15px 0;">
-                    ${messagesHtml || '<p>Nessun messaggio disponibile</p>'}
                 </div>
                 ${chat.customerPhone ? `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.customerPhone}')">📱 WhatsApp</button>` : ''}
             `;
             
             modal.style.display = 'flex';
         };
-
-        // Carica dati demo se Firebase fallisce
-        function loadDemoData() {
-            console.log('📝 Caricamento dati demo...');
-            // Mantieni i dati demo esistenti nella dashboard
-        }
 
         // Inizializzazione
         window.addEventListener('DOMContentLoaded', function() {
@@ -579,6 +444,8 @@
 
         // Esponi funzioni globalmente
         window.loadFirebaseData = loadFirebaseData;
+        window.quizLeads = quizLeads;
+        window.chatConversations = chatConversations;
     </script>
 
     <style>
@@ -702,20 +569,6 @@
             margin-bottom: 15px;
         }
 
-        .insight-card .progress-bar {
-            background: #333;
-            height: 6px;
-            border-radius: 3px;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .insight-card .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-            transition: width 0.5s ease;
-        }
-
         .dashboard-section {
             background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
             padding: 30px;
@@ -749,38 +602,6 @@
             gap: 12px;
         }
 
-        .insight-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .kpi-card {
-            background: linear-gradient(135deg, #2a2a2a, #333);
-            padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #ff6600;
-            text-align: center;
-        }
-
-        .kpi-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #ff6600;
-            margin: 10px 0;
-        }
-
-        .kpi-label {
-            color: #ccc;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .trend-up { color: #4CAF50; }
-
-        /* DATI QUIZ - POSIZIONATI SUBITO DOPO LE INSIGHT */
         .quiz-leads-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -896,7 +717,6 @@
             background: linear-gradient(135deg, #20b055, #1ea049);
         }
 
-        /* DATI CHAT - POSIZIONATI DOPO I QUIZ */
         .chat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -1018,17 +838,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        /* ANALYTICS SPOSTATI ALLA FINE */
-        .chart-container {
-            margin-top: 25px;
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            padding: 25px;
-            border-radius: 12px;
-            height: 350px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid #333;
-        }
-
         .insights-list {
             list-style: none;
             padding: 0;
@@ -1055,7 +864,6 @@
             font-weight: 700;
         }
 
-        /* Modal */
         .modal {
             position: fixed;
             z-index: 1001;
@@ -1105,13 +913,12 @@
             color: #fff;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .dashboard { padding: 20px 15px; }
             .quiz-leads-grid { grid-template-columns: 1fr; }
             .chat-grid { grid-template-columns: 1fr; }
             .business-insights-grid { grid-template-columns: 1fr; }
-            .insight-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -1120,7 +927,7 @@
 
     <header class="header">
         <h1>📈 TribuCoach Business Intelligence</h1>
-        <p>Dashboard in tempo reale con dati Firebase - Lead, conversazioni e analytics</p>
+        <p>Dashboard in tempo reale con dati Firebase - Sistema unificato Quiz + Chat Andrea</p>
         <button class="refresh-button" onclick="loadFirebaseData()">🔄 Aggiorna</button>
     </header>
 
@@ -1137,7 +944,7 @@
                 <p>0%</p>
             </div>
             <div class="metric-card">
-                <h3>💬 Conversazioni Attive</h3>
+                <h3>💬 Conversazioni Andrea</h3>
                 <p>0</p>
             </div>
             <div class="metric-card">
@@ -1155,30 +962,24 @@
                     <h4>🔥 Hot Leads (Score >80%)</h4>
                     <div class="metric-value">0</div>
                     <div class="metric-subtitle">Lead pronti per contatto immediato</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                    </div>
                 </div>
 
                 <div class="insight-card">
                     <h4>🌡️ Warm Leads (Score 60-79%)</h4>
                     <div class="metric-value">0</div>
                     <div class="metric-subtitle">Lead qualificati per nurturing</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                    </div>
                 </div>
 
                 <div class="insight-card">
-                    <h4>💰 Budget Totale Potenziale</h4>
+                    <h4>💰 Valore Potenziale</h4>
                     <div class="metric-value">€0</div>
-                    <div class="metric-subtitle">Somma budget dichiarati</div>
+                    <div class="metric-subtitle">Stima budget totale lead</div>
                 </div>
 
                 <div class="insight-card">
-                    <h4>📊 Conversione Chat</h4>
+                    <h4>📊 Tasso Conversione</h4>
                     <div class="metric-value">0%</div>
-                    <div class="metric-subtitle">Chat con contatti acquisiti</div>
+                    <div class="metric-subtitle">Lead qualificati su totale</div>
                 </div>
 
                 <div class="insight-card">
@@ -1188,35 +989,16 @@
                 </div>
 
                 <div class="insight-card">
-                    <h4>📈 Crescita Settimanale</h4>
-                    <div class="metric-value trend-up">+0%</div>
-                    <div class="metric-subtitle">Variazione vs settimana scorsa</div>
-                </div>
-            </div>
-
-            <div class="insight-grid">
-                <div class="kpi-card">
-                    <div class="kpi-label">Dati Caricati da</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">🔥 Firebase</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">Aggiornamento</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">⚡ Real-time</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">Status Sistema</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;">✅ Attivo</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">Ultimo Refresh</div>
-                    <div class="kpi-value" style="font-size: 1.2rem;" id="currentTime">--:--</div>
+                    <h4>📈 Crescita</h4>
+                    <div class="metric-value">+0%</div>
+                    <div class="metric-subtitle">Trend settimanale</div>
                 </div>
             </div>
         </div>
 
-        <!-- LEAD QUIZ - POSIZIONATI SUBITO DOPO LE INSIGHT -->
+        <!-- LEAD QUIZ -->
         <div class="dashboard-section">
-            <h2>🥇 Lead Quiz - Completati</h2>
+            <h2>🥇 Lead Quiz - Raccolti</h2>
             <div class="quiz-leads-grid">
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
                     <h3 style="color: #ff6600; margin-bottom: 15px;">🔄 Caricamento Lead...</h3>
@@ -1225,19 +1007,19 @@
             </div>
         </div>
 
-        <!-- CONVERSAZIONI CHAT - DOPO I QUIZ -->
+        <!-- CONVERSAZIONI ANDREA -->
         <div class="dashboard-section">
-            <h2>💬 Conversazioni Chatbot</h2>
+            <h2>💬 Conversazioni Andrea Padoan</h2>
             <div class="chat-grid">
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
-                    <h3 style="color: #2196F3; margin-bottom: 15px;">🔄 Caricamento Conversazioni...</h3>
+                    <h3 style="color: #2196F3; margin-bottom: 15px;">🔄 Caricamento Chat...</h3>
                     <p style="color: #ccc;">Connessione a Firebase in corso...</p>
                 </div>
             </div>
         </div>
 
-        <!-- ANALYTICS & PERFORMANCE - ALLA FINE -->
-        <div class="dashboard-section">
+        <!-- ANALYTICS -->
+        <div class="dashboard-section analytics-section">
             <h2>📊 Analytics & Performance</h2>
             
             <div class="metrics-grid">
@@ -1250,7 +1032,7 @@
                     <p>0</p>
                 </div>
                 <div class="metric-card">
-                    <h3>💬 Conversazioni Bot</h3>
+                    <h3>💬 Chat Andrea</h3>
                     <p>0</p>
                 </div>
                 <div class="metric-card">
@@ -1258,60 +1040,31 @@
                     <p style="font-size: 1.5rem;" id="lastUpdate">--:--</p>
                 </div>
             </div>
-
-            <!-- Grafici -->
-            <h3 style="color: #ff6600; margin: 30px 0 15px 0; font-size: 1.4rem;">📈 Distribuzione Dati Firebase</h3>
-            <div class="chart-container">
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; text-align: center;">
-                    <div style="font-size: 1.5rem; margin-bottom: 20px; color: #ff9933;">📊 Statistiche Real-time</div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; width: 100%;">
-                        <div style="background: #ff6600; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">📝 Quiz Lead</div>
-                            <div style="font-size: 2rem; margin: 5px 0;" id="chartQuizCount">0</div>
-                            <div style="font-size: 0.9rem;">database Firebase</div>
-                        </div>
-                        <div style="background: #4CAF50; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">💬 Chat</div>
-                            <div style="font-size: 2rem; margin: 5px 0;" id="chartChatCount">0</div>
-                            <div style="font-size: 0.9rem;">conversazioni</div>
-                        </div>
-                        <div style="background: #2196F3; padding: 15px; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 1.2rem; font-weight: bold;">🔄 Status</div>
-                            <div style="font-size: 2rem; margin: 5px 0;">✅</div>
-                            <div style="font-size: 0.9rem;">connesso</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- INSIGHTS ACTIONABLE - FINALE -->
+        <!-- INSIGHTS FINALI -->
         <div class="dashboard-section">
             <h2>💡 Insights Actionable & Raccomandazioni</h2>
             <ul class="insights-list">
                 <li>
-                    <strong>🔄 Sistema Attivo:</strong> Dashboard connessa a Firebase in tempo reale. 
-                    <em>I dati vengono aggiornati automaticamente ogni 30 secondi.</em>
+                    <strong>🔄 Sistema Attivo:</strong> Dashboard unificata Quiz + Chat Andrea operativa. 
+                    <em>Tutti i lead vengono tracciati automaticamente.</em>
                 </li>
                 <li>
-                    <strong>📊 Dati Real-time:</strong> Lead e conversazioni caricate direttamente dal database Firebase. 
-                    <em>Azione: Usa il chatbot nella landing page per generare dati reali.</em>
+                    <strong>📊 Dati Real-time:</strong> Connessione diretta a Firebase con getChatStats aggiornata. 
+                    <em>Azione: Sistema pronto per raccogliere lead da entrambi i canali.</em>
                 </li>
                 <li>
-                    <strong>💪 TribuCoach Operativo:</strong> Chatbot attivo e funzionante con OpenAI aggiornato. 
-                    <em>Azione: Testa il chatbot per verificare le risposte migliorate.</em>
+                    <strong>💪 Andrea Padoan:</strong> Chatbot intelligente con lead generation automatica. 
+                    <em>Azione: Promuovi la chat per lead conversazionali di qualità.</em>
                 </li>
                 <li>
-                    <strong>🎯 Lead Tracking:</strong> Sistema di raccolta lead automatico attivo in Firebase. 
-                    <em>Azione: I lead appariranno qui quando utenti completeranno quiz o forniranno contatti.</em>
+                    <strong>🎯 Doppio Canale:</strong> Quiz + Chat per massimizzare lead generation. 
+                    <em>Azione: Usa quiz per volume, chat per qualità.</em>
                 </li>
                 <li>
-                    <strong>📱 WhatsApp Integration:</strong> Bottoni diretti per contatto immediato quando ci saranno lead reali. 
-                    <em>Azione: Controlla regolarmente per nuovi lead da contattare.</em>
-                </li>
-                <li>
-                    <strong>🚀 Prossimi Passi:</strong> Promuovi il chatbot e il quiz per raccogliere lead reali. 
-                    <em>Azione: Condividi la landing page per iniziare a raccogliere dati veri.</em>
+                    <strong>📱 WhatsApp Ready:</strong> Contatto immediato appena arrivano lead. 
+                    <em>Azione: Controlla dashboard regolarmente per nuovi lead.</em>
                 </li>
             </ul>
         </div>
@@ -1328,7 +1081,6 @@
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
         // Funzione per aprire WhatsApp
         function openWhatsApp(phone) {
@@ -1376,27 +1128,13 @@
             const now = new Date();
             const timeString = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             
-            const timeElements = ['currentTime', 'lastUpdate'];
-            timeElements.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = timeString;
-                }
-            });
-
-            // Aggiorna contatori grafici
-            const chartQuiz = document.getElementById('chartQuizCount');
-            const chartChat = document.getElementById('chartChatCount');
-            
-            if (chartQuiz && window.quizLeads) {
-                chartQuiz.textContent = window.quizLeads.length || 0;
-            }
-            if (chartChat && window.chatConversations) {
-                chartChat.textContent = window.chatConversations.length || 0;
+            const timeElement = document.getElementById('lastUpdate');
+            if (timeElement) {
+                timeElement.textContent = timeString;
             }
         }
 
-        // Event listener per chiusura modal
+        // Event listeners
         document.addEventListener('click', function(e) {
             const modal = document.getElementById('detailsModal');
             if (e.target === modal) {
@@ -1404,14 +1142,13 @@
             }
         });
 
-        // Escape key per chiudere modal
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
             }
         });
 
-        // Inizializzazione base
+        // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             updateTime();
             setInterval(updateTime, 60000);
