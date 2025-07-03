@@ -1342,7 +1342,7 @@
         // Inizializza Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const functions = getFunctions(app);
+        const functions = getFunctions(app, 'us-central1');
 
         // Variabili chat
         let conversationId = null;
@@ -1426,7 +1426,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
         // Chiama Firebase Function per OpenAI
         async function callChatFunction(userMessage) {
             try {
+                console.log('🔄 Chiamando Firebase Function...');
                 const chatWithOpenAI = httpsCallable(functions, 'chatWithOpenAI');
+                
+                console.log('📤 Dati inviati:', {
+                    messages: messages,
+                    conversationId: conversationId,
+                    customerName: customerName,
+                    customerPhone: customerPhone,
+                    customerEmail: customerEmail
+                });
                 
                 const result = await chatWithOpenAI({
                     messages: messages,
@@ -1436,10 +1445,14 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     customerEmail: customerEmail
                 });
                 
+                console.log('📥 Risposta ricevuta:', result.data);
                 return result.data;
                 
             } catch (error) {
-                console.error('❌ Errore chiamata function:', error);
+                console.error('❌ Errore completo:', error);
+                console.error('❌ Error code:', error.code);
+                console.error('❌ Error message:', error.message);
+                console.error('❌ Error details:', error.details);
                 return {
                     success: false,
                     message: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
