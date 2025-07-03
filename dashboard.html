@@ -52,7 +52,9 @@
                     quizLeads.push({
                         id: doc.id,
                         ...data,
-                        timestamp: data.completed_at?.toDate() || data.timestamp?.toDate() || new Date()
+                        timestamp: data.completed_at ? new Date(data.completed_at) : 
+                                  data.timestamp?.toDate ? data.timestamp.toDate() : 
+                                  data.timestamp ? new Date(data.timestamp) : new Date()
                     });
                 });
 
