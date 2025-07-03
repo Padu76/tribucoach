@@ -1,5 +1,4 @@
-    <!-- Floating Chat Button -->
-    <button id="chatButton">💬</button><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -1112,6 +1111,9 @@
     </style>
 </head>
 <body>
+    <!-- Floating Chat Button -->
+    <button id="chatButton">💬</button>
+
     <header>
         <img src="tribu_logo_monocromo.png" alt="Logo Tribù Personal Training Verona" loading="eager" width="120" height="45">
         <div class="header-stats">
@@ -1323,13 +1325,13 @@
         </div>
     </div>
 
-    <!-- Firebase SDK e Chat Logic -->
+    <!-- Firebase SDK - LOGICA DASHBOARD FUNZIONANTE -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js';
 
-        // Configurazione Firebase
+        // Configurazione Firebase - IDENTICA AL DASHBOARD
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-a2254.firebaseapp.com",
@@ -1343,8 +1345,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const functions = getFunctions(app);
-        
-        // NO region specification per CORS
 
         // Variabili chat
         let conversationId = null;
@@ -1429,18 +1429,20 @@ Sono il tuo alterego digitale - parliamo! 😊`,
         async function callChatFunction(userMessage) {
             try {
                 console.log('🔄 Chiamando Firebase Function...');
-                const chatAndrea = httpsCallable(functions, 'chatAndrea');
+                
+                // USA chatWithOpenAI come nel dashboard
+                const getChatStatsFunction = httpsCallable(functions, 'chatWithOpenAI');
                 
                 console.log('📤 Dati inviati:', {
-                    messages: messages,
+                    message: userMessage,
                     conversationId: conversationId,
                     customerName: customerName,
                     customerPhone: customerPhone,
                     customerEmail: customerEmail
                 });
                 
-                const result = await chatAndrea({
-                    messages: messages,
+                const result = await getChatStatsFunction({
+                    message: userMessage,
                     conversationId: conversationId,
                     customerName: customerName,
                     customerPhone: customerPhone,
@@ -1450,16 +1452,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 console.log('📥 Risposta ricevuta:', result.data);
                 console.log('📥 Risposta COMPLETA:', JSON.stringify(result.data, null, 2));
                 
-                if (result.data && result.data.success !== false) {
-                    return result.data;
-                } else {
-                    console.error('❌ Errore nella risposta:', result.data);
-                    console.error('❌ Struttura errore:', JSON.stringify(result.data, null, 2));
-                    return {
-                        success: false,
-                        message: result.data?.message || 'Errore nella comunicazione con OpenAI'
-                    };
-                }
+                return result.data;
                 
             } catch (error) {
                 console.error('❌ Errore completo:', error);
@@ -1468,7 +1461,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 console.error('❌ Error details:', error.details);
                 return {
                     success: false,
-                    message: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
+                    response: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
                 };
             }
         }
@@ -1497,11 +1490,11 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 
                 hideTypingIndicator();
                 
-                if (response.success !== false) {
+                if (response && (response.response || response.message)) {
                     // Aggiungi risposta assistant
                     messages.push({
                         role: 'assistant',
-                        content: response.message,
+                        content: response.response || response.message,
                         timestamp: new Date()
                     });
                     
@@ -1512,12 +1505,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     if (response.customerEmail) customerEmail = response.customerEmail;
                     
                     renderMessages();
+                    
+                    // Salva in Firestore
+                    await saveConversation(userMessage, response.response || response.message);
+                    
                     console.log('✅ Messaggio inviato e salvato');
                     
                 } else {
                     messages.push({
                         role: 'assistant',
-                        content: response.message || 'Errore nel processare la richiesta',
+                        content: 'Mi dispiace, non ho ricevuto una risposta valida. Riprova!',
                         timestamp: new Date()
                     });
                     renderMessages();
@@ -1537,6 +1534,35 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             
             sendButton.disabled = false;
             messageInput.focus();
+        }
+
+        // Salva conversazione in Firestore
+        async function saveConversation(userMessage, assistantResponse) {
+            try {
+                await addDoc(collection(db, 'chatbase_conversations'), {
+                    conversationId: conversationId,
+                    userMessage: userMessage,
+                    assistantResponse: assistantResponse,
+                    timestamp: new Date(),
+                    sessionId: getSessionId(),
+                    userAgent: navigator.userAgent,
+                    messageCount: messages.length / 2
+                });
+                
+                console.log('💾 Conversazione salvata in Firestore');
+            } catch (error) {
+                console.error('❌ Errore nel salvataggio:', error);
+            }
+        }
+
+        // Session Management
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem('tribucoach_session');
+            if (!sessionId) {
+                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                sessionStorage.setItem('tribucoach_session', sessionId);
+            }
+            return sessionId;
         }
 
         // Mostra typing indicator
@@ -1661,4 +1687,3 @@ Sono il tuo alterego digitale - parliamo! 😊`,
 
 </body>
 </html>
-            
