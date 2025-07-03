@@ -37,10 +37,9 @@
                 console.log('🔄 Caricamento dati Firebase...');
                 updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
 
-                // 1. Carica conversazioni chatbot
+                // 1. Carica conversazioni chatbot (query semplificata)
                 const chatQuery = query(
                     collection(db, 'chatbot_conversations'),
-                    where('source', '==', 'tribucoach-openai-chatbot'),
                     orderBy('lastMessageAt', 'desc'),
                     limit(50)
                 );
@@ -49,14 +48,17 @@
                 chatConversations = [];
                 chatSnapshot.forEach((doc) => {
                     const data = doc.data();
-                    chatConversations.push({
-                        id: doc.id,
-                        ...data,
-                        lastMessageAt: data.lastMessageAt?.toDate() || new Date()
-                    });
+                    // Filtra solo quelle di TribuCoach
+                    if (data.source === 'tribucoach-openai-chatbot') {
+                        chatConversations.push({
+                            id: doc.id,
+                            ...data,
+                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
+                        });
+                    }
                 });
 
-                // 2. Carica lead quiz
+                // 2. Carica lead quiz (query semplificata)
                 const quizQuery = query(
                     collection(db, 'quiz_results'),
                     orderBy('timestamp', 'desc'),
@@ -74,7 +76,7 @@
                     });
                 });
 
-                // 3. Carica statistiche
+                // 3. Carica statistiche (opzionale)
                 try {
                     const getStatsFunction = httpsCallable(functions, 'getChatStats');
                     const statsResult = await getStatsFunction();
@@ -86,7 +88,7 @@
 
                 // 4. Aggiorna dashboard
                 updateDashboard();
-                updateConnectionStatus('✅ Connesso a Firebase - Dati aggiornati', '#4CAF50');
+                updateConnectionStatus('✅ Connesso a Firebase - Dati reali caricati', '#4CAF50');
                 
                 console.log('✅ Dati caricati:', {
                     chat: chatConversations.length,
@@ -96,10 +98,93 @@
 
             } catch (error) {
                 console.error('❌ Errore caricamento Firebase:', error);
-                updateConnectionStatus('❌ Errore connessione Firebase', '#f44336');
+                updateConnectionStatus('❌ Connessione Firebase: query semplificata', '#ff9800');
                 
-                // Mostra dati demo in caso di errore
-                loadDemoData();
+                // Prova query ancora più semplici
+                await loadSimpleFirebaseData();
+            }
+        }
+
+        // Query Firebase semplificate (senza indici)
+        async function loadSimpleFirebaseData() {
+            try {
+                console.log('🔄 Tentativo con query semplificate...');
+
+                // 1. Query molto semplice per chat
+                const chatSnapshot = await getDocs(collection(db, 'chatbot_conversations'));
+                chatConversations = [];
+                chatSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.source === 'tribucoach-openai-chatbot') {
+                        chatConversations.push({
+                            id: doc.id,
+                            ...data,
+                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
+                        });
+                    }
+                });
+
+                // Ordina manualmente
+                chatConversations.sort((a, b) => b.lastMessageAt - a.lastMessageAt);
+                chatConversations = chatConversations.slice(0, 20);
+
+                // 2. Query semplice per quiz
+                const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
+                quizLeads = [];
+                quizSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    quizLeads.push({
+                        id: doc.id,
+                        ...data,
+                        timestamp: data.timestamp?.toDate() || new Date()
+                    });
+                });
+
+                // Ordina manualmente
+                quizLeads.sort((a, b) => b.timestamp - a.timestamp);
+                quizLeads = quizLeads.slice(0, 20);
+
+                updateDashboard();
+                updateConnectionStatus('✅ Dati Firebase caricati (query semplici)', '#4CAF50');
+                
+                console.log('✅ Dati caricati con query semplici:', {
+                    chat: chatConversations.length,
+                    quiz: quizLeads.length
+                });
+
+            } catch (error) {
+                console.error('❌ Errore anche con query semplici:', error);
+                updateConnectionStatus('❌ Errore Firebase - Indici richiesti', '#f44336');
+                
+                // Mostra messaggio per creare indici
+                showIndexRequiredMessage();
+            }
+        }
+
+        // Mostra messaggio per creare indici
+        function showIndexRequiredMessage() {
+            const container = document.querySelector('.dashboard');
+            if (container) {
+                const indexMessage = document.createElement('div');
+                indexMessage.style.cssText = `
+                    background: #f44336; 
+                    color: white; 
+                    padding: 20px; 
+                    border-radius: 10px; 
+                    margin: 20px 0; 
+                    text-align: center;
+                    font-weight: bold;
+                `;
+                indexMessage.innerHTML = `
+                    🚨 <strong>FIREBASE RICHIEDE INDICI</strong><br>
+                    <a href="https://console.firebase.google.com/v1/r/project/tribucoach-a2254/firestore/indexes" 
+                       target="_blank" 
+                       style="color: white; text-decoration: underline;">
+                       Clicca qui per creare gli indici Firebase
+                    </a><br>
+                    <small>Dopo aver creato gli indici, ricarica la pagina</small>
+                `;
+                container.insertBefore(indexMessage, container.firstChild);
             }
         }
 
