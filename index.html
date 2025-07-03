@@ -1446,7 +1446,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 });
                 
                 console.log('📥 Risposta ricevuta:', result.data);
-                return result.data;
+                
+                if (result.data && result.data.success !== false) {
+                    return result.data;
+                } else {
+                    console.error('❌ Errore nella risposta:', result.data);
+                    return {
+                        success: false,
+                        message: result.data?.message || 'Errore nella comunicazione con OpenAI'
+                    };
+                }
                 
             } catch (error) {
                 console.error('❌ Errore completo:', error);
