@@ -101,12 +101,13 @@
                 
                 const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
                 quizLeads = [];
-                quizSnapshot.forEach((doc) => {
+                quizLeads.forEach((doc) => {
                     const data = doc.data();
                     quizLeads.push({
                         id: doc.id,
                         ...data,
-                        timestamp: data.completed_at?.toDate() || data.timestamp?.toDate() || new Date()
+                        timestamp: data.completed_at ? new Date(data.completed_at) : 
+                                  data.timestamp ? new Date(data.timestamp) : new Date()
                     });
                 });
 
@@ -178,6 +179,8 @@
 
         // Aggiorna business insights
         function updateBusinessInsights() {
+            const totalLeads = quizLeads.length;
+            const qualifiedLeads = unifiedStats.qualifiedLeads || 0;
             const hotLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
             const warmLeads = quizLeads.filter(lead => {
                 const score = lead.lead_score || 0;
