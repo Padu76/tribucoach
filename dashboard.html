@@ -8,7 +8,7 @@
     <!-- Firebase SDK v9 -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, getDocs, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
         import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js';
 
         // Configurazione Firebase
@@ -26,18 +26,22 @@
         const db = getFirestore(app);
         const functions = getFunctions(app);
 
-        // Variabili globali per i dati
+        // Variabili globali
         let chatConversations = [];
         let quizLeads = [];
         let unifiedStats = {};
+        let allQuizLeads = [];
+        let allChatConversations = [];
+        let currentQuizFilter = 'all';
+        let currentChatFilter = 'all';
 
-        // Carica dati Firebase CORRETTI
+        // Carica dati Firebase
         async function loadFirebaseData() {
             try {
                 console.log('🔄 Caricamento dati Firebase...');
                 updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
 
-                // 1. USA getChatStats per dati unificati
+                // 1. Usa getChatStats per dati unificati
                 const getStatsFunction = httpsCallable(functions, 'getChatStats');
                 const statsResult = await getStatsFunction();
                 unifiedStats = statsResult.data;
@@ -46,32 +50,38 @@
 
                 // 2. Carica quiz results direttamente
                 const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
-                quizLeads = [];
-                quizSnapshot.forEach((doc) => {
+                allQuizLeads = [];
+                quizSnapshot.forEach(function(doc) {
                     const data = doc.data();
-                    quizLeads.push({
+                    allQuizLeads.push({
                         id: doc.id,
                         ...data,
                         timestamp: data.completed_at ? new Date(data.completed_at) : 
-                                  data.timestamp?.toDate ? data.timestamp.toDate() : 
                                   data.timestamp ? new Date(data.timestamp) : new Date()
                     });
                 });
+                
+                // Applica filtro iniziale
+                quizLeads = filterQuizByDate(allQuizLeads, currentQuizFilter);
 
-                // 3. Carica conversazioni chat (nome collezione corretto)
+                // 3. Carica conversazioni chat
                 try {
                     const chatSnapshot = await getDocs(collection(db, 'chatbase_conversations'));
-                    chatConversations = [];
-                    chatSnapshot.forEach((doc) => {
+                    allChatConversations = [];
+                    chatSnapshot.forEach(function(doc) {
                         const data = doc.data();
-                        chatConversations.push({
+                        allChatConversations.push({
                             id: doc.id,
                             ...data,
-                            lastMessageAt: data.lastMessageAt?.toDate() || new Date()
+                            lastMessageAt: data.lastMessageAt ? data.lastMessageAt.toDate() : new Date()
                         });
                     });
+                    
+                    // Applica filtro iniziale
+                    chatConversations = filterChatByDate(allChatConversations, currentChatFilter);
                 } catch (chatError) {
                     console.warn('⚠️ Collezione chatbase_conversations non trovata:', chatError);
+                    allChatConversations = [];
                     chatConversations = [];
                 }
 
@@ -100,32 +110,43 @@
                 console.log('🔄 Caricamento solo quiz...');
                 
                 const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
-                quizLeads = [];
-                quizLeads.forEach((doc) => {
+                allQuizLeads = [];
+                quizSnapshot.forEach(function(doc) {
                     const data = doc.data();
-                    quizLeads.push({
+                    allQuizLeads.push({
                         id: doc.id,
                         ...data,
                         timestamp: data.completed_at ? new Date(data.completed_at) : 
                                   data.timestamp ? new Date(data.timestamp) : new Date()
                     });
                 });
+                
+                // Applica filtro
+                quizLeads = filterQuizByDate(allQuizLeads, currentQuizFilter);
 
                 // Calcola statistiche manualmente
                 unifiedStats = {
                     totalChats: quizLeads.length,
-                    qualifiedLeads: quizLeads.filter(lead => (lead.lead_score || 0) >= 70).length,
-                    averageScore: quizLeads.length > 0 ? 
-                        Math.round(quizLeads.reduce((sum, lead) => sum + (lead.lead_score || 0), 0) / quizLeads.length) : 0,
-                    leads: quizLeads.map(lead => ({
-                        ...lead,
-                        name: lead.name || 'Non fornito',
-                        phone: lead.whatsapp || 'Non fornito',
-                        email: lead.email || 'Non fornito',
-                        score: Math.round(lead.lead_score || 0),
-                        source: 'Quiz'
-                    }))
+                    qualifiedLeads: 0,
+                    averageScore: 0,
+                    leads: []
                 };
+
+                // Calcola qualifiedLeads
+                for (let i = 0; i < quizLeads.length; i++) {
+                    if ((quizLeads[i].lead_score || 0) >= 70) {
+                        unifiedStats.qualifiedLeads++;
+                    }
+                }
+
+                // Calcola averageScore
+                if (quizLeads.length > 0) {
+                    let totalScore = 0;
+                    for (let i = 0; i < quizLeads.length; i++) {
+                        totalScore += (quizLeads[i].lead_score || 0);
+                    }
+                    unifiedStats.averageScore = Math.round(totalScore / quizLeads.length);
+                }
 
                 updateDashboard();
                 updateConnectionStatus('✅ Quiz caricati - Functions non disponibili', '#ff9800');
@@ -138,6 +159,85 @@
             }
         }
 
+        // FUNZIONI FILTRI TEMPORALI
+        function filterQuizByDate(leads, filter) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            switch(filter) {
+                case 'today':
+                    return leads.filter(function(lead) { return lead.timestamp >= today; });
+                case 'week':
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(today.getDate() - 7);
+                    return leads.filter(function(lead) { return lead.timestamp >= weekAgo; });
+                case 'month':
+                    const monthAgo = new Date(today);
+                    monthAgo.setMonth(today.getMonth() - 1);
+                    return leads.filter(function(lead) { return lead.timestamp >= monthAgo; });
+                case 'all':
+                default:
+                    return leads;
+            }
+        }
+        
+        function filterChatByDate(chats, filter) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            switch(filter) {
+                case 'today':
+                    return chats.filter(function(chat) { return chat.lastMessageAt >= today; });
+                case 'week':
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(today.getDate() - 7);
+                    return chats.filter(function(chat) { return chat.lastMessageAt >= weekAgo; });
+                case 'month':
+                    const monthAgo = new Date(today);
+                    monthAgo.setMonth(today.getMonth() - 1);
+                    return chats.filter(function(chat) { return chat.lastMessageAt >= monthAgo; });
+                case 'all':
+                default:
+                    return chats;
+            }
+        }
+        
+        // Applica filtro quiz
+        function applyQuizFilter(filter) {
+            currentQuizFilter = filter;
+            quizLeads = filterQuizByDate(allQuizLeads, filter);
+            updateDashboard();
+            
+            const filterLabel = {
+                'all': 'Tutti',
+                'today': 'Oggi',
+                'week': 'Settimana',
+                'month': 'Mese'
+            };
+            const element = document.getElementById('quiz-filter-current');
+            if (element) {
+                element.textContent = filterLabel[filter];
+            }
+        }
+        
+        // Applica filtro chat
+        function applyChatFilter(filter) {
+            currentChatFilter = filter;
+            chatConversations = filterChatByDate(allChatConversations, filter);
+            updateDashboard();
+            
+            const filterLabel = {
+                'all': 'Tutti',
+                'today': 'Oggi',
+                'week': 'Settimana',
+                'month': 'Mese'
+            };
+            const element = document.getElementById('chat-filter-current');
+            if (element) {
+                element.textContent = filterLabel[filter];
+            }
+        }
+
         // Aggiorna status connessione
         function updateConnectionStatus(message, color) {
             const statusEl = document.querySelector('.connection-status');
@@ -147,7 +247,7 @@
             }
         }
 
-        // Aggiorna dashboard con dati unificati
+        // Aggiorna dashboard
         function updateDashboard() {
             updateMainMetrics();
             updateBusinessInsights();
@@ -162,7 +262,13 @@
             const totalLeads = stats.totalChats || 0;
             const qualifiedLeads = stats.qualifiedLeads || 0;
             const averageScore = stats.averageScore || 0;
-            const premiumLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
+            
+            let premiumLeads = 0;
+            for (let i = 0; i < quizLeads.length; i++) {
+                if ((quizLeads[i].lead_score || 0) >= 80) {
+                    premiumLeads++;
+                }
+            }
 
             const metrics = [
                 { selector: '.metric-card:nth-child(1) p', value: totalLeads },
@@ -171,27 +277,38 @@
                 { selector: '.metric-card:nth-child(4) p', value: premiumLeads }
             ];
 
-            metrics.forEach(metric => {
-                const el = document.querySelector(metric.selector);
-                if (el) el.textContent = metric.value;
-            });
+            for (let i = 0; i < metrics.length; i++) {
+                const el = document.querySelector(metrics[i].selector);
+                if (el) el.textContent = metrics[i].value;
+            }
         }
 
         // Aggiorna business insights
         function updateBusinessInsights() {
             const totalLeads = quizLeads.length;
             const qualifiedLeads = unifiedStats.qualifiedLeads || 0;
-            const hotLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
-            const warmLeads = quizLeads.filter(lead => {
-                const score = lead.lead_score || 0;
-                return score >= 60 && score < 80;
-            }).length;
+            
+            let hotLeads = 0;
+            let warmLeads = 0;
+            
+            for (let i = 0; i < quizLeads.length; i++) {
+                const score = quizLeads[i].lead_score || 0;
+                if (score >= 80) {
+                    hotLeads++;
+                } else if (score >= 60) {
+                    warmLeads++;
+                }
+            }
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const leadsToday = quizLeads.filter(lead => 
-                lead.timestamp && lead.timestamp >= today
-            ).length;
+            let leadsToday = 0;
+            
+            for (let i = 0; i < quizLeads.length; i++) {
+                if (quizLeads[i].timestamp && quizLeads[i].timestamp >= today) {
+                    leadsToday++;
+                }
+            }
 
             const conversionRate = totalLeads > 0 ? 
                 Math.round((qualifiedLeads / totalLeads) * 100) : 0;
@@ -217,14 +334,17 @@
                 container.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
                         <h3 style="color: #ff6600; margin-bottom: 15px;">📝 Nessun Lead Quiz</h3>
-                        <p style="color: #ccc;">Non ci sono ancora lead dai quiz completati.</p>
+                        <p style="color: #ccc;">Non ci sono lead per il filtro selezionato.</p>
                     </div>
                 `;
                 return;
             }
 
             let html = '';
-            quizLeads.slice(0, 8).forEach(lead => {
+            const leadsToShow = quizLeads.slice(0, 8);
+            
+            for (let i = 0; i < leadsToShow.length; i++) {
+                const lead = leadsToShow[i];
                 const score = lead.lead_score || 0;
                 const scoreClass = score >= 80 ? 'score-high' : score >= 60 ? 'score-medium' : 'score-low';
                 const profileIcon = getProfileIcon(lead.profile);
@@ -273,7 +393,7 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             
             container.innerHTML = html;
         }
@@ -287,14 +407,17 @@
                 container.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
                         <h3 style="color: #2196F3; margin-bottom: 15px;">💬 Nessuna Chat Attiva</h3>
-                        <p style="color: #ccc;">Le nuove conversazioni con Andrea Padoan appariranno qui.</p>
+                        <p style="color: #ccc;">Le conversazioni con Andrea Padoan per il filtro selezionato appariranno qui.</p>
                     </div>
                 `;
                 return;
             }
 
             let html = '';
-            chatConversations.slice(0, 8).forEach(chat => {
+            const chatsToShow = chatConversations.slice(0, 8);
+            
+            for (let i = 0; i < chatsToShow.length; i++) {
+                const chat = chatsToShow[i];
                 const lastMessage = getLastUserMessage(chat.messages);
                 const date = chat.lastMessageAt ? chat.lastMessageAt.toLocaleDateString('it-IT') : 'N/A';
                 
@@ -322,7 +445,7 @@
                         </div>
                     </div>
                 `;
-            });
+            }
             
             container.innerHTML = html;
         }
@@ -339,7 +462,12 @@
 
         // Aggiorna insights actionable
         function updateActionableInsights() {
-            const hotLeads = quizLeads.filter(lead => (lead.lead_score || 0) >= 80).length;
+            let hotLeads = 0;
+            for (let i = 0; i < quizLeads.length; i++) {
+                if ((quizLeads[i].lead_score || 0) >= 80) {
+                    hotLeads++;
+                }
+            }
             const totalLeads = quizLeads.length;
 
             const insightsList = document.querySelector('.insights-list');
@@ -382,7 +510,13 @@
         function getLastUserMessage(messages) {
             if (!Array.isArray(messages)) return 'Conversazione in corso';
             
-            const userMessages = messages.filter(msg => msg.role === 'user');
+            const userMessages = [];
+            for (let i = 0; i < messages.length; i++) {
+                if (messages[i].role === 'user') {
+                    userMessages.push(messages[i]);
+                }
+            }
+            
             if (userMessages.length === 0) return 'Nuovo lead';
             
             const lastMsg = userMessages[userMessages.length - 1];
@@ -390,9 +524,59 @@
             return content.length > 60 ? content.substring(0, 60) + '...' : content;
         }
 
-        // Mostra dettagli quiz
+        // Gestione dropdown filtri
+        function toggleQuizFilter() {
+            const options = document.getElementById('quiz-filter-options');
+            const button = document.querySelector('.filter-button');
+            
+            if (options.classList.contains('show')) {
+                options.classList.remove('show');
+                button.classList.remove('active');
+            } else {
+                // Chiudi altri dropdown
+                const allOptions = document.querySelectorAll('.filter-options');
+                const allButtons = document.querySelectorAll('.filter-button');
+                
+                for (let i = 0; i < allOptions.length; i++) {
+                    allOptions[i].classList.remove('show');
+                }
+                for (let i = 0; i < allButtons.length; i++) {
+                    allButtons[i].classList.remove('active');
+                }
+                
+                options.classList.add('show');
+                button.classList.add('active');
+            }
+        }
+
+        function toggleChatFilter() {
+            const options = document.getElementById('chat-filter-options');
+            const buttons = document.querySelectorAll('.filter-button');
+            const chatButton = buttons[1]; // Secondo bottone
+            
+            if (options.classList.contains('show')) {
+                options.classList.remove('show');
+                chatButton.classList.remove('active');
+            } else {
+                // Chiudi altri dropdown
+                const allOptions = document.querySelectorAll('.filter-options');
+                const allButtons = document.querySelectorAll('.filter-button');
+                
+                for (let i = 0; i < allOptions.length; i++) {
+                    allOptions[i].classList.remove('show');
+                }
+                for (let i = 0; i < allButtons.length; i++) {
+                    allButtons[i].classList.remove('active');
+                }
+                
+                options.classList.add('show');
+                chatButton.classList.add('active');
+            }
+        }
+
+        // Mostra dettagli quiz SEMPLIFICATI
         window.showQuizDetails = function(leadId) {
-            const lead = quizLeads.find(l => l.id === leadId);
+            const lead = allQuizLeads.find(function(l) { return l.id === leadId; });
             if (!lead) return;
             
             const modal = document.getElementById('detailsModal');
@@ -410,15 +594,17 @@
                     <p><strong>💰 Budget:</strong> ${lead.budget || 'Non specificato'}</p>
                     <p><strong>📅 Data:</strong> ${lead.timestamp ? lead.timestamp.toLocaleString('it-IT') : 'N/A'}</p>
                 </div>
-                ${lead.whatsapp ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.whatsapp}')">📱 WhatsApp</button>` : ''}
+                <div style="text-align: center; margin-top: 20px;">
+                    ${lead.whatsapp ? `<button class="action-button whatsapp" onclick="openWhatsApp('${lead.whatsapp}')">📱 WhatsApp</button>` : ''}
+                </div>
             `;
             
             modal.style.display = 'flex';
         };
 
-        // Mostra dettagli chat
+        // Mostra dettagli chat SEMPLIFICATI
         window.showChatDetails = function(chatId) {
-            const chat = chatConversations.find(c => c.id === chatId);
+            const chat = allChatConversations.find(function(c) { return c.id === chatId; });
             if (!chat) return;
             
             const modal = document.getElementById('detailsModal');
@@ -432,11 +618,28 @@
                     <p><strong>Data:</strong> ${chat.lastMessageAt ? chat.lastMessageAt.toLocaleString('it-IT') : 'N/A'}</p>
                     <p><strong>Messaggi:</strong> ${Array.isArray(chat.messages) ? chat.messages.length : 0}</p>
                 </div>
-                ${chat.customerPhone ? `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.customerPhone}')">📱 WhatsApp</button>` : ''}
+                <div style="text-align: center; margin-top: 20px;">
+                    ${chat.customerPhone ? `<button class="action-button whatsapp" onclick="openWhatsApp('${chat.customerPhone}')">📱 WhatsApp</button>` : ''}
+                </div>
             `;
             
             modal.style.display = 'flex';
         };
+
+        // Chiudi dropdown quando clicchi fuori
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.filter-dropdown')) {
+                const allOptions = document.querySelectorAll('.filter-options');
+                const allButtons = document.querySelectorAll('.filter-button');
+                
+                for (let i = 0; i < allOptions.length; i++) {
+                    allOptions[i].classList.remove('show');
+                }
+                for (let i = 0; i < allButtons.length; i++) {
+                    allButtons[i].classList.remove('active');
+                }
+            }
+        });
 
         // Inizializzazione
         window.addEventListener('DOMContentLoaded', function() {
@@ -449,6 +652,10 @@
 
         // Esponi funzioni globalmente
         window.loadFirebaseData = loadFirebaseData;
+        window.applyQuizFilter = applyQuizFilter;
+        window.applyChatFilter = applyChatFilter;
+        window.toggleQuizFilter = toggleQuizFilter;
+        window.toggleChatFilter = toggleChatFilter;
         window.quizLeads = quizLeads;
         window.chatConversations = chatConversations;
     </script>
@@ -531,6 +738,129 @@
             margin: 0 auto;
         }
 
+        .dashboard-section {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            margin-bottom: 35px;
+            border: 1px solid #404040;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
+        }
+
+        .dashboard-section h2 {
+            color: #ff6600;
+            font-size: 1.9rem;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* FILTRI DROPDOWN */
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+        }
+
+        .filter-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+        }
+
+        .dropdown-arrow {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .filter-button.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .filter-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border: 1px solid #444;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .filter-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .filter-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px;
+            font-weight: 500;
+            color: #ccc;
+        }
+
+        .filter-option:hover {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            transform: translateX(4px);
+        }
+
         .business-insights-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -572,39 +902,6 @@
             color: #ccc;
             font-size: 0.9rem;
             margin-bottom: 15px;
-        }
-
-        .dashboard-section {
-            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            margin-bottom: 35px;
-            border: 1px solid #404040;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
-        }
-
-        .dashboard-section h2 {
-            color: #ff6600;
-            font-size: 1.9rem;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #444;
-            padding-bottom: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .quiz-leads-grid {
@@ -924,6 +1221,7 @@
             .chat-grid { grid-template-columns: 1fr; }
             .business-insights-grid { grid-template-columns: 1fr; }
             .metrics-grid { grid-template-columns: 1fr; }
+            .section-header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -1003,7 +1301,21 @@
 
         <!-- LEAD QUIZ -->
         <div class="dashboard-section">
-            <h2>🥇 Lead Quiz - Raccolti</h2>
+            <div class="section-header">
+                <h2>🥇 Lead Quiz - Raccolti</h2>
+                <div class="filter-dropdown">
+                    <button class="filter-button" onclick="toggleQuizFilter()">
+                        <span id="quiz-filter-current">Tutti</span> 
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="filter-options" id="quiz-filter-options">
+                        <div class="filter-option" onclick="applyQuizFilter('all')">📊 Tutti</div>
+                        <div class="filter-option" onclick="applyQuizFilter('today')">📅 Oggi</div>
+                        <div class="filter-option" onclick="applyQuizFilter('week')">📆 Settimana</div>
+                        <div class="filter-option" onclick="applyQuizFilter('month')">🗓️ Mese</div>
+                    </div>
+                </div>
+            </div>
             <div class="quiz-leads-grid">
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
                     <h3 style="color: #ff6600; margin-bottom: 15px;">🔄 Caricamento Lead...</h3>
@@ -1014,7 +1326,21 @@
 
         <!-- CONVERSAZIONI ANDREA -->
         <div class="dashboard-section">
-            <h2>💬 Conversazioni Andrea Padoan</h2>
+            <div class="section-header">
+                <h2>💬 Conversazioni Andrea Padoan</h2>
+                <div class="filter-dropdown">
+                    <button class="filter-button" onclick="toggleChatFilter()">
+                        <span id="chat-filter-current">Tutti</span> 
+                        <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="filter-options" id="chat-filter-options">
+                        <div class="filter-option" onclick="applyChatFilter('all')">📊 Tutti</div>
+                        <div class="filter-option" onclick="applyChatFilter('today')">📅 Oggi</div>
+                        <div class="filter-option" onclick="applyChatFilter('week')">📆 Settimana</div>
+                        <div class="filter-option" onclick="applyChatFilter('month')">🗓️ Mese</div>
+                    </div>
+                </div>
+            </div>
             <div class="chat-grid">
                 <div style="grid-column: 1/-1; text-align: center; padding: 40px; background: #2a2a2a; border-radius: 12px;">
                     <h3 style="color: #2196F3; margin-bottom: 15px;">🔄 Caricamento Chat...</h3>
