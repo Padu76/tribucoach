@@ -1325,7 +1325,10 @@
         </div>
     </div>
 
-    <!-- JavaScript per Chat con Backend Vercel - VERSIONE CORRETTA -->
+    <!-- 🚀 INCLUDI IL SISTEMA FLUIDO -->
+    <script src="fluent-data-collector.js"></script>
+
+    <!-- JavaScript per Chat con Sistema Fluido Integrato -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1343,6 +1346,9 @@
         // Inizializza Firebase solo per Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // 🧠 INIZIALIZZA SISTEMA FLUIDO
+        const dataCollector = new FluentDataCollector();
 
         // Variabili chat
         let conversationId = null;
@@ -1394,7 +1400,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }];
             
             renderMessages();
-            console.log('💬 Andrea Padoan Chat inizializzato:', conversationId);
+            console.log('💬 Andrea Padoan Chat con Sistema Fluido inizializzato:', conversationId);
             
             // Crea record conversazione iniziale
             saveConversationStart();
@@ -1428,33 +1434,63 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 100);
         }
 
-        // 🛠️ FUNZIONE CORRETTA PER BACKEND VERCEL
+        // 🎯 NUOVA FUNZIONE CON SISTEMA FLUIDO
         async function callChatFunction(userMessage) {
             try {
-                console.log('🔄 Chiamando Backend Vercel...');
+                console.log('🧠 Processando con Sistema Fluido...');
                 
-                // 🎯 COSTRUISCI ARRAY MESSAGGI CORRETTO PER CLAUDE
+                // 🚀 USA IL SISTEMA FLUIDO PRIMA
+                const fluentResponse = dataCollector.processMessage(userMessage);
+                console.log('🎯 Risposta Sistema Fluido:', fluentResponse);
+                
+                // Se il sistema fluido ha una risposta diretta, usala
+                if (fluentResponse.message && fluentResponse.action !== 'standard_response') {
+                    console.log('✅ Usata risposta Sistema Fluido');
+                    
+                    // 💾 Salva i dati se il lead è stato convertito
+                    if (fluentResponse.leadGenerated) {
+                        const leadData = dataCollector.getAnalytics();
+                        console.log('🎉 NUOVO LEAD GENERATO:', leadData);
+                        
+                        // Aggiorna variabili globali
+                        customerName = leadData.leadData.name;
+                        customerPhone = leadData.leadData.phone;
+                        customerEmail = leadData.leadData.email;
+                        
+                        // Salva lead in Firebase
+                        await saveLeadToFirebase(leadData);
+                    }
+                    
+                    return {
+                        success: true,
+                        reply: fluentResponse.message,
+                        conversationId: conversationId,
+                        customerName: customerName,
+                        customerPhone: customerPhone,
+                        customerEmail: customerEmail
+                    };
+                }
+                
+                // Altrimenti usa il backend Vercel per risposte più complesse
+                console.log('🔄 Chiamando Backend Vercel per risposta avanzata...');
+                
                 const conversationHistory = messages.map(msg => ({
                     role: msg.role,
                     content: msg.content
                 }));
 
-                // Aggiungi il nuovo messaggio utente
                 conversationHistory.push({
                     role: 'user',
                     content: userMessage
                 });
 
-                console.log('📤 Invio messaggi al backend:', conversationHistory);
-                
-                // Chiamata al backend Vercel con i dati corretti
                 const response = await fetch('https://tribucoach-api.vercel.app/api/chat', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ 
-                        messages: conversationHistory,  // ✅ ARRAY CORRETTO
+                        messages: conversationHistory,
                         conversationId: conversationId,
                         customerName: customerName,
                         customerPhone: customerPhone,
@@ -1467,12 +1503,12 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 }
 
                 const result = await response.json();
-                console.log('📥 Risposta ricevuta dal backend:', result);
+                console.log('📥 Risposta Backend:', result);
                 
                 return result;
                 
             } catch (error) {
-                console.error('❌ Errore chiamata backend:', error);
+                console.error('❌ Errore:', error);
                 return {
                     success: false,
                     reply: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
@@ -1480,7 +1516,74 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }
         }
 
-        // Invia messaggio
+        // 💾 Salva lead nel sistema
+        async function saveLeadToFirebase(analytics) {
+            try {
+                const leadData = {
+                    name: analytics.leadData.name,
+                    phone: analytics.leadData.phone,
+                    goal: analytics.leadData.goal,
+                    timestamp: new Date(),
+                    source: 'tribucoach_fluent_chat',
+                    sessionId: analytics.sessionId,
+                    conversationStage: analytics.stage,
+                    interactionCount: analytics.interactionCount,
+                    valueProvided: analytics.valueProvided,
+                    conversionProbability: 'high' // Dal sistema fluido
+                };
+                
+                // Salva in Firebase
+                await setDoc(doc(db, 'leads_fluent', analytics.sessionId), leadData);
+                console.log('💾 Lead salvato con sistema fluido:', leadData);
+                
+                // Mostra notifica di successo
+                showLeadConversionNotification(leadData);
+                
+            } catch (error) {
+                console.error('❌ Errore salvataggio lead:', error);
+            }
+        }
+
+        // 🎉 Mostra notifica conversione lead
+        function showLeadConversionNotification(leadData) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #4CAF50, #45a049);
+                color: white;
+                padding: 20px 25px;
+                border-radius: 15px;
+                font-weight: bold;
+                z-index: 10001;
+                box-shadow: 0 10px 30px rgba(76, 175, 80, 0.4);
+                max-width: 350px;
+                animation: slideInRight 0.5s ease-out;
+            `;
+            
+            notification.innerHTML = `
+                🎉 <strong>Nuovo Lead Raccolto!</strong><br>
+                📝 ${leadData.name}<br>
+                📱 ${leadData.phone}<br>
+                🎯 ${leadData.goal}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutRight 0.5s ease-in';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 500);
+                }
+            }, 5000);
+        }
+
+        // Invia messaggio con sistema fluido
         async function sendMessage() {
             const userMessage = messageInput.value.trim();
             if (!userMessage) return;
@@ -1523,7 +1626,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     // Aggiorna conversazione in Firestore
                     await updateConversation();
                     
-                    console.log('✅ Messaggio inviato e conversazione aggiornata');
+                    console.log('✅ Messaggio elaborato con Sistema Fluido');
                     
                 } else {
                     messages.push({
@@ -1564,19 +1667,23 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
                     status: 'active',
-                    fullConversation: messages
+                    fullConversation: messages,
+                    hasFluentSystem: true // 🆕 Flag per sistema fluido
                 });
                 
-                console.log('💾 Conversazione inizializzata in Firestore');
+                console.log('💾 Conversazione con Sistema Fluido inizializzata');
             } catch (error) {
                 console.error('❌ Errore inizializzazione conversazione:', error);
             }
         }
 
-        // Aggiorna conversazione esistente (invece di creare nuovi record)
+        // Aggiorna conversazione esistente
         async function updateConversation() {
             try {
                 const conversationRef = doc(db, 'chatbase_conversations', conversationId);
+                
+                // Ottieni analytics dal sistema fluido
+                const analytics = dataCollector.getAnalytics();
                 
                 await updateDoc(conversationRef, {
                     lastUpdate: new Date(),
@@ -1586,10 +1693,20 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     customerEmail: customerEmail || null,
                     fullConversation: messages,
                     lastUserMessage: messages.filter(m => m.role === 'user').pop()?.content || '',
-                    lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || ''
+                    lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || '',
+                    // 🧠 Dati del sistema fluido
+                    fluentSystemData: {
+                        stage: analytics.stage,
+                        interestLevel: analytics.interestLevel,
+                        valueProvided: analytics.valueProvided,
+                        interactionCount: analytics.interactionCount,
+                        hasName: analytics.leadData.hasName,
+                        hasPhone: analytics.leadData.hasPhone,
+                        hasGoal: analytics.leadData.hasGoal
+                    }
                 });
                 
-                console.log('💾 Conversazione aggiornata in Firestore');
+                console.log('💾 Conversazione aggiornata con dati Sistema Fluido');
             } catch (error) {
                 console.error('❌ Errore aggiornamento conversazione:', error);
             }
@@ -1741,9 +1858,40 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 }
             });
         });
+
+        // 📊 Debug: Funzione per controllare stato sistema fluido
+        window.getFluentSystemState = () => {
+            console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
+        };
         
-        console.log('🚀 TribuCoach con Backend Vercel CORRETTO inizializzato');
+        console.log('🚀 TribuCoach con Sistema Fluido ATTIVO inizializzato!');
+        console.log('💡 Testa con: "Ho bisogno di un allenamento" → "Grazie!" → "Marco" → "Perdere peso" → "347 888 1515"');
     </script>
+
+    <!-- Aggiungi animazioni per notifiche -->
+    <style>
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
 
 </body>
 </html>
