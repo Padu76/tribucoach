@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TribuCoach - Sistema Fluido</title>
+    <style>
+        .chat-container {
+            max-width: 600px;
+            margin: 50px auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: 50px;
+        }
+        .bot-message {
+            background: #ff6600;
+            color: white;
+            margin-right: 50px;
+        }
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background: white;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            background: #ff6600;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .analytics-panel {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+        .lead-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .lead-status.converted {
+            background: #d4edda;
+            color: #155724;
+        }
+        .lead-status.engaged {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .lead-status.initial {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #ff6600;">🏋️ TribuCoach - Sistema Fluido</h1>
+    
+    <!-- Chat Interface -->
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                Ciao! Sono Andrea Padoan 💪<br>
+                Come posso aiutarti oggi con allenamento e benessere?
+            </div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Scrivi qui il tuo messaggio..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Invia</button>
+        </div>
+    </div>
+
+    <!-- Analytics Panel -->
+    <div class="analytics-panel">
+        <h3>📊 Analytics Real-time</h3>
+        <div id="analyticsDisplay">
+            <div class="lead-status initial" id="leadStatus">🌱 Utente Iniziale</div>
+            <div>Interazioni: <span id="interactionCount">0</span></div>
+            <div>Interesse: <span id="interestLevel">basso</span></div>
+            <div>Nome: <span id="userName">Non fornito</span></div>
+            <div>Telefono: <span id="userPhone">Non fornito</span></div>
+            <div>Obiettivo: <span id="userGoal">Non specificato</span></div>
+        </div>
+    </div>
+
+    <!-- 🚀 INCLUDI IL SISTEMA FLUIDO -->
+    <script src="fluent-data-collector.js"></script>
+    
+    <script>
+        // 🎯 INIZIALIZZAZIONE
+        const dataCollector = new FluentDataCollector();
+        let chatMessages = document.getElementById('chatMessages');
+        let userInput = document.getElementById('userInput');
+
+        // 💬 GESTIONE MESSAGGI
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Mostra messaggio utente
+            displayUserMessage(message);
+            
+            // 🧠 PROCESSA CON IL SISTEMA FLUIDO
+            const response = dataCollector.processMessage(message);
+            
+            // Mostra risposta bot
+            setTimeout(() => {
+                displayBotMessage(response.message);
+                
+                // 📊 Aggiorna analytics
+                updateAnalytics(response);
+                
+                // 💾 Salva lead se convertito
+                if (response.leadGenerated) {
+                    saveLeadData(dataCollector.getAnalytics());
+                    showConversionSuccess();
+                }
+            }, 1000);
+
+            userInput.value = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function displayUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user-message';
+            messageDiv.innerHTML = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function displayBotMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot-message';
+            messageDiv.innerHTML = message.replace(/\n/g, '<br>');
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 📊 AGGIORNA ANALYTICS IN TEMPO REALE
+        function updateAnalytics(response) {
+            const analytics = dataCollector.getAnalytics();
+            
+            // Aggiorna contatori
+            document.getElementById('interactionCount').textContent = analytics.interactionCount;
+            document.getElementById('interestLevel').textContent = analytics.interestLevel;
+            document.getElementById('userName').textContent = analytics.leadData.name || 'Non fornito';
+            document.getElementById('userPhone').textContent = analytics.leadData.phone || 'Non fornito';
+            document.getElementById('userGoal').textContent = analytics.leadData.goal || 'Non specificato';
+            
+            // Aggiorna status lead
+            const statusElement = document.getElementById('leadStatus');
+            const stage = analytics.stage;
+            
+            if (stage === 'converted') {
+                statusElement.className = 'lead-status converted';
+                statusElement.textContent = '🎉 Lead Convertito!';
+            } else if (stage === 'engaged') {
+                statusElement.className = 'lead-status engaged';
+                statusElement.textContent = '💪 Utente Ingaggiato';
+            } else {
+                statusElement.className = 'lead-status initial';
+                statusElement.textContent = '🌱 Utente Iniziale';
+            }
+        }
+
+        // 💾 SALVA DATI LEAD
+        function saveLeadData(analytics) {
+            const leadData = {
+                name: analytics.leadData.name,
+                phone: analytics.leadData.phone,
+                goal: analytics.leadData.goal,
+                timestamp: new Date().toISOString(),
+                source: 'tribucoach_fluent_chat',
+                sessionId: analytics.sessionId,
+                conversationStage: analytics.stage,
+                interactionCount: analytics.interactionCount,
+                valueProvided: analytics.valueProvided
+            };
+            
+            // Salva in localStorage (sostituisci con Firebase se disponibile)
+            const leadKey = 'tribucoach_lead_' + Date.now();
+            localStorage.setItem(leadKey, JSON.stringify(leadData));
+            
+            console.log('✅ Lead salvato:', leadData);
+            
+            // 🚀 OPZIONALE: Invio automatico a Firebase
+            // if (typeof firebase !== 'undefined') {
+            //     firebase.firestore().collection('leads').add(leadData);
+            // }
+        }
+
+        function showConversionSuccess() {
+            // Mostra notifica di successo
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                font-weight: bold;
+                z-index: 1000;
+            `;
+            notification.textContent = '🎉 Nuovo Lead Convertito!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 5000);
+        }
+
+        // 🔄 FOLLOW-UP AUTOMATICO (ogni 30 secondi per demo)
+        setInterval(() => {
+            const followUp = dataCollector.generateFollowUp();
+            if (followUp) {
+                setTimeout(() => {
+                    displayBotMessage(followUp.message);
+                }, 2000);
+            }
+        }, 30000);
+
+        // 📊 DEBUG: Mostra stato in console
+        window.getCollectorState = () => {
+            console.log('Current State:', dataCollector.getAnalytics());
+        };
+
+        // 💡 SUGGERIMENTI PER TEST
+        console.log(`
+🚀 TESTA IL SISTEMA FLUIDO:
+
+1. Scrivi: "Ho bisogno di un allenamento"
+2. Rispondi: "Grazie, molto utile!"  
+3. Quando chiede il nome: "Marco"
+4. Obiettivo: "Perdere peso"
+5. Telefono: "347 888 1515"
+
+📊 Guarda gli analytics cambiare in tempo reale!
+🎯 Alla fine avrai un lead completo salvato!
+        `);
+    </script>
+</body>
+</html>
