@@ -32,21 +32,17 @@
         let currentQuizFilter = 'all';
         let currentChatFilter = 'all';
 
-        // 🔧 CARICA DATI FIREBASE - VERSIONE CORRETTA
+        // 🔧 CARICA DATI FIREBASE - VERSIONE CORRETTA SENZA FILTRI RESTRITTIVI
         async function loadFirebaseData() {
             try {
                 console.log('🔄 Caricamento dati Firebase...');
                 updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
 
-                // 1. Carica conversazioni chat con ordinamento
+                // 1. Carica TUTTE le conversazioni chat senza orderBy restrittivo
                 try {
                     console.log('📥 Caricamento conversazioni chat...');
-                    const chatQuery = query(
-                        collection(db, 'chatbase_conversations'), 
-                        orderBy('lastUpdate', 'desc'), 
-                        limit(100)
-                    );
-                    const chatSnapshot = await getDocs(chatQuery);
+                    // ✅ RIMUOVO orderBy che potrebbe escludere documenti
+                    const chatSnapshot = await getDocs(collection(db, 'chatbase_conversations'));
                     
                     allChatConversations = [];
                     chatSnapshot.forEach(function(doc) {
@@ -56,7 +52,9 @@
                         allChatConversations.push({
                             id: doc.id,
                             ...data,
-                            lastUpdate: data.lastUpdate ? data.lastUpdate.toDate() : new Date(),
+                            lastUpdate: data.lastUpdate ? data.lastUpdate.toDate() : 
+                                       data.lastMessageAt ? data.lastMessageAt.toDate() :
+                                       data.startTime ? data.startTime.toDate() : new Date(),
                             startTime: data.startTime ? data.startTime.toDate() : new Date(),
                             endTime: data.endTime ? data.endTime.toDate() : null,
                             fullConversation: data.fullConversation || [],
@@ -68,6 +66,9 @@
                         });
                     });
                     
+                    // Ordina manualmente per data più recente
+                    allChatConversations.sort((a, b) => b.lastUpdate - a.lastUpdate);
+                    
                     console.log('✅ Chat caricate:', allChatConversations.length);
                     chatConversations = filterChatByDate(allChatConversations, currentChatFilter);
                     
@@ -77,36 +78,70 @@
                     chatConversations = [];
                 }
 
-                // 2. Carica quiz results
+                // 2. Carica TUTTI i quiz results senza orderBy restrittivo
                 try {
                     console.log('📥 Caricamento quiz results...');
-                    const quizQuery = query(
-                        collection(db, 'quiz_results'), 
-                        orderBy('completed_at', 'desc'), 
-                        limit(100)
-                    );
-                    const quizSnapshot = await getDocs(quizQuery);
+                    // ✅ RIMUOVO orderBy che esclude documenti senza completed_at
+                    const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
                     
                     allQuizLeads = [];
                     quizSnapshot.forEach(function(doc) {
                         const data = doc.data();
                         console.log('📋 Quiz trovato:', doc.id, data);
                         
+                        // ✅ GESTISCO TUTTI I POSSIBILI CAMPI DATA
+                        let timestamp = new Date();
+                        if (data.completed_at) {
+                            timestamp = new Date(data.completed_at);
+                        } else if (data.timestamp) {
+                            timestamp = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                        } else if (data.created_at) {
+                            timestamp = new Date(data.created_at);
+                        } else if (data.date) {
+                            timestamp = new Date(data.date);
+                        }
+                        
                         allQuizLeads.push({
                             id: doc.id,
                             ...data,
-                            timestamp: data.completed_at ? new Date(data.completed_at) : 
-                                      data.timestamp ? new Date(data.timestamp) : new Date()
+                            timestamp: timestamp
                         });
                     });
                     
+                    // Ordina manualmente per data più recente
+                    allQuizLeads.sort((a, b) => b.timestamp - a.timestamp);
+                    
                     console.log('✅ Quiz caricati:', allQuizLeads.length);
+                    console.log('🔍 Primo quiz esempio:', allQuizLeads[0]);
                     quizLeads = filterQuizByDate(allQuizLeads, currentQuizFilter);
                     
                 } catch (quizError) {
                     console.warn('⚠️ Errore caricamento quiz:', quizError);
-                    allQuizLeads = [];
-                    quizLeads = [];
+                    // ✅ FALLBACK: Prova senza query complesse
+                    try {
+                        console.log('🔄 Tentativo fallback per quiz...');
+                        const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
+                        allQuizLeads = [];
+                        
+                        quizSnapshot.forEach(function(doc) {
+                            const data = doc.data();
+                            console.log('📋 Quiz fallback:', doc.id, Object.keys(data));
+                            
+                            allQuizLeads.push({
+                                id: doc.id,
+                                ...data,
+                                timestamp: new Date() // Default timestamp
+                            });
+                        });
+                        
+                        console.log('✅ Quiz fallback caricati:', allQuizLeads.length);
+                        quizLeads = allQuizLeads; // Nessun filtro nel fallback
+                        
+                    } catch (fallbackError) {
+                        console.error('❌ Fallback quiz fallito:', fallbackError);
+                        allQuizLeads = [];
+                        quizLeads = [];
+                    }
                 }
 
                 // 3. Aggiorna dashboard
