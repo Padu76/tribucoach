@@ -1325,10 +1325,11 @@
         </div>
     </div>
 
-    <!-- 🚀 INCLUDI IL SISTEMA FLUIDO -->
+    <!-- 🚀 SISTEMA POTENZIATO - INCLUDI I FILE -->
     <script src="fluent-data-collector.js"></script>
+    <script src="enhanced-knowledge-base.js"></script>
 
-    <!-- JavaScript per Chat con Sistema Fluido Integrato -->
+    <!-- JavaScript per Chat con Sistema Potenziato Integrato -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1347,7 +1348,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 🧠 INIZIALIZZA SISTEMA FLUIDO
+        // 🧠 INIZIALIZZA SISTEMA POTENZIATO
+        const knowledgeBase = new EnhancedKnowledgeBase();
+        const profilingSystem = new AdvancedProfilingSystem();  
+        const upselling = new NaturalUpselling();
         const dataCollector = new FluentDataCollector();
 
         // Variabili chat
@@ -1400,7 +1404,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }];
             
             renderMessages();
-            console.log('💬 Andrea Padoan Chat con Sistema Fluido inizializzato:', conversationId);
+            console.log('💬 Andrea Padoan Chat con Sistema Potenziato inizializzato:', conversationId);
             
             // Crea record conversazione iniziale
             saveConversationStart();
@@ -1434,12 +1438,38 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 100);
         }
 
-        // 🎯 NUOVA FUNZIONE CON SISTEMA FLUIDO
+        // 🎯 NUOVA FUNZIONE CON SISTEMA POTENZIATO
         async function callChatFunction(userMessage) {
             try {
-                console.log('🧠 Processando con Sistema Fluido...');
+                console.log('🧠 Processando con Sistema Potenziato...');
                 
-                // 🚀 USA IL SISTEMA FLUIDO PRIMA
+                // 🚀 1. PROVA KNOWLEDGE BASE PRIMA (Sistema Potenziato)
+                const kbResponse = knowledgeBase.generateSmartResponse(userMessage);
+                if (kbResponse && kbResponse.confidence === 'high') {
+                    console.log('✅ Usata Knowledge Base avanzata');
+                    
+                    // Aggiorna profilo utente
+                    profilingSystem.updateProfile(userMessage);
+                    
+                    // Controlla upselling
+                    const upsellSuggestion = upselling.checkUpselling(userMessage);
+                    
+                    let finalResponse = kbResponse.content;
+                    if (upsellSuggestion) {
+                        finalResponse += '\n\n' + upsellSuggestion;
+                    }
+                    
+                    return {
+                        success: true,
+                        reply: finalResponse,
+                        conversationId: conversationId,
+                        customerName: customerName,
+                        customerPhone: customerPhone,
+                        customerEmail: customerEmail
+                    };
+                }
+                
+                // 🔄 2. SISTEMA FLUIDO (Raccolta Dati)
                 const fluentResponse = dataCollector.processMessage(userMessage);
                 console.log('🎯 Risposta Sistema Fluido:', fluentResponse);
                 
@@ -1471,7 +1501,20 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     };
                 }
                 
-                // Altrimenti usa il backend Vercel per risposte più complesse
+                // 🤖 3. FALLBACK KNOWLEDGE BASE MEDIO
+                if (kbResponse && kbResponse.confidence === 'medium') {
+                    console.log('📋 Usata Knowledge Base (confidenza media)');
+                    return {
+                        success: true,
+                        reply: kbResponse.content,
+                        conversationId: conversationId,
+                        customerName: customerName,
+                        customerPhone: customerPhone,
+                        customerEmail: customerEmail
+                    };
+                }
+                
+                // 🔧 4. BACKEND VERCEL per risposte complesse
                 console.log('🔄 Chiamando Backend Vercel per risposta avanzata...');
                 
                 const conversationHistory = messages.map(msg => ({
@@ -1524,17 +1567,17 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     phone: analytics.leadData.phone,
                     goal: analytics.leadData.goal,
                     timestamp: new Date(),
-                    source: 'tribucoach_fluent_chat',
+                    source: 'tribucoach_enhanced_chat',
                     sessionId: analytics.sessionId,
                     conversationStage: analytics.stage,
                     interactionCount: analytics.interactionCount,
                     valueProvided: analytics.valueProvided,
-                    conversionProbability: 'high' // Dal sistema fluido
+                    conversionProbability: 'high' // Dal sistema potenziato
                 };
                 
                 // Salva in Firebase
-                await setDoc(doc(db, 'leads_fluent', analytics.sessionId), leadData);
-                console.log('💾 Lead salvato con sistema fluido:', leadData);
+                await setDoc(doc(db, 'leads_enhanced', analytics.sessionId), leadData);
+                console.log('💾 Lead salvato con sistema potenziato:', leadData);
                 
                 // Mostra notifica di successo
                 showLeadConversionNotification(leadData);
@@ -1583,7 +1626,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 5000);
         }
 
-        // Invia messaggio con sistema fluido
+        // Invia messaggio con sistema potenziato
         async function sendMessage() {
             const userMessage = messageInput.value.trim();
             if (!userMessage) return;
@@ -1626,7 +1669,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     // Aggiorna conversazione in Firestore
                     await updateConversation();
                     
-                    console.log('✅ Messaggio elaborato con Sistema Fluido');
+                    console.log('✅ Messaggio elaborato con Sistema Potenziato');
                     
                 } else {
                     messages.push({
@@ -1668,10 +1711,10 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     customerEmail: customerEmail || null,
                     status: 'active',
                     fullConversation: messages,
-                    hasFluentSystem: true // 🆕 Flag per sistema fluido
+                    hasEnhancedSystem: true // 🆕 Flag per sistema potenziato
                 });
                 
-                console.log('💾 Conversazione con Sistema Fluido inizializzata');
+                console.log('💾 Conversazione con Sistema Potenziato inizializzata');
             } catch (error) {
                 console.error('❌ Errore inizializzazione conversazione:', error);
             }
@@ -1684,6 +1727,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 
                 // Ottieni analytics dal sistema fluido
                 const analytics = dataCollector.getAnalytics();
+                const profile = profilingSystem.userProfile;
                 
                 await updateDoc(conversationRef, {
                     lastUpdate: new Date(),
@@ -1694,19 +1738,27 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     fullConversation: messages,
                     lastUserMessage: messages.filter(m => m.role === 'user').pop()?.content || '',
                     lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || '',
-                    // 🧠 Dati del sistema fluido
-                    fluentSystemData: {
-                        stage: analytics.stage,
-                        interestLevel: analytics.interestLevel,
-                        valueProvided: analytics.valueProvided,
-                        interactionCount: analytics.interactionCount,
-                        hasName: analytics.leadData.hasName,
-                        hasPhone: analytics.leadData.hasPhone,
-                        hasGoal: analytics.leadData.hasGoal
+                    // 🧠 Dati del sistema potenziato
+                    enhancedSystemData: {
+                        // Sistema fluido
+                        fluentStage: analytics.stage,
+                        fluentInterestLevel: analytics.interestLevel,
+                        fluentValueProvided: analytics.valueProvided,
+                        fluentInteractionCount: analytics.interactionCount,
+                        fluentHasName: analytics.leadData.hasName,
+                        fluentHasPhone: analytics.leadData.hasPhone,
+                        fluentHasGoal: analytics.leadData.hasGoal,
+                        // Sistema profiling
+                        userLevel: profile.level,
+                        userInterests: profile.interests,
+                        profileInteractions: profile.interactions,
+                        // Sistema upselling
+                        upsellEngagementScore: upselling.engagementScore,
+                        upsellPositiveSignals: upselling.positiveSignals
                     }
                 });
                 
-                console.log('💾 Conversazione aggiornata con dati Sistema Fluido');
+                console.log('💾 Conversazione aggiornata con dati Sistema Potenziato');
             } catch (error) {
                 console.error('❌ Errore aggiornamento conversazione:', error);
             }
@@ -1859,13 +1911,20 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             });
         });
 
-        // 📊 Debug: Funzione per controllare stato sistema fluido
-        window.getFluentSystemState = () => {
+        // 📊 Debug: Funzioni per controllare stato sistemi
+        window.getEnhancedSystemState = () => {
             console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
+            console.log('👤 Stato Profiling:', profilingSystem.userProfile);
+            console.log('💰 Stato Upselling:', { 
+                engagementScore: upselling.engagementScore,
+                interactions: upselling.interactions,
+                positiveSignals: upselling.positiveSignals 
+            });
         };
         
-        console.log('🚀 TribuCoach con Sistema Fluido ATTIVO inizializzato!');
-        console.log('💡 Testa con: "Ho bisogno di un allenamento" → "Grazie!" → "Marco" → "Perdere peso" → "347 888 1515"');
+        console.log('🚀 TribuCoach con Sistema POTENZIATO inizializzato!');
+        console.log('💡 Testa con: "workout 15 minuti" → "grazie!" → "Marco" → "perdere peso" → "347 888 1515"');
+        console.log('🎯 Debug: window.getEnhancedSystemState() per vedere analytics');
     </script>
 
     <!-- Aggiungi animazioni per notifiche -->
