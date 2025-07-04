@@ -1,9 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 export default async function handler(req, res) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -21,21 +15,35 @@ export default async function handler(req, res) {
   try {
     const { messages } = req.body;
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 1000,
-      messages: messages
+    // Chiamata diretta a Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1000,
+        system: `Sei Andrea Padoan, personal trainer di Verona. Rispondi in italiano, sii motivante e professionale. Offri consigli su fitness, alimentazione e motivazione.`,
+        messages: messages || [{ role: 'user', content: 'Ciao!' }]
+      })
     });
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'Ciao! Come posso aiutarti con il tuo allenamento?';
 
     return res.status(200).json({
       success: true,
-      reply: response.content[0]?.text || 'Errore nella risposta'
+      reply: reply
     });
 
   } catch (error) {
+    console.error('Errore:', error);
     return res.status(500).json({
       success: false,
-      reply: 'Errore tecnico, riprova!'
+      reply: 'Mi dispiace, c\'è stato un problema tecnico. Riprova!'
     });
   }
 }
