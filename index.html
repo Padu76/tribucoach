@@ -1425,31 +1425,32 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 100);
         }
 
-        // Chiama Firebase Function per OpenAI
+        // Chiama Firebase Function per Claude - FIX PRINCIPALE
         async function callChatFunction(userMessage) {
             try {
                 console.log('🔄 Chiamando Firebase Function...');
                 
-                // USA chatWithOpenAI come nel dashboard
-                const getChatStatsFunction = httpsCallable(functions, 'chatWithOpenAI');
-                console.log('🔍 messages variable:', messages);
-console.log('🔍 messages type:', typeof messages);
-console.log('🔍 is array:', Array.isArray(messages));
-                console.log('📤 Dati inviati:', JSON.stringify({
-messages: messages,
-                    conversationId: conversationId,
-                    customerName: customerName,
-                    customerPhone: customerPhone,
-                    customerEmail: customerEmail
-           }, null, 2));
+                // CAMBIATO DA chatWithOpenAI A chatAndrea
+                const chatAndreaFunction = httpsCallable(functions, 'chatAndrea');
                 
-                const result = await getChatStatsFunction({
-                    messages: messages,
+                console.log('🔍 messages variable:', messages);
+                console.log('🔍 messages type:', typeof messages);
+                console.log('🔍 is array:', Array.isArray(messages));
+                
+                // Assicurati che messages sia sempre un array
+                const messagesArray = Array.isArray(messages) ? messages : [];
+                
+                const requestData = {
+                    messages: messagesArray,
                     conversationId: conversationId,
                     customerName: customerName,
                     customerPhone: customerPhone,
                     customerEmail: customerEmail
-                });
+                };
+                
+                console.log('📤 Dati inviati:', JSON.stringify(requestData, null, 2));
+                
+                const result = await chatAndreaFunction(requestData);
                 
                 console.log('📥 Risposta ricevuta:', result.data);
                 console.log('📥 Risposta COMPLETA:', JSON.stringify(result.data, null, 2));
