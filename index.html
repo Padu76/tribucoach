@@ -1325,13 +1325,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDK - LOGICA DASHBOARD FUNZIONANTE -->
+    <!-- JavaScript per Chat con Backend Vercel -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-        import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-functions.js';
 
-        // Configurazione Firebase - IDENTICA AL DASHBOARD
+        // Configurazione Firebase - SOLO per salvare conversazioni
         const firebaseConfig = {
             apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
             authDomain: "tribucoach-a2254.firebaseapp.com",
@@ -1341,10 +1340,9 @@
             appId: "1:425200296836:web:7835188f40f4348567ab48"
         };
 
-        // Inizializza Firebase
+        // Inizializza Firebase solo per Firestore
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const functions = getFunctions(app);
 
         // Variabili chat
         let conversationId = null;
@@ -1425,43 +1423,43 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 100);
         }
 
-        // Chiama Firebase Function per Claude - FIX PRINCIPALE
+        // MODIFICA PRINCIPALE: Chiama Backend Vercel invece di Firebase
         async function callChatFunction(userMessage) {
             try {
-                console.log('🔄 Chiamando Firebase Function...');
-                
-                // CAMBIATO DA chatWithOpenAI A chatAndrea
-                const chatAndreaFunction = httpsCallable(functions, 'chatAndrea');
-                
-                console.log('🔍 messages variable:', messages);
-                console.log('🔍 messages type:', typeof messages);
-                console.log('🔍 is array:', Array.isArray(messages));
+                console.log('🔄 Chiamando Backend Vercel...');
                 
                 // Assicurati che messages sia sempre un array
                 const messagesArray = Array.isArray(messages) ? messages : [];
                 
-                // FIX: Invia i parametri DIRETTAMENTE senza oggetto wrapper
-                const result = await chatAndreaFunction({
-                    messages: messagesArray,
-                    conversationId: conversationId,
-                    customerName: customerName,
-                    customerPhone: customerPhone,
-                    customerEmail: customerEmail
+                // Chiamata al backend Vercel
+                const response = await fetch('https://tribucoach-backend-cvhvg6rhe-andreas-projects-ee49b818.vercel.app/api/chat', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        messages: messagesArray,
+                        conversationId: conversationId,
+                        customerName: customerName,
+                        customerPhone: customerPhone,
+                        customerEmail: customerEmail
+                    })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('📥 Risposta ricevuta dal backend:', result);
                 
-                console.log('📥 Risposta ricevuta:', result.data);
-                console.log('📥 Risposta COMPLETA:', JSON.stringify(result.data, null, 2));
-                
-                return result.data;
+                return result;
                 
             } catch (error) {
-                console.error('❌ Errore completo:', error);
-                console.error('❌ Error code:', error.code);
-                console.error('❌ Error message:', error.message);
-                console.error('❌ Error details:', error.details);
+                console.error('❌ Errore chiamata backend:', error);
                 return {
                     success: false,
-                    response: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
+                    reply: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧'
                 };
             }
         }
@@ -1490,11 +1488,11 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 
                 hideTypingIndicator();
                 
-                if (response && (response.response || response.message)) {
+                if (response && response.reply) {
                     // Aggiungi risposta assistant
                     messages.push({
                         role: 'assistant',
-                        content: response.response || response.message,
+                        content: response.reply,
                         timestamp: new Date()
                     });
                     
@@ -1507,7 +1505,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     renderMessages();
                     
                     // Salva in Firestore
-                    await saveConversation(userMessage, response.response || response.message);
+                    await saveConversation(userMessage, response.reply);
                     
                     console.log('✅ Messaggio inviato e salvato');
                     
@@ -1682,7 +1680,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             });
         });
         
-        console.log('🚀 Andrea Padoan Landing con Chat Alterego inizializzato');
+        console.log('🚀 TribuCoach con Backend Vercel inizializzato');
     </script>
 
 </body>
