@@ -1382,10 +1382,12 @@
         </div>
     </div>
 
-    <!-- 🚀 INCLUDI I FILE - SOLO AGGIUNTA DEL ML -->
+    <!-- 🚀 INCLUDI TUTTI I SISTEMI POTENZIATI -->
     <script src="fluent-data-collector.js"></script>
     <script src="enhanced-knowledge-base.js"></script>
     <script src="machine-learning-system.js"></script>
+    <script src="advanced-knowledge-base.js"></script>
+    <script src="motivation-system.js"></script>
 
     <!-- JavaScript per Chat con Sistema ORIGINALE + ML -->
     <script type="module">
@@ -1406,10 +1408,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 🧠 INIZIALIZZA SISTEMA ORIGINALE + ML
+        // 🧠 INIZIALIZZA SISTEMA COMPLETO CON TUTTI I MODULI
         const dataCollector = new FluentDataCollector();
         
-        // 🤖 SOLO AGGIUNTA: Sistema ML
+        // 🤖 Sistema ML
         let mlManager = null;
         if (typeof MLManager !== 'undefined') {
             try {
@@ -1420,6 +1422,29 @@
                 console.log('🤖 Sistema ML inizializzato con successo');
             } catch (error) {
                 console.warn('⚠️ Sistema ML non disponibile:', error);
+            }
+        }
+
+        // 🧠 Sistema Knowledge Base Avanzato
+        let enhancedKnowledgeSystem = null;
+        if (typeof EnhancedKnowledgeSystem !== 'undefined') {
+            try {
+                const basicKnowledgeBase = new EnhancedKnowledgeBase();
+                enhancedKnowledgeSystem = new EnhancedKnowledgeSystem(basicKnowledgeBase);
+                console.log('🧠 Sistema Knowledge Base Avanzato inizializzato');
+            } catch (error) {
+                console.warn('⚠️ Sistema Knowledge Base Avanzato non disponibile:', error);
+            }
+        }
+
+        // 🔥 Sistema Motivazionale
+        let motivationSystem = null;
+        if (typeof MotivationSystem !== 'undefined') {
+            try {
+                motivationSystem = new MotivationSystem();
+                console.log('🔥 Sistema Motivazionale inizializzato');
+            } catch (error) {
+                console.warn('⚠️ Sistema Motivazionale non disponibile:', error);
             }
         }
 
@@ -1723,13 +1748,15 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     phone: analytics.leadData.phone,
                     goal: analytics.leadData.goal,
                     timestamp: new Date(),
-                    source: 'tribucoach_fluent_chat',
+                    source: 'tribucoach_super_enhanced_chat',
                     sessionId: analytics.sessionId,
                     conversationStage: analytics.stage,
                     interactionCount: analytics.interactionCount,
                     valueProvided: analytics.valueProvided,
                     conversionProbability: 'high',
-                    hasMLSystem: mlManager ? true : false // 🤖 SOLO AGGIUNTA
+                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
+                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO  
+                    hasMotivationSystem: motivationSystem ? true : false // 🔥 AGGIUNTO
                 };
                 
                 // Salva in Firebase
@@ -1875,7 +1902,9 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     status: 'active',
                     fullConversation: messages,
                     hasFluentSystem: true,
-                    hasMLSystem: mlManager ? true : false // 🤖 SOLO AGGIUNTA
+                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
+                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO
+                    hasMotivationSystem: motivationSystem ? true : false // 🔥 AGGIUNTO
                 });
                 
                 console.log('💾 Conversazione inizializzata');
@@ -1913,18 +1942,34 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     }
                 };
 
-                // 🤖 SOLO AGGIUNTA: Dati ML se disponibili
-                if (mlManager) {
+                // 🤖🧠🔥 AGGIUNTA: Dati sistemi avanzati se disponibili
+                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
                     try {
-                        const mlInsights = mlManager.getMLInsights();
-                        updateData.mlSystemData = {
-                            totalPatterns: mlInsights.totalPatterns,
-                            learningLevel: mlInsights.learningProgress.readinessLevel,
-                            topIntent: mlInsights.topIntents[0]?.[0],
-                            mlEnhancedMessages: messages.filter(m => m.mlEnhanced).length
-                        };
-                    } catch (mlError) {
-                        console.warn('⚠️ Errore dati ML per conversazione:', mlError);
+                        updateData.enhancedSystemsData = {};
+                        
+                        // Dati ML
+                        if (mlManager) {
+                            const mlInsights = mlManager.getMLInsights();
+                            updateData.enhancedSystemsData.mlData = {
+                                totalPatterns: mlInsights.totalPatterns,
+                                learningLevel: mlInsights.learningProgress.readinessLevel,
+                                topIntent: mlInsights.topIntents[0]?.[0],
+                                mlEnhancedMessages: messages.filter(m => m.mlEnhanced).length
+                            };
+                        }
+                        
+                        // Dati Knowledge Base Avanzata
+                        if (enhancedKnowledgeSystem) {
+                            updateData.enhancedSystemsData.knowledgeData = enhancedKnowledgeSystem.getSystemStats();
+                        }
+                        
+                        // Dati Sistema Motivazionale
+                        if (motivationSystem) {
+                            updateData.enhancedSystemsData.motivationData = motivationSystem.getMotivationAnalytics();
+                        }
+                        
+                    } catch (enhancedError) {
+                        console.warn('⚠️ Errore dati sistemi avanzati per conversazione:', enhancedError);
                     }
                 }
                 
@@ -2009,12 +2054,25 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     duration: new Date() - conversationStartTime
                 };
 
-                // 🤖 SOLO AGGIUNTA: ML insights finali
-                if (mlManager) {
+                // 🤖🧠🔥 AGGIUNTA: Insights finali sistemi avanzati
+                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
                     try {
-                        updateData.finalMLInsights = mlManager.getMLInsights();
-                    } catch (mlError) {
-                        console.warn('⚠️ Errore ML insights finali:', mlError);
+                        updateData.finalEnhancedInsights = {};
+                        
+                        if (mlManager) {
+                            updateData.finalEnhancedInsights.mlInsights = mlManager.getMLInsights();
+                        }
+                        
+                        if (enhancedKnowledgeSystem) {
+                            updateData.finalEnhancedInsights.knowledgeStats = enhancedKnowledgeSystem.getSystemStats();
+                        }
+                        
+                        if (motivationSystem) {
+                            updateData.finalEnhancedInsights.motivationAnalytics = motivationSystem.getMotivationAnalytics();
+                        }
+                        
+                    } catch (enhancedError) {
+                        console.warn('⚠️ Errore insights finali sistemi avanzati:', enhancedError);
                     }
                 }
 
@@ -2093,22 +2151,40 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             });
         });
 
-        // 🤖 SOLO AGGIUNTA: Manutenzione ML e debug
-        if (mlManager) {
-            // Manutenzione automatica ogni ora
+        // 🤖🧠🔥 AGGIUNTA: Manutenzione e debug per tutti i sistemi
+        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+            // Manutenzione automatica ogni ora per sistemi disponibili
             setInterval(() => {
                 try {
-                    mlManager.performMaintenance();
+                    if (mlManager) {
+                        mlManager.performMaintenance();
+                    }
                     updateMLStatus();
                 } catch (error) {
-                    console.warn('⚠️ Errore manutenzione ML:', error);
+                    console.warn('⚠️ Errore manutenzione sistemi avanzati:', error);
                 }
             }, 60 * 60 * 1000);
 
-            // Debug function
-            window.getMLSystemState = () => {
-                console.log('🤖 ML Insights:', mlManager.getMLInsights());
-                console.log('🧠 Sistema Fluido:', dataCollector.getAnalytics());
+            // Debug functions
+            window.getAllSystemsState = () => {
+                const state = {};
+                
+                if (mlManager) {
+                    state.mlInsights = mlManager.getMLInsights();
+                }
+                
+                if (enhancedKnowledgeSystem) {
+                    state.knowledgeStats = enhancedKnowledgeSystem.getSystemStats();
+                }
+                
+                if (motivationSystem) {
+                    state.motivationAnalytics = motivationSystem.getMotivationAnalytics();
+                }
+                
+                state.fluentSystem = dataCollector.getAnalytics();
+                
+                console.log('🚀 Stato Completo Tutti i Sistemi:', state);
+                return state;
             };
         }
 
@@ -2117,10 +2193,15 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
         };
         
-        console.log('🚀 TribuCoach con Sistema Fluido' + (mlManager ? ' + ML' : '') + ' inizializzato!');
-        console.log('💡 Testa con: "Ho bisogno di un allenamento" → "Grazie!" → "Marco" → "Perdere peso" → "347 888 1515"');
-        if (mlManager) {
-            console.log('🤖 Debug ML: window.getMLSystemState()');
+        console.log('🚀 TribuCoach SUPER-POTENZIATO inizializzato!');
+        console.log('💡 Sistemi attivi:');
+        console.log('   🔄 Sistema Fluido: ✅');
+        console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
+        console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
+        console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
+        console.log('💡 Test: "Ho bisogno di motivazione" → "workout funzionale" → "Marco" → "347 888 1515"');
+        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+            console.log('🤖 Debug: window.getAllSystemsState() per analytics completi');
         }
         
         // Inizializza ML status
