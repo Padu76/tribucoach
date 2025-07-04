@@ -978,94 +978,6 @@
             animation: slideUpMobile 0.5s ease;
         }
 
-        /* 🆕 MODAL NOME - Aggiunto per raccolta nome */
-        .name-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-            backdrop-filter: blur(15px);
-        }
-
-        .name-modal-content {
-            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
-            border-radius: 25px;
-            padding: 40px;
-            max-width: 450px;
-            width: 90%;
-            text-align: center;
-            border: 2px solid #ff6600;
-            box-shadow: 0 25px 60px rgba(255, 102, 0, 0.4), 0 0 40px rgba(255, 102, 0, 0.3);
-            animation: fadeInScale 0.5s ease-out;
-        }
-
-        .name-modal h3 {
-            color: #ff6600;
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        .name-modal p {
-            color: #ccc;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        .name-input {
-            width: 100%;
-            background: #1a1a1a;
-            border: 2px solid #444;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            outline: none;
-            transition: all 0.3s ease;
-            margin-bottom: 25px;
-        }
-
-        .name-input:focus {
-            border-color: #ff6600;
-            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
-        }
-
-        .name-input::placeholder {
-            color: #888;
-        }
-
-        .name-submit-btn {
-            background: linear-gradient(135deg, #ff6600, #ff4400);
-            color: white;
-            border: none;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.4);
-            width: 100%;
-        }
-
-        .name-submit-btn:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.5);
-        }
-
-        .name-submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
         @keyframes slideUpMobile {
             from {
                 transform: translateY(100%);
@@ -1248,20 +1160,6 @@
 
             #messageInput {
                 padding: 12px 18px;
-            }
-
-            /* Modal nome mobile */
-            .name-modal-content {
-                padding: 30px 25px;
-                max-width: 95%;
-            }
-
-            .name-modal h3 {
-                font-size: 1.5rem;
-            }
-
-            .name-modal p {
-                font-size: 1rem;
             }
         }
     </style>
@@ -1453,26 +1351,6 @@
         💬 Su mobile usa il pulsante chat qui sotto per parlare con TribuCoach
     </div>
 
-    <!-- 🆕 MODAL RACCOLTA NOME -->
-    <div class="name-modal" id="nameModal">
-        <div class="name-modal-content">
-            <h3>👋 Ciao!</h3>
-            <p>Prima di iniziare, come ti chiami?<br>
-            <small style="color: #999;">Così potrò personalizzare i nostri consigli!</small></p>
-            <input 
-                type="text" 
-                id="nameInput" 
-                class="name-input" 
-                placeholder="Inserisci il tuo nome..."
-                maxlength="50"
-                autocomplete="given-name"
-            >
-            <button id="nameSubmitBtn" class="name-submit-btn">
-                🚀 Inizia la Chat
-            </button>
-        </div>
-    </div>
-
     <!-- Chat Overlay (Full Screen) -->
     <div class="chat-overlay" id="chatOverlay">
         <!-- Chat Widget -->
@@ -1481,7 +1359,7 @@
                 <div class="chat-header-info">
                     <img src="Padu_tribu045.jpg" alt="Andrea Padoan" class="chat-avatar">
                     <div>
-                        <h3 id="chatHeaderTitle">🏋️ Andrea Padoan</h3>
+                        <h3>🏋️ Andrea Padoan</h3>
                         <p>Personal Trainer • Il tuo alterego digitale</p>
                     </div>
                 </div>
@@ -1504,14 +1382,12 @@
         </div>
     </div>
 
-    <!-- 🚀 INCLUDI TUTTI I SISTEMI POTENZIATI -->
+    <!-- 🚀 INCLUDI I FILE - SOLO AGGIUNTA DEL ML -->
     <script src="fluent-data-collector.js"></script>
     <script src="enhanced-knowledge-base.js"></script>
     <script src="machine-learning-system.js"></script>
-    <script src="advanced-knowledge-base.js"></script>
-    <script src="motivation-system.js"></script>
 
-    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + RACCOLTA NOME -->
+    <!-- JavaScript per Chat con Sistema ORIGINALE + ML -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1530,10 +1406,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 🧠 INIZIALIZZA SISTEMA COMPLETO CON TUTTI I MODULI
+        // 🧠 INIZIALIZZA SISTEMA ORIGINALE + ML
         const dataCollector = new FluentDataCollector();
         
-        // 🤖 Sistema ML
+        // 🤖 SOLO AGGIUNTA: Sistema ML
         let mlManager = null;
         if (typeof MLManager !== 'undefined') {
             try {
@@ -1547,30 +1423,7 @@
             }
         }
 
-        // 🧠 Sistema Knowledge Base Avanzato
-        let enhancedKnowledgeSystem = null;
-        if (typeof EnhancedKnowledgeSystem !== 'undefined') {
-            try {
-                const basicKnowledgeBase = new EnhancedKnowledgeBase();
-                enhancedKnowledgeSystem = new EnhancedKnowledgeSystem(basicKnowledgeBase);
-                console.log('🧠 Sistema Knowledge Base Avanzato inizializzato');
-            } catch (error) {
-                console.warn('⚠️ Sistema Knowledge Base Avanzato non disponibile:', error);
-            }
-        }
-
-        // 🔥 Sistema Motivazionale
-        let motivationSystem = null;
-        if (typeof MotivationSystem !== 'undefined') {
-            try {
-                motivationSystem = new MotivationSystem();
-                console.log('🔥 Sistema Motivazionale inizializzato');
-            } catch (error) {
-                console.warn('⚠️ Sistema Motivazionale non disponibile:', error);
-            }
-        }
-
-        // Variabili chat ORIGINALI + NOME
+        // Variabili chat ORIGINALI
         let conversationId = null;
         let customerName = null;
         let customerPhone = null;
@@ -1579,7 +1432,7 @@
         let isOpen = false;
         let conversationStartTime = null;
 
-        // Elementi DOM ORIGINALI + MODAL NOME
+        // Elementi DOM ORIGINALI
         const chatButton = document.getElementById('chatButton');
         const chatOverlay = document.getElementById('chatOverlay');
         const chatWidget = document.getElementById('chatWidget');
@@ -1590,71 +1443,6 @@
         const mainChatButton = document.getElementById('mainChatButton');
         const heroChatButton = document.getElementById('heroChatButton');
         const mlStatus = document.getElementById('mlStatus');
-        
-        // 🆕 ELEMENTI MODAL NOME
-        const nameModal = document.getElementById('nameModal');
-        const nameInput = document.getElementById('nameInput');
-        const nameSubmitBtn = document.getElementById('nameSubmitBtn');
-        const chatHeaderTitle = document.getElementById('chatHeaderTitle');
-
-        // 🆕 GESTIONE RACCOLTA NOME
-        function showNameModal() {
-            nameModal.style.display = 'flex';
-            setTimeout(() => {
-                nameInput.focus();
-            }, 300);
-        }
-
-        function hideNameModal() {
-            nameModal.style.display = 'none';
-        }
-
-        function submitName() {
-            const name = nameInput.value.trim();
-            
-            if (!name || name.length < 2) {
-                nameInput.style.borderColor = '#f44336';
-                nameInput.focus();
-                return;
-            }
-            
-            // Salva il nome
-            customerName = name;
-            
-            // Aggiorna header chat
-            chatHeaderTitle.textContent = `🏋️ Ciao ${name}!`;
-            messageInput.placeholder = `Scrivi qui ${name}...`;
-            
-            // Nascondi modal e mostra chat
-            hideNameModal();
-            chatOverlay.style.display = 'flex';
-            
-            // Inizializza chat con nome personalizzato
-            if (!conversationId) {
-                initChatWithName(name);
-            }
-            
-            setTimeout(() => {
-                messageInput.focus();
-            }, 300);
-            
-            console.log('👋 Nome raccolto:', name);
-        }
-
-        // 🆕 EVENT LISTENERS MODAL NOME
-        nameSubmitBtn.addEventListener('click', submitName);
-        
-        nameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                submitName();
-            }
-        });
-
-        nameInput.addEventListener('input', () => {
-            nameInput.style.borderColor = '#444';
-            nameSubmitBtn.disabled = nameInput.value.trim().length < 2;
-        });
 
         // 🤖 SOLO AGGIUNTA: Aggiorna ML Status
         function updateMLStatus() {
@@ -1701,8 +1489,7 @@
 📊 Patterns: ${insights.totalPatterns}
 🎯 Top Intent: ${insights.topIntents[0]?.[0] || 'None'}
 😊 Sentiment: ${Object.entries(insights.sentimentDistribution).sort(([,a], [,b]) => b - a)[0]?.[0] || 'Mixed'}
-🚀 Level: ${insights.learningProgress.readinessLevel}
-👤 User: ${customerName || 'Anonimo'}`);
+🚀 Level: ${insights.learningProgress.readinessLevel}`);
                 } catch (error) {
                     alert('ML System non disponibile');
                 }
@@ -1714,39 +1501,7 @@
             return 'conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // 🆕 Inizializza chat con nome personalizzato
-        function initChatWithName(name) {
-            conversationId = generateConversationId();
-            conversationStartTime = new Date();
-            messages = [{
-                role: 'assistant',
-                content: `👋 Ciao ${name}! Sono Andrea Padoan in versione digitale!
-
-🎯 Sono qui per aiutarti con:
-🏋️ Allenamenti su misura per te
-🥗 Consigli alimentari personalizzati  
-🔥 Motivazione quando ne hai bisogno
-📞 Informazioni sui miei servizi
-
-💪 Dimmi ${name}, cosa ti serve oggi?
-• "Crea un allenamento per me"
-• "Cosa dovrei mangiare oggi?"
-• "Ho bisogno di motivazione"
-• "Quanto costa il Personal Training?"
-
-Sono pronto ad aiutarti! 😊`,
-                timestamp: new Date()
-            }];
-            
-            renderMessages();
-            updateMLStatus(); // 🤖 SOLO AGGIUNTA
-            console.log('💬 Chat inizializzata per:', name, conversationId);
-            
-            // Crea record conversazione iniziale con nome
-            saveConversationStart();
-        }
-
-        // Inizializza chat con messaggio di benvenuto ORIGINALE (fallback)
+        // Inizializza chat con messaggio di benvenuto ORIGINALE
         function initChat() {
             conversationId = generateConversationId();
             conversationStartTime = new Date();
@@ -1968,15 +1723,13 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     phone: analytics.leadData.phone,
                     goal: analytics.leadData.goal,
                     timestamp: new Date(),
-                    source: 'tribucoach_super_enhanced_chat',
+                    source: 'tribucoach_fluent_chat',
                     sessionId: analytics.sessionId,
                     conversationStage: analytics.stage,
                     interactionCount: analytics.interactionCount,
                     valueProvided: analytics.valueProvided,
                     conversionProbability: 'high',
-                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
-                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO  
-                    hasMotivationSystem: motivationSystem ? true : false // 🔥 AGGIUNTO
+                    hasMLSystem: mlManager ? true : false // 🤖 SOLO AGGIUNTA
                 };
                 
                 // Salva in Firebase
@@ -2106,7 +1859,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             messageInput.focus();
         }
 
-        // Salva inizio conversazione ORIGINALE + NOME
+        // Salva inizio conversazione ORIGINALE
         async function saveConversationStart() {
             try {
                 await setDoc(doc(db, 'chatbase_conversations', conversationId), {
@@ -2116,19 +1869,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     sessionId: getSessionId(),
                     userAgent: navigator.userAgent,
                     messageCount: 1,
-                    customerName: customerName || null, // 🆕 Nome raccolto subito
+                    customerName: customerName || null,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
                     status: 'active',
                     fullConversation: messages,
                     hasFluentSystem: true,
-                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
-                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO
-                    hasMotivationSystem: motivationSystem ? true : false, // 🔥 AGGIUNTO
-                    hasNameCollection: true // 🆕 AGGIUNTO
+                    hasMLSystem: mlManager ? true : false // 🤖 SOLO AGGIUNTA
                 });
                 
-                console.log('💾 Conversazione inizializzata con nome:', customerName);
+                console.log('💾 Conversazione inizializzata');
             } catch (error) {
                 console.error('❌ Errore inizializzazione conversazione:', error);
             }
@@ -2163,34 +1913,18 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     }
                 };
 
-                // 🤖🧠🔥 AGGIUNTA: Dati sistemi avanzati se disponibili
-                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+                // 🤖 SOLO AGGIUNTA: Dati ML se disponibili
+                if (mlManager) {
                     try {
-                        updateData.enhancedSystemsData = {};
-                        
-                        // Dati ML
-                        if (mlManager) {
-                            const mlInsights = mlManager.getMLInsights();
-                            updateData.enhancedSystemsData.mlData = {
-                                totalPatterns: mlInsights.totalPatterns,
-                                learningLevel: mlInsights.learningProgress.readinessLevel,
-                                topIntent: mlInsights.topIntents[0]?.[0],
-                                mlEnhancedMessages: messages.filter(m => m.mlEnhanced).length
-                            };
-                        }
-                        
-                        // Dati Knowledge Base Avanzata
-                        if (enhancedKnowledgeSystem) {
-                            updateData.enhancedSystemsData.knowledgeData = enhancedKnowledgeSystem.getSystemStats();
-                        }
-                        
-                        // Dati Sistema Motivazionale
-                        if (motivationSystem) {
-                            updateData.enhancedSystemsData.motivationData = motivationSystem.getMotivationAnalytics();
-                        }
-                        
-                    } catch (enhancedError) {
-                        console.warn('⚠️ Errore dati sistemi avanzati per conversazione:', enhancedError);
+                        const mlInsights = mlManager.getMLInsights();
+                        updateData.mlSystemData = {
+                            totalPatterns: mlInsights.totalPatterns,
+                            learningLevel: mlInsights.learningProgress.readinessLevel,
+                            topIntent: mlInsights.topIntents[0]?.[0],
+                            mlEnhancedMessages: messages.filter(m => m.mlEnhanced).length
+                        };
+                    } catch (mlError) {
+                        console.warn('⚠️ Errore dati ML per conversazione:', mlError);
                     }
                 }
                 
@@ -2236,26 +1970,17 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             if (typing) typing.remove();
         }
 
-        // 🆕 Toggle chat window CON RACCOLTA NOME
+        // Toggle chat window ORIGINALE
         function toggleChat() {
             isOpen = !isOpen;
             
             if (isOpen) {
-                // Se non abbiamo il nome, mostra modal prima
-                if (!customerName) {
-                    showNameModal();
-                    chatButton.innerHTML = '✕';
-                    chatButton.style.backgroundColor = '#f44336';
-                    return;
-                }
-                
-                // Se abbiamo già il nome, mostra direttamente la chat
                 chatOverlay.style.display = 'flex';
                 chatButton.innerHTML = '✕';
                 chatButton.style.backgroundColor = '#f44336';
                 
                 if (!conversationId) {
-                    initChatWithName(customerName);
+                    initChat();
                 }
                 
                 setTimeout(() => {
@@ -2264,7 +1989,6 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 
             } else {
                 chatOverlay.style.display = 'none';
-                hideNameModal(); // Chiudi anche il modal nome se aperto
                 chatButton.innerHTML = '💬';
                 chatButton.style.backgroundColor = '#ff6600';
                 
@@ -2285,25 +2009,12 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     duration: new Date() - conversationStartTime
                 };
 
-                // 🤖🧠🔥 AGGIUNTA: Insights finali sistemi avanzati
-                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+                // 🤖 SOLO AGGIUNTA: ML insights finali
+                if (mlManager) {
                     try {
-                        updateData.finalEnhancedInsights = {};
-                        
-                        if (mlManager) {
-                            updateData.finalEnhancedInsights.mlInsights = mlManager.getMLInsights();
-                        }
-                        
-                        if (enhancedKnowledgeSystem) {
-                            updateData.finalEnhancedInsights.knowledgeStats = enhancedKnowledgeSystem.getSystemStats();
-                        }
-                        
-                        if (motivationSystem) {
-                            updateData.finalEnhancedInsights.motivationAnalytics = motivationSystem.getMotivationAnalytics();
-                        }
-                        
-                    } catch (enhancedError) {
-                        console.warn('⚠️ Errore insights finali sistemi avanzati:', enhancedError);
+                        updateData.finalMLInsights = mlManager.getMLInsights();
+                    } catch (mlError) {
+                        console.warn('⚠️ Errore ML insights finali:', mlError);
                     }
                 }
 
@@ -2321,17 +2032,6 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }
         });
 
-        // Chiudi modal nome cliccando sull'overlay
-        nameModal.addEventListener('click', (e) => {
-            if (e.target === nameModal) {
-                hideNameModal();
-                // Ripristina stato chat button
-                chatButton.innerHTML = '💬';
-                chatButton.style.backgroundColor = '#ff6600';
-                isOpen = false;
-            }
-        });
-
         // Event Listeners ORIGINALI
         chatButton.addEventListener('click', toggleChat);
         closeButton.addEventListener('click', toggleChat);
@@ -2344,7 +2044,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }
         });
 
-        // CTA buttons per aprire chat ORIGINALI + NOME
+        // CTA buttons per aprire chat ORIGINALI
         if (mainChatButton) {
             mainChatButton.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -2393,41 +2093,22 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             });
         });
 
-        // 🤖🧠🔥 AGGIUNTA: Manutenzione e debug per tutti i sistemi
-        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
-            // Manutenzione automatica ogni ora per sistemi disponibili
+        // 🤖 SOLO AGGIUNTA: Manutenzione ML e debug
+        if (mlManager) {
+            // Manutenzione automatica ogni ora
             setInterval(() => {
                 try {
-                    if (mlManager) {
-                        mlManager.performMaintenance();
-                    }
+                    mlManager.performMaintenance();
                     updateMLStatus();
                 } catch (error) {
-                    console.warn('⚠️ Errore manutenzione sistemi avanzati:', error);
+                    console.warn('⚠️ Errore manutenzione ML:', error);
                 }
             }, 60 * 60 * 1000);
 
-            // Debug functions
-            window.getAllSystemsState = () => {
-                const state = {};
-                
-                if (mlManager) {
-                    state.mlInsights = mlManager.getMLInsights();
-                }
-                
-                if (enhancedKnowledgeSystem) {
-                    state.knowledgeStats = enhancedKnowledgeSystem.getSystemStats();
-                }
-                
-                if (motivationSystem) {
-                    state.motivationAnalytics = motivationSystem.getMotivationAnalytics();
-                }
-                
-                state.fluentSystem = dataCollector.getAnalytics();
-                state.userName = customerName;
-                
-                console.log('🚀 Stato Completo Tutti i Sistemi:', state);
-                return state;
+            // Debug function
+            window.getMLSystemState = () => {
+                console.log('🤖 ML Insights:', mlManager.getMLInsights());
+                console.log('🧠 Sistema Fluido:', dataCollector.getAnalytics());
             };
         }
 
@@ -2436,16 +2117,10 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
         };
         
-        console.log('🚀 TribuCoach con RACCOLTA NOME inizializzato!');
-        console.log('💡 Sistemi attivi:');
-        console.log('   🔄 Sistema Fluido: ✅');
-        console.log('   👤 Raccolta Nome: ✅');
-        console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
-        console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
-        console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
-        console.log('💡 Ora all\'apertura chat viene chiesto il nome per identificazione in dashboard');
-        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
-            console.log('🤖 Debug: window.getAllSystemsState() per analytics completi');
+        console.log('🚀 TribuCoach con Sistema Fluido' + (mlManager ? ' + ML' : '') + ' inizializzato!');
+        console.log('💡 Testa con: "Ho bisogno di un allenamento" → "Grazie!" → "Marco" → "Perdere peso" → "347 888 1515"');
+        if (mlManager) {
+            console.log('🤖 Debug ML: window.getMLSystemState()');
         }
         
         // Inizializza ML status
