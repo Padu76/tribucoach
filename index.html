@@ -1440,17 +1440,14 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 // Assicurati che messages sia sempre un array
                 const messagesArray = Array.isArray(messages) ? messages : [];
                 
-                const requestData = {
+                // FIX: Invia i parametri DIRETTAMENTE senza oggetto wrapper
+                const result = await chatAndreaFunction({
                     messages: messagesArray,
                     conversationId: conversationId,
                     customerName: customerName,
                     customerPhone: customerPhone,
                     customerEmail: customerEmail
-                };
-                
-                console.log('📤 Dati inviati:', JSON.stringify(requestData, null, 2));
-                
-                const result = await chatAndreaFunction(requestData);
+                });
                 
                 console.log('📥 Risposta ricevuta:', result.data);
                 console.log('📥 Risposta COMPLETA:', JSON.stringify(result.data, null, 2));
