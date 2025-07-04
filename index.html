@@ -1328,7 +1328,7 @@
     <!-- JavaScript per Chat con Backend Vercel -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
         // Configurazione Firebase - SOLO per salvare conversazioni
         const firebaseConfig = {
@@ -1351,6 +1351,7 @@
         let customerEmail = null;
         let messages = [];
         let isOpen = false;
+        let conversationStartTime = null;
 
         // Elementi DOM
         const chatButton = document.getElementById('chatButton');
@@ -1371,6 +1372,7 @@
         // Inizializza chat con messaggio di benvenuto
         function initChat() {
             conversationId = generateConversationId();
+            conversationStartTime = new Date();
             messages = [{
                 role: 'assistant',
                 content: `👋 Ciao! Sono Andrea Padoan in versione digitale!
@@ -1393,6 +1395,9 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             
             renderMessages();
             console.log('💬 Andrea Padoan Chat inizializzato:', conversationId);
+            
+            // Crea record conversazione iniziale
+            saveConversationStart();
         }
 
         // Renderizza messaggi
@@ -1504,10 +1509,10 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     
                     renderMessages();
                     
-                    // Salva in Firestore
-                    await saveConversation(userMessage, response.reply);
+                    // Aggiorna conversazione in Firestore
+                    await updateConversation();
                     
-                    console.log('✅ Messaggio inviato e salvato');
+                    console.log('✅ Messaggio inviato e conversazione aggiornata');
                     
                 } else {
                     messages.push({
@@ -1534,22 +1539,48 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             messageInput.focus();
         }
 
-        // Salva conversazione in Firestore
-        async function saveConversation(userMessage, assistantResponse) {
+        // Salva inizio conversazione (una sola volta)
+        async function saveConversationStart() {
             try {
-                await addDoc(collection(db, 'chatbase_conversations'), {
+                await setDoc(doc(db, 'chatbase_conversations', conversationId), {
                     conversationId: conversationId,
-                    userMessage: userMessage,
-                    assistantResponse: assistantResponse,
-                    timestamp: new Date(),
+                    startTime: conversationStartTime,
+                    lastUpdate: new Date(),
                     sessionId: getSessionId(),
                     userAgent: navigator.userAgent,
-                    messageCount: messages.length / 2
+                    messageCount: 1,
+                    customerName: customerName || null,
+                    customerPhone: customerPhone || null,
+                    customerEmail: customerEmail || null,
+                    status: 'active',
+                    fullConversation: messages
                 });
                 
-                console.log('💾 Conversazione salvata in Firestore');
+                console.log('💾 Conversazione inizializzata in Firestore');
             } catch (error) {
-                console.error('❌ Errore nel salvataggio:', error);
+                console.error('❌ Errore inizializzazione conversazione:', error);
+            }
+        }
+
+        // Aggiorna conversazione esistente (invece di creare nuovi record)
+        async function updateConversation() {
+            try {
+                const conversationRef = doc(db, 'chatbase_conversations', conversationId);
+                
+                await updateDoc(conversationRef, {
+                    lastUpdate: new Date(),
+                    messageCount: messages.length,
+                    customerName: customerName || null,
+                    customerPhone: customerPhone || null,
+                    customerEmail: customerEmail || null,
+                    fullConversation: messages,
+                    lastUserMessage: messages.filter(m => m.role === 'user').pop()?.content || '',
+                    lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || ''
+                });
+                
+                console.log('💾 Conversazione aggiornata in Firestore');
+            } catch (error) {
+                console.error('❌ Errore aggiornamento conversazione:', error);
             }
         }
 
@@ -1609,6 +1640,26 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 chatOverlay.style.display = 'none';
                 chatButton.innerHTML = '💬';
                 chatButton.style.backgroundColor = '#ff6600';
+                
+                // Quando chiudi la chat, marca la conversazione come completata
+                if (conversationId && messages.length > 1) {
+                    markConversationComplete();
+                }
+            }
+        }
+
+        // Marca conversazione come completata
+        async function markConversationComplete() {
+            try {
+                const conversationRef = doc(db, 'chatbase_conversations', conversationId);
+                await updateDoc(conversationRef, {
+                    status: 'completed',
+                    endTime: new Date(),
+                    duration: new Date() - conversationStartTime
+                });
+                console.log('✅ Conversazione marcata come completata');
+            } catch (error) {
+                console.error('❌ Errore marcatura conversazione:', error);
             }
         }
 
