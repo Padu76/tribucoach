@@ -639,6 +639,8 @@
             let conversationHtml = '';
             if (Array.isArray(chat.fullConversation) && chat.fullConversation.length > 0) {
                 
+                console.log('🔍 DEBUG - Conversazione completa:', chat.fullConversation);
+                
                 // Ordina messaggi per timestamp
                 const sortedMessages = [...chat.fullConversation].sort((a, b) => {
                     const timeA = a.timestamp ? new Date(a.timestamp) : new Date(0);
@@ -646,13 +648,18 @@
                     return timeA - timeB;
                 });
                 
+                console.log('🔍 DEBUG - Messaggi ordinati:', sortedMessages);
+                
                 // Statistiche
                 const userMessages = sortedMessages.filter(m => m.role === 'user').length;
                 const assistantMessages = sortedMessages.filter(m => m.role === 'assistant').length;
+                const totalMessages = sortedMessages.length;
+                
+                console.log('🔍 DEBUG - Statistiche:', {userMessages, assistantMessages, totalMessages});
                 
                 conversationHtml = `
                     <div class="conversation-stats">
-                        <div class="stat-pill">📊 ${sortedMessages.length} messaggi totali</div>
+                        <div class="stat-pill">📊 ${totalMessages} messaggi totali</div>
                         <div class="stat-pill">👤 ${userMessages} utente</div>
                         <div class="stat-pill">🤖 ${assistantMessages} Andrea</div>
                     </div>
@@ -660,15 +667,18 @@
                 
                 // Messaggi
                 sortedMessages.forEach((msg, index) => {
+                    console.log(`🔍 DEBUG - Messaggio ${index + 1}:`, msg);
+                    
                     const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('it-IT') : 
                                    `Msg ${index + 1}`;
                     const charCount = msg.content ? msg.content.length : 0;
+                    const role = msg.role || 'unknown';
                     
                     conversationHtml += `
-                        <div class="message-item ${msg.role}">
+                        <div class="message-item ${role}">
                             <div class="message-header">
                                 <div class="message-role">
-                                    ${msg.role === 'user' ? '👤 Cliente' : '🤖 Andrea Padoan'}
+                                    ${role === 'user' ? '👤 Cliente' : role === 'assistant' ? '🤖 Andrea Padoan' : '❓ Sconosciuto'}
                                 </div>
                                 <div class="message-time">${timeStr}</div>
                             </div>
@@ -678,16 +688,19 @@
                             <div class="message-meta">
                                 <span class="message-number">#${index + 1}</span>
                                 <span class="message-length">${charCount} caratteri</span>
+                                <span class="message-role-debug">Ruolo: ${role}</span>
                             </div>
                         </div>
                     `;
                 });
             } else {
+                console.log('🔍 DEBUG - Nessuna conversazione trovata o array vuoto:', chat.fullConversation);
                 conversationHtml = `
                     <div class="no-messages">
                         <div class="empty-icon">💬</div>
                         <h4>Nessun messaggio disponibile</h4>
                         <p>La cronologia della conversazione non è ancora stata registrata.</p>
+                        <p><strong>DEBUG:</strong> fullConversation = ${JSON.stringify(chat.fullConversation)}</p>
                     </div>
                 `;
             }
@@ -927,8 +940,23 @@
         // INIZIALIZZAZIONE
         window.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inizializzazione Dashboard TribuCoach...');
-            loadFirebaseData();
-            setInterval(loadFirebaseData, 60000);
+            
+            // Test connessione Firebase
+            console.log('🔧 Test Firebase - app:', app);
+            console.log('🔧 Test Firebase - db:', db);
+            
+            try {
+                console.log('🔄 Chiamata loadFirebaseData...');
+                loadFirebaseData();
+            } catch (initError) {
+                console.error('❌ ERRORE durante chiamata loadFirebaseData:', initError);
+            }
+            
+            setInterval(function() {
+                console.log('⏰ Auto-refresh chiamato');
+                loadFirebaseData();
+            }, 60000);
+            
             setInterval(updateLastUpdateTime, 5000);
         });
 
@@ -940,6 +968,10 @@
         window.toggleChatFilter = toggleChatFilter;
         window.searchQuizLeads = searchQuizLeads;
         window.searchChatConversations = searchChatConversations;
+        window.showChatDetails = showChatDetails;
+        window.showQuizDetails = showQuizDetails;
+        window.openWhatsApp = openWhatsApp;
+        window.closeModal = closeModal;
     </script>
 
     <style>
