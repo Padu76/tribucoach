@@ -45,6 +45,7 @@
                 // 1. Carica TUTTE le conversazioni chat senza orderBy restrittivo
                 try {
                     console.log('📥 Caricamento conversazioni chat...');
+                    // ✅ RIMUOVO orderBy che potrebbe escludere documenti
                     const chatSnapshot = await getDocs(collection(db, 'chatbase_conversations'));
                     
                     allChatConversations = [];
@@ -84,6 +85,7 @@
                 // 2. Carica TUTTI i quiz results senza orderBy restrittivo
                 try {
                     console.log('📥 Caricamento quiz results...');
+                    // ✅ RIMUOVO orderBy che esclude documenti senza completed_at
                     const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
                     
                     allQuizLeads = [];
@@ -148,7 +150,6 @@
 
                 // 3. Aggiorna dashboard
                 updateDashboard();
-                updateLeadIntelligence(); // 🧠 NUOVO
                 updateConnectionStatus('✅ Dati caricati - Dashboard aggiornata', '#4CAF50');
                 
                 console.log('✅ Dashboard aggiornata:', {
@@ -161,2226 +162,6 @@
             } catch (error) {
                 console.error('❌ Errore caricamento Firebase:', error);
                 updateConnectionStatus('❌ Errore Firebase - Verifica connessione', '#f44336');
-            }
-        }
-
-        // 🧠 LEAD INTELLIGENCE - ALGORITMI PREDITTIVI
-        function calculateAdvancedLeadScore(lead) {
-            let score = lead.lead_score || 0;
-            let factors = {
-                base: score,
-                profile: 0,
-                engagement: 0,
-                budget: 0,
-                timeline: 0,
-                contact: 0
-            };
-            
-            // 1. PROFILO MULTIPLIER
-            const profileScores = {
-                'Champion Pro': 25,
-                'Guerriero della Forza': 20,
-                'Guerriero': 15,
-                'Fitness Enthusiast': 10,
-                'Beginner': 5
-            };
-            factors.profile = profileScores[lead.profile] || 0;
-            
-            // 2. ENGAGEMENT SCORE
-            if (lead.whatsapp && lead.email) factors.engagement = 15;
-            else if (lead.whatsapp || lead.email) factors.engagement = 10;
-            
-            // 3. BUDGET INDICATOR
-            const budgetPatterns = {
-                'alto': 20, 'premium': 20, 'illimitato': 25,
-                'medio': 15, 'standard': 10,
-                'basso': 5, 'limitato': 0
-            };
-            const budgetText = (lead.budget || '').toLowerCase();
-            for (const [pattern, points] of Object.entries(budgetPatterns)) {
-                if (budgetText.includes(pattern)) {
-                    factors.budget = points;
-                    break;
-                }
-            }
-            
-            // 4. TIMELINE FRESHNESS
-            const daysSince = lead.timestamp ? 
-                Math.floor((new Date() - lead.timestamp) / (1000 * 60 * 60 * 24)) : 30;
-            factors.timeline = Math.max(0, 15 - daysSince);
-            
-            // 5. CONTACT READINESS
-            if (lead.whatsapp && lead.whatsapp !== 'Non fornito') factors.contact = 10;
-            
-            const totalScore = Math.min(100, factors.base + factors.profile + 
-                factors.engagement + factors.budget + factors.timeline + factors.contact);
-            
-            return { score: totalScore, factors };
-        }
-        
-        function predictConversionProbability(lead) {
-            const advanced = calculateAdvancedLeadScore(lead);
-            const score = advanced.score;
-            
-            // Modello predittivo basilare
-            let probability = 0;
-            if (score >= 90) probability = 85;
-            else if (score >= 80) probability = 65;
-            else if (score >= 70) probability = 45;
-            else if (score >= 60) probability = 25;
-            else probability = 10;
-            
-            // Aggiustamenti basati su pattern
-            if (lead.profile === 'Champion Pro') probability += 10;
-            if (lead.whatsapp && lead.email) probability += 5;
-            if (lead.goals && lead.goals.toLowerCase().includes('rapidi')) probability += 5;
-            
-            return Math.min(95, probability);
-        }
-        
-        function getLeadPriorityCategory(lead) {
-            const advanced = calculateAdvancedLeadScore(lead);
-            const conversion = predictConversionProbability(lead);
-            
-            if (advanced.score >= 85 && conversion >= 70) {
-                return { level: 'CRITICAL', color: '#ff1744', icon: '🚨' };
-            } else if (advanced.score >= 75 && conversion >= 50) {
-                return { level: 'HIGH', color: '#ff6600', icon: '🔥' };
-            } else if (advanced.score >= 65 && conversion >= 30) {
-                return { level: 'MEDIUM', color: '#ff9800', icon: '⚡' };
-            } else if (advanced.score >= 50) {
-                return { level: 'LOW', color: '#4CAF50', icon: '🌱' };
-            } else {
-                return { level: 'COLD', color: '#666', icon: '❄️' };
-            }
-        }
-        
-        function generateLeadInsights() {
-            const insights = [];
-            const criticalLeads = [];
-            const emergingPatterns = [];
-            let totalValue = 0;
-            
-            // Analizza tutti i lead
-            for (let i = 0; i < allQuizLeads.length; i++) {
-                const lead = allQuizLeads[i];
-                const advanced = calculateAdvancedLeadScore(lead);
-                const conversion = predictConversionProbability(lead);
-                const priority = getLeadPriorityCategory(lead);
-                
-                lead.advancedScore = advanced.score;
-                lead.conversionProbability = conversion;
-                lead.priorityCategory = priority;
-                
-                if (priority.level === 'CRITICAL') {
-                    criticalLeads.push(lead);
-                    totalValue += 1000; // Valore stimato per lead critico
-                } else if (priority.level === 'HIGH') {
-                    totalValue += 600;
-                }
-                
-                // Pattern detection
-                if (lead.profile === 'Champion Pro' && conversion > 70) {
-                    emergingPatterns.push('Champion Pro ad alta conversione');
-                }
-            }
-            
-            return {
-                criticalCount: criticalLeads.length,
-                totalPredictedValue: totalValue,
-                averageConversion: allQuizLeads.length > 0 ? 
-                    Math.round(allQuizLeads.reduce((sum, lead) => 
-                        sum + (lead.conversionProbability || 0), 0) / allQuizLeads.length) : 0,
-                emergingPatterns: [...new Set(emergingPatterns)],
-                recommendations: generateSmartRecommendations(criticalLeads)
-            };
-        }
-        
-        function generateSmartRecommendations(criticalLeads) {
-            const recommendations = [];
-            
-            if (criticalLeads.length > 0) {
-                recommendations.push({
-                    type: 'URGENT',
-                    icon: '🚨',
-                    title: 'Azione Immediata Richiesta',
-                    message: `${criticalLeads.length} lead critici necessitano contatto entro 24h`
-                });
-            }
-            
-            const highBudgetLeads = allQuizLeads.filter(lead => 
-                (lead.budget || '').toLowerCase().includes('alto') || 
-                (lead.budget || '').toLowerCase().includes('premium')
-            ).length;
-            
-            if (highBudgetLeads > 2) {
-                recommendations.push({
-                    type: 'OPPORTUNITY',
-                    icon: '💰',
-                    title: 'Opportunità Premium',
-                    message: `${highBudgetLeads} lead con budget elevato identificati`
-                });
-            }
-            
-            const recentLeads = allQuizLeads.filter(lead => {
-                const daysSince = lead.timestamp ? 
-                    Math.floor((new Date() - lead.timestamp) / (1000 * 60 * 60 * 24)) : 30;
-                return daysSince <= 1;
-            }).length;
-            
-            if (recentLeads > 0) {
-                recommendations.push({
-                    type: 'TIMING',
-                    icon: '⏰',
-                    title: 'Strike While Hot',
-                    message: `${recentLeads} lead raccolti nelle ultime 24h - contatto ottimale`
-                });
-            }
-            
-            return recommendations;
-        }
-
-        // 🧠 AGGIORNA LEAD INTELLIGENCE SECTION
-        function updateLeadIntelligence() {
-            const insights = generateLeadInsights();
-            
-            // Aggiorna metriche intelligence
-            const intelligenceMetrics = document.querySelectorAll('.intelligence-section .metric-card p');
-            if (intelligenceMetrics[0]) intelligenceMetrics[0].textContent = insights.criticalCount;
-            if (intelligenceMetrics[1]) intelligenceMetrics[1].textContent = insights.averageConversion + '%';
-            if (intelligenceMetrics[2]) intelligenceMetrics[2].textContent = '€' + insights.totalPredictedValue.toLocaleString();
-            
-            // Aggiorna top leads prioritari
-            updateTopPriorityLeads();
-            
-            // Aggiorna raccomandazioni smart
-            updateSmartRecommendations(insights.recommendations);
-            
-            console.log('🧠 Lead Intelligence aggiornata:', insights);
-        }
-        
-        function updateTopPriorityLeads() {
-            const container = document.querySelector('.priority-leads-grid');
-            if (!container) return;
-            
-            // Ordina lead per priorità e score
-            const priorityLeads = allQuizLeads
-                .map(lead => {
-                    const advanced = calculateAdvancedLeadScore(lead);
-                    const conversion = predictConversionProbability(lead);
-                    const priority = getLeadPriorityCategory(lead);
-                    return { ...lead, advanced, conversion, priority };
-                })
-                .sort((a, b) => b.advanced.score - a.advanced.score)
-                .slice(0, 6); // Top 6
-            
-            if (priorityLeads.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🧠</div>
-                        <h3>Lead Intelligence in attesa di dati</h3>
-                        <p>L'analisi predittiva si attiverà con i primi lead raccolti</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < priorityLeads.length; i++) {
-                const lead = priorityLeads[i];
-                const priority = lead.priority;
-                const date = lead.timestamp ? lead.timestamp.toLocaleDateString('it-IT', {
-                    day: '2-digit',
-                    month: '2-digit'
-                }) : 'N/A';
-                
-                html += `
-                    <div class="priority-lead-card priority-${priority.level.toLowerCase()}">
-                        <div class="priority-header">
-                            <div class="detail-row">
-                                <span class="label">Inizio:</span>
-                                <span class="value">${chat.startTime ? chat.startTime.toLocaleString('it-IT') : 'N/A'}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Ultimo Aggiornamento:</span>
-                                <span class="value">${chat.lastUpdate ? chat.lastUpdate.toLocaleString('it-IT') : 'N/A'}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">ID Conversazione:</span>
-                                <span class="value monospace">${chat.id}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="detail-section">
-                    <h4>💬 Timeline Conversazione (Ultimi 10 messaggi)</h4>
-                    <div class="conversation-timeline">
-                        ${conversationHtml}
-                    </div>
-                </div>
-                
-                <div class="modal-actions">
-                    ${chat.customerPhone ? `
-                        <button class="action-button whatsapp large" onclick="openWhatsApp('${chat.customerPhone}')">
-                            📱 Contatta su WhatsApp
-                        </button>
-                    ` : ''}
-                    <button class="action-button secondary large" onclick="closeModal()">
-                        ✖️ Chiudi
-                    </button>
-                </div>
-            `;
-            
-            modal.style.display = 'flex';
-        };
-
-        // Gestione dropdown filtri
-        function toggleQuizFilter() {
-            toggleDropdown('quiz-filter-options', 0);
-        }
-
-        function toggleChatFilter() {
-            toggleDropdown('chat-filter-options', 1);
-        }
-
-        function toggleDropdown(optionsId, buttonIndex) {
-            const options = document.getElementById(optionsId);
-            const buttons = document.querySelectorAll('.filter-button');
-            const button = buttons[buttonIndex];
-            
-            if (options.classList.contains('show')) {
-                options.classList.remove('show');
-                button.classList.remove('active');
-            } else {
-                // Chiudi altri dropdown
-                const allOptions = document.querySelectorAll('.filter-options');
-                const allButtons = document.querySelectorAll('.filter-button');
-                
-                for (let i = 0; i < allOptions.length; i++) {
-                    allOptions[i].classList.remove('show');
-                }
-                for (let i = 0; i < allButtons.length; i++) {
-                    allButtons[i].classList.remove('active');
-                }
-                
-                options.classList.add('show');
-                button.classList.add('active');
-            }
-        }
-
-        // Chiudi dropdown quando clicchi fuori
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.filter-dropdown')) {
-                const allOptions = document.querySelectorAll('.filter-options');
-                const allButtons = document.querySelectorAll('.filter-button');
-                
-                for (let i = 0; i < allOptions.length; i++) {
-                    allOptions[i].classList.remove('show');
-                }
-                for (let i = 0; i < allButtons.length; i++) {
-                    allButtons[i].classList.remove('active');
-                }
-            }
-        });
-
-        // Inizializzazione
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Inizializzazione Dashboard TribuCoach...');
-            loadFirebaseData();
-            
-            // Auto-refresh ogni 60 secondi
-            setInterval(loadFirebaseData, 60000);
-            
-            // Aggiorna ora ogni 5 secondi
-            setInterval(updateLastUpdateTime, 5000);
-        });
-
-        // Esponi funzioni globalmente
-        window.loadFirebaseData = loadFirebaseData;
-        window.applyQuizFilter = applyQuizFilter;
-        window.applyChatFilter = applyChatFilter;
-        window.toggleQuizFilter = toggleQuizFilter;
-        window.toggleChatFilter = toggleChatFilter;
-        window.searchQuizLeads = searchQuizLeads;
-        window.searchChatConversations = searchChatConversations;
-        window.toggleQuizSelection = toggleQuizSelection;
-        window.toggleChatSelection = toggleChatSelection;
-        window.selectAllQuiz = selectAllQuiz;
-        window.deselectAllQuiz = deselectAllQuiz;
-        window.selectAllChats = selectAllChats;
-        window.deselectAllChats = deselectAllChats;
-        window.exportSelectedQuiz = exportSelectedQuiz;
-        window.exportSelectedChats = exportSelectedChats;
-        window.executeRecommendation = executeRecommendation;
-    </script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
-            color: #fff;
-            min-height: 100vh;
-            line-height: 1.4;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.8rem;
-            z-index: 1000;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .header {
-            background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
-            padding: 25px;
-            border-bottom: 3px solid #ff6600;
-            backdrop-filter: blur(20px);
-            margin-top: 40px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header h1 {
-            color: #ff6600;
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
-        }
-
-        .header p {
-            color: #ccc;
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .header .refresh-button {
-            position: absolute;
-            top: 25px;
-            right: 25px;
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-        }
-
-        .header .refresh-button:hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        .dashboard {
-            padding: 30px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        .dashboard-section {
-            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            margin-bottom: 35px;
-            border: 1px solid #404040;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
-        }
-
-        .dashboard-section h2 {
-            color: #ff6600;
-            font-size: 1.9rem;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #444;
-            padding-bottom: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .section-header h2 {
-            margin-bottom: 0;
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        /* 🧠 LEAD INTELLIGENCE STYLES */
-        .intelligence-section {
-            background: linear-gradient(135deg, #1a0f2e 0%, #2d1b3d 50%, #1a0f2e 100%);
-            border: 2px solid #6a4c93;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .intelligence-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #6a4c93, #9b59b6, #6a4c93);
-        }
-
-        .intelligence-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-top: 25px;
-        }
-
-        .intelligence-card {
-            background: linear-gradient(135deg, #2a1f3d, #3d2f52);
-            border: 1px solid #6a4c93;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(106, 76, 147, 0.2);
-        }
-
-        .intelligence-card h3 {
-            color: #9b59b6;
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* PRIORITY LEADS GRID */
-        .priority-leads-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .priority-lead-card {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 2px solid #444;
-            border-radius: 12px;
-            padding: 20px;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .priority-lead-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .priority-lead-card.priority-critical {
-            border-color: #ff1744;
-            box-shadow: 0 8px 25px rgba(255, 23, 68, 0.3);
-        }
-
-        .priority-lead-card.priority-critical::before {
-            background: linear-gradient(180deg, #ff1744, #d50000);
-        }
-
-        .priority-lead-card.priority-high {
-            border-color: #ff6600;
-            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.2);
-        }
-
-        .priority-lead-card.priority-high::before {
-            background: linear-gradient(180deg, #ff6600, #e65100);
-        }
-
-        .priority-lead-card.priority-medium {
-            border-color: #ff9800;
-        }
-
-        .priority-lead-card.priority-medium::before {
-            background: linear-gradient(180deg, #ff9800, #f57500);
-        }
-
-        .priority-lead-card.priority-low {
-            border-color: #4CAF50;
-        }
-
-        .priority-lead-card.priority-low::before {
-            background: linear-gradient(180deg, #4CAF50, #388e3c);
-        }
-
-        .priority-lead-card.priority-cold {
-            border-color: #666;
-            opacity: 0.8;
-        }
-
-        .priority-lead-card.priority-cold::before {
-            background: linear-gradient(180deg, #666, #424242);
-        }
-
-        .priority-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .priority-badge {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .lead-score-advanced {
-            background: linear-gradient(135deg, #9b59b6, #6a4c93);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .lead-info-compact {
-            margin-bottom: 15px;
-        }
-
-        .lead-name-compact {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #fff;
-            margin-bottom: 4px;
-        }
-
-        .lead-profile-text {
-            font-size: 0.85rem;
-            color: #ccc;
-            opacity: 0.8;
-        }
-
-        .prediction-metrics {
-            display: grid;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .prediction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.85rem;
-        }
-
-        .prediction-label {
-            color: #ccc;
-        }
-
-        .prediction-value {
-            color: #9b59b6;
-            font-weight: 600;
-        }
-
-        .quick-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .quick-action {
-            background: linear-gradient(135deg, #444, #555);
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
-
-        .quick-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .quick-action.whatsapp {
-            background: linear-gradient(135deg, #25D366, #20b055);
-        }
-
-        .quick-action.details {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-        }
-
-        /* SMART RECOMMENDATIONS */
-        .recommendations-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .recommendation-item {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            transition: all 0.3s ease;
-            border-left: 4px solid #666;
-        }
-
-        .recommendation-item.urgent {
-            border-left-color: #ff1744;
-            background: linear-gradient(135deg, #2d1515, #3d1f1f);
-        }
-
-        .recommendation-item.opportunity {
-            border-left-color: #ff6600;
-            background: linear-gradient(135deg, #2d1f0f, #3d2a15);
-        }
-
-        .recommendation-item.timing {
-            border-left-color: #2196F3;
-            background: linear-gradient(135deg, #0f1a2d, #15243d);
-        }
-
-        .recommendation-item.info {
-            border-left-color: #9b59b6;
-            background: linear-gradient(135deg, #1f152d, #2a1f3d);
-        }
-
-        .recommendation-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        .recommendation-icon {
-            font-size: 2rem;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        .recommendation-content {
-            flex: 1;
-        }
-
-        .recommendation-content h4 {
-            color: #fff;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .recommendation-content p {
-            color: #ccc;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            margin: 0;
-        }
-
-        .recommendation-action {
-            min-width: 100px;
-        }
-
-        .action-btn-small {
-            background: linear-gradient(135deg, #9b59b6, #6a4c93);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .action-btn-small:hover {
-            background: linear-gradient(135deg, #8e44ad, #5a367c);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(155, 89, 182, 0.3);
-        }
-
-        /* 📥 SELEZIONE MULTIPLA E EXPORT */
-        .selection-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 20px 0;
-            padding: 15px 20px;
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border-radius: 12px;
-            border: 1px solid #444;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .selection-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .selection-btn {
-            background: linear-gradient(135deg, #666, #555);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .selection-btn.select-all {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-        }
-
-        .selection-btn.select-all:hover {
-            background: linear-gradient(135deg, #45a049, #3d8b40);
-            transform: translateY(-1px);
-        }
-
-        .selection-btn.deselect-all {
-            background: linear-gradient(135deg, #f44336, #d32f2f);
-        }
-
-        .selection-btn.deselect-all:hover {
-            background: linear-gradient(135deg, #d32f2f, #b71c1c);
-            transform: translateY(-1px);
-        }
-
-        .selection-counter {
-            background: rgba(255, 102, 0, 0.2);
-            color: #ff9933;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: 1px solid rgba(255, 102, 0, 0.3);
-        }
-
-        .export-btn {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .export-btn:not(:disabled):hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        .export-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        /* CHECKBOX PERSONALIZZATI */
-        .selection-checkbox {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-        }
-
-        .selection-checkbox input[type="checkbox"] {
-            display: none;
-        }
-
-        .selection-checkbox label {
-            display: block;
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #333, #555);
-            border: 2px solid #666;
-            border-radius: 6px;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.3s ease;
-        }
-
-        .selection-checkbox label:hover {
-            border-color: #ff6600;
-            background: linear-gradient(135deg, #444, #666);
-        }
-
-        .selection-checkbox input[type="checkbox"]:checked + label {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            border-color: #ff6600;
-        }
-
-        .selection-checkbox input[type="checkbox"]:checked + label::after {
-            content: '✓';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        /* STATO SELEZIONATO CARD */
-        .lead-card.selected,
-        .chat-card.selected {
-            border: 2px solid #ff6600;
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a, rgba(255, 102, 0, 0.1));
-            transform: scale(1.02);
-            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.3);
-        }
-
-        .lead-card,
-        .chat-card {
-            position: relative;
-        }
-
-        /* 🎨 UX OTTIMIZZATA - SEARCH + CONTROLS */
-        .section-controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .search-container {
-            position: relative;
-            flex: 1;
-            min-width: 300px;
-            max-width: 400px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 20px 12px 45px;
-            background: linear-gradient(135deg, #333, #404040);
-            border: 2px solid #555;
-            border-radius: 25px;
-            color: #fff;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .search-input:focus {
-            border-color: #ff6600;
-            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
-            background: linear-gradient(135deg, #2a2a2a, #333);
-            transform: scale(1.02);
-        }
-
-        .search-input::placeholder {
-            color: #999;
-            font-style: italic;
-        }
-
-        .search-container::before {
-            content: '🔍';
-            position: absolute;
-            left: 18px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.1rem;
-            opacity: 0.7;
-            z-index: 1;
-        }
-
-        /* FILTRI DROPDOWN MIGLIORATI */
-        .filter-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .filter-button {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
-            min-width: 130px;
-            justify-content: center;
-        }
-
-        .filter-button:hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
-        }
-
-        .filter-button.active {
-            background: linear-gradient(135deg, #ff8533, #ff6600);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        .dropdown-arrow {
-            font-size: 0.8rem;
-            transition: transform 0.3s ease;
-        }
-
-        .filter-button.active .dropdown-arrow {
-            transform: rotate(180deg);
-        }
-
-        .filter-options {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: linear-gradient(135deg, #2a2a2a, #333);
-            border: 1px solid #444;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            min-width: 150px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .filter-options.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(5px);
-        }
-
-        .filter-option {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 8px;
-            margin: 4px;
-            font-weight: 500;
-            color: #ccc;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .filter-option:hover {
-            background: rgba(255, 102, 0, 0.2);
-            color: #ff9933;
-            transform: translateX(4px);
-        }
-
-        .filter-option::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background: #ff6600;
-            transform: scaleY(0);
-            transition: transform 0.2s ease;
-        }
-
-        .filter-option:hover::before {
-            transform: scaleY(1);
-        }
-
-        /* METRICHE PRINCIPALI */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 35px;
-        }
-
-        .metric-card {
-            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            border: 1px solid #404040;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff6600, #ff9933);
-        }
-
-        .metric-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
-        }
-
-        .metric-card h3 {
-            color: #ff9933;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-card p {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* BUSINESS INSIGHTS GRID */
-        .business-insights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-        }
-
-        .insight-card {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-            padding: 25px;
-            border-radius: 15px;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .insight-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.15);
-        }
-
-        .insight-card h4 {
-            color: #ff6600;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .insight-card .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #4CAF50;
-            margin: 15px 0;
-        }
-
-        .insight-card .metric-subtitle {
-            color: #ccc;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        /* EMPTY STATES */
-        .empty-state {
-            grid-column: 1/-1;
-            text-align: center;
-            padding: 60px 20px;
-            background: linear-gradient(135deg, #2a2a2a, #333);
-            border-radius: 15px;
-            border: 2px dashed #444;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.7;
-        }
-
-        .empty-state h3 {
-            color: #ff6600;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
-        }
-
-        .empty-state p {
-            color: #ccc;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
-        }
-
-        .reload-btn {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
-        }
-
-        .reload-btn:hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
-        }
-
-        /* QUIZ LEADS GRID */
-        .quiz-leads-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-            gap: 25px;
-            margin: 25px 0;
-        }
-
-        .lead-card {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 1px solid #444;
-            border-radius: 15px;
-            padding: 25px;
-            position: relative;
-            transition: all 0.3s ease;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .lead-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
-        }
-
-        .lead-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .lead-name {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #ff6600;
-            margin-bottom: 8px;
-        }
-
-        .lead-profile-badge {
-            background: rgba(255, 102, 0, 0.2);
-            color: #ff9933;
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 1px solid rgba(255, 102, 0, 0.3);
-        }
-
-        .lead-score-section {
-            text-align: right;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .lead-score {
-            padding: 10px 18px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            min-width: 80px;
-        }
-
-        .score-high { background: #4CAF50; color: white; }
-        .score-medium { background: #ff9800; color: white; }
-        .score-low { background: #f44336; color: white; }
-
-        .priority-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-align: center;
-        }
-
-        .priority-high { background: #f44336; color: white; }
-        .priority-medium { background: #ff9800; color: white; }
-        .priority-low { background: #666; color: #ccc; }
-
-        .lead-details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 20px 0;
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .detail-icon {
-            font-size: 1rem;
-            width: 20px;
-        }
-
-        .detail-value {
-            color: #eee;
-            font-size: 0.9rem;
-            flex: 1;
-        }
-
-        /* CHAT GRID */
-        .chat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 25px;
-            margin: 25px 0;
-        }
-
-        .chat-card {
-            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
-            border: 1px solid #444;
-            border-radius: 15px;
-            padding: 25px;
-            border-left: 5px solid #2196F3;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-
-        .chat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(33, 150, 243, 0.2);
-        }
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .chat-id {
-            background: #333;
-            color: #2196F3;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .status-badge.active { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
-        .status-badge.completed { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
-        .status-badge.abandoned { background: rgba(244, 67, 54, 0.2); color: #f44336; }
-        .status-badge.unknown { background: rgba(158, 158, 158, 0.2); color: #999; }
-
-        .chat-client {
-            margin: 15px 0;
-        }
-
-        .client-name {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #2196F3;
-            margin-bottom: 5px;
-        }
-
-        .client-contact {
-            color: #ccc;
-            font-size: 0.9rem;
-        }
-
-        .chat-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 15px 0;
-            padding: 15px;
-            background: rgba(33, 150, 243, 0.1);
-            border-radius: 10px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label {
-            color: #ccc;
-            font-size: 0.85rem;
-        }
-
-        .stat-value {
-            color: #2196F3;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-
-        .chat-preview {
-            background: #333;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            border-left: 3px solid #2196F3;
-        }
-
-        .preview-label {
-            color: #aaa;
-            font-size: 0.8rem;
-            margin-bottom: 5px;
-        }
-
-        .preview-text {
-            color: #eee;
-            font-style: italic;
-            line-height: 1.4;
-        }
-
-        .chat-meta {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-            font-size: 0.85rem;
-            color: #aaa;
-        }
-
-        /* ACTIONS */
-        .lead-actions, .chat-actions {
-            margin-top: 20px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .action-button {
-            background: linear-gradient(135deg, #ff6600, #ff8533);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .action-button:hover {
-            background: linear-gradient(135deg, #ff8533, #ffaa66);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
-        }
-
-        .action-button.primary {
-            background: linear-gradient(135deg, #2196F3, #1976D2);
-        }
-
-        .action-button.primary:hover {
-            background: linear-gradient(135deg, #1976D2, #1565C0);
-        }
-
-        .action-button.whatsapp {
-            background: linear-gradient(135deg, #25D366, #20b055);
-        }
-
-        .action-button.whatsapp:hover {
-            background: linear-gradient(135deg, #20b055, #1ea049);
-        }
-
-        .action-button.secondary {
-            background: linear-gradient(135deg, #666, #555);
-        }
-
-        .action-button.secondary:hover {
-            background: linear-gradient(135deg, #777, #666);
-        }
-
-        .action-button.large {
-            padding: 15px 25px;
-            font-size: 1rem;
-        }
-
-        /* INSIGHTS LIST */
-        .insights-list {
-            list-style: none;
-            padding: 0;
-            display: grid;
-            gap: 15px;
-        }
-
-        .insights-list li {
-            background: linear-gradient(135deg, #333, #404040);
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 5px solid #ff6600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        .insights-list li:hover {
-            transform: translateX(5px);
-            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.2);
-        }
-
-        .insights-list strong {
-            color: #ff9933;
-            font-weight: 700;
-        }
-
-        .insights-list .highlight {
-            color: #4CAF50;
-            font-weight: bold;
-            background: rgba(76, 175, 80, 0.2);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        /* MODAL STYLES MIGLIORATI */
-        .modal {
-            position: fixed;
-            z-index: 1001;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #2a2a2a, #333333);
-            padding: 35px;
-            border: 1px solid #555;
-            border-radius: 20px;
-            width: 95%;
-            max-width: 900px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            position: relative;
-            animation: modalSlideIn 0.3s ease-out;
-        }
-
-        @keyframes modalSlideIn {
-            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .close-button {
-            color: #aaa;
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: color 0.3s;
-            z-index: 10;
-        }
-
-        .close-button:hover {
-            color: #fff;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #444;
-        }
-
-        .modal-header h2 {
-            color: #ff6600;
-            font-size: 1.8rem;
-            margin: 0;
-        }
-
-        .lead-score-large {
-            padding: 15px 25px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 1.5rem;
-            min-width: 100px;
-            text-align: center;
-        }
-
-        .details-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .detail-section {
-            background: rgba(26, 26, 26, 0.5);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #444;
-        }
-
-        .detail-section h4 {
-            color: #ff9933;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 8px;
-        }
-
-        .detail-rows {
-            display: grid;
-            gap: 12px;
-        }
-
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-
-        .detail-row .label {
-            color: #ccc;
-            font-weight: 600;
-            min-width: 100px;
-        }
-
-        .detail-row .value {
-            color: #fff;
-            text-align: right;
-            flex: 1;
-        }
-
-        .detail-row .value.monospace {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #64B5F6;
-        }
-
-        .conversation-timeline {
-            max-height: 400px;
-            overflow-y: auto;
-            background: #1a1a1a;
-            border-radius: 10px;
-            padding: 15px;
-        }
-
-        .message-item {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 3px solid #666;
-        }
-
-        .message-item.user {
-            background: rgba(255, 102, 0, 0.1);
-            border-left-color: #ff6600;
-        }
-
-        .message-item.assistant {
-            background: rgba(33, 150, 243, 0.1);
-            border-left-color: #2196F3;
-        }
-
-        .message-role {
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-            opacity: 0.8;
-        }
-
-        .message-content {
-            color: #eee;
-            line-height: 1.4;
-            margin-bottom: 5px;
-        }
-
-        .message-time {
-            font-size: 0.7rem;
-            color: #999;
-            text-align: right;
-        }
-
-        .no-messages {
-            text-align: center;
-            color: #999;
-            font-style: italic;
-            padding: 30px;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-        }
-
-        /* SCROLLBAR STYLING */
-        .modal-content::-webkit-scrollbar,
-        .conversation-timeline::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .modal-content::-webkit-scrollbar-track,
-        .conversation-timeline::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-
-        .modal-content::-webkit-scrollbar-thumb,
-        .conversation-timeline::-webkit-scrollbar-thumb {
-            background: #ff6600;
-            border-radius: 3px;
-        }
-
-        /* RESPONSIVE DESIGN MIGLIORATO */
-        @media (max-width: 768px) {
-            .dashboard { 
-                padding: 20px 15px; 
-            }
-            
-            .quiz-leads-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .chat-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .business-insights-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .metrics-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .section-header { 
-                flex-direction: column; 
-                align-items: flex-start; 
-            }
-
-            .intelligence-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .priority-leads-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .recommendation-item {
-                flex-direction: column;
-                text-align: center;
-                gap: 10px;
-            }
-            
-            .recommendation-action {
-                min-width: auto;
-                width: 100%;
-            }
-            
-            .action-btn-small {
-                width: 100%;
-            }
-
-            .section-controls {
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .selection-controls {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .selection-actions {
-                justify-content: center;
-            }
-
-            .search-container {
-                min-width: auto;
-                max-width: none;
-            }
-
-            .lead-details-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chat-stats {
-                grid-template-columns: 1fr;
-            }
-
-            .details-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                width: 98%;
-                padding: 20px;
-            }
-
-            .modal-header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .modal-actions {
-                flex-direction: column;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                padding: 20px 15px;
-            }
-
-            .header h1 {
-                font-size: 1.8rem;
-            }
-
-            .header .refresh-button {
-                position: static;
-                margin-top: 15px;
-                width: 100%;
-            }
-
-            .metric-card p {
-                font-size: 2.2rem;
-            }
-
-            .lead-card-header,
-            .chat-header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .chat-meta {
-                flex-direction: column;
-                gap: 5px;
-                text-align: center;
-            }
-
-            .search-input {
-                padding: 10px 15px 10px 40px;
-                font-size: 0.85rem;
-            }
-
-            .search-container::before {
-                left: 15px;
-                font-size: 1rem;
-            }
-        }
-
-        /* LOADING STATES MIGLIORATI */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(42, 42, 42, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-            z-index: 100;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #333;
-            border-top: 4px solid #ff6600;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #ff6600;
-            font-weight: 600;
-            margin-top: 15px;
-            font-size: 0.9rem;
-        }
-
-        /* MICRO ANIMAZIONI UX */
-        .metric-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.1), transparent);
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            50% { left: 100%; }
-            100% { left: 100%; }
-        }
-
-        .lead-card::before, .chat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255, 102, 0, 0.05), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 15px;
-            pointer-events: none;
-        }
-
-        .lead-card:hover::before, .chat-card:hover::before {
-            opacity: 1;
-        }
-    </style>
-</head>
-<body>
-    <div class="connection-status">🔄 Inizializzazione Dashboard TribuCoach...</div>
-
-    <header class="header">
-        <h1>📈 TribuCoach Business Intelligence</h1>
-        <p>Dashboard in tempo reale - Sistema unificato Quiz + Chat Andrea Padoan</p>
-        <button class="refresh-button" onclick="loadFirebaseData()">🔄 Aggiorna Dati</button>
-    </header>
-
-    <div class="dashboard">
-
-        <!-- METRICHE PRINCIPALI -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <h3>🎯 Totale Lead Quiz</h3>
-                <p>0</p>
-            </div>
-            <div class="metric-card">
-                <h3>⭐ Score Medio Lead</h3>
-                <p>0%</p>
-            </div>
-            <div class="metric-card">
-                <h3>💬 Chat Andrea Attive</h3>
-                <p>0</p>
-            </div>
-            <div class="metric-card">
-                <h3>🔥 Lead Premium (≥80%)</h3>
-                <p>0</p>
-            </div>
-        </div>
-
-        <!-- BUSINESS INSIGHTS -->
-        <div class="dashboard-section">
-            <h2>🎯 Business Intelligence - Opportunità</h2>
-            
-            <div class="business-insights-grid">
-                <div class="insight-card">
-                    <h4>🔥 Hot Leads (Score ≥80%)</h4>
-                    <div class="metric-value">0</div>
-                    <div class="metric-subtitle">Lead pronti per contatto immediato</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>🌡️ Warm Leads (Score 60-79%)</h4>
-                    <div class="metric-value">0</div>
-                    <div class="metric-subtitle">Lead qualificati per nurturing</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>💰 Valore Potenziale</h4>
-                    <div class="metric-value">€0</div>
-                    <div class="metric-subtitle">Stima revenue da hot leads</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📊 Tasso Conversione</h4>
-                    <div class="metric-value">0%</div>
-                    <div class="metric-subtitle">Lead qualificati su totale</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📅 Attività Oggi</h4>
-                    <div class="metric-value">0</div>
-                    <div class="metric-subtitle">Nuovi lead e chat oggi</div>
-                </div>
-
-                <div class="insight-card">
-                    <h4>📈 Trend Crescita</h4>
-                    <div class="metric-value">+0%</div>
-                    <div class="metric-subtitle">Crescita settimanale</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LEAD INTELLIGENCE -->
-        <div class="dashboard-section intelligence-section">
-            <h2>🧠 Lead Intelligence - Scoring Avanzato & Predictive</h2>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <h3>🚨 Lead Critici (>85%)</h3>
-                    <p>0</p>
-                </div>
-                <div class="metric-card">
-                    <h3>🎯 Conversione Media Predetta</h3>
-                    <p>0%</p>
-                </div>
-                <div class="metric-card">
-                    <h3>💰 Valore Predetto Totale</h3>
-                    <p>€0</p>
-                </div>
-                <div class="metric-card">
-                    <h3>🤖 AI Status</h3>
-                    <p style="font-size: 1.8rem;">🟢 ATTIVO</p>
-                </div>
-            </div>
-            
-            <div class="intelligence-grid">
-                <!-- TOP PRIORITY LEADS -->
-                <div class="intelligence-card">
-                    <h3>🎯 Top Priority Leads (Score Avanzato)</h3>
-                    <div class="priority-leads-grid">
-                        <div class="empty-state">
-                            <div class="empty-icon">🧠</div>
-                            <h4>Analisi Predittiva in Corso...</h4>
-                            <p>L'AI sta elaborando i pattern dei lead</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- SMART RECOMMENDATIONS -->
-                <div class="intelligence-card">
-                    <h3>💡 Smart Recommendations (AI-Powered)</h3>
-                    <div class="recommendations-list">
-                        <div class="recommendation-item info">
-                            <div class="recommendation-icon">🔄</div>
-                            <div class="recommendation-content">
-                                <h4>Sistema AI in Inizializzazione</h4>
-                                <p>Le raccomandazioni intelligenti appariranno dopo l'analisi dei primi lead.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LEAD QUIZ -->
-        <div class="dashboard-section">
-            <div class="section-header">
-                <h2>🥇 Lead Quiz - Sistema Profiling</h2>
-                <div class="section-controls">
-                    <div class="search-container">
-                        <input type="text" id="quiz-search" placeholder="Cerca lead (nome, email, profilo...)" 
-                               onkeyup="searchQuizLeads(this.value)" class="search-input">
-                    </div>
-                    <div class="filter-dropdown">
-                        <button class="filter-button" onclick="toggleQuizFilter()">
-                            <span id="quiz-filter-current">Tutti</span> 
-                            <span class="dropdown-arrow">▼</span>
-                        </button>
-                        <div class="filter-options" id="quiz-filter-options">
-                            <div class="filter-option" onclick="applyQuizFilter('all')">📊 Tutti</div>
-                            <div class="filter-option" onclick="applyQuizFilter('today')">📅 Oggi</div>
-                            <div class="filter-option" onclick="applyQuizFilter('week')">📆 Settimana</div>
-                            <div class="filter-option" onclick="applyQuizFilter('month')">🗓️ Mese</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- SELEZIONE MULTIPLA QUIZ -->
-            <div class="selection-controls">
-                ="priority-badge" style="background: ${priority.color}">
-                                ${priority.icon} ${priority.level}
-                            </div>
-                            <div class="lead-score-advanced">${Math.round(lead.advanced.score)}%</div>
-                        </div>
-                        
-                        <div class="lead-info-compact">
-                            <div class="lead-name-compact">
-                                ${getProfileIcon(lead.profile)} ${lead.name || 'Lead Anonimo'}
-                            </div>
-                            <div class="lead-profile-text">${lead.profile || 'Profilo non specificato'}</div>
-                        </div>
-                        
-                        <div class="prediction-metrics">
-                            <div class="prediction-item">
-                                <span class="prediction-label">🎯 Conversione:</span>
-                                <span class="prediction-value">${lead.conversion}%</span>
-                            </div>
-                            <div class="prediction-item">
-                                <span class="prediction-label">💰 Budget:</span>
-                                <span class="prediction-value">${lead.budget || 'N/A'}</span>
-                            </div>
-                            <div class="prediction-item">
-                                <span class="prediction-label">📅 Data:</span>
-                                <span class="prediction-value">${date}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="quick-actions">
-                            ${lead.whatsapp ? `
-                                <button class="quick-action whatsapp" onclick="openWhatsApp('${lead.whatsapp}')" title="Contatta su WhatsApp">
-                                    📱
-                                </button>
-                            ` : ''}
-                            <button class="quick-action details" onclick="showQuizDetails('${lead.id}')" title="Dettagli completi">
-                                👁️
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
-        
-        function updateSmartRecommendations(recommendations) {
-            const container = document.querySelector('.recommendations-list');
-            if (!container) return;
-            
-            if (recommendations.length === 0) {
-                container.innerHTML = `
-                    <div class="recommendation-item info">
-                        <div class="recommendation-icon">💡</div>
-                        <div class="recommendation-content">
-                            <h4>Sistema di Intelligence Attivo</h4>
-                            <p>Le raccomandazioni AI appariranno automaticamente basandosi sui pattern dei lead.</p>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            let html = '';
-            for (let i = 0; i < recommendations.length; i++) {
-                const rec = recommendations[i];
-                html += `
-                    <div class="recommendation-item ${rec.type.toLowerCase()}">
-                        <div class="recommendation-icon">${rec.icon}</div>
-                        <div class="recommendation-content">
-                            <h4>${rec.title}</h4>
-                            <p>${rec.message}</p>
-                        </div>
-                        <div class="recommendation-action">
-                            <button class="action-btn-small" onclick="executeRecommendation('${rec.type}')">
-                                Esegui ⚡
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.innerHTML = html;
-        }
-        
-        // Esegui raccomandazione
-        function executeRecommendation(type) {
-            switch(type) {
-                case 'URGENT':
-                    showNotification('Filtrando lead critici...', 'info');
-                    break;
-                case 'OPPORTUNITY':
-                    showNotification('Identificando opportunità premium...', 'info');
-                    break;
-                case 'TIMING':
-                    showNotification('Mostrando lead recenti per contatto immediato...', 'info');
-                    break;
-                default:
-                    showNotification('Raccomandazione in elaborazione...', 'info');
             }
         }
 
@@ -3284,4 +1065,1745 @@
                                 <span class="label">Stato:</span>
                                 <span class="value">${chat.status || 'Sconosciuto'}</span>
                             </div>
-                            <div class
+                            <div class="detail-row">
+                                <span class="label">Inizio:</span>
+                                <span class="value">${chat.startTime ? chat.startTime.toLocaleString('it-IT') : 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Ultimo Aggiornamento:</span>
+                                <span class="value">${chat.lastUpdate ? chat.lastUpdate.toLocaleString('it-IT') : 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">ID Conversazione:</span>
+                                <span class="value monospace">${chat.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>💬 Timeline Conversazione (Ultimi 10 messaggi)</h4>
+                    <div class="conversation-timeline">
+                        ${conversationHtml}
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    ${chat.customerPhone ? `
+                        <button class="action-button whatsapp large" onclick="openWhatsApp('${chat.customerPhone}')">
+                            📱 Contatta su WhatsApp
+                        </button>
+                    ` : ''}
+                    <button class="action-button secondary large" onclick="closeModal()">
+                        ✖️ Chiudi
+                    </button>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        };
+
+        // Gestione dropdown filtri
+        function toggleQuizFilter() {
+            toggleDropdown('quiz-filter-options', 0);
+        }
+
+        function toggleChatFilter() {
+            toggleDropdown('chat-filter-options', 1);
+        }
+
+        function toggleDropdown(optionsId, buttonIndex) {
+            const options = document.getElementById(optionsId);
+            const buttons = document.querySelectorAll('.filter-button');
+            const button = buttons[buttonIndex];
+            
+            if (options.classList.contains('show')) {
+                options.classList.remove('show');
+                button.classList.remove('active');
+            } else {
+                // Chiudi altri dropdown
+                const allOptions = document.querySelectorAll('.filter-options');
+                const allButtons = document.querySelectorAll('.filter-button');
+                
+                for (let i = 0; i < allOptions.length; i++) {
+                    allOptions[i].classList.remove('show');
+                }
+                for (let i = 0; i < allButtons.length; i++) {
+                    allButtons[i].classList.remove('active');
+                }
+                
+                options.classList.add('show');
+                button.classList.add('active');
+            }
+        }
+
+        // Chiudi dropdown quando clicchi fuori
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.filter-dropdown')) {
+                const allOptions = document.querySelectorAll('.filter-options');
+                const allButtons = document.querySelectorAll('.filter-button');
+                
+                for (let i = 0; i < allOptions.length; i++) {
+                    allOptions[i].classList.remove('show');
+                }
+                for (let i = 0; i < allButtons.length; i++) {
+                    allButtons[i].classList.remove('active');
+                }
+            }
+        });
+
+        // Inizializzazione
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inizializzazione Dashboard TribuCoach...');
+            loadFirebaseData();
+            
+            // Auto-refresh ogni 60 secondi
+            setInterval(loadFirebaseData, 60000);
+            
+            // Aggiorna ora ogni 5 secondi
+            setInterval(updateLastUpdateTime, 5000);
+        });
+
+        // Esponi funzioni globalmente
+        window.loadFirebaseData = loadFirebaseData;
+        window.applyQuizFilter = applyQuizFilter;
+        window.applyChatFilter = applyChatFilter;
+        window.toggleQuizFilter = toggleQuizFilter;
+        window.toggleChatFilter = toggleChatFilter;
+        window.searchQuizLeads = searchQuizLeads;
+        window.searchChatConversations = searchChatConversations;
+        window.toggleQuizSelection = toggleQuizSelection;
+        window.toggleChatSelection = toggleChatSelection;
+        window.selectAllQuiz = selectAllQuiz;
+        window.deselectAllQuiz = deselectAllQuiz;
+        window.selectAllChats = selectAllChats;
+        window.deselectAllChats = deselectAllChats;
+        window.exportSelectedQuiz = exportSelectedQuiz;
+        window.exportSelectedChats = exportSelectedChats;
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.4;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            z-index: 1000;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
+            padding: 25px;
+            border-bottom: 3px solid #ff6600;
+            backdrop-filter: blur(20px);
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            color: #ff6600;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
+        }
+
+        .header p {
+            color: #ccc;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header .refresh-button {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+        }
+
+        .header .refresh-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .dashboard {
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-section {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 35px;
+            border: 1px solid #404040;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
+        }
+
+        .dashboard-section h2 {
+            color: #ff6600;
+            font-size: 1.9rem;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            margin-bottom: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* 📥 SELEZIONE MULTIPLA E EXPORT */
+        .selection-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius: 12px;
+            border: 1px solid #444;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .selection-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .selection-btn {
+            background: linear-gradient(135deg, #666, #555);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .selection-btn.select-all {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+
+        .selection-btn.select-all:hover {
+            background: linear-gradient(135deg, #45a049, #3d8b40);
+            transform: translateY(-1px);
+        }
+
+        .selection-btn.deselect-all {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+
+        .selection-btn.deselect-all:hover {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+            transform: translateY(-1px);
+        }
+
+        .selection-counter {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 102, 0, 0.3);
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:not(:disabled):hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .export-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* CHECKBOX PERSONALIZZATI */
+        .selection-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+
+        .selection-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .selection-checkbox label {
+            display: block;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #333, #555);
+            border: 2px solid #666;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .selection-checkbox label:hover {
+            border-color: #ff6600;
+            background: linear-gradient(135deg, #444, #666);
+        }
+
+        .selection-checkbox input[type="checkbox"]:checked + label {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            border-color: #ff6600;
+        }
+
+        .selection-checkbox input[type="checkbox"]:checked + label::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* STATO SELEZIONATO CARD */
+        .lead-card.selected,
+        .chat-card.selected {
+            border: 2px solid #ff6600;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a, rgba(255, 102, 0, 0.1));
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.3);
+        }
+
+        .lead-card,
+        .chat-card {
+            position: relative;
+        }
+        /* 🎨 UX OTTIMIZZATA - SEARCH + CONTROLS */
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            background: linear-gradient(135deg, #333, #404040);
+            border: 2px solid #555;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #ff6600;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            transform: scale(1.02);
+        }
+
+        .search-input::placeholder {
+            color: #999;
+            font-style: italic;
+        }
+
+        .search-container::before {
+            content: '🔍';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            opacity: 0.7;
+            z-index: 1;
+        }
+
+        /* FILTRI DROPDOWN MIGLIORATI */
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+            min-width: 130px;
+            justify-content: center;
+        }
+
+        .filter-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #ff8533, #ff6600);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .dropdown-arrow {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .filter-button.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .filter-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border: 1px solid #444;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(5px);
+        }
+
+        .filter-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px;
+            font-weight: 500;
+            color: #ccc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-option:hover {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            transform: translateX(4px);
+        }
+
+        .filter-option::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #ff6600;
+            transform: scaleY(0);
+            transition: transform 0.2s ease;
+        }
+
+        .filter-option:hover::before {
+            transform: scaleY(1);
+        }
+
+        /* METRICHE PRINCIPALI */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid #404040;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
+        }
+
+        .metric-card h3 {
+            color: #ff9933;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card p {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* BUSINESS INSIGHTS GRID */
+        .business-insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid #ff6600;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.15);
+        }
+
+        .insight-card h4 {
+            color: #ff6600;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .insight-card .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 15px 0;
+        }
+
+        .insight-card .metric-subtitle {
+            color: #ccc;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        /* EMPTY STATES */
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border-radius: 15px;
+            border: 2px dashed #444;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state h3 {
+            color: #ff6600;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            color: #ccc;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .reload-btn {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+        }
+
+        .reload-btn:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        /* QUIZ LEADS GRID */
+        .quiz-leads-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .lead-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+            border-left: 5px solid #ff6600;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .lead-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
+        }
+
+        .lead-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .lead-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 8px;
+        }
+
+        .lead-profile-badge {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 102, 0, 0.3);
+        }
+
+        .lead-score-section {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .lead-score {
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-width: 80px;
+        }
+
+        .score-high { background: #4CAF50; color: white; }
+        .score-medium { background: #ff9800; color: white; }
+        .score-low { background: #f44336; color: white; }
+
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .priority-high { background: #f44336; color: white; }
+        .priority-medium { background: #ff9800; color: white; }
+        .priority-low { background: #666; color: #ccc; }
+
+        .lead-details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-icon {
+            font-size: 1rem;
+            width: 20px;
+        }
+
+        .detail-value {
+            color: #eee;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        /* CHAT GRID */
+        .chat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .chat-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #2196F3;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(33, 150, 243, 0.2);
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .chat-id {
+            background: #333;
+            color: #2196F3;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .status-badge.completed { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+        .status-badge.abandoned { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .status-badge.unknown { background: rgba(158, 158, 158, 0.2); color: #999; }
+
+        .chat-client {
+            margin: 15px 0;
+        }
+
+        .client-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+
+        .client-contact {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .chat-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(33, 150, 243, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            color: #2196F3;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .chat-preview {
+            background: #333;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 3px solid #2196F3;
+        }
+
+        .preview-label {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .preview-text {
+            color: #eee;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        /* ACTIONS */
+        .lead-actions, .chat-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .action-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+
+        .action-button.primary:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+        }
+
+        .action-button.whatsapp {
+            background: linear-gradient(135deg, #25D366, #20b055);
+        }
+
+        .action-button.whatsapp:hover {
+            background: linear-gradient(135deg, #20b055, #1ea049);
+        }
+
+        .action-button.secondary {
+            background: linear-gradient(135deg, #666, #555);
+        }
+
+        .action-button.secondary:hover {
+            background: linear-gradient(135deg, #777, #666);
+        }
+
+        .action-button.large {
+            padding: 15px 25px;
+            font-size: 1rem;
+        }
+
+        /* INSIGHTS LIST */
+        .insights-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 15px;
+        }
+
+        .insights-list li {
+            background: linear-gradient(135deg, #333, #404040);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #ff6600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .insights-list li:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.2);
+        }
+
+        .insights-list strong {
+            color: #ff9933;
+            font-weight: 700;
+        }
+
+        .insights-list .highlight {
+            color: #4CAF50;
+            font-weight: bold;
+            background: rgba(76, 175, 80, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* MODAL STYLES MIGLIORATI */
+        .modal {
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2a2a2a, #333333);
+            padding: 35px;
+            border: 1px solid #555;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .close-button:hover {
+            color: #fff;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #444;
+        }
+
+        .modal-header h2 {
+            color: #ff6600;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .lead-score-large {
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .detail-section {
+            background: rgba(26, 26, 26, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #444;
+        }
+
+        .detail-section h4 {
+            color: #ff9933;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+
+        .detail-rows {
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .detail-row .label {
+            color: #ccc;
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .detail-row .value {
+            color: #fff;
+            text-align: right;
+            flex: 1;
+        }
+
+        .detail-row .value.monospace {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #64B5F6;
+        }
+
+        .conversation-timeline {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .message-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #666;
+        }
+
+        .message-item.user {
+            background: rgba(255, 102, 0, 0.1);
+            border-left-color: #ff6600;
+        }
+
+        .message-item.assistant {
+            background: rgba(33, 150, 243, 0.1);
+            border-left-color: #2196F3;
+        }
+
+        .message-role {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+
+        .message-content {
+            color: #eee;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #999;
+            text-align: right;
+        }
+
+        .no-messages {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 30px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+
+        /* SCROLLBAR STYLING */
+        .modal-content::-webkit-scrollbar,
+        .conversation-timeline::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-content::-webkit-scrollbar-track,
+        .conversation-timeline::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb,
+        .conversation-timeline::-webkit-scrollbar-thumb {
+            background: #ff6600;
+            border-radius: 3px;
+        }
+
+        /* RESPONSIVE DESIGN MIGLIORATO */
+        @media (max-width: 768px) {
+            .dashboard { 
+                padding: 20px 15px; 
+            }
+            
+            .quiz-leads-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .chat-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .business-insights-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .metrics-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .section-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+            }
+
+            /* 🎨 UX OTTIMIZZATA - SEARCH + CONTROLS */
+                    .section-controls {
+                width: 100%;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .selection-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .selection-actions {
+                justify-content: center;
+            }
+
+            .search-container {
+                min-width: auto;
+                max-width: none;
+            }
+
+            .lead-details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 98%;
+                padding: 20px;
+            }
+
+            .modal-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header .refresh-button {
+                position: static;
+                margin-top: 15px;
+                width: 100%;
+            }
+
+            .metric-card p {
+                font-size: 2.2rem;
+            }
+
+            .lead-card-header,
+            .chat-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .chat-meta {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+
+            .search-input {
+                padding: 10px 15px 10px 40px;
+                font-size: 0.85rem;
+            }
+
+            .search-container::before {
+                left: 15px;
+                font-size: 1rem;
+            }
+        }
+
+        /* LOADING STATES MIGLIORATI */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(42, 42, 42, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top: 4px solid #ff6600;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #ff6600;
+            font-weight: 600;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        /* MICRO ANIMAZIONI UX */
+        .metric-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 102, 0, 0.1), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .lead-card::before, .chat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 102, 0, 0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .lead-card:hover::before, .chat-card:hover::before {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status">🔄 Inizializzazione Dashboard TribuCoach...</div>
+
+    <header class="header">
+        <h1>📈 TribuCoach Business Intelligence</h1>
+        <p>Dashboard in tempo reale - Sistema unificato Quiz + Chat Andrea Padoan</p>
+        <button class="refresh-button" onclick="loadFirebaseData()">🔄 Aggiorna Dati</button>
+    </header>
+
+    <div class="dashboard">
+
+        <!-- METRICHE PRINCIPALI -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>🎯 Totale Lead Quiz</h3>
+                <p>0</p>
+            </div>
+            <div class="metric-card">
+                <h3>⭐ Score Medio Lead</h3>
+                <p>0%</p>
+            </div>
+            <div class="metric-card">
+                <h3>💬 Chat Andrea Attive</h3>
+                <p>0</p>
+            </div>
+            <div class="metric-card">
+                <h3>🔥 Lead Premium (≥80%)</h3>
+                <p>0</p>
+            </div>
+        </div>
+
+        <!-- BUSINESS INSIGHTS -->
+        <div class="dashboard-section">
+            <h2>🎯 Business Intelligence - Opportunità</h2>
+            
+            <div class="business-insights-grid">
+                <div class="insight-card">
+                    <h4>🔥 Hot Leads (Score ≥80%)</h4>
+                    <div class="metric-value">0</div>
+                    <div class="metric-subtitle">Lead pronti per contatto immediato</div>
+                </div>
+
+                <div class="insight-card">
+                    <h4>🌡️ Warm Leads (Score 60-79%)</h4>
+                    <div class="metric-value">0</div>
+                    <div class="metric-subtitle">Lead qualificati per nurturing</div>
+                </div>
+
+                <div class="insight-card">
+                    <h4>💰 Valore Potenziale</h4>
+                    <div class="metric-value">€0</div>
+                    <div class="metric-subtitle">Stima revenue da hot leads</div>
+                </div>
+
+                <div class="insight-card">
+                    <h4>📊 Tasso Conversione</h4>
+                    <div class="metric-value">0%</div>
+                    <div class="metric-subtitle">Lead qualificati su totale</div>
+                </div>
+
+                <div class="insight-card">
+                    <h4>📅 Attività Oggi</h4>
+                    <div class="metric-value">0</div>
+                    <div class="metric-subtitle">Nuovi lead e chat oggi</div>
+                </div>
+
+                <div class="insight-card">
+                    <h4>📈 Trend Crescita</h4>
+                    <div class="metric-value">+0%</div>
+                    <div class="metric-subtitle">Crescita settimanale</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEAD QUIZ -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>🥇 Lead Quiz - Sistema Profiling</h2>
+                <div class="section-controls">
+                    <div class="search-container">
+                        <input type="text" id="quiz-search" placeholder="Cerca lead (nome, email, profilo...)" 
+                               onkeyup="searchQuizLeads(this.value)" class="search-input">
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="filter-button" onclick="toggleQuizFilter()">
+                            <span id="quiz-filter-current">Tutti</span> 
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="filter-options" id="quiz-filter-options">
+                            <div class="filter-option" onclick="applyQuizFilter('all')">📊 Tutti</div>
+                            <div class="filter-option" onclick="applyQuizFilter('today')">📅 Oggi</div>
+                            <div class="filter-option" onclick="applyQuizFilter('week')">📆 Settimana</div>
+                            <div class="filter-option" onclick="applyQuizFilter('month')">🗓️ Mese</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SELEZIONE MULTIPLA QUIZ -->
+            <div class="selection-controls">
+                <div class="selection-actions">
+                    <button class="selection-btn select-all" onclick="selectAllQuiz()">
+                        ✅ Seleziona Tutti
+                    </button>
+                    <button class="selection-btn deselect-all" onclick="deselectAllQuiz()">
+                        ❌ Deseleziona
+                    </button>
+                    <span class="selection-counter" id="quiz-selection-counter">0 selezionati</span>
+                </div>
+                <button class="export-btn" onclick="exportSelectedQuiz()" id="quiz-export-btn" disabled>
+                    📥 Esporta Selezionati
+                </button>
+            </div>
+
+            <div class="quiz-leads-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">🔄</div>
+                    <h3>Caricamento Lead Quiz...</h3>
+                    <p>Connessione a Firebase in corso...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONVERSAZIONI ANDREA -->
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h2>💬 Conversazioni Andrea Padoan AI</h2>
+                <div class="section-controls">
+                    <div class="search-container">
+                        <input type="text" id="chat-search" placeholder="Cerca chat (nome, telefono, messaggio...)" 
+                               onkeyup="searchChatConversations(this.value)" class="search-input">
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="filter-button" onclick="toggleChatFilter()">
+                            <span id="chat-filter-current">Tutti</span> 
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="filter-options" id="chat-filter-options">
+                            <div class="filter-option" onclick="applyChatFilter('all')">📊 Tutti</div>
+                            <div class="filter-option" onclick="applyChatFilter('today')">📅 Oggi</div>
+                            <div class="filter-option" onclick="applyChatFilter('week')">📆 Settimana</div>
+                            <div class="filter-option" onclick="applyChatFilter('month')">🗓️ Mese</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SELEZIONE MULTIPLA CHAT -->
+            <div class="selection-controls">
+                <div class="selection-actions">
+                    <button class="selection-btn select-all" onclick="selectAllChats()">
+                        ✅ Seleziona Tutti
+                    </button>
+                    <button class="selection-btn deselect-all" onclick="deselectAllChats()">
+                        ❌ Deseleziona
+                    </button>
+                    <span class="selection-counter" id="chat-selection-counter">0 selezionati</span>
+                </div>
+                <button class="export-btn" onclick="exportSelectedChats()" id="chat-export-btn" disabled>
+                    📥 Esporta Selezionati
+                </button>
+            </div>
+
+            <div class="chat-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">🔄</div>
+                    <h3>Caricamento Chat...</h3>
+                    <p>Connessione a Firebase in corso...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS -->
+        <div class="dashboard-section analytics-section">
+            <h2>📊 Analytics & Performance</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>📈 Totale Quiz Completati</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>🎯 Lead Qualificati (≥70%)</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>💬 Chat Conversazioni</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>⏰ Ultimo Aggiornamento</h3>
+                    <p style="font-size: 1.5rem;" id="lastUpdate">--:--:--</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INSIGHTS FINALI -->
+        <div class="dashboard-section">
+            <h2>💡 Insights Actionable & Raccomandazioni</h2>
+            <ul class="insights-list">
+                <li>
+                    <strong>🔄 Sistema Operativo:</strong> Dashboard unificata Quiz + Chat Andrea funzionante. 
+                    <em>Tutti i lead vengono tracciati automaticamente in tempo reale.</em>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+
+    <!-- Modal per dettagli -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <div id="modal-body-content">
+                <!-- Il contenuto verrà inserito qui tramite JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funzione per aprire WhatsApp
+        function openWhatsApp(phone) {
+            if (!phone || phone === 'N/A') {
+                showNotification('Numero di telefono non disponibile', 'error');
+                return;
+            }
+            
+            let cleanPhone = phone.replace(/[^\d+]/g, '');
+            if (!cleanPhone.startsWith('+')) {
+                cleanPhone = '+39' + cleanPhone.replace(/^0+/, '');
+            }
+            
+            const whatsappUrl = 'https://wa.me/' + cleanPhone.replace('+', '');
+            window.open(whatsappUrl, '_blank');
+            showNotification('Apertura WhatsApp...', 'success');
+        }
+
+        // Funzione per chiudere il modal
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        // Sistema di notifiche toast migliorato
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; 
+                top: 80px; 
+                right: 20px; 
+                padding: 15px 20px; 
+                border-radius: 12px; 
+                font-weight: bold; 
+                z-index: 10000; 
+                box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+                max-width: 350px;
+                animation: slideInRight 0.3s ease-out;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            if (type === 'success') {
+                toast.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                toast.style.color = 'white';
+                toast.innerHTML = `✅ ${message}`;
+            } else if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                toast.style.color = 'white';
+                toast.innerHTML = `❌ ${message}`;
+            } else {
+                toast.style.background = 'linear-gradient(135deg, #ff6600, #ff8533)';
+                toast.style.color = 'white';
+                toast.innerHTML = `🔔 ${message}`;
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(function() {
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Event listeners per modal
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('detailsModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('Dashboard TribuCoach caricata con successo!', 'success');
+            console.log('🚀 Dashboard TribuCoach inizializzata - Versione UX ottimizzata');
+        });
+
+        // Aggiungi animazioni CSS avanzate
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            @keyframes fadeInUp {
+                from { transform: translateY(30px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .lead-card, .chat-card, .insight-card {
+                animation: fadeInUp 0.6s ease-out;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+            
