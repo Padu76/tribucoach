@@ -177,6 +177,29 @@
             background: rgba(255, 152, 0, 0.1);
         }
 
+        /* 🏋️ Hybrid Status Badge - NUOVO */
+        .hybrid-status {
+            position: fixed;
+            top: 120px;
+            right: 20px;
+            background: rgba(33, 150, 243, 0.1);
+            border: 2px solid #2196F3;
+            color: #2196F3;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .hybrid-status:hover {
+            background: rgba(33, 150, 243, 0.2);
+            transform: scale(1.05);
+        }
+
         /* Buttons Section (Hero Area) */
         .buttons-section {
             text-align: center;
@@ -829,6 +852,23 @@
             box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
         }
 
+        /* 🏋️ Hybrid Enhanced Message Badge - NUOVO */
+        .hybrid-enhanced::after {
+            content: "🔄";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #2196F3;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
+        }
+
         .message-content {
             white-space: pre-wrap;
         }
@@ -1089,6 +1129,14 @@
                 padding: 4px 8px;
             }
 
+            /* 🏋️ Hybrid Status mobile */
+            .hybrid-status {
+                top: 105px;
+                right: 10px;
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+
             .buttons-section {
                 padding: 50px 15px 40px 15px;
             }
@@ -1263,6 +1311,9 @@
 <body>
     <!-- 🤖 ML Status Badge - SOLO AGGIUNTA -->
     <div class="ml-status" id="mlStatus">🌱 ML: Learning</div>
+
+    <!-- 🏋️ Hybrid Status Badge - NUOVO -->
+    <div class="hybrid-status" id="hybridStatus">🔄 Hybrid: Ready</div>
 
     <!-- Floating Chat Button -->
     <button id="chatButton">💬</button>
@@ -1488,14 +1539,15 @@
         </div>
     </div>
 
-    <!-- 🚀 INCLUDI TUTTI I SISTEMI POTENZIATI -->
+    <!-- 🚀 INCLUDI TUTTI I SISTEMI POTENZIATI + NUOVO HYBRID SYSTEM -->
     <script src="fluent-data-collector.js"></script>
     <script src="enhanced-knowledge-base.js"></script>
     <script src="machine-learning-system.js"></script>
     <script src="advanced-knowledge-base.js"></script>
     <script src="motivation-system.js"></script>
+    <script src="hybrid-workout-locations.js"></script>
 
-    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + MOBILE SESSION FIX + NAME COLLECTION + RESPONSE FIX -->
+    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + MOBILE SESSION FIX + NAME COLLECTION + RESPONSE FIX + HYBRID SYSTEM -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1554,6 +1606,17 @@
             }
         }
 
+        // 🏋️ NUOVO: Sistema Hybrid Workout Locations
+        let hybridWorkoutSystem = null;
+        if (typeof HybridWorkoutIntegration !== 'undefined') {
+            try {
+                hybridWorkoutSystem = new HybridWorkoutIntegration();
+                console.log('🏋️ Sistema Hybrid Workout inizializzato');
+            } catch (error) {
+                console.warn('⚠️ Sistema Hybrid Workout non disponibile:', error);
+            }
+        }
+
         // Variabili chat ORIGINALI
         let conversationId = null;
         let customerName = null;
@@ -1564,7 +1627,7 @@
         let conversationStartTime = null;
         let waitingForName = false; // 🎯 FIX: Gestione nome
 
-        // Elementi DOM ORIGINALI
+        // Elementi DOM ORIGINALI + NUOVO HYBRID STATUS
         const chatButton = document.getElementById('chatButton');
         const chatOverlay = document.getElementById('chatOverlay');
         const chatWidget = document.getElementById('chatWidget');
@@ -1575,6 +1638,7 @@
         const mainChatButton = document.getElementById('mainChatButton');
         const heroChatButton = document.getElementById('heroChatButton');
         const mlStatus = document.getElementById('mlStatus');
+        const hybridStatus = document.getElementById('hybridStatus'); // 🏋️ NUOVO
         
         // 🎯 FIX: Elementi per raccolta nome
         const nameCollectionOverlay = document.getElementById('nameCollectionOverlay');
@@ -1703,6 +1767,25 @@
             }
         }
 
+        // 🏋️ NUOVO: Aggiorna Hybrid Status
+        function updateHybridStatus() {
+            if (!hybridWorkoutSystem) {
+                hybridStatus.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const locationOptions = hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions();
+                const hybridCount = locationOptions.categories.hybrid.options.length;
+                
+                hybridStatus.textContent = `🔄 Hybrid: ${hybridCount} Options`;
+                hybridStatus.className = 'hybrid-status';
+            } catch (error) {
+                hybridStatus.textContent = '🔧 Hybrid: Error';
+                hybridStatus.className = 'hybrid-status';
+            }
+        }
+
         // 🤖 SOLO AGGIUNTA: Click su ML Status
         if (mlStatus) {
             mlStatus.addEventListener('click', () => {
@@ -1717,6 +1800,26 @@
 🚀 Level: ${insights.learningProgress.readinessLevel}`);
                 } catch (error) {
                     alert('ML System non disponibile');
+                }
+            });
+        }
+
+        // 🏋️ NUOVO: Click su Hybrid Status
+        if (hybridStatus) {
+            hybridStatus.addEventListener('click', () => {
+                if (!hybridWorkoutSystem) return;
+                try {
+                    const locationOptions = hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions();
+                    const hybridOptions = locationOptions.categories.hybrid.options;
+                    
+                    console.log('🏋️ Hybrid Workout Options:', locationOptions);
+                    alert(`Hybrid Workout System:
+🔄 Opzioni Disponibili: ${hybridOptions.length}
+📋 Modalità: ${hybridOptions.join(', ')}
+💡 Benefici: Varietà, Backup, Adattabilità
+🎯 Status: Pronto per raccomandazioni`);
+                } catch (error) {
+                    alert('Hybrid Workout System non disponibile');
                 }
             });
         }
@@ -1777,7 +1880,8 @@ Ora che ci siamo presentati, sono qui per aiutarti con:
 
 **Cosa vorresti sapere per primo?** Scrivi pure liberamente, sono qui per te! 💪`,
                 timestamp: new Date(),
-                mlEnhanced: false
+                mlEnhanced: false,
+                hybridEnhanced: false
             });
             
             renderMessages();
@@ -1827,11 +1931,13 @@ Come posso aiutarti oggi?
 
 Scrivi pure quello di cui hai bisogno! 💪`,
                     timestamp: new Date(),
-                    mlEnhanced: false
+                    mlEnhanced: false,
+                    hybridEnhanced: false
                 }];
                 
                 renderMessages();
                 updateMLStatus();
+                updateHybridStatus(); // 🏋️ NUOVO
                 
             } else {
                 // Nuovo utente - chiedi nome
@@ -1843,7 +1949,8 @@ Sono Andrea Padoan, il tuo personal trainer digitale sempre disponibile.
 
 Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     timestamp: new Date(),
-                    mlEnhanced: false
+                    mlEnhanced: false,
+                    hybridEnhanced: false
                 }];
                 
                 renderMessages();
@@ -1860,7 +1967,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             console.log('💬 Andrea Padoan Chat inizializzato:', conversationId);
         }
 
-        // Renderizza messaggi ORIGINALE + badge ML
+        // Renderizza messaggi ORIGINALE + badge ML + NUOVO badge Hybrid
         function renderMessages() {
             const html = messages.map((message, index) => {
                 const isUser = message.role === 'user';
@@ -1872,8 +1979,11 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 // 🤖 SOLO AGGIUNTA: ML Enhanced badge
                 const mlClass = message.mlEnhanced ? ' ml-enhanced' : '';
                 
+                // 🏋️ NUOVO: Hybrid Enhanced badge
+                const hybridClass = message.hybridEnhanced ? ' hybrid-enhanced' : '';
+                
                 return `
-                    <div class="message ${isUser ? 'user' : 'assistant'}${mlClass}" data-index="${index}">
+                    <div class="message ${isUser ? 'user' : 'assistant'}${mlClass}${hybridClass}" data-index="${index}">
                         <div class="message-bubble">
                             <div class="message-content">${message.content}</div>
                             <div class="message-time">${time}</div>
@@ -1891,7 +2001,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             }, 100);
         }
 
-        // 🎯 FIX 3: FUNZIONE CHAT CON LOGICA CORRETTA (ALIMENTAZIONE → ALIMENTAZIONE)
+        // 🎯 FIX 3: FUNZIONE CHAT CON LOGICA CORRETTA + NUOVO HYBRID SYSTEM
         async function callChatFunction(userMessage) {
             try {
                 console.log('🧠 Processando messaggio:', userMessage);
@@ -1900,12 +2010,49 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 const isNutritionQuery = detectNutritionQuery(userMessage);
                 const isTrainingQuery = detectTrainingQuery(userMessage);
                 const isMotivationQuery = detectMotivationQuery(userMessage);
+                const isWorkoutLocationQuery = detectWorkoutLocationQuery(userMessage); // 🏋️ NUOVO
                 
                 console.log('🎯 Topic analysis:', { 
                     nutrition: isNutritionQuery, 
                     training: isTrainingQuery, 
-                    motivation: isMotivationQuery 
+                    motivation: isMotivationQuery,
+                    workoutLocation: isWorkoutLocationQuery // 🏋️ NUOVO
                 });
+
+                // 🏋️ NUOVO: HYBRID WORKOUT SYSTEM PRIORITY per location queries
+                if (hybridWorkoutSystem && isWorkoutLocationQuery) {
+                    try {
+                        console.log('🏋️ Usando Sistema Hybrid Workout per location query');
+                        
+                        const userProfile = {
+                            name: customerName,
+                            budget: extractBudgetFromMessage(userMessage),
+                            timeAvailability: extractTimeFromMessage(userMessage),
+                            goals: extractGoalsFromMessage(userMessage)
+                        };
+                        
+                        const recommendations = hybridWorkoutSystem.locationSelector.generateHybridRecommendations(userProfile);
+                        
+                        if (recommendations && recommendations.length > 0) {
+                            const hybridResponse = formatHybridRecommendations(recommendations, userMessage);
+                            
+                            return {
+                                success: true,
+                                reply: hybridResponse,
+                                mlEnhanced: false,
+                                hybridEnhanced: true,
+                                confidence: 'high',
+                                source: 'hybrid_workout_system',
+                                conversationId: conversationId,
+                                customerName: customerName,
+                                customerPhone: customerPhone,
+                                customerEmail: customerEmail
+                            };
+                        }
+                    } catch (hybridError) {
+                        console.warn('⚠️ Errore Hybrid Workout System:', hybridError);
+                    }
+                }
 
                 // 🧠 ENHANCED KNOWLEDGE SYSTEM PRIMA (più specifico)
                 if (enhancedKnowledgeSystem) {
@@ -1915,11 +2062,13 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         if (enhancedResult && enhancedResult.confidence === 'high') {
                             console.log('🎯 Usata risposta Enhanced Knowledge System');
                             updateMLStatus();
+                            updateHybridStatus(); // 🏋️ NUOVO
                             
                             return {
                                 success: true,
                                 reply: enhancedResult.content,
                                 mlEnhanced: true,
+                                hybridEnhanced: false,
                                 confidence: enhancedResult.confidence,
                                 source: 'enhanced_knowledge',
                                 conversationId: conversationId,
@@ -1941,7 +2090,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                             conversationId: conversationId,
                             messageCount: messages.length,
                             userProfile: { name: customerName, phone: customerPhone },
-                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : 'general'
+                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : isWorkoutLocationQuery ? 'workout_location' : 'general'
                         };
 
                         const mlResult = mlManager.processMessageWithML(userMessage, sessionContext);
@@ -1949,11 +2098,13 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         if (mlResult.confidence > 0.7) {
                             console.log('🤖 Usata risposta ML (alta confidenza)');
                             updateMLStatus();
+                            updateHybridStatus(); // 🏋️ NUOVO
                             
                             return {
                                 success: true,
                                 reply: mlResult.response,
                                 mlEnhanced: true,
+                                hybridEnhanced: false,
                                 confidence: mlResult.confidence,
                                 source: 'ml_manager',
                                 conversationId: conversationId,
@@ -1995,6 +2146,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         success: true,
                         reply: fluentResponse.message,
                         mlEnhanced: false,
+                        hybridEnhanced: false,
                         source: 'fluent_data_collector',
                         conversationId: conversationId,
                         customerName: customerName,
@@ -2015,6 +2167,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                                 success: true,
                                 reply: enhancedResult.content,
                                 mlEnhanced: true,
+                                hybridEnhanced: false,
                                 confidence: enhancedResult.confidence,
                                 source: 'enhanced_knowledge_medium',
                                 conversationId: conversationId,
@@ -2043,11 +2196,13 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         if (mlResult.confidence > 0.4) {
                             console.log('📋 Usata risposta ML (confidenza media)');
                             updateMLStatus();
+                            updateHybridStatus(); // 🏋️ NUOVO
                             
                             return {
                                 success: true,
                                 reply: mlResult.response,
                                 mlEnhanced: true,
+                                hybridEnhanced: false,
                                 confidence: mlResult.confidence,
                                 source: 'ml_manager_medium',
                                 conversationId: conversationId,
@@ -2086,10 +2241,11 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         customerPhone: customerPhone,
                         customerEmail: customerEmail,
                         context: {
-                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : 'general',
+                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : isWorkoutLocationQuery ? 'workout_location' : 'general',
                             isNutritionQuery,
                             isTrainingQuery,
-                            isMotivationQuery
+                            isMotivationQuery,
+                            isWorkoutLocationQuery // 🏋️ NUOVO
                         }
                     })
                 });
@@ -2104,6 +2260,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 return {
                     ...result,
                     mlEnhanced: false,
+                    hybridEnhanced: false,
                     source: 'vercel_backend'
                 };
                 
@@ -2113,6 +2270,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     success: false,
                     reply: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧',
                     mlEnhanced: false,
+                    hybridEnhanced: false,
                     source: 'error'
                 };
             }
@@ -2157,6 +2315,91 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             return motivationKeywords.some(keyword => lowerMessage.includes(keyword));
         }
 
+        // 🏋️ NUOVO: Rileva query per workout locations
+        function detectWorkoutLocationQuery(message) {
+            const locationKeywords = [
+                'dove allenarmi', 'dove allenarsi', 'palestra o casa', 'casa o palestra',
+                'allenamento a casa', 'allenamento in palestra', 'outdoor', 'all\'aperto',
+                'personal trainer', 'lezioni di gruppo', 'modalità', 'come allenarsi',
+                'budget allenamento', 'tempo per allenarsi', 'attrezzatura',
+                'combinare', 'ibrido', 'variare', 'alternare', 'backup allenamento'
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            return locationKeywords.some(keyword => lowerMessage.includes(keyword));
+        }
+
+        // 🏋️ NUOVO: Funzioni helper per estrazione dati
+        function extractBudgetFromMessage(message) {
+            const lowerMessage = message.toLowerCase();
+            if (lowerMessage.includes('gratis') || lowerMessage.includes('budget basso') || lowerMessage.includes('poco')) {
+                return 'low';
+            } else if (lowerMessage.includes('budget medio') || lowerMessage.includes('moderato')) {
+                return 'medium';
+            } else if (lowerMessage.includes('budget alto') || lowerMessage.includes('soldi')) {
+                return 'high';
+            }
+            return 'medium'; // default
+        }
+
+        function extractTimeFromMessage(message) {
+            const lowerMessage = message.toLowerCase();
+            if (lowerMessage.includes('poco tempo') || lowerMessage.includes('veloce') || lowerMessage.includes('limitato')) {
+                return 'limited';
+            } else if (lowerMessage.includes('molto tempo') || lowerMessage.includes('flessibile')) {
+                return 'flexible';
+            }
+            return 'normal'; // default
+        }
+
+        function extractGoalsFromMessage(message) {
+            const goals = [];
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('dimagrire') || lowerMessage.includes('perdere peso')) {
+                goals.push('weight_loss');
+            }
+            if (lowerMessage.includes('massa') || lowerMessage.includes('muscoli')) {
+                goals.push('muscle_gain');
+            }
+            if (lowerMessage.includes('tonificare') || lowerMessage.includes('definire')) {
+                goals.push('toning');
+            }
+            if (lowerMessage.includes('forza')) {
+                goals.push('strength');
+            }
+            if (lowerMessage.includes('resistenza') || lowerMessage.includes('cardio')) {
+                goals.push('endurance');
+            }
+            
+            return goals.length > 0 ? goals : ['general_fitness'];
+        }
+
+        // 🏋️ NUOVO: Formatta raccomandazioni hybrid
+        function formatHybridRecommendations(recommendations, userMessage) {
+            let response = `🏋️ **RACCOMANDAZIONI ALLENAMENTO PERSONALIZZATE**\n\n`;
+            response += `Basandomi sulla tua richiesta "${userMessage}", ecco le migliori opzioni per te:\n\n`;
+
+            recommendations.forEach((rec, index) => {
+                const title = rec.type.replace('_', ' + ').toUpperCase();
+                response += `**${index + 1}. ${title}**\n`;
+                response += `💡 ${rec.reasoning}\n`;
+                if (rec.schedule) response += `📅 Schedule: ${rec.schedule}\n`;
+                if (rec.monthly_cost) response += `💰 Costo: ${rec.monthly_cost}\n`;
+                response += `🎯 Match: ${rec.match_score || 85}%\n\n`;
+            });
+
+            response += `🔄 **VANTAGGI APPROCCIO IBRIDO:**\n`;
+            response += `• Varietà che previene noia\n`;
+            response += `• Backup sempre disponibile\n`;
+            response += `• Adattabile a vita/stagioni\n`;
+            response += `• Ottimizzazione costo/beneficio\n\n`;
+
+            response += `💪 Vuoi che approfondisca una di queste opzioni o hai altre domande sui luoghi di allenamento?`;
+
+            return response;
+        }
+
         // 💾 Salva lead nel sistema ORIGINALE
         async function saveLeadToFirebase(analytics) {
             try {
@@ -2174,6 +2417,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     hasMLSystem: mlManager ? true : false,
                     hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false,
                     hasMotivationSystem: motivationSystem ? true : false,
+                    hasHybridWorkoutSystem: hybridWorkoutSystem ? true : false, // 🏋️ NUOVO
                     fixedVersion: true // Marker per identificare versione fixed
                 };
                 
@@ -2189,7 +2433,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             }
         }
 
-        // 🎉 Mostra notifica conversione lead ORIGINALE
+        // 🎉 Mostra notifica conversione lead ORIGINALE + HYBRID
         function showLeadConversionNotification(leadData) {
             const notification = document.createElement('div');
             notification.style.cssText = `
@@ -2213,6 +2457,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 📱 ${leadData.phone}<br>
                 🎯 ${leadData.goal}
                 ${mlManager ? '<br>🤖 ML Enhanced' : ''}
+                ${hybridWorkoutSystem ? '<br>🏋️ Hybrid Ready' : ''}
                 <br>🔧 Fixed Version
             `;
             
@@ -2230,7 +2475,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             }, 5000);
         }
 
-        // Invia messaggio ORIGINALE + ML + FIX NOME
+        // Invia messaggio ORIGINALE + ML + FIX NOME + HYBRID
         async function sendMessage() {
             const userMessage = messageInput.value.trim();
             if (!userMessage) return;
@@ -2243,7 +2488,8 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 role: 'user',
                 content: userMessage,
                 timestamp: new Date(),
-                mlEnhanced: false
+                mlEnhanced: false,
+                hybridEnhanced: false
             });
             
             messageInput.value = '';
@@ -2265,6 +2511,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         content: response.reply,
                         timestamp: new Date(),
                         mlEnhanced: response.mlEnhanced || false,
+                        hybridEnhanced: response.hybridEnhanced || false, // 🏋️ NUOVO
                         confidence: response.confidence,
                         source: response.source
                     });
@@ -2290,7 +2537,8 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         role: 'assistant',
                         content: 'Mi dispiace, non ho ricevuto una risposta valida. Riprova!',
                         timestamp: new Date(),
-                        mlEnhanced: false
+                        mlEnhanced: false,
+                        hybridEnhanced: false
                     });
                     renderMessages();
                 }
@@ -2303,7 +2551,8 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     role: 'assistant',
                     content: 'Mi dispiace, c\'è stato un problema. Riprova! 🔧',
                     timestamp: new Date(),
-                    mlEnhanced: false
+                    mlEnhanced: false,
+                    hybridEnhanced: false
                 });
                 renderMessages();
             }
@@ -2312,7 +2561,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             messageInput.focus();
         }
 
-        // Salva inizio conversazione FIXED
+        // Salva inizio conversazione FIXED + HYBRID
         async function saveConversationStart() {
             try {
                 const conversationData = {
@@ -2333,20 +2582,21 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     hasMLSystem: mlManager ? true : false,
                     hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false,
                     hasMotivationSystem: motivationSystem ? true : false,
+                    hasHybridWorkoutSystem: hybridWorkoutSystem ? true : false, // 🏋️ NUOVO
                     fixedVersion: true, // Marker versione fixed
                     hasMobilePersistence: true,
                     hasNameCollection: true
                 };
                 
                 await setDoc(doc(db, 'chatbase_conversations', conversationId), conversationData);
-                console.log('💾 Conversazione inizializzata (FIXED VERSION)');
+                console.log('💾 Conversazione inizializzata (FIXED VERSION + HYBRID)');
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione conversazione:', error);
             }
         }
 
-        // Aggiorna conversazione esistente FIXED + ML
+        // Aggiorna conversazione esistente FIXED + ML + HYBRID
         async function updateConversation() {
             try {
                 const conversationRef = doc(db, 'chatbase_conversations', conversationId);
@@ -2380,7 +2630,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 };
 
                 // Dati sistemi avanzati se disponibili
-                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+                if (mlManager || enhancedKnowledgeSystem || motivationSystem || hybridWorkoutSystem) {
                     try {
                         updateData.enhancedSystemsData = {};
                         
@@ -2405,13 +2655,22 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                             updateData.enhancedSystemsData.motivationData = motivationSystem.getMotivationAnalytics();
                         }
                         
+                        // 🏋️ NUOVO: Dati Sistema Hybrid Workout
+                        if (hybridWorkoutSystem) {
+                            updateData.enhancedSystemsData.hybridWorkoutData = {
+                                hybridEnhancedMessages: messages.filter(m => m.hybridEnhanced).length,
+                                availableOptions: hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions(),
+                                systemReady: true
+                            };
+                        }
+                        
                     } catch (enhancedError) {
                         console.warn('⚠️ Errore dati sistemi avanzati per conversazione:', enhancedError);
                     }
                 }
                 
                 await updateDoc(conversationRef, updateData);
-                console.log('💾 Conversazione aggiornata (FIXED)');
+                console.log('💾 Conversazione aggiornata (FIXED + HYBRID)');
                 
             } catch (error) {
                 console.error('❌ Errore aggiornamento conversazione:', error);
@@ -2474,7 +2733,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             }
         }
 
-        // Marca conversazione come completata FIXED
+        // Marca conversazione come completata FIXED + HYBRID
         async function markConversationComplete() {
             try {
                 const conversationRef = doc(db, 'chatbase_conversations', conversationId);
@@ -2486,7 +2745,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 };
 
                 // Insights finali sistemi avanzati
-                if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+                if (mlManager || enhancedKnowledgeSystem || motivationSystem || hybridWorkoutSystem) {
                     try {
                         updateData.finalEnhancedInsights = {};
                         
@@ -2502,13 +2761,21 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                             updateData.finalEnhancedInsights.motivationAnalytics = motivationSystem.getMotivationAnalytics();
                         }
                         
+                        // 🏋️ NUOVO: Insights finali Hybrid Workout
+                        if (hybridWorkoutSystem) {
+                            updateData.finalEnhancedInsights.hybridWorkoutStats = {
+                                systemUsed: messages.some(m => m.hybridEnhanced),
+                                availableOptionsCount: hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions().categories.hybrid.options.length
+                            };
+                        }
+                        
                     } catch (enhancedError) {
                         console.warn('⚠️ Errore insights finali sistemi avanzati:', enhancedError);
                     }
                 }
 
                 await updateDoc(conversationRef, updateData);
-                console.log('✅ Conversazione marcata come completata (FIXED)');
+                console.log('✅ Conversazione marcata come completata (FIXED + HYBRID)');
                 
             } catch (error) {
                 console.error('❌ Errore marcatura conversazione:', error);
@@ -2585,8 +2852,8 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             });
         });
 
-        // Manutenzione e debug per tutti i sistemi
-        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+        // Manutenzione e debug per tutti i sistemi + HYBRID
+        if (mlManager || enhancedKnowledgeSystem || motivationSystem || hybridWorkoutSystem) {
             // Manutenzione automatica ogni ora per sistemi disponibili
             setInterval(() => {
                 try {
@@ -2594,6 +2861,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         mlManager.performMaintenance();
                     }
                     updateMLStatus();
+                    updateHybridStatus(); // 🏋️ NUOVO
                 } catch (error) {
                     console.warn('⚠️ Errore manutenzione sistemi avanzati:', error);
                 }
@@ -2615,9 +2883,17 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                     state.motivationAnalytics = motivationSystem.getMotivationAnalytics();
                 }
                 
+                // 🏋️ NUOVO: Hybrid Workout System state
+                if (hybridWorkoutSystem) {
+                    state.hybridWorkoutStats = {
+                        locationOptions: hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions(),
+                        systemReady: true
+                    };
+                }
+                
                 state.fluentSystem = dataCollector.getAnalytics();
                 
-                console.log('🚀 Stato Completo Tutti i Sistemi:', state);
+                console.log('🚀 Stato Completo Tutti i Sistemi + HYBRID:', state);
                 return state;
             };
         }
@@ -2638,8 +2914,42 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 messagesCount: messages.length
             });
         };
+
+        // 🏋️ NUOVO: Debug function per Hybrid Workout System
+        window.getHybridWorkoutState = () => {
+            if (!hybridWorkoutSystem) {
+                console.log('❌ Hybrid Workout System non disponibile');
+                return;
+            }
+            
+            const locationOptions = hybridWorkoutSystem.locationSelector.getEnhancedLocationOptions();
+            console.log('🏋️ Hybrid Workout System State:', {
+                systemReady: true,
+                singleOptions: locationOptions.categories.single.options.length,
+                hybridOptions: locationOptions.categories.hybrid.options.length,
+                benefits: locationOptions.hybrid_benefits,
+                recommendations: 'Call generateHybridRecommendations() with user profile'
+            });
+            
+            // Test raccomandazioni
+            const testProfile = {
+                budget: 'medium',
+                timeAvailability: 'limited',
+                goals: ['weight_loss'],
+                personality: ['variety_lover']
+            };
+            
+            const testRecommendations = hybridWorkoutSystem.locationSelector.generateHybridRecommendations(testProfile);
+            console.log('🎯 Test Recommendations for profile:', testProfile);
+            console.log('📋 Results:', testRecommendations);
+            
+            return {
+                locationOptions,
+                testRecommendations
+            };
+        };
         
-        console.log('🚀 TribuCoach FIXED VERSION inizializzato!');
+        console.log('🚀 TribuCoach FIXED VERSION + HYBRID WORKOUT inizializzato!');
         console.log('💡 Sistemi attivi:');
         console.log('   🔄 Sistema Fluido: ✅');
         console.log('   📱 Mobile Session Unified: ✅');
@@ -2649,14 +2959,19 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
         console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
         console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
         console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
-        console.log('💡 Test: "Ho bisogno di motivazione" → "alimentazione per dimagrire" → "Marco" → "347 888 1515"');
-        if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
+        console.log('   🏋️ Sistema Hybrid Workout:', hybridWorkoutSystem ? '✅' : '❌');
+        console.log('💡 Test: "dove dovrei allenarmi" → "budget limitato casa o palestra" → "Marco" → "347 888 1515"');
+        if (mlManager || enhancedKnowledgeSystem || motivationSystem || hybridWorkoutSystem) {
             console.log('🤖 Debug: window.getAllSystemsState() per analytics completi');
+            if (hybridWorkoutSystem) {
+                console.log('🏋️ Debug: window.getHybridWorkoutState() per test sistema hybrid');
+            }
         }
         console.log('📱 Debug: window.getSessionState() per stato sessione');
         
-        // Inizializza ML status
+        // Inizializza status badges
         updateMLStatus();
+        updateHybridStatus(); // 🏋️ NUOVO
 
         // Aggiungi CSS per animazioni (già nel CSS)
     </script>
