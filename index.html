@@ -1712,7 +1712,7 @@
             }
         }
 
-        // 🔧 FIX: Recupera dati utente da storage
+        // 🔧 FIX: Recupera dati utente da storage e sincronizza con FluentDataCollector
         function loadUserDataFromStorage() {
             try {
                 const savedName = localStorage.getItem('tribucoach_user_name') || sessionStorage.getItem('tribucoach_user_name');
@@ -1723,6 +1723,13 @@
                     customerName = savedName;
                     customerPhone = savedPhone; 
                     customerEmail = savedEmail;
+                    
+                    // 🔧 FIX: Sincronizza nome salvato con FluentDataCollector
+                    if (savedName && dataCollector && dataCollector.setForcedName) {
+                        dataCollector.setForcedName(savedName);
+                        console.log(`🔧 Nome "${savedName}" sincronizzato con FluentDataCollector da storage`);
+                    }
+                    
                     console.log('📱 Dati utente recuperati:', { name: savedName, phone: savedPhone, email: savedEmail });
                     return true;
                 }
@@ -1859,17 +1866,26 @@
                 return;
             }
 
-            // Salva nome e aggiorna variabili
+            // 🔧 FIX: Salva nome e FORZA nel FluentDataCollector
             customerName = name;
             saveUserDataToStorage(name, customerPhone, customerEmail);
+            
+            // 🔧 FIX: Forza il nome nel FluentDataCollector per evitare override
+            if (dataCollector && dataCollector.setForcedName) {
+                dataCollector.setForcedName(name);
+                console.log(`🔧 Nome "${name}" forzato nel FluentDataCollector`);
+            }
             
             // Nascondi overlay
             hideNameCollection();
             
+            // 🔧 FIX: Usa sempre la variabile locale per garantire correttezza
+            const safeName = name; // Usa sempre il nome dall'input
+            
             // Aggiungi messaggio personalizzato
             messages.push({
                 role: 'assistant',
-                content: `Piacere di conoscerti, ${name}! 🎉
+                content: `Piacere di conoscerti, ${safeName}! 🎉
 
 Ora che ci siamo presentati, sono qui per aiutarti con:
 
@@ -1887,7 +1903,12 @@ Ora che ci siamo presentati, sono qui per aiutarti con:
             renderMessages();
             updateConversation();
             
-            console.log('✅ Nome raccolto:', name);
+            console.log('✅ Nome raccolto e protetto:', name);
+            
+            // 🔧 FIX: Debug per verificare stato FluentDataCollector
+            if (dataCollector && dataCollector.getDebugInfo) {
+                console.log('🔍 FluentDataCollector Debug:', dataCollector.getDebugInfo());
+            }
         }
 
         // Event listeners per nome
@@ -2122,6 +2143,11 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                 const fluentResponse = dataCollector.processMessage(userMessage);
                 console.log('🎯 Risposta Sistema Fluido:', fluentResponse);
                 
+                // 🔧 FIX: Debug stato FluentDataCollector
+                if (dataCollector.getDebugInfo) {
+                    console.log('🔍 FluentDataCollector stato:', dataCollector.getDebugInfo());
+                }
+                
                 if (fluentResponse.message && fluentResponse.action !== 'standard_response') {
                     console.log('✅ Usata risposta Sistema Fluido');
                     
@@ -2130,7 +2156,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
                         const leadData = dataCollector.getAnalytics();
                         console.log('🎉 NUOVO LEAD GENERATO:', leadData);
                         
-                        // Aggiorna variabili globali
+                        // 🔧 FIX: Usa il nome corretto dal leadData (che ora è protetto)
                         if (leadData.leadData.name) customerName = leadData.leadData.name;
                         if (leadData.leadData.phone) customerPhone = leadData.leadData.phone;
                         if (leadData.leadData.email) customerEmail = leadData.leadData.email;
@@ -2898,9 +2924,15 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             };
         }
 
-        // Debug: Funzione per controllare stato sistema fluido ORIGINALE
+        // Debug: Funzione per controllare stato FluentDataCollector
         window.getFluentSystemState = () => {
-            console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
+            const analytics = dataCollector.getAnalytics();
+            const debugInfo = dataCollector.getDebugInfo ? dataCollector.getDebugInfo() : 'Debug info non disponibile';
+            
+            console.log('🧠 Stato Sistema Fluido:', analytics);
+            console.log('🔍 Debug Info:', debugInfo);
+            
+            return { analytics, debugInfo };
         };
 
         // Debug: Funzione per controllare session management
@@ -2949,18 +2981,19 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             };
         };
         
-        console.log('🚀 TribuCoach FIXED VERSION + HYBRID WORKOUT inizializzato!');
+        console.log('🚀 TribuCoach FIXED VERSION + HYBRID WORKOUT + NOME BUG FIXED inizializzato!');
         console.log('💡 Sistemi attivi:');
-        console.log('   🔄 Sistema Fluido: ✅');
+        console.log('   🔄 Sistema Fluido: ✅ (con nome protection)');
         console.log('   📱 Mobile Session Unified: ✅');
-        console.log('   🎯 Nome Collection: ✅');
+        console.log('   🎯 Nome Collection: ✅ (nome protetto da override)');
         console.log('   🔍 Response Logic Fixed: ✅');
         console.log('   💾 Field Consistency: ✅');
         console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
         console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
         console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
         console.log('   🏋️ Sistema Hybrid Workout:', hybridWorkoutSystem ? '✅' : '❌');
-        console.log('💡 Test: "dove dovrei allenarmi" → "budget limitato casa o palestra" → "Marco" → "347 888 1515"');
+        console.log('💡 Test: "Andrea" → "dove dovrei allenarmi" → "mi dai un supporto motivazionale" → "347 888 1515"');
+        console.log('🔧 Nome Bug: FIXED - FluentDataCollector non può più sovrascrivere nomi forzati');
         if (mlManager || enhancedKnowledgeSystem || motivationSystem || hybridWorkoutSystem) {
             console.log('🤖 Debug: window.getAllSystemsState() per analytics completi');
             if (hybridWorkoutSystem) {
@@ -2968,6 +3001,7 @@ Prima di iniziare, mi piacerebbe conoscerti meglio...`,
             }
         }
         console.log('📱 Debug: window.getSessionState() per stato sessione');
+        console.log('🔍 Debug: window.getFluentSystemState() per debug FluentDataCollector');
         
         // Inizializza status badges
         updateMLStatus();

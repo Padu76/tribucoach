@@ -1,4 +1,4 @@
-// 🎯 SISTEMA RACCOLTA DATI FLUIDA - TRIBUCOACH
+// 🎯 SISTEMA RACCOLTA DATI FLUIDA - TRIBUCOACH - FIXED NOME BUG
 // Sistema conversazionale per raccogliere nome e telefono in modo naturale
 
 class FluentDataCollector {
@@ -20,10 +20,28 @@ class FluentDataCollector {
         
         this.conversationHistory = [];
         this.initializePatterns();
+        
+        // 🔧 FIX: Nome forzato dall'esterno (per evitare override)
+        this.forcedName = null;
     }
 
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // 🔧 FIX: Metodo per settare nome dall'esterno
+    setForcedName(name) {
+        if (name && name.length >= 2) {
+            this.forcedName = name;
+            this.userData.name = name;
+            this.userData.hasName = true;
+            console.log(`🔧 FluentDataCollector: Nome forzato a "${name}"`);
+        }
+    }
+
+    // 🔧 FIX: Metodo per aggiornare nome dall'esterno
+    updateCustomerName(name) {
+        this.setForcedName(name);
     }
 
     initializePatterns() {
@@ -94,20 +112,58 @@ class FluentDataCollector {
         return null;
     }
 
+    // 🔧 FIX: Funzione extractName completamente riscritta per evitare false captures
     extractName(message) {
-        // Pattern semplificato per nomi
-        const namePatterns = [
-            /(?:sono|mi chiamo|il mio nome è)\s+([a-zA-Z]+)/i,
-            /^([a-zA-Z]+)$/,
-            /ciao,?\s*([a-zA-Z]+)/i
-        ];
+        // 🔧 FIX: Se c'è un nome forzato, non estrarre mai dal messaggio
+        if (this.forcedName) {
+            console.log(`🔧 Nome forzato attivo: "${this.forcedName}", ignoro estrazione da messaggio`);
+            return null;
+        }
+
+        const trimmedMessage = message.trim();
         
-        for (const pattern of namePatterns) {
-            const match = message.match(pattern);
-            if (match && match[1] && match[1].length > 1) {
-                return match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+        // 🔧 FIX: Pattern più specifici e sicuri
+        
+        // 1. SOLO se il messaggio è ESATTAMENTE un nome (senza altre parole)
+        if (/^[A-Za-z]{2,15}$/.test(trimmedMessage)) {
+            const possibleName = trimmedMessage.charAt(0).toUpperCase() + trimmedMessage.slice(1).toLowerCase();
+            
+            // 🔧 FIX: Lista estesa di parole comuni da escludere
+            const excludedWords = [
+                'mi', 'me', 'io', 'tu', 'che', 'come', 'cosa', 'dove', 'quando', 'perche', 'perché',
+                'ciao', 'salve', 'buongiorno', 'buonasera', 'grazie', 'prego', 'scusa', 'scusi',
+                'bene', 'male', 'bello', 'brutto', 'buono', 'cattivo', 'grande', 'piccolo',
+                'aiuto', 'help', 'supporto', 'consigli', 'info', 'informazioni',
+                'workout', 'allenamento', 'dieta', 'peso', 'forma', 'casa', 'palestra',
+                'ok', 'okay', 'si', 'no', 'forse', 'magari', 'ecco', 'allora', 'quindi',
+                'oggi', 'ieri', 'domani', 'sempre', 'mai', 'spesso', 'subito', 'dopo'
+            ];
+            
+            if (!excludedWords.includes(possibleName.toLowerCase())) {
+                console.log(`✅ Nome estratto come parola singola: "${possibleName}"`);
+                return possibleName;
+            } else {
+                console.log(`❌ Parola "${possibleName}" esclusa dalla lista common words`);
+                return null;
             }
         }
+        
+        // 2. Pattern espliciti con introduzione
+        const explicitNamePatterns = [
+            /(?:sono|mi chiamo|il mio nome è|mi puoi chiamare)\s+([A-Za-z]{2,15})(?:\s|$|!|\.|,)/i,
+            /(?:ciao,?\s+sono\s+)([A-Za-z]{2,15})(?:\s|$|!|\.|,)/i
+        ];
+        
+        for (const pattern of explicitNamePatterns) {
+            const match = trimmedMessage.match(pattern);
+            if (match && match[1]) {
+                const extractedName = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+                console.log(`✅ Nome estratto con pattern esplicito: "${extractedName}"`);
+                return extractedName;
+            }
+        }
+        
+        console.log(`❌ Nessun nome valido estratto da: "${message}"`);
         return null;
     }
 
@@ -126,6 +182,13 @@ class FluentDataCollector {
     // 🎯 LOGICA PRINCIPALE - Gestione Conversazione
     processMessage(userMessage) {
         const analysis = this.analyzeUserMessage(userMessage);
+        
+        // 🔧 FIX: Non permettere override del nome se è già stato forzato
+        if (this.forcedName && analysis.containsName) {
+            console.log(`🔧 Ignorando nome "${analysis.containsName}" perché nome forzato "${this.forcedName}" è attivo`);
+            analysis.containsName = null;
+        }
+        
         this.updateUserData(analysis);
         
         // Aggiorna conversazione
@@ -152,11 +215,12 @@ class FluentDataCollector {
             this.userData.interestLevel = 'high';
         }
 
-        // Salva nome se trovato
-        if (analysis.containsName && !this.userData.hasName) {
+        // 🔧 FIX: Salva nome solo se non c'è già un nome forzato
+        if (analysis.containsName && !this.userData.hasName && !this.forcedName) {
             this.userData.name = analysis.containsName;
             this.userData.hasName = true;
             this.userData.conversationStage = 'engaged';
+            console.log(`✅ Nome salvato in userData: "${analysis.containsName}"`);
         }
 
         // Salva obiettivo
@@ -181,8 +245,8 @@ class FluentDataCollector {
             return this.handlePhoneProvided(analysis.containsPhone);
         }
 
-        // 2. Se utente ha fornito nome
-        if (analysis.containsName) {
+        // 2. Se utente ha fornito nome (solo se non già forzato)
+        if (analysis.containsName && !this.forcedName) {
             return this.handleNameProvided(analysis.containsName);
         }
 
@@ -191,8 +255,8 @@ class FluentDataCollector {
             return this.askForPhone();
         }
 
-        // 4. Se è il momento di chiedere nome
-        if (this.shouldAskName()) {
+        // 4. Se è il momento di chiedere nome (solo se non già forzato)
+        if (this.shouldAskName() && !this.forcedName) {
             return this.askForName();
         }
 
@@ -208,13 +272,14 @@ class FluentDataCollector {
     // 🔍 CONDIZIONI per Raccolta Dati
     shouldAskName() {
         return !this.userData.hasName && 
+               !this.forcedName &&  // 🔧 FIX: Non chiedere se nome già forzato
                this.userData.interactionCount >= 2 && 
                this.userData.valueGiven.length > 0 &&
                this.userData.interestLevel !== 'low';
     }
 
     shouldAskPhone() {
-        return this.userData.hasName && 
+        return (this.userData.hasName || this.forcedName) &&  // 🔧 FIX: Considera anche nome forzato
                this.userData.hasGoal && 
                this.userData.interestLevel === 'high' && 
                !this.userData.hasPhone &&
@@ -322,12 +387,17 @@ Così posso personalizzare tutto per te! 🎯`,
     }
 
     handleNameProvided(name) {
-        this.userData.name = name;
+        // 🔧 FIX: Usa il nome corretto - forcedName ha priorità
+        const finalName = this.forcedName || name;
+        
+        this.userData.name = finalName;
         this.userData.hasName = true;
         this.userData.conversationStage = 'engaged';
         
+        console.log(`✅ handleNameProvided: usando nome "${finalName}" (forced: ${this.forcedName}, provided: ${name})`);
+        
         return {
-            message: `Piacere di conoscerti ${name}! 🤝
+            message: `Piacere di conoscerti, ${finalName}! 🤝
 
 Dimmi: qual è il tuo obiettivo principale?
 
@@ -350,11 +420,13 @@ Così ti do consigli specifici per te! 💪`,
             Math.floor(Math.random() * this.phoneRequests.length)
         ];
         
-        const userName = this.userData.name ? ` ${this.userData.name}` : '';
+        // 🔧 FIX: Usa nome corretto - priorità al forcedName
+        const userName = this.forcedName || this.userData.name;
+        const userNameFormatted = userName ? ` ${userName}` : '';
         const userGoal = this.userData.goal || 'i tuoi obiettivi';
         
         return {
-            message: `Perfetto${userName}! 🎯
+            message: `Perfetto${userNameFormatted}! 🎯
 
 Ti sto preparando un piano personalizzato per "${userGoal}":
 
@@ -376,10 +448,12 @@ ${randomRequest}
         this.userData.hasPhone = true;
         this.userData.conversationStage = 'converted';
         
-        const userName = this.userData.name ? ` ${this.userData.name}` : '';
+        // 🔧 FIX: Usa nome corretto - priorità al forcedName
+        const userName = this.forcedName || this.userData.name;
+        const userNameFormatted = userName ? ` ${userName}` : '';
         
         return {
-            message: `🎉 Perfetto${userName}!
+            message: `🎉 Perfetto${userNameFormatted}!
 
 Il tuo numero ${phone} è stato salvato.
 
@@ -419,6 +493,9 @@ Cosa ti serve oggi? 😊`,
 
     // 📈 ANALYTICS e TRACKING
     getAnalytics() {
+        // 🔧 FIX: Usa sempre il nome corretto nei dati analytics
+        const finalName = this.forcedName || this.userData.name;
+        
         return {
             sessionId: this.userData.sessionId,
             stage: this.userData.conversationStage,
@@ -426,17 +503,17 @@ Cosa ti serve oggi? 😊`,
             valueProvided: this.userData.valueGiven,
             interestLevel: this.userData.interestLevel,
             leadData: {
-                hasName: this.userData.hasName,
+                hasName: this.userData.hasName || (this.forcedName ? true : false),
                 hasGoal: this.userData.hasGoal, 
                 hasPhone: this.userData.hasPhone,
-                name: this.userData.name,
+                name: finalName,  // 🔧 FIX: Nome corretto qui
                 goal: this.userData.goal,
                 phone: this.userData.phone
             },
             conversionFunnel: {
                 initial: true,
-                engaged: this.userData.hasName,
-                qualified: this.userData.hasName && this.userData.hasGoal,
+                engaged: this.userData.hasName || (this.forcedName ? true : false),
+                qualified: (this.userData.hasName || this.forcedName) && this.userData.hasGoal,
                 converted: this.userData.hasPhone
             }
         };
@@ -448,10 +525,12 @@ Cosa ti serve oggi? 😊`,
             (Date.now() - this.userData.lastInteraction) / (1000 * 60 * 60 * 24);
         
         if (daysSinceLastInteraction >= 3 && !this.userData.hasPhone) {
-            const userName = this.userData.name ? ` ${this.userData.name}` : '';
+            // 🔧 FIX: Usa nome corretto nel follow-up
+            const userName = this.forcedName || this.userData.name;
+            const userNameFormatted = userName ? ` ${userName}` : '';
             
             return {
-                message: `👋 Ciao${userName}! È da qualche giorno che non ci sentiamo.
+                message: `👋 Ciao${userNameFormatted}! È da qualche giorno che non ci sentiamo.
 
 Come stanno andando:
 • Gli allenamenti che ti ho consigliato?
@@ -472,31 +551,53 @@ Interessato a saperne di più? 😊`,
 
     // 💾 SALVA/CARICA STATO
     exportUserData() {
-        return JSON.stringify(this.userData);
+        const exportData = {
+            ...this.userData,
+            forcedName: this.forcedName  // 🔧 FIX: Include nome forzato nell'export
+        };
+        return JSON.stringify(exportData);
     }
 
     importUserData(jsonData) {
         try {
-            this.userData = JSON.parse(jsonData);
+            const importedData = JSON.parse(jsonData);
+            this.userData = { ...importedData };
+            
+            // 🔧 FIX: Ripristina nome forzato se presente
+            if (importedData.forcedName) {
+                this.forcedName = importedData.forcedName;
+                delete this.userData.forcedName; // Rimuovi da userData, tienilo separato
+            }
+            
             return true;
         } catch (error) {
             console.error('Errore import dati:', error);
             return false;
         }
     }
+
+    // 🔧 FIX: Debug method per controllare stato
+    getDebugInfo() {
+        return {
+            forcedName: this.forcedName,
+            userDataName: this.userData.name,
+            hasName: this.userData.hasName,
+            finalNameUsed: this.forcedName || this.userData.name
+        };
+    }
 }
 
-// 🚀 ESEMPIO DI UTILIZZO
+// 🚀 ESEMPIO DI UTILIZZO AGGIORNATO
 const collector = new FluentDataCollector();
 
-// Simulazione conversazione
+// Simulazione conversazione aggiornata
 function simulateConversation() {
-    console.log('=== SIMULAZIONE CONVERSAZIONE ===\n');
+    console.log('=== SIMULAZIONE CONVERSAZIONE FIXED ===\n');
     
     const messages = [
         "Ciao, ho bisogno di un allenamento da casa",
         "Grazie! L'ho provato, molto utile",
-        "Marco",
+        "Marco",  // Questo nome dovrebbe essere estratto correttamente
         "Voglio perdere peso",
         "347 888 1515"
     ];
@@ -505,7 +606,8 @@ function simulateConversation() {
         console.log(`USER: ${msg}`);
         const response = collector.processMessage(msg);
         console.log(`BOT: ${response.message}\n`);
-        console.log(`[Analytics: ${response.action}]\n`);
+        console.log(`[Analytics: ${response.action}]`);
+        console.log(`[Debug: ${JSON.stringify(collector.getDebugInfo())}]\n`);
         
         if (index === messages.length - 1) {
             console.log('=== DATI FINALI RACCOLTI ===');
@@ -514,8 +616,28 @@ function simulateConversation() {
     });
 }
 
-// Esegui simulazione (decommenta per testare)
-// simulateConversation();
+// Test specifico per il bug del nome
+function testNameBug() {
+    console.log('=== TEST NOME BUG ===\n');
+    
+    const testCollector = new FluentDataCollector();
+    
+    // Simula il flusso reale dove il nome viene forzato
+    console.log('1. Forzo nome "Andrea" dall\'esterno');
+    testCollector.setForcedName('Andrea');
+    console.log('Debug dopo forcing:', testCollector.getDebugInfo());
+    
+    console.log('\n2. Processo messaggio "Mi dai un supporto motivazionale?"');
+    const response = testCollector.processMessage('Mi dai un supporto motivazionale?');
+    console.log('Risposta:', response.message.substring(0, 100) + '...');
+    console.log('Debug dopo messaggio:', testCollector.getDebugInfo());
+    
+    console.log('\n3. Analytics finali:');
+    console.log(JSON.stringify(testCollector.getAnalytics(), null, 2));
+}
+
+// Esegui test (decommenta per testare)
+// testNameBug();
 
 // 📤 EXPORT per integrazione
 if (typeof module !== 'undefined' && module.exports) {
