@@ -1389,7 +1389,7 @@
     <script src="advanced-knowledge-base.js"></script>
     <script src="motivation-system.js"></script>
 
-    <!-- JavaScript per Chat con Sistema ORIGINALE + ML -->
+    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + MOBILE SESSION FIX -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1469,6 +1469,136 @@
         const heroChatButton = document.getElementById('heroChatButton');
         const mlStatus = document.getElementById('mlStatus');
 
+        // 🔧 MOBILE SESSION FIX - Session Management ROBUSTO per Mobile + Desktop
+        function getSessionId() {
+            const STORAGE_KEY = 'tribucoach_session';
+            const PHONE_KEY = 'tribucoach_phone';
+            
+            // 1. PROVA localStorage prima (persistente)
+            let sessionId = localStorage.getItem(STORAGE_KEY);
+            
+            // 2. FALLBACK sessionStorage (meno persistente)
+            if (!sessionId) {
+                sessionId = sessionStorage.getItem(STORAGE_KEY);
+            }
+            
+            // 3. MOBILE RECOVERY: Usa telefono come chiave unificante
+            if (!sessionId) {
+                const savedPhone = localStorage.getItem(PHONE_KEY);
+                if (savedPhone && customerPhone && savedPhone === customerPhone) {
+                    // Riusa sessione esistente per stesso telefono
+                    sessionId = `session_${savedPhone.replace(/\D/g, '')}_unified`;
+                    console.log('📱 Sessione mobile recuperata per telefono:', savedPhone);
+                }
+            }
+            
+            // 4. GENERA NUOVO ID solo se necessario
+            if (!sessionId) {
+                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                console.log('🆕 Nuova sessione creata:', sessionId);
+            }
+            
+            // 5. SALVA in ENTRAMBI i storage per max persistenza
+            try {
+                localStorage.setItem(STORAGE_KEY, sessionId);
+                sessionStorage.setItem(STORAGE_KEY, sessionId);
+                
+                // Salva telefono se disponibile per future recovery
+                if (customerPhone) {
+                    localStorage.setItem(PHONE_KEY, customerPhone);
+                }
+                
+            } catch (error) {
+                console.warn('⚠️ Errore salvataggio sessione:', error);
+                // Fallback a memoria solo se storage non funziona
+                window.fallbackSessionId = sessionId;
+            }
+            
+            return sessionId;
+        }
+
+        // 🔧 AGGIUNTA: Funzione per unificare sessioni quando ottieni il telefono
+        function unifySessions(phone) {
+            if (!phone) return;
+            
+            try {
+                const PHONE_KEY = 'tribucoach_phone';
+                const STORAGE_KEY = 'tribucoach_session';
+                
+                // Salva telefono per future sessioni
+                localStorage.setItem(PHONE_KEY, phone);
+                
+                // Crea/aggiorna sessione unificata
+                const unifiedSessionId = `session_${phone.replace(/\D/g, '')}_unified`;
+                
+                localStorage.setItem(STORAGE_KEY, unifiedSessionId);
+                sessionStorage.setItem(STORAGE_KEY, unifiedSessionId);
+                
+                // Aggiorna variabile globale
+                if (!conversationId) {
+                    conversationId = `conv_${unifiedSessionId}`;
+                }
+                
+                console.log('🔗 Sessioni unificate per telefono:', phone);
+                
+            } catch (error) {
+                console.warn('⚠️ Errore unificazione sessioni:', error);
+            }
+        }
+
+        // 🔧 AGGIUNTA: Hook per quando ottieni dati utente
+        function onUserDataCollected(name, phone, email) {
+            // Aggiorna variabili globali
+            if (name) customerName = name;
+            if (phone) {
+                customerPhone = phone;
+                unifySessions(phone); // Unifica sessioni
+            }
+            if (email) customerEmail = email;
+            
+            console.log('👤 Dati utente raccolti:', { name, phone, email });
+        }
+
+        // 🔧 AGGIUNTA: Mobile-specific session recovery
+        function mobileSessionRecovery() {
+            // Controlla se siamo su mobile
+            const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (!isMobile) return;
+            
+            // Su mobile, prova a recuperare sessione precedente
+            const savedPhone = localStorage.getItem('tribucoach_phone');
+            const savedConversationId = localStorage.getItem('tribucoach_last_conversation');
+            
+            if (savedPhone && savedConversationId) {
+                console.log('📱 Tentativo recovery sessione mobile...');
+                
+                // Riprova a caricare conversazione precedente
+                customerPhone = savedPhone;
+                
+                // Usa conversationId salvato se recente (< 24h)
+                const conversationTimestamp = parseInt(savedConversationId.split('_')[1]);
+                const now = Date.now();
+                const dayInMs = 24 * 60 * 60 * 1000;
+                
+                if ((now - conversationTimestamp) < dayInMs) {
+                    conversationId = savedConversationId;
+                    console.log('✅ Conversazione mobile recuperata:', conversationId);
+                }
+            }
+        }
+
+        // 🔧 AGGIUNTA: Salva conversationId per mobile recovery
+        function saveConversationForMobileRecovery() {
+            if (conversationId) {
+                try {
+                    localStorage.setItem('tribucoach_last_conversation', conversationId);
+                } catch (error) {
+                    console.warn('⚠️ Errore salvataggio conversazione per recovery:', error);
+                }
+            }
+        }
+
         // 🤖 SOLO AGGIUNTA: Aggiorna ML Status
         function updateMLStatus() {
             if (!mlManager) {
@@ -1526,10 +1656,22 @@
             return 'conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // Inizializza chat con messaggio di benvenuto ORIGINALE
+        // 🔧 MODIFICA: Inizializza chat con messaggio di benvenuto + Mobile Recovery
         function initChat() {
-            conversationId = generateConversationId();
-            conversationStartTime = new Date();
+            // Recovery mobile prima di creare nuova chat
+            mobileSessionRecovery();
+            
+            if (!conversationId) {
+                conversationId = generateConversationId();
+            }
+            
+            if (!conversationStartTime) {
+                conversationStartTime = new Date();
+            }
+            
+            // Salva per recovery mobile
+            saveConversationForMobileRecovery();
+            
             messages = [{
                 role: 'assistant',
                 content: `👋 Ciao! Sono Andrea Padoan in versione digitale!
@@ -1634,10 +1776,17 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 if (fluentResponse.message && fluentResponse.action !== 'standard_response') {
                     console.log('✅ Usata risposta Sistema Fluido');
                     
-                    // 💾 Salva i dati se il lead è stato convertito
+                    // 💾 🔧 MODIFICA: Salva i dati se il lead è stato convertito + Mobile Session Fix
                     if (fluentResponse.leadGenerated) {
                         const leadData = dataCollector.getAnalytics();
                         console.log('🎉 NUOVO LEAD GENERATO:', leadData);
+                        
+                        // 🔧 AGGIUNTA: Unifica sessioni con telefono
+                        onUserDataCollected(
+                            leadData.leadData.name,
+                            leadData.leadData.phone, 
+                            leadData.leadData.email
+                        );
                         
                         // Aggiorna variabili globali
                         customerName = leadData.leadData.name;
@@ -1889,6 +2038,8 @@ Sono il tuo alterego digitale - parliamo! 😊`,
         // Salva inizio conversazione ORIGINALE
         async function saveConversationStart() {
             try {
+                const fullconversation = JSON.stringify(messages); // 🔧 FIX: Salva come stringa JSON
+                
                 await setDoc(doc(db, 'chatbase_conversations', conversationId), {
                     conversationId: conversationId,
                     startTime: conversationStartTime,
@@ -1900,7 +2051,8 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
                     status: 'active',
-                    fullConversation: messages,
+                    fullconversation: fullconversation, // 🔧 FIX: Campo minuscolo con JSON string
+                    fullConversation: messages, // Backup campo maiuscolo
                     hasFluentSystem: true,
                     hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
                     hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO
@@ -1921,13 +2073,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 // Ottieni analytics dal sistema fluido
                 const analytics = dataCollector.getAnalytics();
                 
+                const fullconversation = JSON.stringify(messages); // 🔧 FIX: Salva come stringa JSON
+                
                 const updateData = {
                     lastUpdate: new Date(),
                     messageCount: messages.length,
                     customerName: customerName || null,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
-                    fullConversation: messages,
+                    fullconversation: fullconversation, // 🔧 FIX: Campo minuscolo con JSON string 
+                    fullConversation: messages, // Backup campo maiuscolo
                     lastUserMessage: messages.filter(m => m.role === 'user').pop()?.content || '',
                     lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || '',
                     // 🧠 Dati del sistema fluido ORIGINALE
@@ -1978,16 +2133,6 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             } catch (error) {
                 console.error('❌ Errore aggiornamento conversazione:', error);
             }
-        }
-
-        // Session Management ORIGINALE
-        function getSessionId() {
-            let sessionId = sessionStorage.getItem('tribucoach_session');
-            if (!sessionId) {
-                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                sessionStorage.setItem('tribucoach_session', sessionId);
-            }
-            return sessionId;
         }
 
         // Mostra typing indicator ORIGINALE
@@ -2193,9 +2338,10 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
         };
         
-        console.log('🚀 TribuCoach SUPER-POTENZIATO inizializzato!');
+        console.log('🚀 TribuCoach SUPER-POTENZIATO + MOBILE FIXED inizializzato!');
         console.log('💡 Sistemi attivi:');
         console.log('   🔄 Sistema Fluido: ✅');
+        console.log('   📱 Mobile Session Fix: ✅');
         console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
         console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
         console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
