@@ -70,9 +70,53 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
                                        data.startTime ? data.startTime.toDate() : new Date(),
                             startTime: data.startTime ? data.startTime.toDate() : new Date(),
                             endTime: data.endTime ? data.endTime.toDate() : null,
-                            // 🔧 FIX IMMEDIATO: fullconversation (minuscolo) ha priorità!
-                            fullConversation: data.fullconversation || data.fullConversation || data.messages || [],
-                            messageCount: data.messageCount || (data.fullconversation ? data.fullconversation.length : (data.fullConversation ? data.fullConversation.length : 0)),
+                            // 🔧 FIX IMMEDIATO: Parsing JSON se necessario
+                            fullConversation: (() => {
+                                // Prova fullconversation (minuscolo) prima
+                                if (data.fullconversation) {
+                                    if (typeof data.fullconversation === 'string') {
+                                        try {
+                                            return JSON.parse(data.fullconversation);
+                                        } catch (e) {
+                                            console.warn('⚠️ JSON parse failed for fullconversation:', e);
+                                        }
+                                    } else if (Array.isArray(data.fullconversation)) {
+                                        return data.fullconversation;
+                                    }
+                                }
+                                
+                                // Fallback su fullConversation (maiuscolo)
+                                if (data.fullConversation) {
+                                    if (typeof data.fullConversation === 'string') {
+                                        try {
+                                            return JSON.parse(data.fullConversation);
+                                        } catch (e) {
+                                            console.warn('⚠️ JSON parse failed for fullConversation:', e);
+                                        }
+                                    } else if (Array.isArray(data.fullConversation)) {
+                                        return data.fullConversation;
+                                    }
+                                }
+                                
+                                // Fallback finale
+                                return data.messages || [];
+                            })(),
+                            messageCount: data.messageCount || (() => {
+                                // Calcola messageCount dai dati parsati
+                                if (data.fullconversation && typeof data.fullconversation === 'string') {
+                                    try {
+                                        const parsed = JSON.parse(data.fullconversation);
+                                        return Array.isArray(parsed) ? parsed.length : 0;
+                                    } catch (e) {
+                                        return 0;
+                                    }
+                                } else if (Array.isArray(data.fullconversation)) {
+                                    return data.fullconversation.length;
+                                } else if (Array.isArray(data.fullConversation)) {
+                                    return data.fullConversation.length;
+                                }
+                                return 0;
+                            })(),
                             customerName: data.customerName || 'Anonimo',
                             customerPhone: data.customerPhone || null,
                             customerEmail: data.customerEmail || null,
@@ -1039,12 +1083,50 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
             let userMessages = 0;
             let andreaMessages = 0;
             
-            // 🔧 VERIFICA TUTTI I POSSIBILI CAMPI MESSAGGI
-            let messagesToShow = chat.fullConversation || chat.fullconversation || chat.messages || [];
+            // 🔧 VERIFICA TUTTI I POSSIBILI CAMPI MESSAGGI CON PARSING
+            let messagesToShow = [];
             
-            console.log('🔍 DEBUG - Messaggi da mostrare:', messagesToShow);
-            console.log('🔍 DEBUG - È array?', Array.isArray(messagesToShow));
-            console.log('🔍 DEBUG - Lunghezza:', messagesToShow.length);
+            // 1. Prova fullconversation (potrebbe essere JSON string)
+            if (chat.fullconversation) {
+                console.log('🔍 DEBUG - fullconversation tipo:', typeof chat.fullconversation);
+                if (typeof chat.fullconversation === 'string') {
+                    try {
+                        messagesToShow = JSON.parse(chat.fullconversation);
+                        console.log('✅ JSON PARSED - fullconversation:', messagesToShow.length, 'messaggi');
+                    } catch (e) {
+                        console.log('❌ JSON PARSE FAILED:', e);
+                        messagesToShow = [];
+                    }
+                } else if (Array.isArray(chat.fullconversation)) {
+                    messagesToShow = chat.fullconversation;
+                    console.log('✅ ARRAY DIRETTO - fullconversation:', messagesToShow.length, 'messaggi');
+                }
+            }
+            
+            // 2. Fallback su fullConversation
+            if (messagesToShow.length === 0 && chat.fullConversation) {
+                if (typeof chat.fullConversation === 'string') {
+                    try {
+                        messagesToShow = JSON.parse(chat.fullConversation);
+                        console.log('✅ JSON PARSED - fullConversation:', messagesToShow.length, 'messaggi');
+                    } catch (e) {
+                        console.log('❌ JSON PARSE FAILED fullConversation:', e);
+                    }
+                } else if (Array.isArray(chat.fullConversation)) {
+                    messagesToShow = chat.fullConversation;
+                    console.log('✅ ARRAY DIRETTO - fullConversation:', messagesToShow.length, 'messaggi');
+                }
+            }
+            
+            // 3. Fallback su messages
+            if (messagesToShow.length === 0 && chat.messages) {
+                messagesToShow = Array.isArray(chat.messages) ? chat.messages : [];
+                console.log('✅ FALLBACK - messages:', messagesToShow.length, 'messaggi');
+            }
+            
+            console.log('🔍 DEBUG FINALE - Messaggi da mostrare:', messagesToShow);
+            console.log('🔍 DEBUG FINALE - È array?', Array.isArray(messagesToShow));
+            console.log('🔍 DEBUG FINALE - Lunghezza:', messagesToShow.length);
             
             if (Array.isArray(messagesToShow) && messagesToShow.length > 0) {
                 totalMessages = messagesToShow.length;
