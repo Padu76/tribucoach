@@ -53,13 +53,13 @@
                         const data = doc.data();
                         console.log('📋 Conversazione trovata:', doc.id, data);
 
-// ✅ AGGIUNGI QUESTE RIGHE QUI:
 if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
     console.log('🔍 DEBUG ANDREA - RAW DATA:', data);
+    console.log('🔍 DEBUG ANDREA - fullconversation:', data.fullconversation);
     console.log('🔍 DEBUG ANDREA - fullConversation:', data.fullConversation);
-    console.log('🔍 DEBUG ANDREA - TIPO:', typeof data.fullConversation);
-    console.log('🔍 DEBUG ANDREA - È ARRAY?', Array.isArray(data.fullConversation));
-    console.log('🔍 DEBUG ANDREA - LUNGHEZZA:', data.fullConversation ? data.fullConversation.length : 'undefined');
+    console.log('🔍 DEBUG ANDREA - TIPO:', typeof data.fullconversation);
+    console.log('🔍 DEBUG ANDREA - È ARRAY?', Array.isArray(data.fullconversation));
+    console.log('🔍 DEBUG ANDREA - LUNGHEZZA:', data.fullconversation ? data.fullconversation.length : 'undefined');
 }
                         
                         allChatConversations.push({
@@ -70,8 +70,9 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
                                        data.startTime ? data.startTime.toDate() : new Date(),
                             startTime: data.startTime ? data.startTime.toDate() : new Date(),
                             endTime: data.endTime ? data.endTime.toDate() : null,
-                            fullConversation: data.fullConversation || data.messages || [],
-                            messageCount: data.messageCount || (data.fullConversation ? data.fullConversation.length : 0),
+                            // 🔧 FIX IMMEDIATO: fullconversation (minuscolo) ha priorità!
+                            fullConversation: data.fullconversation || data.fullConversation || data.messages || [],
+                            messageCount: data.messageCount || (data.fullconversation ? data.fullconversation.length : (data.fullConversation ? data.fullConversation.length : 0)),
                             customerName: data.customerName || 'Anonimo',
                             customerPhone: data.customerPhone || null,
                             customerEmail: data.customerEmail || null,
@@ -1007,7 +1008,7 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
             modal.style.display = 'flex';
         };
 
-        // ✅ FUNZIONE CHAT DETAILS CORRETTA - CRONOLOGIA COMPLETA
+        // ✅ FUNZIONE CHAT DETAILS CORRETTA - CRONOLOGIA COMPLETA CON FIX
         window.showChatDetails = function(chatId) {
             const chat = allChatConversations.find(function(c) { return c.id === chatId; });
             if (!chat) {
@@ -1020,35 +1021,43 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
             const duration = calculateDuration(chat.startTime, chat.endTime);
             const statusBadge = getStatusBadge(chat.status);
             
-            // 🔍 DEBUG - Verifica dati completi
-            console.log('🔍 DEBUG - Conversazione completa:', chat.fullConversation);
-            console.log('🔍 DEBUG - Messaggi ordinati:', chat.fullConversation);
-            console.log('🔍 DEBUG - Statistiche:', {
-                totalMessages: chat.fullConversation ? chat.fullConversation.length : 0,
-                messageCount: chat.messageCount
+            // 🔍 DEBUG AVANZATO - Verifica tutti i campi
+            console.log('🔍 DEBUG COMPLETO - Chat trovata:', {
+                id: chat.id,
+                fullConversation: chat.fullConversation,
+                fullconversation: chat.fullconversation,
+                messages: chat.messages,
+                messageCount: chat.messageCount,
+                tipoFullConversation: typeof chat.fullConversation,
+                isArrayFullConversation: Array.isArray(chat.fullConversation),
+                lunghezzaFullConversation: chat.fullConversation ? chat.fullConversation.length : 'undefined'
             });
             
-            // ✅ COSTRUISCI CRONOLOGIA COMPLETA - NON LIMITATA
+            // ✅ COSTRUISCI CRONOLOGIA COMPLETA - CON FIX DEFINITIVO
             let conversationHtml = '';
             let totalMessages = 0;
             let userMessages = 0;
             let andreaMessages = 0;
             
-            if (Array.isArray(chat.fullConversation) && chat.fullConversation.length > 0) {
-                // 🎯 TUTTI I MESSAGGI - Non slice(-10)!
-                const allMessages = chat.fullConversation;
-                totalMessages = allMessages.length;
-                
-                console.log('🔍 DEBUG - Messaggio 1:', allMessages[0]);
+            // 🔧 VERIFICA TUTTI I POSSIBILI CAMPI MESSAGGI
+            let messagesToShow = chat.fullConversation || chat.fullconversation || chat.messages || [];
+            
+            console.log('🔍 DEBUG - Messaggi da mostrare:', messagesToShow);
+            console.log('🔍 DEBUG - È array?', Array.isArray(messagesToShow));
+            console.log('🔍 DEBUG - Lunghezza:', messagesToShow.length);
+            
+            if (Array.isArray(messagesToShow) && messagesToShow.length > 0) {
+                totalMessages = messagesToShow.length;
+                console.log('🎯 TROVATI MESSAGGI:', totalMessages);
                 
                 // Ordina per timestamp se disponibile
-                allMessages.sort((a, b) => {
+                messagesToShow.sort((a, b) => {
                     const aTime = a.timestamp ? new Date(a.timestamp) : new Date(0);
                     const bTime = b.timestamp ? new Date(b.timestamp) : new Date(0);
                     return aTime - bTime;
                 });
                 
-                conversationHtml = allMessages.map((msg, index) => {
+                conversationHtml = messagesToShow.map((msg, index) => {
                     const isUser = msg.role === 'user';
                     if (isUser) userMessages++;
                     else andreaMessages++;
@@ -1075,8 +1084,22 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
                         </div>
                     `;
                 }).join('');
+                
+                console.log('✅ HTML Generato per', totalMessages, 'messaggi');
             } else {
-                conversationHtml = '<div class="no-messages">Nessun messaggio disponibile nella cronologia</div>';
+                console.log('❌ NESSUN MESSAGGIO TROVATO - Campi disponibili:', Object.keys(chat));
+                conversationHtml = `
+                    <div class="no-messages">
+                        <p>❌ Nessun messaggio disponibile nella cronologia</p>
+                        <p><strong>Debug info:</strong></p>
+                        <ul style="text-align: left; color: #999; font-size: 0.8rem;">
+                            <li>fullConversation: ${chat.fullConversation ? 'presente' : 'assente'}</li>
+                            <li>fullconversation: ${chat.fullconversation ? 'presente' : 'assente'}</li>
+                            <li>messages: ${chat.messages ? 'presente' : 'assente'}</li>
+                            <li>messageCount: ${chat.messageCount || 'N/A'}</li>
+                        </ul>
+                    </div>
+                `;
             }
             
             // 📊 STATISTICHE REAL-TIME
@@ -1151,7 +1174,7 @@ if (doc.id === 'conv_1751666356129_zrdzo1kjp') {
                 </div>
                 
                 <div class="detail-section">
-                    <h4>💬 Cronologia Completa (${totalMessages} messaggi)</h4>
+                    <h4>💬 Cronologia Completa (${totalMessages} messaggi) - 🔧 FIXED!</h4>
                     ${statsHtml}
                     <div class="conversation-timeline">
                         ${conversationHtml}
