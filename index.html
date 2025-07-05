@@ -925,6 +925,92 @@
             cursor: not-allowed;
         }
 
+        /* 🎯 NAME COLLECTION OVERLAY */
+        .name-collection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .name-collection-box {
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid #ff6600;
+            box-shadow: 0 20px 60px rgba(255, 102, 0, 0.4);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        .name-collection-box h3 {
+            color: #ff6600;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .name-collection-box p {
+            color: #ccc;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #555;
+            border-radius: 25px;
+            background: #1a1a1a;
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .name-input:focus {
+            border-color: #ff6600;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+        }
+
+        .name-input::placeholder {
+            color: #888;
+        }
+
+        .name-submit-btn {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+            width: 100%;
+        }
+
+        .name-submit-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .name-submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @keyframes messageSlide {
             from {
                 opacity: 0;
@@ -1161,6 +1247,16 @@
             #messageInput {
                 padding: 12px 18px;
             }
+
+            /* Mobile name collection */
+            .name-collection-box {
+                padding: 30px 20px;
+                width: 95%;
+            }
+
+            .name-collection-box h3 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -1355,6 +1451,16 @@
     <div class="chat-overlay" id="chatOverlay">
         <!-- Chat Widget -->
         <div id="chatWidget">
+            <!-- 🎯 NAME COLLECTION OVERLAY -->
+            <div class="name-collection-overlay" id="nameCollectionOverlay">
+                <div class="name-collection-box">
+                    <h3>👋 Ciao! Sono Andrea Padoan</h3>
+                    <p>Prima di iniziare, mi piacerebbe conoscerti meglio.<br>Come ti chiami?</p>
+                    <input type="text" id="nameInput" class="name-input" placeholder="Inserisci il tuo nome..." maxlength="50">
+                    <button id="nameSubmitBtn" class="name-submit-btn">Iniziamo a chattare! 🚀</button>
+                </div>
+            </div>
+
             <div class="chat-header">
                 <div class="chat-header-info">
                     <img src="Padu_tribu045.jpg" alt="Andrea Padoan" class="chat-avatar">
@@ -1389,7 +1495,7 @@
     <script src="advanced-knowledge-base.js"></script>
     <script src="motivation-system.js"></script>
 
-    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + MOBILE SESSION FIX -->
+    <!-- JavaScript per Chat con Sistema ORIGINALE + ML + MOBILE SESSION FIX + NAME COLLECTION + RESPONSE FIX -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, doc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
@@ -1456,6 +1562,7 @@
         let messages = [];
         let isOpen = false;
         let conversationStartTime = null;
+        let waitingForName = false; // 🎯 FIX: Gestione nome
 
         // Elementi DOM ORIGINALI
         const chatButton = document.getElementById('chatButton');
@@ -1468,134 +1575,97 @@
         const mainChatButton = document.getElementById('mainChatButton');
         const heroChatButton = document.getElementById('heroChatButton');
         const mlStatus = document.getElementById('mlStatus');
+        
+        // 🎯 FIX: Elementi per raccolta nome
+        const nameCollectionOverlay = document.getElementById('nameCollectionOverlay');
+        const nameInput = document.getElementById('nameInput');
+        const nameSubmitBtn = document.getElementById('nameSubmitBtn');
 
-        // 🔧 MOBILE SESSION FIX - Session Management ROBUSTO per Mobile + Desktop
-        function getSessionId() {
-            const STORAGE_KEY = 'tribucoach_session';
-            const PHONE_KEY = 'tribucoach_phone';
-            
-            // 1. PROVA localStorage prima (persistente)
-            let sessionId = localStorage.getItem(STORAGE_KEY);
-            
-            // 2. FALLBACK sessionStorage (meno persistente)
-            if (!sessionId) {
-                sessionId = sessionStorage.getItem(STORAGE_KEY);
-            }
-            
-            // 3. MOBILE RECOVERY: Usa telefono come chiave unificante
-            if (!sessionId) {
-                const savedPhone = localStorage.getItem(PHONE_KEY);
-                if (savedPhone && customerPhone && savedPhone === customerPhone) {
-                    // Riusa sessione esistente per stesso telefono
-                    sessionId = `session_${savedPhone.replace(/\D/g, '')}_unified`;
-                    console.log('📱 Sessione mobile recuperata per telefono:', savedPhone);
-                }
-            }
-            
-            // 4. GENERA NUOVO ID solo se necessario
-            if (!sessionId) {
-                sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                console.log('🆕 Nuova sessione creata:', sessionId);
-            }
-            
-            // 5. SALVA in ENTRAMBI i storage per max persistenza
-            try {
-                localStorage.setItem(STORAGE_KEY, sessionId);
-                sessionStorage.setItem(STORAGE_KEY, sessionId);
-                
-                // Salva telefono se disponibile per future recovery
-                if (customerPhone) {
-                    localStorage.setItem(PHONE_KEY, customerPhone);
-                }
-                
-            } catch (error) {
-                console.warn('⚠️ Errore salvataggio sessione:', error);
-                // Fallback a memoria solo se storage non funziona
-                window.fallbackSessionId = sessionId;
-            }
-            
-            return sessionId;
-        }
-
-        // 🔧 AGGIUNTA: Funzione per unificare sessioni quando ottieni il telefono
-        function unifySessions(phone) {
-            if (!phone) return;
+        // 🔧 FIX 1: SESSION MANAGEMENT UNIFICATO - MOBILE PERSISTENT
+        function getUnifiedSessionId() {
+            const STORAGE_KEY = 'tribucoach_unified_session';
+            const PHONE_KEY = 'tribucoach_user_phone';
+            const NAME_KEY = 'tribucoach_user_name';
             
             try {
-                const PHONE_KEY = 'tribucoach_phone';
-                const STORAGE_KEY = 'tribucoach_session';
+                // 1. RECUPERA DATI ESISTENTI
+                let existingPhone = localStorage.getItem(PHONE_KEY) || sessionStorage.getItem(PHONE_KEY);
+                let existingName = localStorage.getItem(NAME_KEY) || sessionStorage.getItem(NAME_KEY);
+                let existingSession = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
                 
-                // Salva telefono per future sessioni
-                localStorage.setItem(PHONE_KEY, phone);
-                
-                // Crea/aggiorna sessione unificata
-                const unifiedSessionId = `session_${phone.replace(/\D/g, '')}_unified`;
-                
-                localStorage.setItem(STORAGE_KEY, unifiedSessionId);
-                sessionStorage.setItem(STORAGE_KEY, unifiedSessionId);
-                
-                // Aggiorna variabile globale
-                if (!conversationId) {
-                    conversationId = `conv_${unifiedSessionId}`;
+                // 2. SE HAI TELEFONO, CREA SESSIONE UNIFIED
+                if (existingPhone && customerPhone && existingPhone === customerPhone) {
+                    const unifiedSession = `session_${existingPhone.replace(/\D/g, '')}_unified`;
+                    localStorage.setItem(STORAGE_KEY, unifiedSession);
+                    sessionStorage.setItem(STORAGE_KEY, unifiedSession);
+                    console.log('📱 Sessione unificata per telefono:', existingPhone);
+                    return unifiedSession;
                 }
                 
-                console.log('🔗 Sessioni unificate per telefono:', phone);
+                // 3. USA SESSIONE ESISTENTE SE VALIDA
+                if (existingSession) {
+                    // Verifica che non sia troppo vecchia (max 30 giorni)
+                    const sessionTimestamp = existingSession.split('_')[1];
+                    if (sessionTimestamp && (Date.now() - parseInt(sessionTimestamp)) < 30 * 24 * 60 * 60 * 1000) {
+                        localStorage.setItem(STORAGE_KEY, existingSession);
+                        sessionStorage.setItem(STORAGE_KEY, existingSession);
+                        console.log('♻️ Riutilizzo sessione esistente:', existingSession);
+                        return existingSession;
+                    }
+                }
+                
+                // 4. GENERA NUOVA SESSIONE
+                const newSession = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                localStorage.setItem(STORAGE_KEY, newSession);
+                sessionStorage.setItem(STORAGE_KEY, newSession);
+                console.log('🆕 Nuova sessione creata:', newSession);
+                return newSession;
                 
             } catch (error) {
-                console.warn('⚠️ Errore unificazione sessioni:', error);
+                console.warn('⚠️ Errore session management:', error);
+                return `session_fallback_${Date.now()}`;
             }
         }
 
-        // 🔧 AGGIUNTA: Hook per quando ottieni dati utente
-        function onUserDataCollected(name, phone, email) {
-            // Aggiorna variabili globali
-            if (name) customerName = name;
-            if (phone) {
-                customerPhone = phone;
-                unifySessions(phone); // Unifica sessioni
-            }
-            if (email) customerEmail = email;
-            
-            console.log('👤 Dati utente raccolti:', { name, phone, email });
-        }
-
-        // 🔧 AGGIUNTA: Mobile-specific session recovery
-        function mobileSessionRecovery() {
-            // Controlla se siamo su mobile
-            const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            if (!isMobile) return;
-            
-            // Su mobile, prova a recuperare sessione precedente
-            const savedPhone = localStorage.getItem('tribucoach_phone');
-            const savedConversationId = localStorage.getItem('tribucoach_last_conversation');
-            
-            if (savedPhone && savedConversationId) {
-                console.log('📱 Tentativo recovery sessione mobile...');
-                
-                // Riprova a caricare conversazione precedente
-                customerPhone = savedPhone;
-                
-                // Usa conversationId salvato se recente (< 24h)
-                const conversationTimestamp = parseInt(savedConversationId.split('_')[1]);
-                const now = Date.now();
-                const dayInMs = 24 * 60 * 60 * 1000;
-                
-                if ((now - conversationTimestamp) < dayInMs) {
-                    conversationId = savedConversationId;
-                    console.log('✅ Conversazione mobile recuperata:', conversationId);
+        // 🔧 FIX: Salva dati utente in storage persistente
+        function saveUserDataToStorage(name, phone, email) {
+            try {
+                if (name) {
+                    localStorage.setItem('tribucoach_user_name', name);
+                    sessionStorage.setItem('tribucoach_user_name', name);
                 }
+                if (phone) {
+                    localStorage.setItem('tribucoach_user_phone', phone);
+                    sessionStorage.setItem('tribucoach_user_phone', phone);
+                }
+                if (email) {
+                    localStorage.setItem('tribucoach_user_email', email);
+                    sessionStorage.setItem('tribucoach_user_email', email);
+                }
+                console.log('💾 Dati utente salvati nel storage');
+            } catch (error) {
+                console.warn('⚠️ Errore salvataggio dati utente:', error);
             }
         }
 
-        // 🔧 AGGIUNTA: Salva conversationId per mobile recovery
-        function saveConversationForMobileRecovery() {
-            if (conversationId) {
-                try {
-                    localStorage.setItem('tribucoach_last_conversation', conversationId);
-                } catch (error) {
-                    console.warn('⚠️ Errore salvataggio conversazione per recovery:', error);
+        // 🔧 FIX: Recupera dati utente da storage
+        function loadUserDataFromStorage() {
+            try {
+                const savedName = localStorage.getItem('tribucoach_user_name') || sessionStorage.getItem('tribucoach_user_name');
+                const savedPhone = localStorage.getItem('tribucoach_user_phone') || sessionStorage.getItem('tribucoach_user_phone');
+                const savedEmail = localStorage.getItem('tribucoach_user_email') || sessionStorage.getItem('tribucoach_user_email');
+                
+                if (savedName || savedPhone || savedEmail) {
+                    customerName = savedName;
+                    customerPhone = savedPhone; 
+                    customerEmail = savedEmail;
+                    console.log('📱 Dati utente recuperati:', { name: savedName, phone: savedPhone, email: savedEmail });
+                    return true;
                 }
+                return false;
+            } catch (error) {
+                console.warn('⚠️ Errore recupero dati utente:', error);
+                return false;
             }
         }
 
@@ -1656,11 +1726,81 @@
             return 'conv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
 
-        // 🔧 MODIFICA: Inizializza chat con messaggio di benvenuto + Mobile Recovery
-        function initChat() {
-            // Recovery mobile prima di creare nuova chat
-            mobileSessionRecovery();
+        // 🎯 FIX 2: FLOW NOME OBBLIGATORIO
+        function showNameCollection() {
+            nameCollectionOverlay.style.display = 'flex';
+            waitingForName = true;
+            nameInput.focus();
             
+            // Disabilita input principale
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+        }
+
+        function hideNameCollection() {
+            nameCollectionOverlay.style.display = 'none';
+            waitingForName = false;
+            
+            // Riabilita input principale
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+            messageInput.focus();
+        }
+
+        function handleNameSubmission() {
+            const name = nameInput.value.trim();
+            
+            if (!name || name.length < 2) {
+                nameInput.style.borderColor = '#f44336';
+                nameInput.focus();
+                return;
+            }
+
+            // Salva nome e aggiorna variabili
+            customerName = name;
+            saveUserDataToStorage(name, customerPhone, customerEmail);
+            
+            // Nascondi overlay
+            hideNameCollection();
+            
+            // Aggiungi messaggio personalizzato
+            messages.push({
+                role: 'assistant',
+                content: `Piacere di conoscerti, ${name}! 🎉
+
+Ora che ci siamo presentati, sono qui per aiutarti con:
+
+🏋️ **Allenamenti personalizzati** - Dimmi i tuoi obiettivi e creerò il workout perfetto per te
+🥗 **Consigli alimentari** - Nutrizione su misura per il tuo stile di vita  
+🔥 **Motivazione quotidiana** - Quando hai bisogno di una spinta extra
+📞 **Info sui miei servizi** - Personal training, consulenze, programmi
+
+**Cosa vorresti sapere per primo?** Scrivi pure liberamente, sono qui per te! 💪`,
+                timestamp: new Date(),
+                mlEnhanced: false
+            });
+            
+            renderMessages();
+            updateConversation();
+            
+            console.log('✅ Nome raccolto:', name);
+        }
+
+        // Event listeners per nome
+        nameSubmitBtn.addEventListener('click', handleNameSubmission);
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleNameSubmission();
+            }
+        });
+
+        nameInput.addEventListener('input', () => {
+            nameInput.style.borderColor = '#555';
+        });
+
+        // 🔧 MODIFICA: Inizializza chat con sistema nome + recupero dati
+        function initChat() {
             if (!conversationId) {
                 conversationId = generateConversationId();
             }
@@ -1668,36 +1808,56 @@
             if (!conversationStartTime) {
                 conversationStartTime = new Date();
             }
-            
-            // Salva per recovery mobile
-            saveConversationForMobileRecovery();
-            
-            messages = [{
-                role: 'assistant',
-                content: `👋 Ciao! Sono Andrea Padoan in versione digitale!
 
-🎯 Sono qui per aiutarti con:
-🏋️ Allenamenti su misura per te
-🥗 Consigli alimentari personalizzati  
-🔥 Motivazione quando ne hai bisogno
-📞 Informazioni sui miei servizi
-
-💪 Prova a chiedermi:
-• "Crea un allenamento per me"
-• "Cosa dovrei mangiare oggi?"
-• "Ho bisogno di motivazione"
-• "Quanto costa il Personal Training?"
-
-Sono il tuo alterego digitale - parliamo! 😊`,
-                timestamp: new Date()
-            }];
+            // Recupera dati utente esistenti
+            const hasUserData = loadUserDataFromStorage();
             
-            renderMessages();
-            updateMLStatus(); // 🤖 SOLO AGGIUNTA
-            console.log('💬 Andrea Padoan Chat inizializzato:', conversationId);
+            if (hasUserData && customerName) {
+                // Utente esistente - messaggio personalizzato
+                messages = [{
+                    role: 'assistant',
+                    content: `Ciao ${customerName}! 👋 Bentornato/a!
+
+Come posso aiutarti oggi?
+
+🏋️ **Allenamento** - Nuovo workout o modifiche al programma?
+🥗 **Alimentazione** - Consigli nutrizionali o piano alimentare?
+🔥 **Motivazione** - Hai bisogno di una spinta motivazionale?
+📞 **Servizi** - Info su personal training e consulenze?
+
+Scrivi pure quello di cui hai bisogno! 💪`,
+                    timestamp: new Date(),
+                    mlEnhanced: false
+                }];
+                
+                renderMessages();
+                updateMLStatus();
+                
+            } else {
+                // Nuovo utente - chiedi nome
+                messages = [{
+                    role: 'assistant',
+                    content: `👋 Benvenuto/a in TribuCoach!
+
+Sono Andrea Padoan, il tuo personal trainer digitale sempre disponibile.
+
+Prima di iniziare, mi piacerebbe conoscerti meglio...`,
+                    timestamp: new Date(),
+                    mlEnhanced: false
+                }];
+                
+                renderMessages();
+                
+                // Mostra overlay nome dopo 1 secondo
+                setTimeout(() => {
+                    showNameCollection();
+                }, 1000);
+            }
             
             // Crea record conversazione iniziale
             saveConversationStart();
+            
+            console.log('💬 Andrea Padoan Chat inizializzato:', conversationId);
         }
 
         // Renderizza messaggi ORIGINALE + badge ML
@@ -1731,25 +1891,63 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 100);
         }
 
-        // 🎯 FUNZIONE CHAT ORIGINALE + ML
+        // 🎯 FIX 3: FUNZIONE CHAT CON LOGICA CORRETTA (ALIMENTAZIONE → ALIMENTAZIONE)
         async function callChatFunction(userMessage) {
             try {
-                console.log('🧠 Processando messaggio...');
+                console.log('🧠 Processando messaggio:', userMessage);
                 
-                // 🤖 SOLO AGGIUNTA: Prova ML se disponibile
+                // 🔍 ANALISI TOPIC per routing corretto
+                const isNutritionQuery = detectNutritionQuery(userMessage);
+                const isTrainingQuery = detectTrainingQuery(userMessage);
+                const isMotivationQuery = detectMotivationQuery(userMessage);
+                
+                console.log('🎯 Topic analysis:', { 
+                    nutrition: isNutritionQuery, 
+                    training: isTrainingQuery, 
+                    motivation: isMotivationQuery 
+                });
+
+                // 🧠 ENHANCED KNOWLEDGE SYSTEM PRIMA (più specifico)
+                if (enhancedKnowledgeSystem) {
+                    try {
+                        const enhancedResult = enhancedKnowledgeSystem.generateSmartResponse(userMessage);
+                        
+                        if (enhancedResult && enhancedResult.confidence === 'high') {
+                            console.log('🎯 Usata risposta Enhanced Knowledge System');
+                            updateMLStatus();
+                            
+                            return {
+                                success: true,
+                                reply: enhancedResult.content,
+                                mlEnhanced: true,
+                                confidence: enhancedResult.confidence,
+                                source: 'enhanced_knowledge',
+                                conversationId: conversationId,
+                                customerName: customerName,
+                                customerPhone: customerPhone,
+                                customerEmail: customerEmail
+                            };
+                        }
+                    } catch (enhancedError) {
+                        console.warn('⚠️ Errore Enhanced Knowledge System:', enhancedError);
+                    }
+                }
+
+                // 🤖 ML MANAGER SECONDO (machine learning)
                 if (mlManager) {
                     try {
                         const sessionContext = {
-                            sessionId: getSessionId(),
+                            sessionId: getUnifiedSessionId(),
                             conversationId: conversationId,
                             messageCount: messages.length,
-                            userProfile: { name: customerName, phone: customerPhone }
+                            userProfile: { name: customerName, phone: customerPhone },
+                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : 'general'
                         };
 
                         const mlResult = mlManager.processMessageWithML(userMessage, sessionContext);
                         
                         if (mlResult.confidence > 0.7) {
-                            console.log('🎯 Usata risposta ML (alta confidenza)');
+                            console.log('🤖 Usata risposta ML (alta confidenza)');
                             updateMLStatus();
                             
                             return {
@@ -1757,6 +1955,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                                 reply: mlResult.response,
                                 mlEnhanced: true,
                                 confidence: mlResult.confidence,
+                                source: 'ml_manager',
                                 conversationId: conversationId,
                                 customerName: customerName,
                                 customerPhone: customerPhone,
@@ -1764,34 +1963,29 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                             };
                         }
                     } catch (mlError) {
-                        console.warn('⚠️ Errore ML, continuo con sistema originale:', mlError);
+                        console.warn('⚠️ Errore ML Manager:', mlError);
                     }
                 }
-                
-                // 🚀 SISTEMA ORIGINALE: USA IL SISTEMA FLUIDO PRIMA
+
+                // 🚀 FLUENT DATA COLLECTOR TERZO (lead generation + responses)
                 const fluentResponse = dataCollector.processMessage(userMessage);
                 console.log('🎯 Risposta Sistema Fluido:', fluentResponse);
                 
-                // Se il sistema fluido ha una risposta diretta, usala
                 if (fluentResponse.message && fluentResponse.action !== 'standard_response') {
                     console.log('✅ Usata risposta Sistema Fluido');
                     
-                    // 💾 🔧 MODIFICA: Salva i dati se il lead è stato convertito + Mobile Session Fix
+                    // 💾 Salva i dati se il lead è stato convertito
                     if (fluentResponse.leadGenerated) {
                         const leadData = dataCollector.getAnalytics();
                         console.log('🎉 NUOVO LEAD GENERATO:', leadData);
                         
-                        // 🔧 AGGIUNTA: Unifica sessioni con telefono
-                        onUserDataCollected(
-                            leadData.leadData.name,
-                            leadData.leadData.phone, 
-                            leadData.leadData.email
-                        );
-                        
                         // Aggiorna variabili globali
-                        customerName = leadData.leadData.name;
-                        customerPhone = leadData.leadData.phone;
-                        customerEmail = leadData.leadData.email;
+                        if (leadData.leadData.name) customerName = leadData.leadData.name;
+                        if (leadData.leadData.phone) customerPhone = leadData.leadData.phone;
+                        if (leadData.leadData.email) customerEmail = leadData.leadData.email;
+                        
+                        // Salva nel storage
+                        saveUserDataToStorage(customerName, customerPhone, customerEmail);
                         
                         // Salva lead in Firebase
                         await saveLeadToFirebase(leadData);
@@ -1801,18 +1995,44 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                         success: true,
                         reply: fluentResponse.message,
                         mlEnhanced: false,
+                        source: 'fluent_data_collector',
                         conversationId: conversationId,
                         customerName: customerName,
                         customerPhone: customerPhone,
                         customerEmail: customerEmail
                     };
                 }
-                
-                // 🤖 SOLO AGGIUNTA: ML con confidenza media
+
+                // 🔄 ENHANCED KNOWLEDGE CON CONFIDENZA MEDIA
+                if (enhancedKnowledgeSystem) {
+                    try {
+                        const enhancedResult = enhancedKnowledgeSystem.generateSmartResponse(userMessage);
+                        
+                        if (enhancedResult && enhancedResult.confidence === 'medium') {
+                            console.log('📋 Usata risposta Enhanced Knowledge (confidenza media)');
+                            
+                            return {
+                                success: true,
+                                reply: enhancedResult.content,
+                                mlEnhanced: true,
+                                confidence: enhancedResult.confidence,
+                                source: 'enhanced_knowledge_medium',
+                                conversationId: conversationId,
+                                customerName: customerName,
+                                customerPhone: customerPhone,
+                                customerEmail: customerEmail
+                            };
+                        }
+                    } catch (enhancedError) {
+                        console.warn('⚠️ Errore Enhanced Knowledge fallback:', enhancedError);
+                    }
+                }
+
+                // 🤖 ML CON CONFIDENZA MEDIA
                 if (mlManager) {
                     try {
                         const sessionContext = {
-                            sessionId: getSessionId(),
+                            sessionId: getUnifiedSessionId(),
                             conversationId: conversationId,
                             messageCount: messages.length,
                             userProfile: { name: customerName, phone: customerPhone }
@@ -1829,6 +2049,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                                 reply: mlResult.response,
                                 mlEnhanced: true,
                                 confidence: mlResult.confidence,
+                                source: 'ml_manager_medium',
                                 conversationId: conversationId,
                                 customerName: customerName,
                                 customerPhone: customerPhone,
@@ -1840,7 +2061,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     }
                 }
                 
-                // SISTEMA ORIGINALE: Altrimenti usa il backend Vercel per risposte più complesse
+                // 🌐 BACKEND VERCEL COME ULTIMO FALLBACK
                 console.log('🔄 Chiamando Backend Vercel per risposta avanzata...');
                 
                 const conversationHistory = messages.map(msg => ({
@@ -1863,7 +2084,13 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                         conversationId: conversationId,
                         customerName: customerName,
                         customerPhone: customerPhone,
-                        customerEmail: customerEmail
+                        customerEmail: customerEmail,
+                        context: {
+                            topic: isNutritionQuery ? 'nutrition' : isTrainingQuery ? 'training' : 'general',
+                            isNutritionQuery,
+                            isTrainingQuery,
+                            isMotivationQuery
+                        }
                     })
                 });
 
@@ -1876,7 +2103,8 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 
                 return {
                     ...result,
-                    mlEnhanced: false
+                    mlEnhanced: false,
+                    source: 'vercel_backend'
                 };
                 
             } catch (error) {
@@ -1884,9 +2112,49 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 return {
                     success: false,
                     reply: 'Mi dispiace, c\'è stato un errore. Riprova tra poco! 🔧',
-                    mlEnhanced: false
+                    mlEnhanced: false,
+                    source: 'error'
                 };
             }
+        }
+
+        // 🔍 FIX: Funzioni per rilevare topic del messaggio
+        function detectNutritionQuery(message) {
+            const nutritionKeywords = [
+                'alimentazione', 'dieta', 'cibo', 'mangiare', 'nutrizione', 'calorie', 
+                'proteine', 'carboidrati', 'grassi', 'macro', 'vitamine', 'integratori',
+                'colazione', 'pranzo', 'cena', 'spuntino', 'peso', 'dimagrire',
+                'cosa mangio', 'cosa mangiare', 'perdere peso', 'ingrassare',
+                'fame', 'sazietà', 'digestione', 'metabolismo', 'supplementi'
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            return nutritionKeywords.some(keyword => lowerMessage.includes(keyword));
+        }
+
+        function detectTrainingQuery(message) {
+            const trainingKeywords = [
+                'allenamento', 'workout', 'esercizi', 'palestra', 'fitness',
+                'muscoli', 'forza', 'cardio', 'pesi', 'squat', 'panca',
+                'stacco', 'corsa', 'camminata', 'stretching', 'yoga',
+                'serie', 'ripetizioni', 'recupero', 'riposo', 'programma',
+                'scheda', 'training', 'movimento', 'postura', 'dolore muscolare'
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            return trainingKeywords.some(keyword => lowerMessage.includes(keyword));
+        }
+
+        function detectMotivationQuery(message) {
+            const motivationKeywords = [
+                'motivazione', 'scoraggiato', 'demotivato', 'non ce la faccio',
+                'difficile', 'pigro', 'stanco', 'stress', 'ansia',
+                'non riesco', 'ho paura', 'insicuro', 'dubbio',
+                'aiuto', 'supporto', 'incoraggiamento', 'spinta'
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            return motivationKeywords.some(keyword => lowerMessage.includes(keyword));
         }
 
         // 💾 Salva lead nel sistema ORIGINALE
@@ -1897,15 +2165,16 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     phone: analytics.leadData.phone,
                     goal: analytics.leadData.goal,
                     timestamp: new Date(),
-                    source: 'tribucoach_super_enhanced_chat',
+                    source: 'tribucoach_fixed_chat',
                     sessionId: analytics.sessionId,
                     conversationStage: analytics.stage,
                     interactionCount: analytics.interactionCount,
                     valueProvided: analytics.valueProvided,
                     conversionProbability: 'high',
-                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
-                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO  
-                    hasMotivationSystem: motivationSystem ? true : false // 🔥 AGGIUNTO
+                    hasMLSystem: mlManager ? true : false,
+                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false,
+                    hasMotivationSystem: motivationSystem ? true : false,
+                    fixedVersion: true // Marker per identificare versione fixed
                 };
                 
                 // Salva in Firebase
@@ -1944,6 +2213,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 📱 ${leadData.phone}<br>
                 🎯 ${leadData.goal}
                 ${mlManager ? '<br>🤖 ML Enhanced' : ''}
+                <br>🔧 Fixed Version
             `;
             
             document.body.appendChild(notification);
@@ -1960,10 +2230,13 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }, 5000);
         }
 
-        // Invia messaggio ORIGINALE + ML
+        // Invia messaggio ORIGINALE + ML + FIX NOME
         async function sendMessage() {
             const userMessage = messageInput.value.trim();
             if (!userMessage) return;
+            
+            // 🎯 FIX: Blocca invio se aspetta nome
+            if (waitingForName) return;
             
             // Aggiungi messaggio utente
             messages.push({
@@ -1991,8 +2264,9 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                         role: 'assistant',
                         content: response.reply,
                         timestamp: new Date(),
-                        mlEnhanced: response.mlEnhanced || false, // 🤖 SOLO AGGIUNTA
-                        confidence: response.confidence
+                        mlEnhanced: response.mlEnhanced || false,
+                        confidence: response.confidence,
+                        source: response.source
                     });
                     
                     // Aggiorna dati conversazione se disponibili
@@ -2001,12 +2275,15 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                     if (response.customerPhone) customerPhone = response.customerPhone;
                     if (response.customerEmail) customerEmail = response.customerEmail;
                     
+                    // Salva dati aggiornati
+                    saveUserDataToStorage(customerName, customerPhone, customerEmail);
+                    
                     renderMessages();
                     
                     // Aggiorna conversazione in Firestore
                     await updateConversation();
                     
-                    console.log('✅ Messaggio elaborato');
+                    console.log('✅ Messaggio elaborato con fonte:', response.source);
                     
                 } else {
                     messages.push({
@@ -2035,37 +2312,41 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             messageInput.focus();
         }
 
-        // Salva inizio conversazione ORIGINALE
+        // Salva inizio conversazione FIXED
         async function saveConversationStart() {
             try {
-                const fullconversation = JSON.stringify(messages); // 🔧 FIX: Salva come stringa JSON
-                
-                await setDoc(doc(db, 'chatbase_conversations', conversationId), {
+                const conversationData = {
                     conversationId: conversationId,
                     startTime: conversationStartTime,
                     lastUpdate: new Date(),
-                    sessionId: getSessionId(),
+                    sessionId: getUnifiedSessionId(),
                     userAgent: navigator.userAgent,
-                    messageCount: 1,
+                    messageCount: messages.length,
                     customerName: customerName || null,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
                     status: 'active',
-                    fullconversation: fullconversation, // 🔧 FIX: Campo minuscolo con JSON string
-                    fullConversation: messages, // Backup campo maiuscolo
+                    // 🔧 FIX 4: FIELD CONSISTENCY - UNIFICATO
+                    fullConversation: messages, // Array standard
+                    fullconversation: JSON.stringify(messages), // JSON string backup
                     hasFluentSystem: true,
-                    hasMLSystem: mlManager ? true : false, // 🤖 AGGIUNTO
-                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false, // 🧠 AGGIUNTO
-                    hasMotivationSystem: motivationSystem ? true : false // 🔥 AGGIUNTO
-                });
+                    hasMLSystem: mlManager ? true : false,
+                    hasAdvancedKnowledge: enhancedKnowledgeSystem ? true : false,
+                    hasMotivationSystem: motivationSystem ? true : false,
+                    fixedVersion: true, // Marker versione fixed
+                    hasMobilePersistence: true,
+                    hasNameCollection: true
+                };
                 
-                console.log('💾 Conversazione inizializzata');
+                await setDoc(doc(db, 'chatbase_conversations', conversationId), conversationData);
+                console.log('💾 Conversazione inizializzata (FIXED VERSION)');
+                
             } catch (error) {
                 console.error('❌ Errore inizializzazione conversazione:', error);
             }
         }
 
-        // Aggiorna conversazione esistente ORIGINALE + ML
+        // Aggiorna conversazione esistente FIXED + ML
         async function updateConversation() {
             try {
                 const conversationRef = doc(db, 'chatbase_conversations', conversationId);
@@ -2073,19 +2354,18 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 // Ottieni analytics dal sistema fluido
                 const analytics = dataCollector.getAnalytics();
                 
-                const fullconversation = JSON.stringify(messages); // 🔧 FIX: Salva come stringa JSON
-                
                 const updateData = {
                     lastUpdate: new Date(),
                     messageCount: messages.length,
                     customerName: customerName || null,
                     customerPhone: customerPhone || null,
                     customerEmail: customerEmail || null,
-                    fullconversation: fullconversation, // 🔧 FIX: Campo minuscolo con JSON string 
-                    fullConversation: messages, // Backup campo maiuscolo
+                    // 🔧 FIX 4: FIELD CONSISTENCY UNIFICATO
+                    fullConversation: messages, // Array standard per dashboard
+                    fullconversation: JSON.stringify(messages), // JSON string per backup/compatibility
                     lastUserMessage: messages.filter(m => m.role === 'user').pop()?.content || '',
                     lastAssistantMessage: messages.filter(m => m.role === 'assistant').pop()?.content || '',
-                    // 🧠 Dati del sistema fluido ORIGINALE
+                    // Dati del sistema fluido
                     fluentSystemData: {
                         stage: analytics.stage,
                         interestLevel: analytics.interestLevel,
@@ -2094,10 +2374,12 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                         hasName: analytics.leadData.hasName,
                         hasPhone: analytics.leadData.hasPhone,
                         hasGoal: analytics.leadData.hasGoal
-                    }
+                    },
+                    fixedVersion: true,
+                    sessionId: getUnifiedSessionId()
                 };
 
-                // 🤖🧠🔥 AGGIUNTA: Dati sistemi avanzati se disponibili
+                // Dati sistemi avanzati se disponibili
                 if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
                     try {
                         updateData.enhancedSystemsData = {};
@@ -2129,7 +2411,8 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 }
                 
                 await updateDoc(conversationRef, updateData);
-                console.log('💾 Conversazione aggiornata');
+                console.log('💾 Conversazione aggiornata (FIXED)');
+                
             } catch (error) {
                 console.error('❌ Errore aggiornamento conversazione:', error);
             }
@@ -2160,7 +2443,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             if (typing) typing.remove();
         }
 
-        // Toggle chat window ORIGINALE
+        // Toggle chat window ORIGINALE + FIX NOME
         function toggleChat() {
             isOpen = !isOpen;
             
@@ -2174,7 +2457,9 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 }
                 
                 setTimeout(() => {
-                    messageInput.focus();
+                    if (!waitingForName) {
+                        messageInput.focus();
+                    }
                 }, 300);
                 
             } else {
@@ -2189,17 +2474,18 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }
         }
 
-        // Marca conversazione come completata ORIGINALE
+        // Marca conversazione come completata FIXED
         async function markConversationComplete() {
             try {
                 const conversationRef = doc(db, 'chatbase_conversations', conversationId);
                 const updateData = {
                     status: 'completed',
                     endTime: new Date(),
-                    duration: new Date() - conversationStartTime
+                    duration: new Date() - conversationStartTime,
+                    fixedVersion: true
                 };
 
-                // 🤖🧠🔥 AGGIUNTA: Insights finali sistemi avanzati
+                // Insights finali sistemi avanzati
                 if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
                     try {
                         updateData.finalEnhancedInsights = {};
@@ -2222,7 +2508,8 @@ Sono il tuo alterego digitale - parliamo! 😊`,
                 }
 
                 await updateDoc(conversationRef, updateData);
-                console.log('✅ Conversazione marcata come completata');
+                console.log('✅ Conversazione marcata come completata (FIXED)');
+                
             } catch (error) {
                 console.error('❌ Errore marcatura conversazione:', error);
             }
@@ -2235,7 +2522,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             }
         });
 
-        // Event Listeners ORIGINALI
+        // Event Listeners ORIGINALI + FIX NOME
         chatButton.addEventListener('click', toggleChat);
         closeButton.addEventListener('click', toggleChat);
         sendButton.addEventListener('click', sendMessage);
@@ -2243,7 +2530,9 @@ Sono il tuo alterego digitale - parliamo! 😊`,
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                if (!waitingForName) { // 🎯 FIX: Blocca se aspetta nome
+                    sendMessage();
+                }
             }
         });
 
@@ -2296,7 +2585,7 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             });
         });
 
-        // 🤖🧠🔥 AGGIUNTA: Manutenzione e debug per tutti i sistemi
+        // Manutenzione e debug per tutti i sistemi
         if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
             // Manutenzione automatica ogni ora per sistemi disponibili
             setInterval(() => {
@@ -2333,27 +2622,43 @@ Sono il tuo alterego digitale - parliamo! 😊`,
             };
         }
 
-        // 📊 Debug: Funzione per controllare stato sistema fluido ORIGINALE
+        // Debug: Funzione per controllare stato sistema fluido ORIGINALE
         window.getFluentSystemState = () => {
             console.log('🧠 Stato Sistema Fluido:', dataCollector.getAnalytics());
         };
+
+        // Debug: Funzione per controllare session management
+        window.getSessionState = () => {
+            console.log('📱 Session State:', {
+                unifiedSessionId: getUnifiedSessionId(),
+                customerName: customerName,
+                customerPhone: customerPhone,
+                customerEmail: customerEmail,
+                conversationId: conversationId,
+                messagesCount: messages.length
+            });
+        };
         
-        console.log('🚀 TribuCoach SUPER-POTENZIATO + MOBILE FIXED inizializzato!');
+        console.log('🚀 TribuCoach FIXED VERSION inizializzato!');
         console.log('💡 Sistemi attivi:');
         console.log('   🔄 Sistema Fluido: ✅');
-        console.log('   📱 Mobile Session Fix: ✅');
+        console.log('   📱 Mobile Session Unified: ✅');
+        console.log('   🎯 Nome Collection: ✅');
+        console.log('   🔍 Response Logic Fixed: ✅');
+        console.log('   💾 Field Consistency: ✅');
         console.log('   🤖 Machine Learning:', mlManager ? '✅' : '❌');
         console.log('   🧠 Knowledge Base Avanzata:', enhancedKnowledgeSystem ? '✅' : '❌');
         console.log('   🔥 Sistema Motivazionale:', motivationSystem ? '✅' : '❌');
-        console.log('💡 Test: "Ho bisogno di motivazione" → "workout funzionale" → "Marco" → "347 888 1515"');
+        console.log('💡 Test: "Ho bisogno di motivazione" → "alimentazione per dimagrire" → "Marco" → "347 888 1515"');
         if (mlManager || enhancedKnowledgeSystem || motivationSystem) {
             console.log('🤖 Debug: window.getAllSystemsState() per analytics completi');
         }
+        console.log('📱 Debug: window.getSessionState() per stato sessione');
         
         // Inizializza ML status
         updateMLStatus();
 
-        // 🎨 Aggiungi animazioni per notifiche (già nel CSS)
+        // Aggiungi CSS per animazioni (già nel CSS)
     </script>
 
 </body>
