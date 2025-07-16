@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifestyleFitnessCoach - Admin Dashboard</title>
+
+    <!-- Firebase SDK v9 -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy, where, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+        // 🔥 CONFIGURAZIONE FIREBASE REALE - TribuCoach
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
+
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        console.log('🔥 Firebase connesso a:', firebaseConfig.projectId);
+
+        // Variabili globali
+        let allUsers = [];
+        let allSessions = [];
+        let allAIConversations = [];
+        let currentFilter = 'all';
+        let selectedUsers = new Set();
+
+        // 🔄 CARICA DATI FIREBASE LIFESTYLE + SISTEMA ESISTENTE
+        async function loadDashboardData() {
+            try {
+                console.log('🔄 Caricamento dati LifestyleFitnessCoach + TribuCoach...');
+                updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
+
+                // 1. Carica profili lifestyle
+                try {
+                    const lifestyleSnapshot = await getDocs(collection(db, 'lifestyle_profiles'));
+                    allUsers = [];
+                    
+                    lifestyleSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        allUsers.push({
+                            id: doc.id,
+                            name: data.name || data.firstName || 'Nome non fornito',
+                            email: data.email || data.emailAddress || 'Email non fornita',
+                            ...data,
+                            registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            currentWeek: data.currentWeek || 1,
+                            completedWeeks: data.completedWeeks || [],
+                            totalSessions: data.totalSessions || 0,
+                            profileQuadrant: data.quadrant || 'Q4',
+                            consciousnessLevel: data.consciousnessLevel || 'Opportunista'
+                        });
+                    });
+                    
+                    console.log('✅ Profili lifestyle caricati:', allUsers.length);
+                } catch (error) {
+                    console.warn('⚠️ Collezione lifestyle_profiles non trovata, carico da quiz_results:', error);
+                    
+                    // FALLBACK: Usa quiz_results se lifestyle_profiles non esiste
+                    const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
+                    allUsers = [];
+                    
+                    quizSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Converte quiz results in formato utenti lifestyle
+                        allUsers.push({
+                            id: doc.id,
+                            name: data.name || 'Nome non fornito',
+                            email: data.email || 'Email non fornita',
+                            registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            currentWeek: 1, // Nuovo utente
+                            completedWeeks: [],
+                            totalSessions: 0,
+                            profileQuadrant: 'Q4', // Default per nuovi
+                            consciousnessLevel: 'Opportunista',
+                            leadScore: data.lead_score || 0,
+                            source: 'quiz_conversion'
+                        });
+                    });
+                    
+                    console.log('✅ Utenti da quiz results:', allUsers.length);
+                }
+
+                // 2. Carica sessioni coaching
+                try {
+                    const sessionsSnapshot = await getDocs(collection(db, 'coaching_sessions'));
+                    allSessions = [];
+                    
+                    sessionsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        allSessions.push({
+                            id: doc.id,
+                            ...data,
+                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            duration: data.duration || 0,
+                            weekNumber: data.weekNumber || 1,
+                            questionsAnswered: data.questionsAnswered || 0,
+                            aiResponsesGenerated: data.aiResponsesGenerated || 0
+                        });
+                    });
+                    
+                    console.log('✅ Sessioni coaching caricate:', allSessions.length);
+                } catch (error) {
+                    console.warn('⚠️ Collezione coaching_sessions non trovata:', error);
+                    allSessions = [];
+                }
+
+                // 3. Carica conversazioni AI
+                try {
+                    const aiSnapshot = await getDocs(collection(db, 'ai_conversations'));
+                    allAIConversations = [];
+                    
+                    aiSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        allAIConversations.push({
+                            id: doc.id,
+                            ...data,
+                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            messages: data.messages || [],
+                            insights: data.insights || [],
+                            homeworkGenerated: data.homeworkGenerated || false
+                        });
+                    });
+                    
+                    console.log('✅ Conversazioni AI caricate:', allAIConversations.length);
+                } catch (error) {
+                    console.warn('⚠️ Collezione ai_conversations non trovata:', error);
+                    
+                    // FALLBACK: Usa chatbot_conversations se esiste
+                    try {
+                        const chatSnapshot = await getDocs(collection(db, 'chatbot_conversations'));
+                        allAIConversations = [];
+                        
+                        chatSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            allAIConversations.push({
+                                id: doc.id,
+                                timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                                messages: data.messages || [],
+                                customerName: data.customerName || 'Anonimo',
+                                source: 'chatbot_conversion'
+                            });
+                        });
+                        
+                        console.log('✅ Conversazioni da chatbot:', allAIConversations.length);
+                    } catch (fallbackError) {
+                        console.warn('⚠️ Nessuna collezione conversazioni trovata');
+                        allAIConversations = [];
+                    }
+                }
+
+                // Aggiorna dashboard
+                updateDashboard();
+                updateConnectionStatus('✅ Dashboard aggiornata - Dati reali caricati', '#4CAF50');
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento Firebase:', error);
+                updateConnectionStatus('❌ Errore Firebase - Verifica connessione', '#f44336');
+            }
+        }
+
+        // 📊 AGGIORNA DASHBOARD
+        function updateDashboard() {
+            updateOverviewMetrics();
+            updateUsersGrid();
+            updateWeekAnalytics();
+            updateAIMonitoring();
+            updateSessionsList();
+            updateLastUpdateTime();
+        }
+
+        // 📈 METRICHE OVERVIEW
+        function updateOverviewMetrics() {
+            const totalUsers = allUsers.length;
+            const activeUsers = allUsers.filter(u => {
+                const lastActivity = u.lastActivity;
+                const threeDaysAgo = new Date();
+                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+                return lastActivity >= threeDaysAgo;
+            }).length;
+
+            const completedPrograms = allUsers.filter(u => 
+                u.completedWeeks && u.completedWeeks.includes(7)
+            ).length;
+
+            const avgProgress = totalUsers > 0 ? 
+                Math.round(allUsers.reduce((sum, u) => sum + (u.currentWeek || 1), 0) / totalUsers * 100 / 7) : 0;
+
+            const todaySessions = allSessions.filter(s => {
+                const today = new Date().toDateString();
+                return s.timestamp.toDateString() === today;
+            }).length;
+
+            const metrics = [
+                { selector: '.metric-card:nth-child(1) p', value: totalUsers },
+                { selector: '.metric-card:nth-child(2) p', value: activeUsers },
+                { selector: '.metric-card:nth-child(3) p', value: completedPrograms },
+                { selector: '.metric-card:nth-child(4) p', value: avgProgress + '%' },
+                { selector: '.metric-card:nth-child(5) p', value: todaySessions }
+            ];
+
+            metrics.forEach(({ selector, value }) => {
+                const el = document.querySelector(selector);
+                if (el) el.textContent = value;
+            });
+        }
+
+        // 👥 GRIGLIA UTENTI
+        function updateUsersGrid() {
+            const container = document.querySelector('.users-grid');
+            if (!container) return;
+
+            if (allUsers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <h3>Nessun Utente Registrato</h3>
+                        <p>Gli utenti del coaching LifestyleFitnessCoach appariranno qui.</p>
+                        <button class="reload-btn" onclick="loadDashboardData()">🔄 Ricarica Dati</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const usersToShow = allUsers.slice(0, 12);
+            let html = '';
+
+            usersToShow.forEach(user => {
+                const progressPercentage = (user.currentWeek || 1) / 7 * 100;
+                const profileIcon = getProfileIcon(user.profileQuadrant);
+                const statusBadge = getStatusBadge(user.currentWeek, user.completedWeeks);
+                const lastActivity = user.lastActivity.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div class="user-card ${selectedUsers.has(user.id) ? 'selected' : ''}" data-user-id="${user.id}">
+                        <div class="selection-checkbox">
+                            <input type="checkbox" id="user-${user.id}" 
+                                   ${selectedUsers.has(user.id) ? 'checked' : ''} 
+                                   onchange="toggleUserSelection('${user.id}')">
+                            <label for="user-${user.id}"></label>
+                        </div>
+                        
+                        <div class="user-header">
+                            <div class="user-info">
+                                <div class="user-name">👤 ${user.name || 'Nome non fornito'}</div>
+                                <div class="user-email">${user.email || 'Email non fornita'}</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        
+                        <div class="progress-section">
+                            <div class="progress-info">
+                                <span>Settimana ${user.currentWeek || 1} di 7</span>
+                                <span>${Math.round(progressPercentage)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">${profileIcon}</span>
+                                <span class="detail-value">Profilo ${user.profileQuadrant || 'Q4'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🧠</span>
+                                <span class="detail-value">${user.consciousnessLevel || 'Opportunista'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📅</span>
+                                <span class="detail-value">${lastActivity}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🎯</span>
+                                <span class="detail-value">${user.totalSessions || 0} sessioni</span>
+                            </div>
+                        </div>
+                        
+                        <div class="user-actions">
+                            <button class="action-button primary" onclick="showUserDetails('${user.id}')">
+                                👁️ Dettagli Completi
+                            </button>
+                            <button class="action-button secondary" onclick="showUserProgress('${user.id}')">
+                                📊 Progress Report
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 📊 ANALYTICS SETTIMANE
+        function updateWeekAnalytics() {
+            const weekStats = {};
+            
+            // Inizializza statistiche per tutte le settimane
+            for (let i = 1; i <= 7; i++) {
+                weekStats[i] = {
+                    started: 0,
+                    completed: 0,
+                    abandoned: 0,
+                    avgDuration: 0,
+                    totalSessions: 0
+                };
+            }
+
+            // Calcola statistiche dai dati utenti
+            allUsers.forEach(user => {
+                const currentWeek = user.currentWeek || 1;
+                const completedWeeks = user.completedWeeks || [];
+                
+                // Settimane iniziate
+                for (let week = 1; week <= currentWeek; week++) {
+                    weekStats[week].started++;
+                }
+                
+                // Settimane completate
+                completedWeeks.forEach(week => {
+                    if (weekStats[week]) weekStats[week].completed++;
+                });
+            });
+
+            // Calcola durata media dalle sessioni
+            allSessions.forEach(session => {
+                const week = session.weekNumber;
+                if (weekStats[week]) {
+                    weekStats[week].totalSessions++;
+                    weekStats[week].avgDuration += session.duration || 0;
+                }
+            });
+
+            // Finalizza medie
+            Object.values(weekStats).forEach(stats => {
+                if (stats.totalSessions > 0) {
+                    stats.avgDuration = Math.round(stats.avgDuration / stats.totalSessions);
+                }
+                stats.abandoned = stats.started - stats.completed;
+            });
+
+            // Aggiorna UI
+            const container = document.querySelector('.week-analytics-grid');
+            if (!container) return;
+
+            let html = '';
+            for (let week = 1; week <= 7; week++) {
+                const stats = weekStats[week];
+                const completionRate = stats.started > 0 ? 
+                    Math.round((stats.completed / stats.started) * 100) : 0;
+
+                html += `
+                    <div class="week-card">
+                        <div class="week-header">
+                            <h4>Settimana ${week}</h4>
+                            <div class="completion-rate ${completionRate >= 70 ? 'high' : completionRate >= 40 ? 'medium' : 'low'}">
+                                ${completionRate}%
+                            </div>
+                        </div>
+                        <div class="week-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">▶️ Iniziate:</span>
+                                <span class="stat-value">${stats.started}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">✅ Completate:</span>
+                                <span class="stat-value">${stats.completed}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">⏱️ Durata Media:</span>
+                                <span class="stat-value">${stats.avgDuration}min</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // 🤖 MONITORING AI
+        function updateAIMonitoring() {
+            const totalConversations = allAIConversations.length;
+            const todayConversations = allAIConversations.filter(conv => {
+                const today = new Date().toDateString();
+                return conv.timestamp.toDateString() === today;
+            }).length;
+
+            const homeworkGenerated = allAIConversations.filter(conv => 
+                conv.homeworkGenerated
+            ).length;
+
+            const avgMessagesPerConv = totalConversations > 0 ? 
+                Math.round(allAIConversations.reduce((sum, conv) => 
+                    sum + (conv.messages?.length || 0), 0) / totalConversations) : 0;
+
+            // Aggiorna metriche AI
+            const aiMetrics = document.querySelectorAll('.ai-metrics .metric-card p');
+            if (aiMetrics[0]) aiMetrics[0].textContent = totalConversations;
+            if (aiMetrics[1]) aiMetrics[1].textContent = todayConversations;
+            if (aiMetrics[2]) aiMetrics[2].textContent = homeworkGenerated;
+            if (aiMetrics[3]) aiMetrics[3].textContent = avgMessagesPerConv;
+        }
+
+        // 📋 LISTA SESSIONI
+        function updateSessionsList() {
+            const container = document.querySelector('.sessions-list');
+            if (!container) return;
+
+            if (allSessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3>Nessuna Sessione Registrata</h3>
+                        <p>Le sessioni di coaching appariranno qui.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const recentSessions = allSessions
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 10);
+
+            let html = '';
+            recentSessions.forEach(session => {
+                const user = allUsers.find(u => u.id === session.userId);
+                const userName = user ? user.name : 'Utente sconosciuto';
+                const duration = formatDuration(session.duration || 0);
+                const timestamp = session.timestamp.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                html += `
+                    <div class="session-item">
+                        <div class="session-info">
+                            <div class="session-user">👤 ${userName}</div>
+                            <div class="session-details">
+                                <span>📝 Settimana ${session.weekNumber}</span>
+                                <span>⏱️ ${duration}</span>
+                                <span>💬 ${session.aiResponsesGenerated || 0} AI responses</span>
+                            </div>
+                        </div>
+                        <div class="session-meta">
+                            <span class="session-date">${timestamp}</span>
+                            <button class="action-button small" onclick="showSessionDetails('${session.id}')">
+                                👁️ Dettagli
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 🛠️ UTILITY FUNCTIONS
+        function getProfileIcon(quadrant) {
+            const icons = {
+                'Q1': '🏆', // Competente e Motivato
+                'Q2': '💪', // Forte ma Inesperto
+                'Q3': '🎯', // Esperto ma Demotivato
+                'Q4': '🌱'  // Principiante Totale
+            };
+            return icons[quadrant] || '👤';
+        }
+
+        function getStatusBadge(currentWeek, completedWeeks = []) {
+            if (completedWeeks.includes(7)) {
+                return '<div class="status-badge completed">✅ Completato</div>';
+            } else if (currentWeek >= 4) {
+                return '<div class="status-badge active">🔥 Attivo</div>';
+            } else if (currentWeek >= 2) {
+                return '<div class="status-badge progress">⏳ In Progress</div>';
+            } else {
+                return '<div class="status-badge new">🆕 Nuovo</div>';
+            }
+        }
+
+        function formatDuration(minutes) {
+            if (minutes < 60) return `${minutes}min`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        function updateConnectionStatus(message, color) {
+            const statusEl = document.querySelector('.connection-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.background = color;
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const timeElement = document.getElementById('lastUpdate');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // 🔍 MODAL FUNCTIONS
+        window.showUserDetails = function(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) {
+                alert('Utente non trovato');
+                return;
+            }
+
+            const userSessions = allSessions.filter(s => s.userId === userId);
+            const userConversations = allAIConversations.filter(c => c.userId === userId);
+            
+            const modal = document.getElementById('detailsModal');
+            const modalBody = document.getElementById('modal-body-content');
+
+            modalBody.innerHTML = `
+                <div class="modal-header">
+                    <h2>👤 Profilo Utente Completo</h2>
+                </div>
+                
+                <div class="details-grid">
+                    <div class="detail-section">
+                        <h4>📋 Informazioni Personali</h4>
+                        <div class="detail-rows">
+                            <div class="detail-row">
+                                <span class="label">Nome:</span>
+                                <span class="value">${user.name || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Email:</span>
+                                <span class="value">${user.email || 'N/A'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Registrazione:</span>
+                                <span class="value">${user.registrationDate.toLocaleDateString('it-IT')}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Ultima Attività:</span>
+                                <span class="value">${user.lastActivity.toLocaleDateString('it-IT')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>🎯 Profilo Coaching</h4>
+                        <div class="detail-rows">
+                            <div class="detail-row">
+                                <span class="label">Quadrante:</span>
+                                <span class="value">${getProfileIcon(user.profileQuadrant)} ${user.profileQuadrant}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Livello Coscienza:</span>
+                                <span class="value">${user.consciousnessLevel}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Settimana Corrente:</span>
+                                <span class="value">${user.currentWeek} / 7</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Settimane Completate:</span>
+                                <span class="value">${user.completedWeeks?.length || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>📊 Statistiche Attività</h4>
+                        <div class="detail-rows">
+                            <div class="detail-row">
+                                <span class="label">Sessioni Totali:</span>
+                                <span class="value">${userSessions.length}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Conversazioni AI:</span>
+                                <span class="value">${userConversations.length}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Tempo Totale:</span>
+                                <span class="value">${formatDuration(userSessions.reduce((sum, s) => sum + (s.duration || 0), 0))}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Homework Generati:</span>
+                                <span class="value">${userConversations.filter(c => c.homeworkGenerated).length}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="action-button primary large" onclick="showUserProgress('${user.id}')">
+                        📊 Vedi Progress Report
+                    </button>
+                    <button class="action-button secondary large" onclick="closeModal()">
+                        ✖️ Chiudi
+                    </button>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+        };
+
+        window.showUserProgress = function(userId) {
+            // Implementazione progress report dettagliato
+            console.log('📊 Progress report per utente:', userId);
+        };
+
+        window.showSessionDetails = function(sessionId) {
+            // Implementazione dettagli sessione
+            console.log('📋 Dettagli sessione:', sessionId);
+        };
+
+        window.closeModal = function() {
+            document.getElementById('detailsModal').style.display = 'none';
+        };
+
+        // 👥 SELEZIONE UTENTI
+        window.toggleUserSelection = function(userId) {
+            if (selectedUsers.has(userId)) {
+                selectedUsers.delete(userId);
+            } else {
+                selectedUsers.add(userId);
+            }
+            updateSelectionUI();
+        };
+
+        function updateSelectionUI() {
+            const counter = document.getElementById('user-selection-counter');
+            const count = selectedUsers.size;
+            
+            if (counter) counter.textContent = `${count} selezionati`;
+        }
+
+        // Inizializzazione
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 LifestyleFitnessCoach Admin Dashboard inizializzata');
+            loadDashboardData();
+            
+            // Auto-refresh ogni 60 secondi
+            setInterval(loadDashboardData, 60000);
+            
+            // Aggiorna ora ogni 5 secondi
+            setInterval(updateLastUpdateTime, 5000);
+        });
+
+        // Esponi funzioni globalmente
+        window.loadDashboardData = loadDashboardData;
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #fff;
+            min-height: 100vh;
+            line-height: 1.4;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            z-index: 1000;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(255,102,0,0.15), rgba(255,102,0,0.05));
+            padding: 25px;
+            border-bottom: 3px solid #ff6600;
+            backdrop-filter: blur(20px);
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            color: #ff6600;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(255,102,0,0.3);
+        }
+
+        .header p {
+            color: #ccc;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header .refresh-button {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+        }
+
+        .header .refresh-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .dashboard {
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .dashboard-section {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 35px;
+            border: 1px solid #404040;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
+        }
+
+        .dashboard-section h2 {
+            color: #ff6600;
+            font-size: 1.9rem;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* METRICHE OVERVIEW */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid #404040;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
+        }
+
+        .metric-card h3 {
+            color: #ff9933;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card p {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* GRIGLIA UTENTI */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 25px 0;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 15px;
+            padding: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+            border-left: 5px solid #ff6600;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.2);
+        }
+
+        .user-card.selected {
+            border: 2px solid #ff6600;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a, rgba(255, 102, 0, 0.1));
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(255, 102, 0, 0.3);
+        }
+
+        .selection-checkbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+
+        .selection-checkbox input[type="checkbox"] {
+            display: none;
+        }
+
+        .selection-checkbox label {
+            display: block;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #333, #555);
+            border: 2px solid #666;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .selection-checkbox label:hover {
+            border-color: #ff6600;
+            background: linear-gradient(135deg, #444, #666);
+        }
+
+        .selection-checkbox input[type="checkbox"]:checked + label {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            border-color: #ff6600;
+        }
+
+        .selection-checkbox input[type="checkbox"]:checked + label::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .user-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-badge.completed { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .status-badge.active { background: rgba(255, 102, 0, 0.2); color: #ff6600; }
+        .status-badge.progress { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
+        .status-badge.new { background: rgba(158, 158, 158, 0.2); color: #999; }
+
+        .progress-section {
+            margin: 20px 0;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6600, #ff9933);
+            transition: width 0.3s ease;
+        }
+
+        .user-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-icon {
+            font-size: 1rem;
+            width: 20px;
+        }
+
+        .detail-value {
+            color: #eee;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        /* ANALYTICS SETTIMANE */
+        .week-analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .week-card {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .week-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 102, 0, 0.15);
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .week-header h4 {
+            color: #ff6600;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .completion-rate {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .completion-rate.high { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .completion-rate.medium { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+        .completion-rate.low { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+
+        .week-stats {
+            display: grid;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label {
+            color: #ccc;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* AI METRICS */
+        .ai-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        /* LISTA SESSIONI */
+        .sessions-list {
+            display: grid;
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .session-item {
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .session-item:hover {
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            transform: translateX(5px);
+        }
+
+        .session-user {
+            font-weight: bold;
+            color: #ff6600;
+            margin-bottom: 8px;
+        }
+
+        .session-details {
+            display: flex;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .session-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .session-date {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        /* ACTIONS */
+        .user-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .action-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+        }
+
+        .action-button.primary {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+
+        .action-button.primary:hover {
+            background: linear-gradient(135deg, #1976D2, #1565C0);
+        }
+
+        .action-button.secondary {
+            background: linear-gradient(135deg, #666, #555);
+        }
+
+        .action-button.secondary:hover {
+            background: linear-gradient(135deg, #777, #666);
+        }
+
+        .action-button.small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .action-button.large {
+            padding: 15px 25px;
+            font-size: 1rem;
+        }
+
+        /* MODAL */
+        .modal {
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2a2a2a, #333333);
+            padding: 35px;
+            border: 1px solid #555;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .close-button:hover {
+            color: #fff;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #444;
+        }
+
+        .modal-header h2 {
+            color: #ff6600;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .detail-section {
+            background: rgba(26, 26, 26, 0.5);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #444;
+        }
+
+        .detail-section h4 {
+            color: #ff9933;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 8px;
+        }
+
+        .detail-rows {
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .detail-row .label {
+            color: #ccc;
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .detail-row .value {
+            color: #fff;
+            text-align: right;
+            flex: 1;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+
+        /* EMPTY STATES */
+        .empty-state {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border-radius: 15px;
+            border: 2px dashed #444;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+
+        .empty-state h3 {
+            color: #ff6600;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .empty-state p {
+            color: #ccc;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+
+        .reload-btn {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+        }
+
+        .reload-btn:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .dashboard { 
+                padding: 20px 15px; 
+            }
+            
+            .users-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .week-analytics-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .metrics-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .user-details {
+                grid-template-columns: 1fr;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                width: 98%;
+                padding: 20px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header .refresh-button {
+                position: static;
+                margin-top: 15px;
+                width: 100%;
+            }
+
+            .week-analytics-grid { 
+                grid-template-columns: 1fr; 
+            }
+
+            .session-item {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status">🔄 Inizializzazione LifestyleFitnessCoach Dashboard...</div>
+
+    <header class="header">
+        <h1>🎯 LifestyleFitnessCoach Admin</h1>
+        <p>Dashboard Coaching 7 Settimane - Sistema AI Personalizzato Andrea Padoan</p>
+        <button class="refresh-button" onclick="loadDashboardData()">🔄 Aggiorna Dati</button>
+    </header>
+
+    <div class="dashboard">
+
+        <!-- OVERVIEW METRICS -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>👥 Utenti Totali</h3>
+                <p>0</p>
+            </div>
+            <div class="metric-card">
+                <h3>🔥 Utenti Attivi (3gg)</h3>
+                <p>0</p>
+            </div>
+            <div class="metric-card">
+                <h3>✅ Programmi Completati</h3>
+                <p>0</p>
+            </div>
+            <div class="metric-card">
+                <h3>📊 Progress Medio</h3>
+                <p>0%</p>
+            </div>
+            <div class="metric-card">
+                <h3>📝 Sessioni Oggi</h3>
+                <p>0</p>
+            </div>
+        </div>
+
+        <!-- UTENTI REGISTRATI -->
+        <div class="dashboard-section">
+            <h2>👥 Gestione Utenti Coaching</h2>
+            
+            <div class="selection-controls" style="margin: 20px 0; padding: 15px; background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 12px;">
+                <span class="selection-counter" id="user-selection-counter">0 selezionati</span>
+            </div>
+
+            <div class="users-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">🔄</div>
+                    <h3>Caricamento Utenti...</h3>
+                    <p>Connessione a Firebase in corso...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS 7 SETTIMANE -->
+        <div class="dashboard-section">
+            <h2>📊 Analytics Settimane Coaching</h2>
+            
+            <div class="week-analytics-grid">
+                <div class="empty-state">
+                    <div class="empty-icon">📊</div>
+                    <h3>Caricamento Analytics...</h3>
+                    <p>Statistiche settimane in arrivo...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI COACHING MONITORING -->
+        <div class="dashboard-section">
+            <h2>🤖 Monitoring Sistema AI</h2>
+            
+            <div class="ai-metrics">
+                <div class="metric-card">
+                    <h3>💬 Conversazioni AI Totali</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>📅 Conversazioni Oggi</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>📝 Homework Generati</h3>
+                    <p>0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>💬 Messaggi Medi/Conv</h3>
+                    <p>0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SESSIONI RECENTI -->
+        <div class="dashboard-section">
+            <h2>📋 Sessioni Coaching Recenti</h2>
+            
+            <div class="sessions-list">
+                <div class="empty-state">
+                    <div class="empty-icon">📋</div>
+                    <h3>Caricamento Sessioni...</h3>
+                    <p>Cronologia sessioni in arrivo...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATUS SISTEMA -->
+        <div class="dashboard-section">
+            <h2>⚡ Status Sistema</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>🔄 Ultimo Aggiornamento</h3>
+                    <p style="font-size: 1.5rem;" id="lastUpdate">--:--:--</p>
+                </div>
+                <div class="metric-card">
+                    <h3>🔥 Firebase Status</h3>
+                    <p style="font-size: 1.2rem; color: #4CAF50;">Connesso</p>
+                </div>
+                <div class="metric-card">
+                    <h3>🤖 AI System</h3>
+                    <p style="font-size: 1.2rem; color: #4CAF50;">Operativo</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal per dettagli -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <div id="modal-body-content">
+                <!-- Il contenuto verrà inserito qui tramite JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event listeners per modal
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('detailsModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Sistema di notifiche
+        function showNotification(message, type) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; 
+                top: 80px; 
+                right: 20px; 
+                padding: 15px 20px; 
+                border-radius: 12px; 
+                font-weight: bold; 
+                z-index: 10000; 
+                box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+                max-width: 350px;
+                animation: slideInRight 0.3s ease-out;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            if (type === 'success') {
+                toast.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+                toast.style.color = 'white';
+                toast.innerHTML = `✅ ${message}`;
+            } else if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                toast.style.color = 'white';
+                toast.innerHTML = `❌ ${message}`;
+            } else {
+                toast.style.background = 'linear-gradient(135deg, #ff6600, #ff8533)';
+                toast.style.color = 'white';
+                toast.innerHTML = `🔔 ${message}`;
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(function() {
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Animazioni CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            showNotification('LifestyleFitnessCoach Admin Dashboard caricata!', 'success');
+            console.log('🚀 LifestyleFitnessCoach Admin Dashboard inizializzata');
+        });
+    </script>
+</body>
+</html>
