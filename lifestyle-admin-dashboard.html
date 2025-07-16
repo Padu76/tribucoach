@@ -58,6 +58,7 @@
                             id: doc.id,
                             name: data.name || 'Nome non fornito',
                             email: data.email || 'Email non fornita',
+                            phone: data.phone || data.whatsapp || data.telefono || null,
                             registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
                             lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
                             
@@ -71,15 +72,23 @@
                             profileQuadrant: quadrant,
                             consciousnessLevel: consciousnessLevel,
                             
-                            // Dati quiz originali
+                            // Dati quiz originali COMPLETI
                             leadScore: calculateLeadScore(data),
-                            quizData: data,
+                            quizData: data, // TUTTI i dati del quiz
                             source: 'quiz',
                             
                             // Metadati utili
                             profileType: data.profile_type || data.profile || 'Non definito',
                             goals: data.goals || [],
-                            challenges: data.challenges || data.obstacles || []
+                            challenges: data.challenges || data.obstacles || [],
+                            
+                            // Dati aggiuntivi per admin
+                            age: data.age || null,
+                            city: data.city || data.citta || null,
+                            experience: data.experience || data.esperienza || null,
+                            activityLevel: data.activity_level || data.livello_attivita || null,
+                            readinessLevel: data.readiness_level || data.livello_motivazione || null,
+                            commitmentLevel: data.commitment_level || data.livello_impegno || null
                         });
                     });
                     
@@ -356,6 +365,10 @@
                         
                         <div class="user-details">
                             <div class="detail-item">
+                                <span class="detail-icon">📱</span>
+                                <span class="detail-value">${user.phone || 'Non fornito'}</span>
+                            </div>
+                            <div class="detail-item">
                                 <span class="detail-icon">${profileIcon}</span>
                                 <span class="detail-value">Profilo ${user.profileQuadrant}</span>
                             </div>
@@ -366,10 +379,6 @@
                             <div class="detail-item">
                                 <span class="detail-icon">📅</span>
                                 <span class="detail-value">${lastActivity}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-icon">🎯</span>
-                                <span class="detail-value">${user.totalSessions} sessioni</span>
                             </div>
                         </div>
                         
@@ -619,7 +628,7 @@
             }
         }
 
-        // 🔍 MODAL FUNCTIONS
+        // 🔍 MODAL DETTAGLI UTENTE COMPLETO
         window.showUserDetails = function(userId) {
             const user = allUsers.find(u => u.id === userId);
             if (!user) {
@@ -636,6 +645,7 @@
             modalBody.innerHTML = `
                 <div class="modal-header">
                     <h2>👤 Profilo Utente Completo</h2>
+                    <div class="user-status-badge">${getStatusBadge(user)}</div>
                 </div>
                 
                 <div class="details-grid">
@@ -644,19 +654,27 @@
                         <div class="detail-rows">
                             <div class="detail-row">
                                 <span class="label">Nome:</span>
-                                <span class="value">${user.name || 'N/A'}</span>
+                                <span class="value">${user.name}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="label">Email:</span>
-                                <span class="value">${user.email || 'N/A'}</span>
+                                <span class="value">${user.email}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Telefono:</span>
+                                <span class="value">${user.phone || 'Non fornito'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Età:</span>
+                                <span class="value">${user.age || 'Non fornita'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Città:</span>
+                                <span class="value">${user.city || 'Non fornita'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="label">Registrazione:</span>
                                 <span class="value">${user.registrationDate.toLocaleDateString('it-IT')}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Ultima Attività:</span>
-                                <span class="value">${user.lastActivity.toLocaleDateString('it-IT')}</span>
                             </div>
                         </div>
                     </div>
@@ -666,11 +684,15 @@
                         <div class="detail-rows">
                             <div class="detail-row">
                                 <span class="label">Quadrante:</span>
-                                <span class="value">${getProfileIcon(user.profileQuadrant)} ${user.profileQuadrant}</span>
+                                <span class="value">${getProfileIcon(user.profileQuadrant)} ${user.profileQuadrant} - ${getQuadrantDescription(user.profileQuadrant)}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="label">Livello Coscienza:</span>
-                                <span class="value">${user.consciousnessLevel}</span>
+                                <span class="value">${user.consciousnessLevel} - ${getConsciousnessDescription(user.consciousnessLevel)}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Lead Score:</span>
+                                <span class="value lead-score ${user.leadScore >= 70 ? 'high' : user.leadScore >= 40 ? 'medium' : 'low'}">${Math.round(user.leadScore)}%</span>
                             </div>
                             <div class="detail-row">
                                 <span class="label">Settimana Corrente:</span>
@@ -684,32 +706,83 @@
                     </div>
                     
                     <div class="detail-section">
-                        <h4>📊 Statistiche Attività</h4>
+                        <h4>🏋️ Dati Fitness</h4>
                         <div class="detail-rows">
                             <div class="detail-row">
-                                <span class="label">Sessioni Totali:</span>
-                                <span class="value">${userSessions.length}</span>
+                                <span class="label">Esperienza:</span>
+                                <span class="value">${user.experience || 'Non specificata'}</span>
                             </div>
                             <div class="detail-row">
-                                <span class="label">Conversazioni AI:</span>
-                                <span class="value">${userConversations.length}</span>
+                                <span class="label">Livello Attività:</span>
+                                <span class="value">${user.activityLevel || 'Non specificato'}</span>
                             </div>
                             <div class="detail-row">
-                                <span class="label">Tempo Totale:</span>
-                                <span class="value">${formatDuration(userSessions.reduce((sum, s) => sum + (s.duration || 0), 0))}</span>
+                                <span class="label">Motivazione (1-5):</span>
+                                <span class="value">${user.readinessLevel || 'N/A'}</span>
                             </div>
                             <div class="detail-row">
-                                <span class="label">Homework Generati:</span>
-                                <span class="value">${userConversations.filter(c => c.homeworkGenerated).length}</span>
+                                <span class="label">Impegno (1-5):</span>
+                                <span class="value">${user.commitmentLevel || 'N/A'}</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 
+                <div class="detail-section full-width">
+                    <h4>🎯 Obiettivi Dichiarati</h4>
+                    <div class="goals-list">
+                        ${Array.isArray(user.goals) && user.goals.length > 0 ? 
+                            user.goals.map(goal => `<span class="goal-tag">${goal}</span>`).join('') :
+                            '<span class="no-data">Nessun obiettivo specificato</span>'
+                        }
+                    </div>
+                </div>
+                
+                <div class="detail-section full-width">
+                    <h4>⚠️ Sfide e Ostacoli</h4>
+                    <div class="challenges-list">
+                        ${Array.isArray(user.challenges) && user.challenges.length > 0 ? 
+                            user.challenges.map(challenge => `<span class="challenge-tag">${challenge}</span>`).join('') :
+                            '<span class="no-data">Nessuna sfida dichiarata</span>'
+                        }
+                    </div>
+                </div>
+                
+                <div class="detail-section full-width">
+                    <h4>📊 Analisi Personalizzata Generata</h4>
+                    <div class="analysis-preview">
+                        ${generateUserAnalysisPreview(user)}
+                    </div>
+                </div>
+                
+                <div class="detail-section full-width">
+                    <h4>📝 Dati Quiz Completi</h4>
+                    <div class="quiz-data-section">
+                        <button class="expand-btn" onclick="toggleQuizData('${user.id}')">
+                            📋 Mostra/Nascondi Risposte Complete
+                        </button>
+                        <div class="quiz-data-content" id="quiz-data-${user.id}" style="display: none;">
+                            ${generateCompleteQuizData(user.quizData)}
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="modal-actions">
-                    <button class="action-button primary large" onclick="showUserProgress('${user.id}')">
-                        📊 Vedi Progress Report
-                    </button>
+                    ${user.phone ? `
+                        <button class="action-button whatsapp large" onclick="openWhatsApp('${user.phone}')">
+                            📱 Contatta WhatsApp
+                        </button>
+                    ` : ''}
+                    ${user.email ? `
+                        <button class="action-button primary large" onclick="window.open('mailto:${user.email}?subject=LifestyleFitnessCoach - Supporto Coaching', '_blank')">
+                            📧 Invia Email
+                        </button>
+                    ` : ''}
+                    ${!user.hasStartedCoaching ? `
+                        <button class="action-button secondary large" onclick="markCoachingStarted('${user.id}')">
+                            🚀 Segna Coaching Iniziato
+                        </button>
+                    ` : ''}
                     <button class="action-button secondary large" onclick="closeModal()">
                         ✖️ Chiudi
                     </button>
@@ -719,10 +792,283 @@
             modal.style.display = 'flex';
         };
 
-        window.showUserProgress = function(userId) {
-            // Implementazione progress report dettagliato
-            console.log('📊 Progress report per utente:', userId);
+        // 🏷️ HELPER FUNCTIONS PER MODAL
+        function getQuadrantDescription(quadrant) {
+            const descriptions = {
+                'Q1': 'Competente e Motivato - Consulenza tra pari',
+                'Q2': 'Forte ma Inesperto - Guida tecnica step-by-step', 
+                'Q3': 'Esperto ma Demotivato - Supporto emotivo e mindset',
+                'Q4': 'Principiante Totale - Supporto completo e paziente'
+            };
+            return descriptions[quadrant] || 'Quadrante non definito';
+        }
+
+        function getConsciousnessDescription(level) {
+            const descriptions = {
+                'Opportunista': 'Focus su risultati immediati e benefici tangibili',
+                'Conformista': 'Struttura chiara, regole e sicurezza',
+                'Achiever': 'Performance, successo e competizione',
+                'Pluralista': 'Crescita personale, benessere olistico'
+            };
+            return descriptions[level] || 'Livello non definito';
+        }
+
+        function generateUserAnalysisPreview(user) {
+            const quadrant = user.profileQuadrant;
+            const score = Math.round(user.leadScore);
+            
+            let analysis = `<div class="analysis-box">`;
+            analysis += `<p><strong>Situazione Attuale:</strong> Score ${score}/100 che indica `;
+            
+            if (score >= 70) {
+                analysis += `un profilo qualificato con buone opportunità di trasformazione.`;
+            } else if (score >= 40) {
+                analysis += `alcune aree di miglioramento con potenziale di crescita.`;
+            } else {
+                analysis += `significative opportunità di sviluppo e crescita.`;
+            }
+            
+            analysis += `</p>`;
+            analysis += `<p><strong>Approccio Consigliato:</strong> ${getQuadrantDescription(quadrant)}</p>`;
+            analysis += `<p><strong>Comunicazione:</strong> ${getConsciousnessDescription(user.consciousnessLevel)}</p>`;
+            analysis += `</div>`;
+            
+            return analysis;
+        }
+
+        function generateCompleteQuizData(quizData) {
+            if (!quizData) return '<p class="no-data">Nessun dato quiz disponibile</p>';
+            
+            let html = '<div class="quiz-data-grid">';
+            
+            // Filtra e mostra solo campi rilevanti
+            const relevantFields = {
+                'name': 'Nome',
+                'email': 'Email', 
+                'phone': 'Telefono',
+                'whatsapp': 'WhatsApp',
+                'age': 'Età',
+                'city': 'Città',
+                'experience': 'Esperienza',
+                'activity_level': 'Livello Attività',
+                'goals': 'Obiettivi',
+                'challenges': 'Sfide',
+                'obstacles': 'Ostacoli',
+                'readiness_level': 'Livello Motivazione',
+                'commitment_level': 'Livello Impegno',
+                'training_style': 'Stile Allenamento',
+                'diet': 'Alimentazione',
+                'sleep': 'Sonno',
+                'stress': 'Stress',
+                'budget': 'Budget',
+                'time_availability': 'Disponibilità Tempo'
+            };
+            
+            Object.entries(relevantFields).forEach(([key, label]) => {
+                if (quizData[key] !== undefined && quizData[key] !== null && quizData[key] !== '') {
+                    let value = quizData[key];
+                    
+                    if (Array.isArray(value)) {
+                        value = value.join(', ');
+                    }
+                    
+                    html += `
+                        <div class="quiz-field">
+                            <strong>${label}:</strong>
+                            <span>${value}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            return html;
+        }
+
+        window.toggleQuizData = function(userId) {
+            const element = document.getElementById(`quiz-data-${userId}`);
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+            } else {
+                element.style.display = 'none';
+            }
         };
+
+        window.markCoachingStarted = function(userId) {
+            if (confirm('Segnare questo utente come "Coaching Iniziato"?')) {
+                // Implementa aggiornamento Firebase
+                console.log('Segna coaching iniziato per:', userId);
+                alert('Funzione da implementare - aggiornamento Firebase');
+            }
+        };
+
+        // 📅 FILTRI TEMPORALI
+        let currentTimeFilter = 'all';
+
+        window.toggleTimeFilter = function() {
+            const options = document.getElementById('time-filter-options');
+            const button = document.querySelector('.filter-button');
+            
+            if (options.classList.contains('show')) {
+                options.classList.remove('show');
+                button.classList.remove('active');
+            } else {
+                options.classList.add('show');
+                button.classList.add('active');
+            }
+        };
+
+        window.applyTimeFilter = function(filter) {
+            currentTimeFilter = filter;
+            
+            const filterLabel = {
+                'all': 'Tutti',
+                'today': 'Oggi', 
+                'week': 'Settimana',
+                'month': 'Mese'
+            };
+            
+            document.getElementById('time-filter-current').textContent = filterLabel[filter];
+            document.getElementById('time-filter-options').classList.remove('show');
+            
+            // Applica filtro
+            filterUsersByTime(filter);
+        };
+
+        function filterUsersByTime(filter) {
+            const now = new Date();
+            let filteredUsers = allUsers;
+            
+            switch(filter) {
+                case 'today':
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    filteredUsers = allUsers.filter(u => u.registrationDate >= today);
+                    break;
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    filteredUsers = allUsers.filter(u => u.registrationDate >= weekAgo);
+                    break;
+                case 'month':
+                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    filteredUsers = allUsers.filter(u => u.registrationDate >= monthAgo);
+                    break;
+                case 'all':
+                default:
+                    filteredUsers = allUsers;
+                    break;
+            }
+            
+            // Aggiorna display con utenti filtrati
+            displayFilteredUsers(filteredUsers);
+        }
+
+        function displayFilteredUsers(users) {
+            // Riutilizza la logica di updateUsersGrid ma con users filtrati
+            const container = document.querySelector('.users-grid');
+            if (!container) return;
+
+            if (users.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <h3>Nessun Utente per il Periodo Selezionato</h3>
+                        <p>Cambia il filtro temporale per vedere altri risultati.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Usa la stessa logica di rendering di updateUsersGrid
+            renderUsersGrid(users);
+        }
+
+        function renderUsersGrid(usersToShow) {
+            const container = document.querySelector('.users-grid');
+            let html = '';
+
+            usersToShow.slice(0, 12).forEach(user => {
+                const progressPercentage = user.hasStartedCoaching ? 
+                    (user.currentWeek || 1) / 7 * 100 : 0;
+                
+                const profileIcon = getProfileIcon(user.profileQuadrant);
+                const statusBadge = getStatusBadge(user);
+                const lastActivity = user.lastActivity.toLocaleDateString('it-IT', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const leadScore = user.leadScore || 0;
+                const scoreClass = leadScore >= 70 ? 'high' : leadScore >= 40 ? 'medium' : 'low';
+
+                html += `
+                    <div class="user-card ${selectedUsers.has(user.id) ? 'selected' : ''}" data-user-id="${user.id}">
+                        <div class="selection-checkbox">
+                            <input type="checkbox" id="user-${user.id}" 
+                                   ${selectedUsers.has(user.id) ? 'checked' : ''} 
+                                   onchange="toggleUserSelection('${user.id}')">
+                            <label for="user-${user.id}"></label>
+                        </div>
+                        
+                        <div class="user-header">
+                            <div class="user-info">
+                                <div class="user-name">👤 ${user.name}</div>
+                                <div class="user-email">${user.email}</div>
+                                <div class="lead-score ${scoreClass}">Score: ${Math.round(leadScore)}%</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        
+                        <div class="progress-section">
+                            <div class="progress-info">
+                                <span>${user.hasStartedCoaching ? `Settimana ${user.currentWeek || 1} di 7` : 'Quiz completato - Coaching non iniziato'}</span>
+                                <span>${Math.round(progressPercentage)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="user-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">📱</span>
+                                <span class="detail-value">${user.phone || 'Non fornito'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">${profileIcon}</span>
+                                <span class="detail-value">Profilo ${user.profileQuadrant}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">🧠</span>
+                                <span class="detail-value">${user.consciousnessLevel}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📅</span>
+                                <span class="detail-value">${lastActivity}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="user-actions">
+                            <button class="action-button primary" onclick="showUserDetails('${user.id}')">
+                                👁️ Dettagli Quiz Completi
+                            </button>
+                            ${!user.hasStartedCoaching ? `
+                                <button class="action-button secondary" onclick="markCoachingStarted('${user.id}')">
+                                    🚀 Inizia Coaching
+                                </button>
+                            ` : `
+                                <button class="action-button secondary" onclick="showUserProgress('${user.id}')">
+                                    📊 Progress Report
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
 
         window.showSessionDetails = function(sessionId) {
             // Implementazione dettagli sessione
@@ -1221,7 +1567,6 @@
             font-size: 0.8rem;
         }
 
-        /* ACTIONS */
         .user-actions {
             margin-top: 20px;
             display: flex;
@@ -1258,6 +1603,14 @@
             background: linear-gradient(135deg, #1976D2, #1565C0);
         }
 
+        .action-button.whatsapp {
+            background: linear-gradient(135deg, #25D366, #20b055);
+        }
+
+        .action-button.whatsapp:hover {
+            background: linear-gradient(135deg, #20b055, #1ea049);
+        }
+
         .action-button.secondary {
             background: linear-gradient(135deg, #666, #555);
         }
@@ -1274,6 +1627,207 @@
         .action-button.large {
             padding: 15px 25px;
             font-size: 1rem;
+        }
+
+        /* MODAL ENHANCEMENTS */
+        .detail-section.full-width {
+            grid-column: 1/-1;
+        }
+
+        .goals-list, .challenges-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .goal-tag, .challenge-tag {
+            background: rgba(234, 88, 12, 0.2);
+            color: #ff9933;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(234, 88, 12, 0.3);
+        }
+
+        .challenge-tag {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border-color: rgba(244, 67, 54, 0.3);
+        }
+
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+
+        .analysis-box {
+            background: rgba(234, 88, 12, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ea580c;
+        }
+
+        .analysis-box p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .quiz-data-section {
+            margin-top: 15px;
+        }
+
+        .expand-btn {
+            background: linear-gradient(135deg, #666, #555);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: linear-gradient(135deg, #777, #666);
+        }
+
+        .quiz-data-content {
+            margin-top: 15px;
+            background: rgba(26, 26, 26, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .quiz-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .quiz-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quiz-field:last-child {
+            border-bottom: none;
+        }
+
+        .quiz-field strong {
+            color: #ff9933;
+            min-width: 120px;
+        }
+
+        .quiz-field span {
+            color: #eee;
+            text-align: right;
+            flex: 1;
+        }
+
+        .user-status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* FILTER DROPDOWN */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .filter-button {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+            min-width: 130px;
+            justify-content: center;
+        }
+
+        .filter-button:hover {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+        }
+
+        .filter-button.active {
+            background: linear-gradient(135deg, #ff8533, #ff6600);
+            box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+        }
+
+        .dropdown-arrow {
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+
+        .filter-button.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .filter-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            border: 1px solid #444;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            min-width: 150px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-options.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(5px);
+        }
+
+        .filter-option {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 8px;
+            margin: 4px;
+            font-weight: 500;
+            color: #ccc;
+        }
+
+        .filter-option:hover {
+            background: rgba(255, 102, 0, 0.2);
+            color: #ff9933;
+            transform: translateX(4px);
         }
 
         /* MODAL */
@@ -1544,7 +2098,23 @@
 
         <!-- UTENTI REGISTRATI -->
         <div class="dashboard-section">
-            <h2>👥 Gestione Utenti Coaching</h2>
+            <div class="section-header">
+                <h2>👥 Gestione Utenti Coaching</h2>
+                <div class="section-controls">
+                    <div class="filter-dropdown">
+                        <button class="filter-button" onclick="toggleTimeFilter()">
+                            <span id="time-filter-current">Tutti</span> 
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="filter-options" id="time-filter-options">
+                            <div class="filter-option" onclick="applyTimeFilter('all')">📊 Tutti</div>
+                            <div class="filter-option" onclick="applyTimeFilter('today')">📅 Oggi</div>
+                            <div class="filter-option" onclick="applyTimeFilter('week')">📆 Settimana</div>
+                            <div class="filter-option" onclick="applyTimeFilter('month')">🗓️ Mese</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="selection-controls" style="margin: 20px 0; padding: 15px; background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 12px;">
                 <span class="selection-counter" id="user-selection-counter">0 selezionati</span>
