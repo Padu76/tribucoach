@@ -168,6 +168,12 @@
             border: 2px solid #ea580c;
         }
 
+        .module-card.completed {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.12);
+            border: 2px solid #16a34a;
+        }
+
         .module-card.locked {
             opacity: 0.6;
             cursor: not-allowed;
@@ -205,6 +211,10 @@
             position: relative;
         }
 
+        .module-card.completed .module-icon {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+
         .module-card.locked .module-icon {
             background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
         }
@@ -218,6 +228,10 @@
             color: #ea580c;
             font-weight: 600;
             margin-bottom: 0.5rem;
+        }
+
+        .module-card.completed .module-week {
+            color: #16a34a;
         }
 
         .module-card.locked .module-week {
@@ -298,6 +312,17 @@
             box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }
 
+        .btn-completed {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-completed:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
         .btn-locked {
             background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
             color: white;
@@ -311,6 +336,21 @@
             width: 30px;
             height: 30px;
             background: #94a3b8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .completed-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 30px;
+            height: 30px;
+            background: #16a34a;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -461,6 +501,26 @@
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
+        /* Progress Info */
+        .progress-info {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .progress-info h3 {
+            color: #16a34a;
+            margin-bottom: 1rem;
+        }
+
+        .progress-info p {
+            color: #15803d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
         /* Animations */
         @keyframes fadeInUp {
             from {
@@ -560,14 +620,19 @@
         </div>
     </section>
 
-    <!-- Modules Section -->
+    <!-- Progress Info -->
     <section class="modules-section">
+        <div class="progress-info" id="progressInfo">
+            <h3>📊 Il Tuo Progresso</h3>
+            <p>Hai completato <span id="completedCount">0</span> delle 7 settimane. Continua così!</p>
+        </div>
+        
         <h2 class="modules-title">I Tuoi 7 Moduli di Trasformazione</h2>
         <p class="modules-subtitle">Ogni modulo è progettato per costruire sulla settimana precedente</p>
         
         <div class="modules-grid">
-            <!-- Week 1 - ACTIVE -->
-            <div class="module-card active" onclick="startModule(1)">
+            <!-- Week 1 - DEFAULT ACTIVE -->
+            <div class="module-card active" id="module-1">
                 <div class="module-header">
                     <div class="module-icon">
                         🤝
@@ -594,8 +659,8 @@
                 </div>
             </div>
 
-            <!-- Week 2 - LOCKED -->
-            <div class="module-card locked">
+            <!-- Week 2 - LOCKED BY DEFAULT -->
+            <div class="module-card locked" id="module-2">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -618,12 +683,12 @@
                     <div class="feature-item">📋 Compiti pratici</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 1</button>
                 </div>
             </div>
 
             <!-- Week 3 - LOCKED -->
-            <div class="module-card locked">
+            <div class="module-card locked" id="module-3">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -646,12 +711,12 @@
                     <div class="feature-item">🗓️ Timeline personalizzata</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 2</button>
                 </div>
             </div>
 
             <!-- Week 4 - LOCKED -->
-            <div class="module-card locked">
+            <div class="module-card locked" id="module-4">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -674,12 +739,12 @@
                     <div class="feature-item">🚧 Gestione ostacoli</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 3</button>
                 </div>
             </div>
 
             <!-- Week 5 - LOCKED -->
-            <div class="module-card locked">
+            <div class="module-card locked" id="module-5">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -702,12 +767,12 @@
                     <div class="feature-item">💪 Cambiamenti duraturi</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 4</button>
                 </div>
             </div>
 
             <!-- Week 6 - LOCKED -->
-            <div class="module-card locked">
+            <div class="module-card locked" id="module-6">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -730,12 +795,12 @@
                     <div class="feature-item">🏆 Celebrazione successi</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 5</button>
                 </div>
             </div>
 
             <!-- Week 7 - LOCKED -->
-            <div class="module-card locked">
+            <div class="module-card locked" id="module-7">
                 <div class="lock-icon">🔒</div>
                 <div class="module-header">
                     <div class="module-icon">
@@ -758,7 +823,7 @@
                     <div class="feature-item">🎉 Celebrazione successi</div>
                 </div>
                 <div class="module-action">
-                    <button class="btn btn-locked">🔒 Bloccato</button>
+                    <button class="btn btn-locked">🔒 Completa Prima Settimana 6</button>
                 </div>
             </div>
         </div>
@@ -855,7 +920,7 @@
                 }, index * 100);
             });
 
-            // Check user progress
+            // Load and update user progress
             loadUserProgress();
         });
 
@@ -864,52 +929,137 @@
                 const progress = localStorage.getItem('lifestyleProgress');
                 if (progress) {
                     const progressData = JSON.parse(progress);
+                    console.log('📊 Progress loaded:', progressData);
                     updateModuleAccess(progressData);
+                } else {
+                    console.log('📊 No progress found - starting fresh');
+                    // Set default progress
+                    const defaultProgress = {
+                        completedWeeks: [],
+                        currentWeek: 1,
+                        lastUpdate: new Date().toISOString()
+                    };
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(defaultProgress));
+                    updateModuleAccess(defaultProgress);
                 }
             } catch (error) {
-                console.error('Error loading progress:', error);
+                console.error('❌ Error loading progress:', error);
             }
         }
 
         function updateModuleAccess(progressData) {
-            const moduleCards = document.querySelectorAll('.module-card');
+            const completedWeeks = progressData.completedWeeks || [];
+            const currentWeek = progressData.currentWeek || 1;
             
-            moduleCards.forEach((card, index) => {
-                const weekNumber = index + 1;
+            console.log('🔄 Updating module access:', { completedWeeks, currentWeek });
+            
+            // Update progress info
+            document.getElementById('completedCount').textContent = completedWeeks.length;
+            
+            // Update each module
+            for (let weekNumber = 1; weekNumber <= 7; weekNumber++) {
+                const moduleCard = document.getElementById(`module-${weekNumber}`);
+                if (!moduleCard) continue;
                 
-                if (progressData.completedWeeks.includes(weekNumber - 1) && weekNumber <= progressData.currentWeek + 1) {
-                    card.classList.remove('locked');
-                    card.classList.add('active');
-                    
-                    // Update button
-                    const button = card.querySelector('.btn');
-                    if (button) {
-                        button.className = 'btn btn-primary';
-                        button.innerHTML = `🚀 Inizia Settimana ${weekNumber}`;
-                        button.onclick = () => startModule(weekNumber);
-                    }
+                const isCompleted = completedWeeks.includes(weekNumber);
+                const isAccessible = weekNumber === 1 || completedWeeks.includes(weekNumber - 1);
+                
+                // Reset all classes
+                moduleCard.classList.remove('active', 'completed', 'locked');
+                
+                if (isCompleted) {
+                    // Module is completed
+                    moduleCard.classList.add('completed');
+                    updateModuleButton(moduleCard, weekNumber, 'completed');
+                    addCompletedIcon(moduleCard);
+                } else if (isAccessible) {
+                    // Module is accessible (current week)
+                    moduleCard.classList.add('active');
+                    updateModuleButton(moduleCard, weekNumber, 'active');
+                    removeIcons(moduleCard);
+                } else {
+                    // Module is locked
+                    moduleCard.classList.add('locked');
+                    updateModuleButton(moduleCard, weekNumber, 'locked');
+                    addLockIcon(moduleCard);
                 }
-            });
+            }
         }
 
-        function startModule(weekNumber) {
-            // Check if module is accessible
-            const moduleCard = document.querySelector(`.module-card:nth-child(${weekNumber})`);
-            if (moduleCard && moduleCard.classList.contains('locked')) {
-                showMessage('⚠️ Questo modulo sarà disponibile dopo aver completato i precedenti!', 'warning');
-                return;
+        function updateModuleButton(moduleCard, weekNumber, status) {
+            const actionDiv = moduleCard.querySelector('.module-action');
+            if (!actionDiv) return;
+            
+            switch(status) {
+                case 'completed':
+                    actionDiv.innerHTML = `
+                        <a href="week-${weekNumber}.html" class="btn btn-completed">
+                            ✅ Rivedi Sessione
+                        </a>
+                    `;
+                    break;
+                case 'active':
+                    actionDiv.innerHTML = `
+                        <a href="week-${weekNumber}.html" class="btn btn-primary">
+                            🚀 Inizia Settimana ${weekNumber}
+                        </a>
+                    `;
+                    break;
+                case 'locked':
+                    const prevWeek = weekNumber - 1;
+                    actionDiv.innerHTML = `
+                        <button class="btn btn-locked" onclick="showLockedMessage(${weekNumber})">
+                            🔒 Completa Prima Settimana ${prevWeek}
+                        </button>
+                    `;
+                    break;
             }
+        }
 
-            // Redirect to specific week
-            window.location.href = `week-${weekNumber}.html`;
+        function addCompletedIcon(moduleCard) {
+            // Remove existing icons
+            removeIcons(moduleCard);
+            
+            // Add completed icon
+            const completedIcon = document.createElement('div');
+            completedIcon.className = 'completed-icon';
+            completedIcon.innerHTML = '✅';
+            moduleCard.appendChild(completedIcon);
+        }
+
+        function addLockIcon(moduleCard) {
+            // Remove existing icons
+            removeIcons(moduleCard);
+            
+            // Add lock icon
+            const lockIcon = document.createElement('div');
+            lockIcon.className = 'lock-icon';
+            lockIcon.innerHTML = '🔒';
+            moduleCard.appendChild(lockIcon);
+        }
+
+        function removeIcons(moduleCard) {
+            const existingIcons = moduleCard.querySelectorAll('.lock-icon, .completed-icon');
+            existingIcons.forEach(icon => icon.remove());
+        }
+
+        function showLockedMessage(weekNumber) {
+            const prevWeek = weekNumber - 1;
+            const message = `🔒 Per accedere alla Settimana ${weekNumber}, devi prima completare la Settimana ${prevWeek}. Ogni settimana si basa su quella precedente!`;
+            showMessage(message, 'warning');
         }
 
         function showMessage(message, type = 'info') {
-            const notification = document.createElement('div');
-            const bgColor = type === 'warning' ? '#f59e0b' : '#16a34a';
+            const colors = {
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                success: '#16a34a',
+                error: '#ef4444'
+            };
             
+            const notification = document.createElement('div');
             notification.innerHTML = `
-                <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px; animation: slideIn 0.3s ease-out;">
                     ${message}
                 </div>
             `;
@@ -918,8 +1068,24 @@
             
             setTimeout(() => {
                 notification.remove();
-            }, 4000);
+            }, 5000);
         }
+
+        // Style for slide-in animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
