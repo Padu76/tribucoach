@@ -1105,7 +1105,7 @@
                             <div class="cta-section">
                                 <h3>🚀 Inizia il Tuo Percorso</h3>
                                 <p>Trasforma questo profilo in risultati concreti</p>
-                                <button class="cta-button" onclick="window.open('dashboard.html', '_blank')">
+                                <button class="cta-button" onclick="saveProfileAndRedirect()">
                                     Scopri il Tuo Piano Personalizzato
                                 </button>
                             </div>
@@ -1252,8 +1252,24 @@
             }
         }
 
-        // Inizializza il quiz
+        // Initialize when page loads
         const quiz = new LifestyleQuiz();
+        
+        // Save profile and redirect function
+        function saveProfileAndRedirect() {
+            if (quiz.profile) {
+                // Save to localStorage
+                localStorage.setItem('lifestyleQuizResults', JSON.stringify(quiz.profile));
+                
+                // Save to Firebase if available
+                if (typeof saveToFirebase === 'function') {
+                    saveToFirebase(quiz.profile);
+                }
+                
+                // Redirect to user dashboard
+                window.location.href = 'user-dashboard.html';
+            }
+        }
     </script>
 </body>
 </html>
