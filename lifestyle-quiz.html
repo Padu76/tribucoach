@@ -1,725 +1,1259 @@
-import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, User, Target, Heart, Zap, CheckCircle, Clock, Brain, Shield, Star, Coffee, Lightbulb, Activity, Users, Calendar, Home, Compass, Puzzle, TrendingUp, Moon } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifestyle Assessment Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const LifestyleAssessmentQuiz = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [profile, setProfile] = useState(null);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-  // Quiz espanso a 20 domande
-  const questions = [
-    {
-      id: 'behavioral_competence',
-      title: 'Competenza Comportamentale',
-      icon: <Zap className="w-7 h-7" />,
-      question: 'Quanto sei sicuro di avere le competenze pratiche per raggiungere i tuoi obiettivi di stile di vita?',
-      subtitle: 'Valuta le tue abilità concrete',
-      type: 'scale',
-      category: 'assessment',
-      options: [
-        { value: 1, label: 'Per niente', emoji: '😟' },
-        { value: 2, label: 'Poco', emoji: '😐' },
-        { value: 3, label: 'Abbastanza', emoji: '🙂' },
-        { value: 4, label: 'Molto', emoji: '😊' },
-        { value: 5, label: 'Completamente', emoji: '🤩' }
-      ]
-    },
-    {
-      id: 'transitional_competence',
-      title: 'Gestione del Cambiamento',
-      icon: <Target className="w-7 h-7" />,
-      question: 'Quanto sei bravo a gestire gli ostacoli emotivi e mentali durante i cambiamenti?',
-      subtitle: 'La tua resilienza nei momenti difficili',
-      type: 'scale',
-      category: 'assessment',
-      options: [
-        { value: 1, label: 'Molto difficile', emoji: '😰' },
-        { value: 2, label: 'Difficile', emoji: '😕' },
-        { value: 3, label: 'Nella media', emoji: '😐' },
-        { value: 4, label: 'Abbastanza bravo', emoji: '😌' },
-        { value: 5, label: 'Molto bravo', emoji: '💪' }
-      ]
-    },
-    {
-      id: 'consciousness_level',
-      title: 'Livello di Coscienza',
-      icon: <Brain className="w-7 h-7" />,
-      question: 'Quale affermazione ti rappresenta di più in questo momento della tua vita?',
-      subtitle: 'Il tuo approccio alla vita',
-      type: 'single',
-      category: 'personality',
-      options: [
-        { value: 1, label: 'Voglio risultati immediati e gratificazioni veloci', emoji: '⚡' },
-        { value: 2, label: 'Preferisco seguire regole chiare e tradizioni consolidate', emoji: '📋' },
-        { value: 3, label: 'Sono orientato al successo e ai risultati concreti', emoji: '🎯' },
-        { value: 4, label: 'Valorizzo la crescita personale e il benessere della comunità', emoji: '🌱' }
-      ]
-    },
-    {
-      id: 'current_life_satisfaction',
-      title: 'Soddisfazione Attuale',
-      icon: <Star className="w-7 h-7" />,
-      question: 'Come descriveresti il tuo livello di soddisfazione generale nella vita?',
-      subtitle: 'Il tuo stato emotivo generale',
-      type: 'scale',
-      category: 'wellbeing',
-      options: [
-        { value: 1, label: 'Molto insoddisfatto', emoji: '😔' },
-        { value: 2, label: 'Insoddisfatto', emoji: '😞' },
-        { value: 3, label: 'Neutrale', emoji: '😐' },
-        { value: 4, label: 'Soddisfatto', emoji: '😊' },
-        { value: 5, label: 'Molto soddisfatto', emoji: '🥰' }
-      ]
-    },
-    {
-      id: 'motivation_driver',
-      title: 'Driver Motivazionali',
-      icon: <Heart className="w-7 h-7" />,
-      question: 'Cosa ti motiva di più nella vita? (seleziona fino a 3 opzioni)',
-      subtitle: 'Le tue fonti di energia principale',
-      type: 'multiple',
-      category: 'motivation',
-      maxSelections: 3,
-      options: [
-        { value: 'health', label: 'Salute e benessere fisico', emoji: '🏃' },
-        { value: 'confidence', label: 'Fiducia in me stesso', emoji: '💪' },
-        { value: 'social', label: 'Essere apprezzato dagli altri', emoji: '👥' },
-        { value: 'achievement', label: 'Raggiungere obiettivi ambiziosi', emoji: '🏆' },
-        { value: 'time', label: 'Risparmiare tempo ed essere efficiente', emoji: '⏰' },
-        { value: 'creativity', label: 'Esprimere la mia creatività', emoji: '🎨' },
-        { value: 'family', label: 'Essere un buon genitore/partner', emoji: '👨‍👩‍👧' },
-        { value: 'money', label: 'Sicurezza finanziaria', emoji: '💰' }
-      ]
-    },
-    {
-      id: 'current_challenges',
-      title: 'Sfide Attuali',
-      icon: <Shield className="w-7 h-7" />,
-      question: 'Quali sono le tue principali sfide attuali? (seleziona tutte quelle che si applicano)',
-      subtitle: 'Gli ostacoli che vuoi superare',
-      type: 'multiple',
-      category: 'challenges',
-      options: [
-        { value: 'procrastination', label: 'Procrastinazione e rimandare', emoji: '⏳' },
-        { value: 'low_energy', label: 'Bassa energia e stanchezza', emoji: '😴' },
-        { value: 'anxiety', label: 'Ansia e stress', emoji: '😰' },
-        { value: 'low_self_esteem', label: 'Bassa autostima', emoji: '😔' },
-        { value: 'bad_habits', label: 'Cattive abitudini', emoji: '🚫' },
-        { value: 'lack_focus', label: 'Mancanza di concentrazione', emoji: '🤯' },
-        { value: 'time_management', label: 'Gestione del tempo', emoji: '⏰' },
-        { value: 'work_life_balance', label: 'Equilibrio vita-lavoro', emoji: '⚖️' }
-      ]
-    },
-    {
-      id: 'daily_routine',
-      title: 'Routine Quotidiana',
-      icon: <Clock className="w-7 h-7" />,
-      question: 'Come descriveresti la tua routine quotidiana attuale?',
-      subtitle: 'Il tuo ritmo di vita',
-      type: 'single',
-      category: 'lifestyle',
-      options: [
-        { value: 'chaotic', label: 'Caotica, ogni giorno è diverso', emoji: '🌪️' },
-        { value: 'loose', label: 'Flessibile, con alcuni punti fissi', emoji: '🌊' },
-        { value: 'structured', label: 'Strutturata, con orari definiti', emoji: '📅' },
-        { value: 'rigid', label: 'Rigida, seguo sempre lo stesso schema', emoji: '🗓️' }
-      ]
-    },
-    {
-      id: 'goal_setting_history',
-      title: 'Esperienza con gli Obiettivi',
-      icon: <TrendingUp className="w-7 h-7" />,
-      question: 'Qual è la tua esperienza nel raggiungere gli obiettivi che ti poni?',
-      subtitle: 'Il tuo track record',
-      type: 'single',
-      category: 'achievement',
-      options: [
-        { value: 'rarely', label: 'Raramente li raggiungo', emoji: '😞' },
-        { value: 'sometimes', label: 'A volte li raggiungo', emoji: '😐' },
-        { value: 'often', label: 'Spesso li raggiungo', emoji: '😊' },
-        { value: 'always', label: 'Li raggiungo quasi sempre', emoji: '🏆' }
-      ]
-    },
-    {
-      id: 'support_system',
-      title: 'Sistema di Supporto',
-      icon: <Users className="w-7 h-7" />,
-      question: 'Quanto supporto senti di avere dalle persone intorno a te?',
-      subtitle: 'La tua rete di sostegno',
-      type: 'scale',
-      category: 'social',
-      options: [
-        { value: 1, label: 'Nessun supporto', emoji: '😔' },
-        { value: 2, label: 'Poco supporto', emoji: '😕' },
-        { value: 3, label: 'Supporto moderato', emoji: '🙂' },
-        { value: 4, label: 'Buon supporto', emoji: '😊' },
-        { value: 5, label: 'Supporto eccellente', emoji: '🥰' }
-      ]
-    },
-    {
-      id: 'physical_activity',
-      title: 'Attività Fisica',
-      icon: <Activity className="w-7 h-7" />,
-      question: 'Quanto spesso fai attività fisica attualmente?',
-      subtitle: 'Il tuo livello di movimento',
-      type: 'single',
-      category: 'health',
-      options: [
-        { value: 'never', label: 'Mai o quasi mai', emoji: '🛋️' },
-        { value: 'rarely', label: 'Raramente (1-2 volte al mese)', emoji: '🚶' },
-        { value: 'sometimes', label: 'Qualche volta (1-2 volte a settimana)', emoji: '🏃' },
-        { value: 'regularly', label: 'Regolarmente (3-4 volte a settimana)', emoji: '💪' },
-        { value: 'daily', label: 'Quotidianamente', emoji: '🏋️' }
-      ]
-    },
-    {
-      id: 'sleep_quality',
-      title: 'Qualità del Sonno',
-      icon: <Moon className="w-7 h-7" />,
-      question: 'Come valuti la qualità del tuo sonno?',
-      subtitle: 'Il tuo riposo notturno',
-      type: 'scale',
-      category: 'health',
-      options: [
-        { value: 1, label: 'Pessima', emoji: '😴' },
-        { value: 2, label: 'Scarsa', emoji: '😪' },
-        { value: 3, label: 'Nella media', emoji: '😐' },
-        { value: 4, label: 'Buona', emoji: '😌' },
-        { value: 5, label: 'Eccellente', emoji: '🛌' }
-      ]
-    },
-    {
-      id: 'stress_management',
-      title: 'Gestione dello Stress',
-      icon: <Compass className="w-7 h-7" />,
-      question: 'Come gestisci tipicamente lo stress?',
-      subtitle: 'Le tue strategie di coping',
-      type: 'multiple',
-      category: 'coping',
-      options: [
-        { value: 'exercise', label: 'Esercizio fisico', emoji: '🏃' },
-        { value: 'meditation', label: 'Meditazione/mindfulness', emoji: '🧘' },
-        { value: 'social', label: 'Parlare con amici/famiglia', emoji: '👥' },
-        { value: 'hobbies', label: 'Hobby e attività creative', emoji: '🎨' },
-        { value: 'avoid', label: 'Evito le situazioni stressanti', emoji: '🚫' },
-        { value: 'work', label: 'Mi butto nel lavoro', emoji: '💼' },
-        { value: 'food', label: 'Mangiare (comfort food)', emoji: '🍫' },
-        { value: 'nothing', label: 'Non ho strategie specifiche', emoji: '🤷' }
-      ]
-    },
-    {
-      id: 'self_care_emotional',
-      title: 'Self-Care Emotivo',
-      icon: <Heart className="w-7 h-7" />,
-      question: 'Quanto tempo dedichi al tuo benessere emotivo?',
-      subtitle: 'La cura delle tue emozioni',
-      type: 'scale',
-      category: 'selfcare',
-      options: [
-        { value: 1, label: 'Mai', emoji: '😞' },
-        { value: 2, label: 'Raramente', emoji: '😕' },
-        { value: 3, label: 'Qualche volta', emoji: '😐' },
-        { value: 4, label: 'Spesso', emoji: '😊' },
-        { value: 5, label: 'Sempre', emoji: '🥰' }
-      ]
-    },
-    {
-      id: 'work_satisfaction',
-      title: 'Soddisfazione Professionale',
-      icon: <Coffee className="w-7 h-7" />,
-      question: 'Quanto sei soddisfatto della tua situazione lavorativa/professionale?',
-      subtitle: 'Il tuo rapporto con il lavoro',
-      type: 'scale',
-      category: 'professional',
-      options: [
-        { value: 1, label: 'Molto insoddisfatto', emoji: '😫' },
-        { value: 2, label: 'Insoddisfatto', emoji: '😞' },
-        { value: 3, label: 'Neutrale', emoji: '😐' },
-        { value: 4, label: 'Soddisfatto', emoji: '😊' },
-        { value: 5, label: 'Molto soddisfatto', emoji: '🤩' }
-      ]
-    },
-    {
-      id: 'learning_growth',
-      title: 'Crescita Personale',
-      icon: <Lightbulb className="w-7 h-7" />,
-      question: 'Quanto è importante per te la crescita personale e l\'apprendimento continuo?',
-      subtitle: 'Il tuo desiderio di miglioramento',
-      type: 'scale',
-      category: 'growth',
-      options: [
-        { value: 1, label: 'Per niente importante', emoji: '😑' },
-        { value: 2, label: 'Poco importante', emoji: '😐' },
-        { value: 3, label: 'Abbastanza importante', emoji: '🙂' },
-        { value: 4, label: 'Molto importante', emoji: '😊' },
-        { value: 5, label: 'Fondamentale', emoji: '🤩' }
-      ]
-    },
-    {
-      id: 'relationship_quality',
-      title: 'Qualità delle Relazioni',
-      icon: <Users className="w-7 h-7" />,
-      question: 'Come valuti la qualità delle tue relazioni personali?',
-      subtitle: 'I tuoi rapporti interpersonali',
-      type: 'scale',
-      category: 'social',
-      options: [
-        { value: 1, label: 'Pessima', emoji: '💔' },
-        { value: 2, label: 'Scarsa', emoji: '😞' },
-        { value: 3, label: 'Nella media', emoji: '😐' },
-        { value: 4, label: 'Buona', emoji: '😊' },
-        { value: 5, label: 'Eccellente', emoji: '💕' }
-      ]
-    },
-    {
-      id: 'decision_making',
-      title: 'Processo Decisionale',
-      icon: <Puzzle className="w-7 h-7" />,
-      question: 'Come prendi solitamente le decisioni importanti?',
-      subtitle: 'Il tuo stile decisionale',
-      type: 'single',
-      category: 'personality',
-      options: [
-        { value: 'intuitive', label: 'Seguo l\'istinto e le emozioni', emoji: '💭' },
-        { value: 'analytical', label: 'Analizzo tutti i pro e contro', emoji: '📊' },
-        { value: 'social', label: 'Chiedo consigli ad altri', emoji: '👥' },
-        { value: 'avoid', label: 'Rimando finché non sono costretto', emoji: '⏳' }
-      ]
-    },
-    {
-      id: 'time_perspective',
-      title: 'Prospettiva Temporale',
-      icon: <Calendar className="w-7 h-7" />,
-      question: 'Su quale orizzonte temporale ti concentri di più?',
-      subtitle: 'La tua visione del tempo',
-      type: 'single',
-      category: 'mindset',
-      options: [
-        { value: 'past', label: 'Rifletto spesso sul passato', emoji: '⏪' },
-        { value: 'present', label: 'Vivo nel momento presente', emoji: '🎯' },
-        { value: 'near_future', label: 'Pianifico i prossimi mesi', emoji: '📅' },
-        { value: 'far_future', label: 'Penso a lungo termine (anni)', emoji: '🔮' }
-      ]
-    },
-    {
-      id: 'home_environment',
-      title: 'Ambiente Domestico',
-      icon: <Home className="w-7 h-7" />,
-      question: 'Come descriveresti il tuo ambiente domestico?',
-      subtitle: 'Il tuo spazio personale',
-      type: 'single',
-      category: 'environment',
-      options: [
-        { value: 'chaotic', label: 'Caotico e disorganizzato', emoji: '🌪️' },
-        { value: 'messy', label: 'Un po\' disordinato ma vivibile', emoji: '🏠' },
-        { value: 'organized', label: 'Organizzato e pulito', emoji: '🏡' },
-        { value: 'minimalist', label: 'Minimalista e zen', emoji: '🧘' }
-      ]
-    },
-    {
-      id: 'coaching_readiness',
-      title: 'Apertura al Coaching',
-      icon: <Compass className="w-7 h-7" />,
-      question: 'Quanto sei pronto a impegnarti in un percorso di coaching strutturato?',
-      subtitle: 'Il tuo livello di commitment',
-      type: 'scale',
-      category: 'readiness',
-      options: [
-        { value: 1, label: 'Per niente pronto', emoji: '😑' },
-        { value: 2, label: 'Un po\' scettico', emoji: '🤔' },
-        { value: 3, label: 'Curioso di provare', emoji: '😊' },
-        { value: 4, label: 'Molto motivato', emoji: '💪' },
-        { value: 5, label: 'Completamente pronto', emoji: '🚀' }
-      ]
-    }
-  ];
+        .container {
+            max-width: 1024px;
+            margin: 0 auto;
+            padding: 24px;
+        }
 
-  const handleAnswer = (questionId, value) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: value
-    }));
-  };
+        .quiz-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
 
-  const handleNext = () => {
-    if (currentStep < questions.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      generateProfile();
-    }
-  };
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            padding: 48px 32px;
+            text-align: center;
+            color: white;
+        }
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+        .header h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-  const generateProfile = () => {
-    const behavioral = answers.behavioral_competence || 3;
-    const transitional = answers.transitional_competence || 3;
-    const consciousness = answers.consciousness_level || 2;
-    const readiness = answers.coaching_readiness || 3;
-    
-    // Matrice Decisionale
-    let quadrant = '';
-    let approach = '';
-    
-    if (behavioral >= 4 && transitional >= 4) {
-      quadrant = 'Q1: Coaching Opzionale';
-      approach = 'Hai già ottime competenze. Il coaching può aiutarti a raggiungere livelli ancora più elevati.';
-    } else if (behavioral >= 4 && transitional < 4) {
-      quadrant = 'Q2: Training Tecnico';
-      approach = 'Hai competenze pratiche ma devi lavorare sulla gestione emotiva del cambiamento.';
-    } else if (behavioral < 4 && transitional >= 4) {
-      quadrant = 'Q3: Coaching Emotivo';
-      approach = 'Sei bravo nella gestione emotiva ma hai bisogno di competenze pratiche specifiche.';
-    } else {
-      quadrant = 'Q4: Coaching Completo';
-      approach = 'Beneficerai di un approccio completo che combina coaching e training pratico.';
-    }
+        .header p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+        }
 
-    // Livello di Coscienza
-    const consciousnessLabels = {
-      1: 'Opportunista - Risultati Immediati',
-      2: 'Conformista - Struttura e Regole', 
-      3: 'Achiever - Successo e Performance',
-      4: 'Pluralista - Crescita e Benessere'
-    };
+        .content {
+            padding: 32px;
+        }
 
-    // Calcolo punteggi aree
-    const wellbeingScore = Math.round(((answers.current_life_satisfaction || 3) + 
-                                      (answers.sleep_quality || 3) + 
-                                      (answers.self_care_emotional || 3)) / 3);
-    
-    const healthScore = Math.round(((answers.physical_activity === 'daily' ? 5 : 
-                                   answers.physical_activity === 'regularly' ? 4 :
-                                   answers.physical_activity === 'sometimes' ? 3 : 
-                                   answers.physical_activity === 'rarely' ? 2 : 1) + 
-                                  (answers.sleep_quality || 3)) / 2);
+        .progress-section {
+            margin-bottom: 32px;
+        }
 
-    const professionalScore = answers.work_satisfaction || 3;
-    const socialScore = Math.round(((answers.support_system || 3) + 
-                                   (answers.relationship_quality || 3)) / 2);
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
 
-    const profileData = {
-      quadrant,
-      approach,
-      consciousnessLevel: consciousnessLabels[consciousness],
-      motivationDrivers: answers.motivation_driver || [],
-      challenges: answers.current_challenges || [],
-      readinessLevel: readiness,
-      scores: {
-        wellbeing: wellbeingScore,
-        health: healthScore,
-        professional: professionalScore,
-        social: socialScore
-      },
-      insights: {
-        goalAchievement: answers.goal_setting_history,
-        stressCoping: answers.stress_management || [],
-        timeOrientation: answers.time_perspective,
-        decisionStyle: answers.decision_making
-      }
-    };
+        .progress-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+        }
 
-    setProfile(profileData);
-  };
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
 
-  const currentQuestion = questions[currentStep];
-  const isLastStep = currentStep === questions.length - 1;
-  const canProceed = answers[currentQuestion?.id] !== undefined;
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            transition: width 0.5s ease-out;
+        }
 
-  if (profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-green-50">
-        <div className="max-w-6xl mx-auto p-6">
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-slate-800 to-orange-600 px-8 py-12 text-white">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold mb-4">🎯 Il Tuo Profilo Lifestyle</h1>
-                <p className="text-xl opacity-90">Analisi personalizzata basata sulle tue 20 risposte</p>
-              </div>
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .question-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border-left: 4px solid #ea580c;
+        }
+
+        .question-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .question-icon {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 50%;
+            padding: 16px;
+            color: white;
+            margin-right: 24px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .question-text {
+            flex: 1;
+        }
+
+        .question-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .question-subtitle {
+            font-size: 1.125rem;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+
+        .question-description {
+            font-size: 0.875rem;
+            color: #ea580c;
+            font-style: italic;
+        }
+
+        .options-container {
+            display: grid;
+            gap: 16px;
+        }
+
+        .scale-options {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
+
+        .option-button {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .option-button:hover {
+            transform: translateY(-2px);
+            border-color: #cbd5e1;
+        }
+
+        .option-button.selected {
+            border-color: #ea580c;
+            background: #fff7ed;
+            color: #ea580c;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.2);
+        }
+
+        .option-emoji {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .option-value {
+            font-size: 1.125rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .option-label {
+            font-size: 0.875rem;
+        }
+
+        .single-option {
+            width: 100%;
+            text-align: left;
+        }
+
+        .single-option .option-content {
+            display: flex;
+            align-items: center;
+        }
+
+        .single-option .option-emoji {
+            font-size: 1.5rem;
+            margin-right: 16px;
+            margin-bottom: 0;
+        }
+
+        .single-option .option-label {
+            font-size: 1.125rem;
+        }
+
+        .multiple-option {
+            width: 100%;
+            text-align: left;
+        }
+
+        .multiple-option .option-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .multiple-option .option-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .multiple-option .option-emoji {
+            font-size: 1.5rem;
+            margin-right: 16px;
+            margin-bottom: 0;
+        }
+
+        .multiple-option .option-label {
+            font-size: 1.125rem;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            color: #ea580c;
+        }
+
+        .selection-info {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .nav-button:disabled {
+            background: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .nav-button.prev {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .nav-button.prev:hover:not(:disabled) {
+            background: #cbd5e1;
+        }
+
+        .nav-button.next {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-button.next:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0f172a 0%, #c2410c 100%);
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+            transition: all 0.3s ease;
+        }
+
+        .dot.current {
+            background: #ea580c;
+            width: 32px;
+            border-radius: 4px;
+        }
+
+        .dot.completed {
+            background: #16a34a;
+        }
+
+        /* Profile Page Styles */
+        .profile-header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            padding: 48px 32px;
+            text-align: center;
+            color: white;
+        }
+
+        .profile-header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .profile-header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .profile-content {
+            padding: 32px;
+        }
+
+        .profile-section {
+            margin-bottom: 32px;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+        }
+
+        .profile-card {
+            border-radius: 16px;
+            padding: 32px;
+            border-left: 4px solid;
+        }
+
+        .profile-card.primary {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border-left-color: #1e293b;
+        }
+
+        .profile-card.secondary {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border-left-color: #ea580c;
+        }
+
+        .profile-card.success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-left-color: #16a34a;
+        }
+
+        .profile-card h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .profile-card.primary h3 {
+            color: #1e293b;
+        }
+
+        .profile-card.secondary h3 {
+            color: #ea580c;
+        }
+
+        .profile-card.success h3 {
+            color: #16a34a;
+        }
+
+        .profile-text {
+            font-size: 1.125rem;
+            margin-bottom: 12px;
+        }
+
+        .profile-description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .readiness-meter {
+            background: #fed7aa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .readiness-label {
+            font-size: 0.875rem;
+            color: #ea580c;
+            margin-bottom: 8px;
+        }
+
+        .readiness-bar {
+            width: 100%;
+            height: 8px;
+            background: #fef3c7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .readiness-fill {
+            height: 100%;
+            background: #ea580c;
+            transition: width 0.3s ease;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+
+        .dashboard-item {
+            text-align: center;
+        }
+
+        .dashboard-score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-label {
+            font-size: 0.875rem;
+            color: #16a34a;
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .dashboard-bar {
+            width: 100%;
+            height: 8px;
+            background: #dcfce7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dashboard-fill {
+            height: 100%;
+            background: #16a34a;
+            transition: width 0.3s ease;
+        }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            color: #ea580c;
+        }
+
+        .list-text {
+            color: #475569;
+            text-transform: capitalize;
+        }
+
+        .cta-section {
+            text-align: center;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 16px;
+            padding: 32px;
+            color: white;
+        }
+
+        .cta-section h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .cta-section p {
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .cta-button {
+            background: white;
+            color: #1e293b;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-button:hover {
+            background: #fff7ed;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .content {
+                padding: 24px;
+            }
+
+            .question-card {
+                padding: 24px;
+            }
+
+            .question-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .question-icon {
+                margin-right: 0;
+                margin-bottom: 16px;
+            }
+
+            .scale-options {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-button {
+                padding: 12px 24px;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-card">
+            <div id="quiz-container">
+                <!-- Quiz content will be inserted here -->
             </div>
-
-            <div className="p-8">
-              {/* Quadrant e Approach */}
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-8 border-l-4 border-slate-800">
-                  <h3 className="text-2xl font-bold text-slate-800 mb-4">📊 Matrice Decisionale</h3>
-                  <p className="text-xl font-semibold text-slate-700 mb-3">{profile.quadrant}</p>
-                  <p className="text-slate-600 leading-relaxed">{profile.approach}</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl p-8 border-l-4 border-orange-600">
-                  <h3 className="text-2xl font-bold text-orange-800 mb-4">🧠 Livello di Coscienza</h3>
-                  <p className="text-xl font-semibold text-orange-700 mb-3">{profile.consciousnessLevel}</p>
-                  <div className="bg-orange-50 rounded-lg p-4 mt-4">
-                    <p className="text-sm text-orange-600">Readiness Level: {profile.readinessLevel}/5</p>
-                    <div className="w-full bg-orange-200 rounded-full h-2 mt-2">
-                      <div 
-                        className="bg-orange-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(profile.readinessLevel / 5) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Scores Dashboard */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 mb-8 border-l-4 border-green-600">
-                <h3 className="text-2xl font-bold text-green-800 mb-6">📈 Dashboard Benessere</h3>
-                <div className="grid md:grid-cols-4 gap-6">
-                  {Object.entries(profile.scores).map(([key, score]) => (
-                    <div key={key} className="text-center">
-                      <div className="text-3xl font-bold text-green-700 mb-2">{score}/5</div>
-                      <div className="text-sm text-green-600 capitalize mb-2">
-                        {key === 'wellbeing' ? 'Benessere' :
-                         key === 'health' ? 'Salute' :
-                         key === 'professional' ? 'Lavoro' : 'Sociale'}
-                      </div>
-                      <div className="w-full bg-green-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(score / 5) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Motivazioni e Sfide */}
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                {profile.motivationDrivers.length > 0 && (
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border-l-4 border-orange-600">
-                    <h3 className="text-2xl font-bold text-orange-800 mb-4">💪 Tue Motivazioni</h3>
-                    <div className="space-y-3">
-                      {profile.motivationDrivers.slice(0, 3).map((driver, index) => (
-                        <div key={index} className="flex items-center bg-white rounded-lg p-3 shadow-sm">
-                          <CheckCircle className="w-5 h-5 text-orange-600 mr-3" />
-                          <span className="text-slate-700 capitalize">{driver}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {profile.challenges.length > 0 && (
-                  <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-8 border-l-4 border-slate-800">
-                    <h3 className="text-2xl font-bold text-slate-800 mb-4">⚡ Sfide da Affrontare</h3>
-                    <div className="space-y-3">
-                      {profile.challenges.slice(0, 3).map((challenge, index) => (
-                        <div key={index} className="flex items-center bg-white rounded-lg p-3 shadow-sm">
-                          <Target className="w-5 h-5 text-slate-600 mr-3" />
-                          <span className="text-slate-700 capitalize">{challenge}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* CTA */}
-              <div className="text-center bg-gradient-to-r from-slate-800 to-orange-600 rounded-2xl p-8">
-                <h3 className="text-2xl font-bold text-white mb-4">🚀 Inizia il Tuo Percorso</h3>
-                <p className="text-white opacity-90 mb-6">Trasforma questo profilo in risultati concreti</p>
-                <button className="bg-white text-slate-800 px-8 py-4 rounded-xl font-bold hover:bg-orange-50 transition-all duration-300 shadow-lg text-lg">
-                  Scopri il Tuo Piano Personalizzato
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-green-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-slate-800 to-orange-600 px-8 py-8">
-            <div className="text-center text-white">
-              <h1 className="text-3xl font-bold mb-2">🎯 Lifestyle Assessment</h1>
-              <p className="text-lg opacity-90">Scopri il tuo profilo personalizzato in 20 domande</p>
-            </div>
-          </div>
-
-          <div className="p-8">
-            {/* Progress Bar */}
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-medium text-slate-600">Progresso</span>
-                <span className="text-sm font-medium text-slate-600">{currentStep + 1} di {questions.length}</span>
-              </div>
-              <div className="w-full bg-slate-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-slate-800 to-orange-600 h-3 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${((currentStep + 1) / questions.length) * 100}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-xs text-slate-500">Inizio</span>
-                <span className="text-xs text-slate-500">Fine</span>
-              </div>
-            </div>
-
-            {/* Question Card */}
-            <div className="bg-gradient-to-br from-slate-50 to-orange-50 rounded-2xl p-8 mb-8 border-l-4 border-orange-600">
-              <div className="flex items-start mb-6">
-                <div className="bg-gradient-to-r from-slate-800 to-orange-600 rounded-full p-4 text-white mr-6 shadow-lg">
-                  {currentQuestion.icon}
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">{currentQuestion.title}</h2>
-                  <p className="text-lg text-slate-600 mb-2">{currentQuestion.question}</p>
-                  <p className="text-sm text-orange-600 italic">{currentQuestion.subtitle}</p>
-                </div>
-              </div>
-
-              {/* Answer Options */}
-              <div className="space-y-4">
-                {currentQuestion.type === 'scale' && (
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {currentQuestion.options.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleAnswer(currentQuestion.id, option.value)}
-                        className={`p-6 rounded-xl border-2 transition-all duration-300 text-center hover:scale-105 ${
-                          answers[currentQuestion.id] === option.value
-                            ? 'border-orange-600 bg-orange-50 text-orange-700 shadow-lg'
-                            : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
-                        }`}
-                      >
-                        <div className="text-2xl mb-2">{option.emoji}</div>
-                        <div className="font-bold text-lg mb-1">{option.value}</div>
-                        <div className="text-sm">{option.label}</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {currentQuestion.type === 'single' && (
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => handleAnswer(currentQuestion.id, option.value)}
-                        className={`w-full p-6 rounded-xl border-2 transition-all duration-300 text-left hover:scale-102 ${
-                          answers[currentQuestion.id] === option.value
-                            ? 'border-orange-600 bg-orange-50 text-orange-700 shadow-lg'
-                            : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="text-2xl mr-4">{option.emoji}</span>
-                          <span className="text-lg">{option.label}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {currentQuestion.type === 'multiple' && (
-                  <div className="space-y-3">
-                    {currentQuestion.options.map((option) => {
-                      const isSelected = (answers[currentQuestion.id] || []).includes(option.value);
-                      const currentSelections = answers[currentQuestion.id] || [];
-                      const maxReached = currentQuestion.maxSelections && currentSelections.length >= currentQuestion.maxSelections;
-                      
-                      return (
-                        <button
-                          key={option.value}
-                          onClick={() => {
-                            if (isSelected || !maxReached) {
-                              const current = answers[currentQuestion.id] || [];
-                              const updated = isSelected
-                                ? current.filter(v => v !== option.value)
-                                : [...current, option.value];
-                              handleAnswer(currentQuestion.id, updated);
-                            }
-                          }}
-                          disabled={!isSelected && maxReached}
-                          className={`w-full p-6 rounded-xl border-2 transition-all duration-300 text-left hover:scale-102 ${
-                            isSelected
-                              ? 'border-orange-600 bg-orange-50 text-orange-700 shadow-lg'
-                              : maxReached
-                              ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
-                              : 'border-slate-200 hover:border-slate-300 bg-white shadow-sm'
-                          }`}
-                        >
-                          <div className="flex items-center">
-                            <span className="text-2xl mr-4">{option.emoji}</span>
-                            <span className="text-lg">{option.label}</span>
-                            {isSelected && (
-                              <CheckCircle className="w-6 h-6 text-orange-600 ml-auto" />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                    {currentQuestion.maxSelections && (
-                      <p className="text-sm text-slate-500 text-center mt-4">
-                        Seleziona fino a {currentQuestion.maxSelections} opzioni
-                        ({(answers[currentQuestion.id] || []).length}/{currentQuestion.maxSelections})
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between items-center">
-              <button
-                onClick={handlePrevious}
-                disabled={currentStep === 0}
-                className={`flex items-center px-8 py-4 rounded-xl font-medium transition-all duration-300 ${
-                  currentStep === 0
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300 shadow-sm'
-                }`}
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Precedente
-              </button>
-
-              <div className="flex space-x-2">
-                {questions.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      index === currentStep
-                        ? 'bg-orange-600 w-8'
-                        : index < currentStep
-                        ? 'bg-green-600'
-                        : 'bg-slate-300'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <button
-                onClick={handleNext}
-                disabled={!canProceed}
-                className={`flex items-center px-8 py-4 rounded-xl font-medium transition-all duration-300 ${
-                  !canProceed
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-slate-800 to-orange-600 text-white hover:from-slate-900 hover:to-orange-700 shadow-lg'
-                }`}
-              >
-                {isLastStep ? 'Genera Profilo' : 'Avanti'}
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  );
-};
 
-export default LifestyleAssessmentQuiz;
+    <script>
+        class LifestyleQuiz {
+            constructor() {
+                this.currentStep = 0;
+                this.answers = {};
+                this.profile = null;
+                this.container = document.getElementById('quiz-container');
+                
+                this.questions = [
+                    {
+                        id: 'behavioral_competence',
+                        title: 'Competenza Comportamentale',
+                        icon: '⚡',
+                        question: 'Quanto sei sicuro di avere le competenze pratiche per raggiungere i tuoi obiettivi di stile di vita?',
+                        subtitle: 'Valuta le tue abilità concrete',
+                        type: 'scale',
+                        category: 'assessment',
+                        options: [
+                            { value: 1, label: 'Per niente', emoji: '😟' },
+                            { value: 2, label: 'Poco', emoji: '😐' },
+                            { value: 3, label: 'Abbastanza', emoji: '🙂' },
+                            { value: 4, label: 'Molto', emoji: '😊' },
+                            { value: 5, label: 'Completamente', emoji: '🤩' }
+                        ]
+                    },
+                    {
+                        id: 'transitional_competence',
+                        title: 'Gestione del Cambiamento',
+                        icon: '🎯',
+                        question: 'Quanto sei bravo a gestire gli ostacoli emotivi e mentali durante i cambiamenti?',
+                        subtitle: 'La tua resilienza nei momenti difficili',
+                        type: 'scale',
+                        category: 'assessment',
+                        options: [
+                            { value: 1, label: 'Molto difficile', emoji: '😰' },
+                            { value: 2, label: 'Difficile', emoji: '😕' },
+                            { value: 3, label: 'Nella media', emoji: '😐' },
+                            { value: 4, label: 'Abbastanza bravo', emoji: '😌' },
+                            { value: 5, label: 'Molto bravo', emoji: '💪' }
+                        ]
+                    },
+                    {
+                        id: 'consciousness_level',
+                        title: 'Livello di Coscienza',
+                        icon: '🧠',
+                        question: 'Quale affermazione ti rappresenta di più in questo momento della tua vita?',
+                        subtitle: 'Il tuo approccio alla vita',
+                        type: 'single',
+                        category: 'personality',
+                        options: [
+                            { value: 1, label: 'Voglio risultati immediati e gratificazioni veloci', emoji: '⚡' },
+                            { value: 2, label: 'Preferisco seguire regole chiare e tradizioni consolidate', emoji: '📋' },
+                            { value: 3, label: 'Sono orientato al successo e ai risultati concreti', emoji: '🎯' },
+                            { value: 4, label: 'Valorizzo la crescita personale e il benessere della comunità', emoji: '🌱' }
+                        ]
+                    },
+                    {
+                        id: 'current_life_satisfaction',
+                        title: 'Soddisfazione Attuale',
+                        icon: '⭐',
+                        question: 'Come descriveresti il tuo livello di soddisfazione generale nella vita?',
+                        subtitle: 'Il tuo stato emotivo generale',
+                        type: 'scale',
+                        category: 'wellbeing',
+                        options: [
+                            { value: 1, label: 'Molto insoddisfatto', emoji: '😔' },
+                            { value: 2, label: 'Insoddisfatto', emoji: '😞' },
+                            { value: 3, label: 'Neutrale', emoji: '😐' },
+                            { value: 4, label: 'Soddisfatto', emoji: '😊' },
+                            { value: 5, label: 'Molto soddisfatto', emoji: '🥰' }
+                        ]
+                    },
+                    {
+                        id: 'motivation_driver',
+                        title: 'Driver Motivazionali',
+                        icon: '❤️',
+                        question: 'Cosa ti motiva di più nella vita? (seleziona fino a 3 opzioni)',
+                        subtitle: 'Le tue fonti di energia principale',
+                        type: 'multiple',
+                        category: 'motivation',
+                        maxSelections: 3,
+                        options: [
+                            { value: 'health', label: 'Salute e benessere fisico', emoji: '🏃' },
+                            { value: 'confidence', label: 'Fiducia in me stesso', emoji: '💪' },
+                            { value: 'social', label: 'Essere apprezzato dagli altri', emoji: '👥' },
+                            { value: 'achievement', label: 'Raggiungere obiettivi ambiziosi', emoji: '🏆' },
+                            { value: 'time', label: 'Risparmiare tempo ed essere efficiente', emoji: '⏰' },
+                            { value: 'creativity', label: 'Esprimere la mia creatività', emoji: '🎨' },
+                            { value: 'family', label: 'Essere un buon genitore/partner', emoji: '👨‍👩‍👧' },
+                            { value: 'money', label: 'Sicurezza finanziaria', emoji: '💰' }
+                        ]
+                    },
+                    {
+                        id: 'current_challenges',
+                        title: 'Sfide Attuali',
+                        icon: '🛡️',
+                        question: 'Quali sono le tue principali sfide attuali? (seleziona tutte quelle che si applicano)',
+                        subtitle: 'Gli ostacoli che vuoi superare',
+                        type: 'multiple',
+                        category: 'challenges',
+                        options: [
+                            { value: 'procrastination', label: 'Procrastinazione e rimandare', emoji: '⏳' },
+                            { value: 'low_energy', label: 'Bassa energia e stanchezza', emoji: '😴' },
+                            { value: 'anxiety', label: 'Ansia e stress', emoji: '😰' },
+                            { value: 'low_self_esteem', label: 'Bassa autostima', emoji: '😔' },
+                            { value: 'bad_habits', label: 'Cattive abitudini', emoji: '🚫' },
+                            { value: 'lack_focus', label: 'Mancanza di concentrazione', emoji: '🤯' },
+                            { value: 'time_management', label: 'Gestione del tempo', emoji: '⏰' },
+                            { value: 'work_life_balance', label: 'Equilibrio vita-lavoro', emoji: '⚖️' }
+                        ]
+                    },
+                    {
+                        id: 'daily_routine',
+                        title: 'Routine Quotidiana',
+                        icon: '🕐',
+                        question: 'Come descriveresti la tua routine quotidiana attuale?',
+                        subtitle: 'Il tuo ritmo di vita',
+                        type: 'single',
+                        category: 'lifestyle',
+                        options: [
+                            { value: 'chaotic', label: 'Caotica, ogni giorno è diverso', emoji: '🌪️' },
+                            { value: 'loose', label: 'Flessibile, con alcuni punti fissi', emoji: '🌊' },
+                            { value: 'structured', label: 'Strutturata, con orari definiti', emoji: '📅' },
+                            { value: 'rigid', label: 'Rigida, seguo sempre lo stesso schema', emoji: '🗓️' }
+                        ]
+                    },
+                    {
+                        id: 'goal_setting_history',
+                        title: 'Esperienza con gli Obiettivi',
+                        icon: '📈',
+                        question: 'Qual è la tua esperienza nel raggiungere gli obiettivi che ti poni?',
+                        subtitle: 'Il tuo track record',
+                        type: 'single',
+                        category: 'achievement',
+                        options: [
+                            { value: 'rarely', label: 'Raramente li raggiungo', emoji: '😞' },
+                            { value: 'sometimes', label: 'A volte li raggiungo', emoji: '😐' },
+                            { value: 'often', label: 'Spesso li raggiungo', emoji: '😊' },
+                            { value: 'always', label: 'Li raggiungo quasi sempre', emoji: '🏆' }
+                        ]
+                    },
+                    {
+                        id: 'support_system',
+                        title: 'Sistema di Supporto',
+                        icon: '👥',
+                        question: 'Quanto supporto senti di avere dalle persone intorno a te?',
+                        subtitle: 'La tua rete di sostegno',
+                        type: 'scale',
+                        category: 'social',
+                        options: [
+                            { value: 1, label: 'Nessun supporto', emoji: '😔' },
+                            { value: 2, label: 'Poco supporto', emoji: '😕' },
+                            { value: 3, label: 'Supporto moderato', emoji: '🙂' },
+                            { value: 4, label: 'Buon supporto', emoji: '😊' },
+                            { value: 5, label: 'Supporto eccellente', emoji: '🥰' }
+                        ]
+                    },
+                    {
+                        id: 'physical_activity',
+                        title: 'Attività Fisica',
+                        icon: '💪',
+                        question: 'Quanto spesso fai attività fisica attualmente?',
+                        subtitle: 'Il tuo livello di movimento',
+                        type: 'single',
+                        category: 'health',
+                        options: [
+                            { value: 'never', label: 'Mai o quasi mai', emoji: '🛋️' },
+                            { value: 'rarely', label: 'Raramente (1-2 volte al mese)', emoji: '🚶' },
+                            { value: 'sometimes', label: 'Qualche volta (1-2 volte a settimana)', emoji: '🏃' },
+                            { value: 'regularly', label: 'Regolarmente (3-4 volte a settimana)', emoji: '💪' },
+                            { value: 'daily', label: 'Quotidianamente', emoji: '🏋️' }
+                        ]
+                    },
+                    {
+                        id: 'sleep_quality',
+                        title: 'Qualità del Sonno',
+                        icon: '🌙',
+                        question: 'Come valuti la qualità del tuo sonno?',
+                        subtitle: 'Il tuo riposo notturno',
+                        type: 'scale',
+                        category: 'health',
+                        options: [
+                            { value: 1, label: 'Pessima', emoji: '😴' },
+                            { value: 2, label: 'Scarsa', emoji: '😪' },
+                            { value: 3, label: 'Nella media', emoji: '😐' },
+                            { value: 4, label: 'Buona', emoji: '😌' },
+                            { value: 5, label: 'Eccellente', emoji: '🛌' }
+                        ]
+                    },
+                    {
+                        id: 'stress_management',
+                        title: 'Gestione dello Stress',
+                        icon: '🧭',
+                        question: 'Come gestisci tipicamente lo stress?',
+                        subtitle: 'Le tue strategie di coping',
+                        type: 'multiple',
+                        category: 'coping',
+                        options: [
+                            { value: 'exercise', label: 'Esercizio fisico', emoji: '🏃' },
+                            { value: 'meditation', label: 'Meditazione/mindfulness', emoji: '🧘' },
+                            { value: 'social', label: 'Parlare con amici/famiglia', emoji: '👥' },
+                            { value: 'hobbies', label: 'Hobby e attività creative', emoji: '🎨' },
+                            { value: 'avoid', label: 'Evito le situazioni stressanti', emoji: '🚫' },
+                            { value: 'work', label: 'Mi butto nel lavoro', emoji: '💼' },
+                            { value: 'food', label: 'Mangiare (comfort food)', emoji: '🍫' },
+                            { value: 'nothing', label: 'Non ho strategie specifiche', emoji: '🤷' }
+                        ]
+                    },
+                    {
+                        id: 'self_care_emotional',
+                        title: 'Self-Care Emotivo',
+                        icon: '❤️',
+                        question: 'Quanto tempo dedichi al tuo benessere emotivo?',
+                        subtitle: 'La cura delle tue emozioni',
+                        type: 'scale',
+                        category: 'selfcare',
+                        options: [
+                            { value: 1, label: 'Mai', emoji: '😞' },
+                            { value: 2, label: 'Raramente', emoji: '😕' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '😊' },
+                            { value: 5, label: 'Sempre', emoji: '🥰' }
+                        ]
+                    },
+                    {
+                        id: 'work_satisfaction',
+                        title: 'Soddisfazione Professionale',
+                        icon: '☕',
+                        question: 'Quanto sei soddisfatto della tua situazione lavorativa/professionale?',
+                        subtitle: 'Il tuo rapporto con il lavoro',
+                        type: 'scale',
+                        category: 'professional',
+                        options: [
+                            { value: 1, label: 'Molto insoddisfatto', emoji: '😫' },
+                            { value: 2, label: 'Insoddisfatto', emoji: '😞' },
+                            { value: 3, label: 'Neutrale', emoji: '😐' },
+                            { value: 4, label: 'Soddisfatto', emoji: '😊' },
+                            { value: 5, label: 'Molto soddisfatto', emoji: '🤩' }
+                        ]
+                    },
+                    {
+                        id: 'learning_growth',
+                        title: 'Crescita Personale',
+                        icon: '💡',
+                        question: 'Quanto è importante per te la crescita personale e l\'apprendimento continuo?',
+                        subtitle: 'Il tuo desiderio di miglioramento',
+                        type: 'scale',
+                        category: 'growth',
+                        options: [
+                            { value: 1, label: 'Per niente importante', emoji: '😑' },
+                            { value: 2, label: 'Poco importante', emoji: '😐' },
+                            { value: 3, label: 'Abbastanza importante', emoji: '🙂' },
+                            { value: 4, label: 'Molto importante', emoji: '😊' },
+                            { value: 5, label: 'Fondamentale', emoji: '🤩' }
+                        ]
+                    },
+                    {
+                        id: 'relationship_quality',
+                        title: 'Qualità delle Relazioni',
+                        icon: '👥',
+                        question: 'Come valuti la qualità delle tue relazioni personali?',
+                        subtitle: 'I tuoi rapporti interpersonali',
+                        type: 'scale',
+                        category: 'social',
+                        options: [
+                            { value: 1, label: 'Pessima', emoji: '💔' },
+                            { value: 2, label: 'Scarsa', emoji: '😞' },
+                            { value: 3, label: 'Nella media', emoji: '😐' },
+                            { value: 4, label: 'Buona', emoji: '😊' },
+                            { value: 5, label: 'Eccellente', emoji: '💕' }
+                        ]
+                    },
+                    {
+                        id: 'decision_making',
+                        title: 'Processo Decisionale',
+                        icon: '🧩',
+                        question: 'Come prendi solitamente le decisioni importanti?',
+                        subtitle: 'Il tuo stile decisionale',
+                        type: 'single',
+                        category: 'personality',
+                        options: [
+                            { value: 'intuitive', label: 'Seguo l\'istinto e le emozioni', emoji: '💭' },
+                            { value: 'analytical', label: 'Analizzo tutti i pro e contro', emoji: '📊' },
+                            { value: 'social', label: 'Chiedo consigli ad altri', emoji: '👥' },
+                            { value: 'avoid', label: 'Rimando finché non sono costretto', emoji: '⏳' }
+                        ]
+                    },
+                    {
+                        id: 'time_perspective',
+                        title: 'Prospettiva Temporale',
+                        icon: '📅',
+                        question: 'Su quale orizzonte temporale ti concentri di più?',
+                        subtitle: 'La tua visione del tempo',
+                        type: 'single',
+                        category: 'mindset',
+                        options: [
+                            { value: 'past', label: 'Rifletto spesso sul passato', emoji: '⏪' },
+                            { value: 'present', label: 'Vivo nel momento presente', emoji: '🎯' },
+                            { value: 'near_future', label: 'Pianifico i prossimi mesi', emoji: '📅' },
+                            { value: 'far_future', label: 'Penso a lungo termine (anni)', emoji: '🔮' }
+                        ]
+                    },
+                    {
+                        id: 'home_environment',
+                        title: 'Ambiente Domestico',
+                        icon: '🏠',
+                        question: 'Come descriveresti il tuo ambiente domestico?',
+                        subtitle: 'Il tuo spazio personale',
+                        type: 'single',
+                        category: 'environment',
+                        options: [
+                            { value: 'chaotic', label: 'Caotico e disorganizzato', emoji: '🌪️' },
+                            { value: 'messy', label: 'Un po\' disordinato ma vivibile', emoji: '🏠' },
+                            { value: 'organized', label: 'Organizzato e pulito', emoji: '🏡' },
+                            { value: 'minimalist', label: 'Minimalista e zen', emoji: '🧘' }
+                        ]
+                    },
+                    {
+                        id: 'coaching_readiness',
+                        title: 'Apertura al Coaching',
+                        icon: '🧭',
+                        question: 'Quanto sei pronto a impegnarti in un percorso di coaching strutturato?',
+                        subtitle: 'Il tuo livello di commitment',
+                        type: 'scale',
+                        category: 'readiness',
+                        options: [
+                            { value: 1, label: 'Per niente pronto', emoji: '😑' },
+                            { value: 2, label: 'Un po\' scettico', emoji: '🤔' },
+                            { value: 3, label: 'Curioso di provare', emoji: '😊' },
+                            { value: 4, label: 'Molto motivato', emoji: '💪' },
+                            { value: 5, label: 'Completamente pronto', emoji: '🚀' }
+                        ]
+                    }
+                ];
+                
+                this.init();
+            }
+
+            init() {
+                this.render();
+            }
+
+            handleAnswer(questionId, value) {
+                this.answers[questionId] = value;
+                this.render();
+            }
+
+            handleNext() {
+                if (this.currentStep < this.questions.length - 1) {
+                    this.currentStep++;
+                    this.render();
+                } else {
+                    this.generateProfile();
+                }
+            }
+
+            handlePrevious() {
+                if (this.currentStep > 0) {
+                    this.currentStep--;
+                    this.render();
+                }
+            }
+
+            generateProfile() {
+                const behavioral = this.answers.behavioral_competence || 3;
+                const transitional = this.answers.transitional_competence || 3;
+                const consciousness = this.answers.consciousness_level || 2;
+                const readiness = this.answers.coaching_readiness || 3;
+                
+                let quadrant = '';
+                let approach = '';
+                
+                if (behavioral >= 4 && transitional >= 4) {
+                    quadrant = 'Q1: Coaching Opzionale';
+                    approach = 'Hai già ottime competenze. Il coaching può aiutarti a raggiungere livelli ancora più elevati.';
+                } else if (behavioral >= 4 && transitional < 4) {
+                    quadrant = 'Q2: Training Tecnico';
+                    approach = 'Hai competenze pratiche ma devi lavorare sulla gestione emotiva del cambiamento.';
+                } else if (behavioral < 4 && transitional >= 4) {
+                    quadrant = 'Q3: Coaching Emotivo';
+                    approach = 'Sei bravo nella gestione emotiva ma hai bisogno di competenze pratiche specifiche.';
+                } else {
+                    quadrant = 'Q4: Coaching Completo';
+                    approach = 'Beneficerai di un approccio completo che combina coaching e training pratico.';
+                }
+
+                const consciousnessLabels = {
+                    1: 'Opportunista - Risultati Immediati',
+                    2: 'Conformista - Struttura e Regole', 
+                    3: 'Achiever - Successo e Performance',
+                    4: 'Pluralista - Crescita e Benessere'
+                };
+
+                const wellbeingScore = Math.round(((this.answers.current_life_satisfaction || 3) + 
+                                                  (this.answers.sleep_quality || 3) + 
+                                                  (this.answers.self_care_emotional || 3)) / 3);
+                
+                const healthScore = Math.round(((this.getPhysicalActivityScore() + 
+                                              (this.answers.sleep_quality || 3)) / 2));
+
+                const professionalScore = this.answers.work_satisfaction || 3;
+                const socialScore = Math.round(((this.answers.support_system || 3) + 
+                                               (this.answers.relationship_quality || 3)) / 2);
+
+                this.profile = {
+                    quadrant,
+                    approach,
+                    consciousnessLevel: consciousnessLabels[consciousness],
+                    motivationDrivers: this.answers.motivation_driver || [],
+                    challenges: this.answers.current_challenges || [],
+                    readinessLevel: readiness,
+                    scores: {
+                        wellbeing: wellbeingScore,
+                        health: healthScore,
+                        professional: professionalScore,
+                        social: socialScore
+                    },
+                    insights: {
+                        goalAchievement: this.answers.goal_setting_history,
+                        stressCoping: this.answers.stress_management || [],
+                        timeOrientation: this.answers.time_perspective,
+                        decisionStyle: this.answers.decision_making
+                    }
+                };
+                
+                this.render();
+            }
+
+            getPhysicalActivityScore() {
+                const activity = this.answers.physical_activity;
+                switch(activity) {
+                    case 'daily': return 5;
+                    case 'regularly': return 4;
+                    case 'sometimes': return 3;
+                    case 'rarely': return 2;
+                    default: return 1;
+                }
+            }
+
+            render() {
+                if (this.profile) {
+                    this.renderProfile();
+                } else {
+                    this.renderQuestion();
+                }
+            }
+
+            renderProfile() {
+                this.container.innerHTML = `
+                    <div class="profile-header">
+                        <h1>🎯 Il Tuo Profilo Lifestyle</h1>
+                        <p>Analisi personalizzata basata sulle tue 20 risposte</p>
+                    </div>
+                    <div class="profile-content">
+                        <div class="profile-section">
+                            <div class="profile-grid">
+                                <div class="profile-card primary">
+                                    <h3>📊 Matrice Decisionale</h3>
+                                    <p class="profile-text">${this.profile.quadrant}</p>
+                                    <p class="profile-description">${this.profile.approach}</p>
+                                </div>
+                                <div class="profile-card secondary">
+                                    <h3>🧠 Livello di Coscienza</h3>
+                                    <p class="profile-text">${this.profile.consciousnessLevel}</p>
+                                    <div class="readiness-meter">
+                                        <div class="readiness-label">Readiness Level: ${this.profile.readinessLevel}/5</div>
+                                        <div class="readiness-bar">
+                                            <div class="readiness-fill" style="width: ${(this.profile.readinessLevel / 5) * 100}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div class="profile-card success">
+                                <h3>📈 Dashboard Benessere</h3>
+                                <div class="dashboard-grid">
+                                    ${Object.entries(this.profile.scores).map(([key, score]) => `
+                                        <div class="dashboard-item">
+                                            <div class="dashboard-score">${score}/5</div>
+                                            <div class="dashboard-label">${this.getScoreLabel(key)}</div>
+                                            <div class="dashboard-bar">
+                                                <div class="dashboard-fill" style="width: ${(score / 5) * 100}%"></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div class="profile-grid">
+                                ${this.profile.motivationDrivers.length > 0 ? `
+                                    <div class="profile-card secondary">
+                                        <h3>💪 Tue Motivazioni</h3>
+                                        <div class="list-container">
+                                            ${this.profile.motivationDrivers.slice(0, 3).map(driver => `
+                                                <div class="list-item">
+                                                    <div class="list-icon">✓</div>
+                                                    <div class="list-text">${driver}</div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${this.profile.challenges.length > 0 ? `
+                                    <div class="profile-card primary">
+                                        <h3>⚡ Sfide da Affrontare</h3>
+                                        <div class="list-container">
+                                            ${this.profile.challenges.slice(0, 3).map(challenge => `
+                                                <div class="list-item">
+                                                    <div class="list-icon">🎯</div>
+                                                    <div class="list-text">${challenge}</div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div class="cta-section">
+                                <h3>🚀 Inizia il Tuo Percorso</h3>
+                                <p>Trasforma questo profilo in risultati concreti</p>
+                                <button class="cta-button" onclick="window.location.href='dashboard.html'">
+                                    Scopri il Tuo Piano Personalizzato
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderQuestion() {
+                const currentQuestion = this.questions[this.currentStep];
+                const progress = ((this.currentStep + 1) / this.questions.length) * 100;
+                const canProceed = this.answers[currentQuestion.id] !== undefined;
+                const isLastStep = this.currentStep === this.questions.length - 1;
+
+                this.container.innerHTML = `
+                    <div class="header">
+                        <h1>🎯 Lifestyle Assessment</h1>
+                        <p>Scopri il tuo profilo personalizzato in 20 domande</p>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span class="progress-text">Progresso</span>
+                                <span class="progress-text">${this.currentStep + 1} di ${this.questions.length}</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span class="progress-label">Inizio</span>
+                                <span class="progress-label">Fine</span>
+                            </div>
+                        </div>
+                        
+                        <div class="question-card">
+                            <div class="question-header">
+                                <div class="question-icon">
+                                    ${currentQuestion.icon}
+                                </div>
+                                <div class="question-text">
+                                    <h2 class="question-title">${currentQuestion.title}</h2>
+                                    <p class="question-subtitle">${currentQuestion.question}</p>
+                                    <p class="question-description">${currentQuestion.subtitle}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="options-container ${currentQuestion.type === 'scale' ? 'scale-options' : ''}">
+                                ${this.renderOptions(currentQuestion)}
+                            </div>
+                            
+                            ${currentQuestion.maxSelections ? `
+                                <div class="selection-info">
+                                    Seleziona fino a ${currentQuestion.maxSelections} opzioni
+                                    (${(this.answers[currentQuestion.id] || []).length}/${currentQuestion.maxSelections})
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="navigation">
+                            <button class="nav-button prev" ${this.currentStep === 0 ? 'disabled' : ''} onclick="quiz.handlePrevious()">
+                                ← Precedente
+                            </button>
+                            
+                            <div class="progress-dots">
+                                ${this.questions.map((_, index) => `
+                                    <div class="dot ${index === this.currentStep ? 'current' : index < this.currentStep ? 'completed' : ''}"></div>
+                                `).join('')}
+                            </div>
+                            
+                            <button class="nav-button next" ${!canProceed ? 'disabled' : ''} onclick="quiz.handleNext()">
+                                ${isLastStep ? 'Genera Profilo' : 'Avanti'} →
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderOptions(question) {
+                return question.options.map(option => {
+                    if (question.type === 'scale') {
+                        return `
+                            <button class="option-button ${this.answers[question.id] === option.value ? 'selected' : ''}" 
+                                    onclick="quiz.handleAnswer('${question.id}', ${option.value})">
+                                <div class="option-emoji">${option.emoji}</div>
+                                <div class="option-value">${option.value}</div>
+                                <div class="option-label">${option.label}</div>
+                            </button>
+                        `;
+                    } else if (question.type === 'single') {
+                        return `
+                            <button class="option-button single-option ${this.answers[question.id] === option.value ? 'selected' : ''}" 
+                                    onclick="quiz.handleAnswer('${question.id}', '${option.value}')">
+                                <div class="option-content">
+                                    <span class="option-emoji">${option.emoji}</span>
+                                    <span class="option-label">${option.label}</span>
+                                </div>
+                            </button>
+                        `;
+                    } else if (question.type === 'multiple') {
+                        const isSelected = (this.answers[question.id] || []).includes(option.value);
+                        const currentSelections = this.answers[question.id] || [];
+                        const maxReached = question.maxSelections && currentSelections.length >= question.maxSelections;
+                        
+                        return `
+                            <button class="option-button multiple-option ${isSelected ? 'selected' : ''}" 
+                                    ${!isSelected && maxReached ? 'disabled' : ''}
+                                    onclick="quiz.handleMultipleAnswer('${question.id}', '${option.value}')">
+                                <div class="option-content">
+                                    <div class="option-left">
+                                        <span class="option-emoji">${option.emoji}</span>
+                                        <span class="option-label">${option.label}</span>
+                                    </div>
+                                    ${isSelected ? '<div class="check-icon">✓</div>' : ''}
+                                </div>
+                            </button>
+                        `;
+                    }
+                }).join('');
+            }
+
+            handleMultipleAnswer(questionId, value) {
+                const question = this.questions.find(q => q.id === questionId);
+                const current = this.answers[questionId] || [];
+                const isSelected = current.includes(value);
+                const maxReached = question.maxSelections && current.length >= question.maxSelections;
+                
+                if (isSelected || !maxReached) {
+                    const updated = isSelected 
+                        ? current.filter(v => v !== value)
+                        : [...current, value];
+                    this.handleAnswer(questionId, updated);
+                }
+            }
+
+            getScoreLabel(key) {
+                const labels = {
+                    'wellbeing': 'Benessere',
+                    'health': 'Salute',
+                    'professional': 'Lavoro',
+                    'social': 'Sociale'
+                };
+                return labels[key] || key;
+            }
+        }
+
+        // Inizializza il quiz
+        const quiz = new LifestyleQuiz();
+    </script>
+</body>
+</html>
