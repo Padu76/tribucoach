@@ -39,56 +39,54 @@
                 console.log('🔄 Caricamento dati LifestyleFitnessCoach + TribuCoach...');
                 updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
 
-                // 1. Carica profili lifestyle
+                // 1. Carica SEMPRE da quiz_results (dati reali)
                 try {
-                    const lifestyleSnapshot = await getDocs(collection(db, 'lifestyle_profiles'));
-                    allUsers = [];
-                    
-                    lifestyleSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        allUsers.push({
-                            id: doc.id,
-                            name: data.name || data.firstName || 'Nome non fornito',
-                            email: data.email || data.emailAddress || 'Email non fornita',
-                            ...data,
-                            registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            currentWeek: data.currentWeek || 1,
-                            completedWeeks: data.completedWeeks || [],
-                            totalSessions: data.totalSessions || 0,
-                            profileQuadrant: data.quadrant || 'Q4',
-                            consciousnessLevel: data.consciousnessLevel || 'Opportunista'
-                        });
-                    });
-                    
-                    console.log('✅ Profili lifestyle caricati:', allUsers.length);
-                } catch (error) {
-                    console.warn('⚠️ Collezione lifestyle_profiles non trovata, carico da quiz_results:', error);
-                    
-                    // FALLBACK: Usa quiz_results se lifestyle_profiles non esiste
-                    const quizSnapshot = await getDocs(collection(db, 'quiz_results'));
+                    const quizSnapshot = await getDocs(query(
+                        collection(db, 'quiz_results'), 
+                        orderBy('timestamp', 'desc')
+                    ));
                     allUsers = [];
                     
                     quizSnapshot.forEach(doc => {
                         const data = doc.data();
-                        // Converte quiz results in formato utenti lifestyle
+                        
+                        // Determina quadrante e livello coscienza dai dati quiz
+                        const quadrant = determineQuadrant(data);
+                        const consciousnessLevel = determineConsciousnessLevel(data);
+                        
                         allUsers.push({
                             id: doc.id,
                             name: data.name || 'Nome non fornito',
                             email: data.email || 'Email non fornita',
                             registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
                             lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            currentWeek: 1, // Nuovo utente
-                            completedWeeks: [],
-                            totalSessions: 0,
-                            profileQuadrant: 'Q4', // Default per nuovi
-                            consciousnessLevel: 'Opportunista',
-                            leadScore: data.lead_score || 0,
-                            source: 'quiz_conversion'
+                            
+                            // Status coaching
+                            currentWeek: data.currentWeek || 1,
+                            completedWeeks: data.completedWeeks || [],
+                            totalSessions: data.totalSessions || 0,
+                            hasStartedCoaching: data.hasStartedCoaching || false,
+                            
+                            // Profilo personalizzazione
+                            profileQuadrant: quadrant,
+                            consciousnessLevel: consciousnessLevel,
+                            
+                            // Dati quiz originali
+                            leadScore: calculateLeadScore(data),
+                            quizData: data,
+                            source: 'quiz',
+                            
+                            // Metadati utili
+                            profileType: data.profile_type || data.profile || 'Non definito',
+                            goals: data.goals || [],
+                            challenges: data.challenges || data.obstacles || []
                         });
                     });
                     
-                    console.log('✅ Utenti da quiz results:', allUsers.length);
+                    console.log('✅ Utenti da quiz_results caricati:', allUsers.length);
+                } catch (error) {
+                    console.error('❌ Errore caricamento quiz_results:', error);
+                    allUsers = [];
                 }
 
                 // 2. Carica sessioni coaching
@@ -169,7 +167,89 @@
             }
         }
 
-        // 📊 AGGIORNA DASHBOARD
+        // 🧠 DETERMINA QUADRANTE DA DATI QUIZ
+        function determineQuadrant(quizData) {
+            // Analizza i dati del quiz per determinare il quadrante
+            let competenceScore = 0;
+            let motivationScore = 0;
+            
+            // Competenza tecnica
+            if (quizData.experience) {
+                if (quizData.experience.includes('avanzato') || quizData.experience.includes('Avanzato')) competenceScore += 2;
+                else if (quizData.experience.includes('intermedio') || quizData.experience.includes('Intermedio')) competenceScore += 1;
+            }
+            
+            if (quizData.activity_level) {
+                if (quizData.activity_level.includes('Molto attivo')) competenceScore += 2;
+                else if (quizData.activity_level.includes('Moderatamente')) competenceScore += 1;
+            }
+            
+            // Motivazione emotiva
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                motivationScore += Math.min(quizData.goals.length, 2);
+            }
+            
+            if (quizData.readiness_level && quizData.readiness_level >= 4) motivationScore += 1;
+            if (quizData.commitment_level && quizData.commitment_level >= 4) motivationScore += 1;
+            
+            // Determina quadrante
+            if (competenceScore >= 2 && motivationScore >= 2) return 'Q1'; // Competente e Motivato
+            else if (competenceScore < 2 && motivationScore >= 2) return 'Q2'; // Forte ma Inesperto  
+            else if (competenceScore >= 2 && motivationScore < 2) return 'Q3'; // Esperto ma Demotivato
+            else return 'Q4'; // Principiante Totale
+        }
+        
+        // 🧠 DETERMINA LIVELLO COSCIENZA
+        function determineConsciousnessLevel(quizData) {
+            // Analizza priorità e linguaggio per determinare livello
+            let level = 'Opportunista'; // Default
+            
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                const goals = quizData.goals.join(' ').toLowerCase();
+                
+                if (goals.includes('comunità') || goals.includes('aiutare') || goals.includes('sociale')) {
+                    level = 'Pluralista';
+                } else if (goals.includes('successo') || goals.includes('performance') || goals.includes('competizione')) {
+                    level = 'Achiever';
+                } else if (goals.includes('salute') || goals.includes('stabilità') || goals.includes('routine')) {
+                    level = 'Conformista';
+                }
+            }
+            
+            return level;
+        }
+        
+        // 🧮 CALCOLA LEAD SCORE MIGLIORATO
+        function calculateLeadScore(quizData) {
+            if (quizData.lead_score) return quizData.lead_score;
+            
+            let score = 0;
+            
+            // Score da esperienza (20 punti)
+            if (quizData.experience) {
+                if (quizData.experience.includes('Avanzato')) score += 20;
+                else if (quizData.experience.includes('Intermedio')) score += 15;
+                else if (quizData.experience.includes('Principiante')) score += 10;
+            }
+            
+            // Score da obiettivi (25 punti)
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                score += Math.min(quizData.goals.length * 5, 25);
+            }
+            
+            // Score da readiness (20 punti)
+            if (quizData.readiness_level) score += quizData.readiness_level * 4;
+            
+            // Score da commitment (15 punti)  
+            if (quizData.commitment_level) score += quizData.commitment_level * 3;
+            
+            // Score da completezza dati (20 punti)
+            if (quizData.email) score += 10;
+            if (quizData.name) score += 5;
+            if (quizData.phone || quizData.whatsapp) score += 5;
+            
+            return Math.min(score, 100);
+        }
         function updateDashboard() {
             updateOverviewMetrics();
             updateUsersGrid();
@@ -179,22 +259,17 @@
             updateLastUpdateTime();
         }
 
-        // 📈 METRICHE OVERVIEW
+        // 📈 METRICHE OVERVIEW AGGIORNATE
         function updateOverviewMetrics() {
             const totalUsers = allUsers.length;
-            const activeUsers = allUsers.filter(u => {
-                const lastActivity = u.lastActivity;
-                const threeDaysAgo = new Date();
-                threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-                return lastActivity >= threeDaysAgo;
-            }).length;
-
+            const usersStartedCoaching = allUsers.filter(u => u.hasStartedCoaching).length;
             const completedPrograms = allUsers.filter(u => 
                 u.completedWeeks && u.completedWeeks.includes(7)
             ).length;
-
-            const avgProgress = totalUsers > 0 ? 
-                Math.round(allUsers.reduce((sum, u) => sum + (u.currentWeek || 1), 0) / totalUsers * 100 / 7) : 0;
+            
+            const qualifiedLeads = allUsers.filter(u => (u.leadScore || 0) >= 70).length;
+            const conversionRate = totalUsers > 0 ? 
+                Math.round((usersStartedCoaching / totalUsers) * 100) : 0;
 
             const todaySessions = allSessions.filter(s => {
                 const today = new Date().toDateString();
@@ -203,9 +278,9 @@
 
             const metrics = [
                 { selector: '.metric-card:nth-child(1) p', value: totalUsers },
-                { selector: '.metric-card:nth-child(2) p', value: activeUsers },
-                { selector: '.metric-card:nth-child(3) p', value: completedPrograms },
-                { selector: '.metric-card:nth-child(4) p', value: avgProgress + '%' },
+                { selector: '.metric-card:nth-child(2) p', value: qualifiedLeads },
+                { selector: '.metric-card:nth-child(3) p', value: usersStartedCoaching },
+                { selector: '.metric-card:nth-child(4) p', value: conversionRate + '%' },
                 { selector: '.metric-card:nth-child(5) p', value: todaySessions }
             ];
 
@@ -215,7 +290,7 @@
             });
         }
 
-        // 👥 GRIGLIA UTENTI
+        // 👥 GRIGLIA UTENTI MIGLIORATA
         function updateUsersGrid() {
             const container = document.querySelector('.users-grid');
             if (!container) return;
@@ -224,8 +299,8 @@
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">👥</div>
-                        <h3>Nessun Utente Registrato</h3>
-                        <p>Gli utenti del coaching LifestyleFitnessCoach appariranno qui.</p>
+                        <h3>Nessun Utente Trovato</h3>
+                        <p>I risultati quiz e utenti coaching appariranno qui.</p>
                         <button class="reload-btn" onclick="loadDashboardData()">🔄 Ricarica Dati</button>
                     </div>
                 `;
@@ -236,15 +311,20 @@
             let html = '';
 
             usersToShow.forEach(user => {
-                const progressPercentage = (user.currentWeek || 1) / 7 * 100;
+                const progressPercentage = user.hasStartedCoaching ? 
+                    (user.currentWeek || 1) / 7 * 100 : 0;
+                
                 const profileIcon = getProfileIcon(user.profileQuadrant);
-                const statusBadge = getStatusBadge(user.currentWeek, user.completedWeeks);
+                const statusBadge = getStatusBadge(user);
                 const lastActivity = user.lastActivity.toLocaleDateString('it-IT', {
                     day: '2-digit',
                     month: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit'
                 });
+                
+                const leadScore = user.leadScore || 0;
+                const scoreClass = leadScore >= 70 ? 'high' : leadScore >= 40 ? 'medium' : 'low';
 
                 html += `
                     <div class="user-card ${selectedUsers.has(user.id) ? 'selected' : ''}" data-user-id="${user.id}">
@@ -257,15 +337,16 @@
                         
                         <div class="user-header">
                             <div class="user-info">
-                                <div class="user-name">👤 ${user.name || 'Nome non fornito'}</div>
-                                <div class="user-email">${user.email || 'Email non fornita'}</div>
+                                <div class="user-name">👤 ${user.name}</div>
+                                <div class="user-email">${user.email}</div>
+                                <div class="lead-score ${scoreClass}">Score: ${Math.round(leadScore)}%</div>
                             </div>
                             ${statusBadge}
                         </div>
                         
                         <div class="progress-section">
                             <div class="progress-info">
-                                <span>Settimana ${user.currentWeek || 1} di 7</span>
+                                <span>${user.hasStartedCoaching ? `Settimana ${user.currentWeek || 1} di 7` : 'Quiz completato - Coaching non iniziato'}</span>
                                 <span>${Math.round(progressPercentage)}%</span>
                             </div>
                             <div class="progress-bar">
@@ -276,11 +357,11 @@
                         <div class="user-details">
                             <div class="detail-item">
                                 <span class="detail-icon">${profileIcon}</span>
-                                <span class="detail-value">Profilo ${user.profileQuadrant || 'Q4'}</span>
+                                <span class="detail-value">Profilo ${user.profileQuadrant}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-icon">🧠</span>
-                                <span class="detail-value">${user.consciousnessLevel || 'Opportunista'}</span>
+                                <span class="detail-value">${user.consciousnessLevel}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-icon">📅</span>
@@ -288,17 +369,23 @@
                             </div>
                             <div class="detail-item">
                                 <span class="detail-icon">🎯</span>
-                                <span class="detail-value">${user.totalSessions || 0} sessioni</span>
+                                <span class="detail-value">${user.totalSessions} sessioni</span>
                             </div>
                         </div>
                         
                         <div class="user-actions">
                             <button class="action-button primary" onclick="showUserDetails('${user.id}')">
-                                👁️ Dettagli Completi
+                                👁️ Dettagli Quiz
                             </button>
-                            <button class="action-button secondary" onclick="showUserProgress('${user.id}')">
-                                📊 Progress Report
-                            </button>
+                            ${!user.hasStartedCoaching ? `
+                                <button class="action-button secondary" onclick="markCoachingStarted('${user.id}')">
+                                    🚀 Inizia Coaching
+                                </button>
+                            ` : `
+                                <button class="action-button secondary" onclick="showUserProgress('${user.id}')">
+                                    📊 Progress Report
+                                </button>
+                            `}
                         </div>
                     </div>
                 `;
@@ -484,15 +571,22 @@
             return icons[quadrant] || '👤';
         }
 
-        function getStatusBadge(currentWeek, completedWeeks = []) {
-            if (completedWeeks.includes(7)) {
-                return '<div class="status-badge completed">✅ Completato</div>';
-            } else if (currentWeek >= 4) {
-                return '<div class="status-badge active">🔥 Attivo</div>';
-            } else if (currentWeek >= 2) {
-                return '<div class="status-badge progress">⏳ In Progress</div>';
+        function getStatusBadge(user) {
+            if (user.completedWeeks && user.completedWeeks.includes(7)) {
+                return '<div class="status-badge completed">✅ Programma Completato</div>';
+            } else if (user.hasStartedCoaching) {
+                if (user.currentWeek >= 4) {
+                    return '<div class="status-badge active">🔥 Coaching Avanzato</div>';
+                } else {
+                    return '<div class="status-badge progress">⏳ Coaching in Corso</div>';
+                }
             } else {
-                return '<div class="status-badge new">🆕 Nuovo</div>';
+                const leadScore = user.leadScore || 0;
+                if (leadScore >= 70) {
+                    return '<div class="status-badge new high-potential">🌟 Lead Qualificato</div>';
+                } else {
+                    return '<div class="status-badge new">🆕 Quiz Completato</div>';
+                }
             }
         }
 
@@ -938,7 +1032,19 @@
             font-weight: 600;
         }
 
-        .status-badge.completed { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .lead-score {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .lead-score.high { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .lead-score.medium { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+        .lead-score.low { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+
+        .status-badge.high-potential { background: rgba(255, 193, 7, 0.2); color: #FFC107; }
         .status-badge.active { background: rgba(255, 102, 0, 0.2); color: #ff6600; }
         .status-badge.progress { background: rgba(33, 150, 243, 0.2); color: #2196F3; }
         .status-badge.new { background: rgba(158, 158, 158, 0.2); color: #999; }
@@ -1415,19 +1521,19 @@
         <!-- OVERVIEW METRICS -->
         <div class="metrics-grid">
             <div class="metric-card">
-                <h3>👥 Utenti Totali</h3>
+                <h3>📝 Quiz Completati</h3>
                 <p>0</p>
             </div>
             <div class="metric-card">
-                <h3>🔥 Utenti Attivi (3gg)</h3>
+                <h3>🌟 Lead Qualificati (≥70%)</h3>
                 <p>0</p>
             </div>
             <div class="metric-card">
-                <h3>✅ Programmi Completati</h3>
+                <h3>🚀 Coaching Iniziati</h3>
                 <p>0</p>
             </div>
             <div class="metric-card">
-                <h3>📊 Progress Medio</h3>
+                <h3>📊 Tasso Conversione</h3>
                 <p>0%</p>
             </div>
             <div class="metric-card">
