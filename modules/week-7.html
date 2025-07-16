@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 7 - Consolidamento e Futuro | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #059669;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Journey Overview */
+        .journey-overview {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .journey-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .journey-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .journey-timeline {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .timeline-week {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .timeline-description {
+            flex: 1;
+            color: #475569;
+        }
+
+        /* Session Container */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Scalometer */
+        .scalometer {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .scale-question {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .scale-input {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .scale-input input[type="radio"] {
+            width: auto;
+        }
+
+        .scale-input label {
+            font-size: 0.8rem;
+            margin: 0;
+            padding: 0.25rem;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-celebration {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            font-size: 1.2rem;
+            padding: 1rem 2rem;
+        }
+
+        .btn-celebration:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .celebration-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border-radius: 16px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .celebration-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .celebration-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #78716c;
+            margin-bottom: 2rem;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .achievement-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .achievement-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .achievement-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .achievement-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #059669;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .celebration {
+            animation: celebration 2s ease-in-out infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .journey-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .achievements-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scalometer {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🏆 Settimana 7 - Consolidamento e Futuro</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Settimana 7! 🏆</h1>
+            <p class="welcome-subtitle">Consolidamento e Futuro - La Tua Trasformazione Completa</p>
+            <p class="welcome-description">
+                Congratulazioni! Sei arrivato all'ultima settimana del tuo percorso di trasformazione. Oggi celebreremo i tuoi progressi, 
+                consolideremo i risultati raggiunti e pianificheremo il tuo futuro. Questa sessione è dedicata a te e al tuo incredibile viaggio. 
+                Preparati a scoprire quanto sei cresciuto!
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">🏆</div>
+                <div class="coach-message">
+                    <h3>Celebriamo la Tua Trasformazione</h3>
+                    <p>Sei riuscito a completare un percorso che molti iniziano ma pochi terminano. 
+                    Oggi celebriamo i tuoi successi e costruiamo il ponte verso il tuo futuro straordinario!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Journey Overview -->
+        <section class="journey-overview fade-in">
+            <h2 class="journey-title">🚀 Il Tuo Viaggio in Numeri</h2>
+            <div class="journey-stats">
+                <div class="stat-card">
+                    <div class="stat-number">7</div>
+                    <div class="stat-label">Settimane Completate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">280</div>
+                    <div class="stat-label">Minuti di Coaching</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">49</div>
+                    <div class="stat-label">Giorni di Crescita</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Possibilità Future</div>
+                </div>
+            </div>
+            
+            <div class="journey-timeline">
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 1</div>
+                    <div class="timeline-description">Hai iniziato il viaggio conoscendoti meglio</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 2</div>
+                    <div class="timeline-description">Hai sviluppato consapevolezza di te stesso</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 3</div>
+                    <div class="timeline-description">Hai definito obiettivi SMART chiari</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 4</div>
+                    <div class="timeline-description">Hai creato un piano d'azione concreto</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 5</div>
+                    <div class="timeline-description">Hai trasformato le tue abitudini</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 6</div>
+                    <div class="timeline-description">Hai scoperto le tue potenzialità</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-week">Week 7</div>
+                    <div class="timeline-description">Oggi consolidi tutto e guardi al futuro</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching Finale</h2>
+                        <p class="panel-subtitle">Celebriamo i tuoi successi insieme</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea è qui per celebrare la tua trasformazione</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Eccoci qui! Ultima settimana del nostro viaggio insieme. Guardo indietro e vedo una persona completamente trasformata. 
+                            Voglio che tu ti prenda un momento per riflettere: com'eri 7 settimane fa e come sei ora? 
+                            Cosa è cambiato in te che ti rende più orgoglioso? 🏆
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Rifletti sui tuoi cambiamenti...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">📊</div>
+                    <div>
+                        <h2 class="panel-title">Valutazione Finale</h2>
+                        <p class="panel-subtitle">Misura i tuoi progressi</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso valutazione: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="finalForm">
+                    <!-- Sezione 1: Autostima Finale -->
+                    <div class="form-section" id="section1">
+                        <h3>📊 Test di Autostima Finale</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #64748b;">
+                            Confronta con la settimana 2 - vota da 1 a 5 (1=per nulla, 5=sempre)
+                        </p>
+                        
+                        <div class="scalometer">
+                            <div class="scale-question">Mi piaccio come sono</div>
+                            <div class="scale-input">
+                                <input type="radio" name="final1" value="1" id="f1_1" onchange="updateProgress()">
+                                <label for="f1_1">1</label>
+                                <input type="radio" name="final1" value="2" id="f1_2" onchange="updateProgress()">
+                                <label for="f1_2">2</label>
+                                <input type="radio" name="final1" value="3" id="f1_3" onchange="updateProgress()">
+                                <label for="f1_3">3</label>
+                                <input type="radio" name="final1" value="4" id="f1_4" onchange="updateProgress()">
+                                <label for="f1_4">4</label>
+                                <input type="radio" name="final1" value="5" id="f1_5" onchange="updateProgress()">
+                                <label for="f1_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scalometer">
+                            <div class="scale-question">Conduco una vita equilibrata</div>
+                            <div class="scale-input">
+                                <input type="radio" name="final2" value="1" id="f2_1" onchange="updateProgress()">
+                                <label for="f2_1">1</label>
+                                <input type="radio" name="final2" value="2" id="f2_2" onchange="updateProgress()">
+                                <label for="f2_2">2</label>
+                                <input type="radio" name="final2" value="3" id="f2_3" onchange="updateProgress()">
+                                <label for="f2_3">3</label>
+                                <input type="radio" name="final2" value="4" id="f2_4" onchange="updateProgress()">
+                                <label for="f2_4">4</label>
+                                <input type="radio" name="final2" value="5" id="f2_5" onchange="updateProgress()">
+                                <label for="f2_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scalometer">
+                            <div class="scale-question">Riesco a portare a termine quello che inizio</div>
+                            <div class="scale-input">
+                                <input type="radio" name="final3" value="1" id="f3_1" onchange="updateProgress()">
+                                <label for="f3_1">1</label>
+                                <input type="radio" name="final3" value="2" id="f3_2" onchange="updateProgress()">
+                                <label for="f3_2">2</label>
+                                <input type="radio" name="final3" value="3" id="f3_3" onchange="updateProgress()">
+                                <label for="f3_3">3</label>
+                                <input type="radio" name="final3" value="4" id="f3_4" onchange="updateProgress()">
+                                <label for="f3_4">4</label>
+                                <input type="radio" name="final3" value="5" id="f3_5" onchange="updateProgress()">
+                                <label for="f3_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scalometer">
+                            <div class="scale-question">Sono una persona ottimista</div>
+                            <div class="scale-input">
+                                <input type="radio" name="final4" value="1" id="f4_1" onchange="updateProgress()">
+                                <label for="f4_1">1</label>
+                                <input type="radio" name="final4" value="2" id="f4_2" onchange="updateProgress()">
+                                <label for="f4_2">2</label>
+                                <input type="radio" name="final4" value="3" id="f4_3" onchange="updateProgress()">
+                                <label for="f4_3">3</label>
+                                <input type="radio" name="final4" value="4" id="f4_4" onchange="updateProgress()">
+                                <label for="f4_4">4</label>
+                                <input type="radio" name="final4" value="5" id="f4_5" onchange="updateProgress()">
+                                <label for="f4_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scalometer">
+                            <div class="scale-question">Affronto la vita con entusiasmo</div>
+                            <div class="scale-input">
+                                <input type="radio" name="final5" value="1" id="f5_1" onchange="updateProgress()">
+                                <label for="f5_1">1</label>
+                                <input type="radio" name="final5" value="2" id="f5_2" onchange="updateProgress()">
+                                <label for="f5_2">2</label>
+                                <input type="radio" name="final5" value="3" id="f5_3" onchange="updateProgress()">
+                                <label for="f5_3">3</label>
+                                <input type="radio" name="final5" value="4" id="f5_4" onchange="updateProgress()">
+                                <label for="f5_4">4</label>
+                                <input type="radio" name="final5" value="5" id="f5_5" onchange="updateProgress()">
+                                <label for="f5_5">5</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Bilancio Risultati -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>📈 Bilancio dei Risultati</h3>
+                        <div class="form-group">
+                            <label for="biggestChange">Qual è il cambiamento più grande che hai notato in te?</label>
+                            <textarea id="biggestChange" placeholder="Cosa è cambiato di più in te durante questo percorso?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="goalsAchieved">Quali obiettivi hai raggiunto?</label>
+                            <textarea id="goalsAchieved" placeholder="Elenca i successi e i risultati ottenuti..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="habitsChanged">Quali abitudini hai cambiato con successo?</label>
+                            <textarea id="habitsChanged" placeholder="Nuove abitudini positive e cattive abitudini eliminate..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="challengesOvercome">Quali sfide hai superato?</label>
+                            <textarea id="challengesOvercome" placeholder="Ostacoli che hai affrontato e vinto..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Pianificazione Futura -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>🚀 Pianificazione del Futuro</h3>
+                        <div class="form-group">
+                            <label for="futureGoals">Quali sono i tuoi prossimi obiettivi?</label>
+                            <textarea id="futureGoals" placeholder="Cosa vuoi raggiungere nei prossimi 6-12 mesi?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="maintainProgress">Come manterrai i progressi raggiunti?</label>
+                            <textarea id="maintainProgress" placeholder="Strategia per mantenere i cambiamenti positivi..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="continuousGrowth">Come continuerai a crescere?</label>
+                            <textarea id="continuousGrowth" placeholder="Piani per la crescita personale continua..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="support">Chi ti supporterà nel tuo futuro?</label>
+                            <textarea id="support" placeholder="Persone e risorse che ti accompagneranno..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Riflessioni Finali -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>💭 Riflessioni Finali</h3>
+                        <div class="form-group">
+                            <label for="gratitude">Per cosa sei più grato di questo percorso?</label>
+                            <textarea id="gratitude" placeholder="Cosa ti ha dato più gioia e soddisfazione..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="advice">Che consiglio daresti a chi inizia questo percorso?</label>
+                            <textarea id="advice" placeholder="Consigli per chi vuole iniziare la propria trasformazione..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="proudestMoment">Qual è il momento di cui sei più orgoglioso?</label>
+                            <textarea id="proudestMoment" placeholder="Il momento che ti ha reso più orgoglioso di te..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="commitment">Qual è il tuo impegno per il futuro?</label>
+                            <textarea id="commitment" placeholder="La promessa che fai a te stesso per il futuro..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">🎉 Completa la Trasformazione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <div class="celebration-section celebration">
+                <h2 class="celebration-title">🎉 CONGRATULAZIONI! 🎉</h2>
+                <p class="celebration-message">
+                    Hai completato un percorso straordinario di trasformazione! In 7 settimane sei riuscito a cambiare la tua vita, 
+                    sviluppare nuove abitudini, raggiungere obiettivi e scoprire le tue potenzialità. 
+                    Questo è solo l'inizio di una vita migliore!
+                </p>
+                
+                <div class="achievements-grid">
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🏆</div>
+                        <h3 class="achievement-title">Campione della Trasformazione</h3>
+                        <p class="achievement-description">Hai completato tutte le 7 settimane con successo</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🎯</div>
+                        <h3 class="achievement-title">Maestro degli Obiettivi</h3>
+                        <p class="achievement-description">Hai imparato a definire e raggiungere obiettivi SMART</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">🔄</div>
+                        <h3 class="achievement-title">Trasformatore di Abitudini</h3>
+                        <p class="achievement-description">Hai cambiato le tue abitudini per sempre</p>
+                    </div>
+                    <div class="achievement-card">
+                        <div class="achievement-icon">⭐</div>
+                        <h3 class="achievement-title">Scopritore di Talenti</h3>
+                        <p class="achievement-description">Hai identificato e valorizzato le tue potenzialità</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">🌟 Il Tuo Manuale di Mantenimento</h3>
+                <ul class="homework-list">
+                    <li>✅ Continua con le abitudini positive che hai sviluppato</li>
+                    <li>✅ Rivedi i tuoi obiettivi ogni mese e aggiornali</li>
+                    <li>✅ Dedica tempo quotidiano alle tue potenzialità</li>
+                    <li>✅ Condividi la tua trasformazione con altri</li>
+                    <li>✅ Continua a crescere e imparare ogni giorno</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 Ricorda: la trasformazione è un processo continuo. 
+                    Hai ora tutti gli strumenti per continuare a crescere!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-celebration" onclick="downloadCertificate()">📜 Scarica il Tuo Certificato</button>
+                <button class="btn btn-success" onclick="downloadFinalReport()">📄 Scarica Report Finale</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="planFuture()">🚀 Pianifica il Futuro</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 4;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Grazie per aver condiviso questo con me. La tua trasformazione è stata straordinaria!", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            const celebrationResponses = [
+                "Sono davvero orgoglioso di te! Questa trasformazione è il risultato del tuo impegno e della tua determinazione. Come ti senti ora che hai raggiunto questo traguardo?",
+                "Incredibile! Vedo una persona completamente nuova. Il cambiamento che hai fatto è ispirazionale. Cosa ti ha dato più forza durante questo percorso?",
+                "Fantastico! Hai dimostrato a te stesso che il cambiamento è possibile. Ora che hai tutti questi strumenti, cosa ti emoziona di più del tuo futuro?",
+                "Straordinario! Guardando indietro, riesci a vedere quanto sei cresciuto? Questa trasformazione ti accompagnerà per tutta la vita.",
+                "Eccezionale! Sei riuscito a completare qualcosa che molti iniziano ma pochi finiscono. Quali sono le tre cose più importanti che hai imparato?"
+            ];
+            
+            return celebrationResponses[Math.floor(Math.random() * celebrationResponses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            
+            let filled = 0;
+            let total = 0;
+            
+            if (currentSection === 1) {
+                // Count radio buttons
+                const radioGroups = ['final1', 'final2', 'final3', 'final4', 'final5'];
+                radioGroups.forEach(group => {
+                    total++;
+                    const checked = document.querySelector(`input[name="${group}"]:checked`);
+                    if (checked) filled++;
+                });
+            } else {
+                // Count other inputs
+                const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    total++;
+                    if (input.value.trim()) filled++;
+                });
+            }
+            
+            const sectionProgress = (filled / total) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#finalForm input, #finalForm textarea, #finalForm select');
+            formElements.forEach(element => {
+                if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.id] = element.value;
+                }
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week7SessionData', JSON.stringify(sessionData));
+            
+            // Mark journey as completed
+            markJourneyComplete();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+            
+            // Show celebration
+            showCelebrationMessage();
+        }
+
+        function markJourneyComplete() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(7)) {
+                    progress.completedWeeks.push(7);
+                    progress.currentWeek = 7;
+                    progress.journeyCompleted = true;
+                    progress.completionDate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error marking journey complete:', error);
+            }
+        }
+
+        function downloadCertificate() {
+            const certificateContent = `
+                🏆 CERTIFICATO DI COMPLETAMENTO 🏆
+                
+                LifestyleFitnessCoach - Andrea Padoan
+                
+                Questo certifica che
+                
+                ________________________________
+                
+                ha completato con successo il
+                
+                PERCORSO DI TRASFORMAZIONE LIFESTYLE
+                
+                Un programma di coaching intensivo di 7 settimane
+                dedicato al miglioramento personale e professionale
+                
+                Settimane completate: 7/7
+                Ore di coaching: 4.5 ore
+                Data di completamento: ${new Date().toLocaleDateString('it-IT')}
+                
+                Competenze sviluppate:
+                ✅ Consapevolezza di sé
+                ✅ Definizione obiettivi SMART
+                ✅ Pianificazione strategica
+                ✅ Trasformazione abitudini
+                ✅ Scoperta potenzialità
+                ✅ Consolidamento risultati
+                
+                Congratulazioni per questo straordinario traguardo!
+                
+                Con stima e ammirazione,
+                Andrea Padoan
+                Lifestyle & Fitness Coach
+                
+                "La trasformazione inizia con una decisione
+                e si completa con l'azione costante"
+            `;
+            
+            const blob = new Blob([certificateContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Certificato_Completamento_Lifestyle_Transformation.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('🏆 Certificato scaricato! Hai completato un percorso straordinario!', 'success');
+        }
+
+        function downloadFinalReport() {
+            const reportContent = `
+                📊 REPORT FINALE DI TRASFORMAZIONE 📊
+                
+                Andrea Padoan - Lifestyle Coach
+                Data: ${new Date().toLocaleDateString('it-IT')}
+                
+                🏆 CONGRATULAZIONI! 🏆
+                Hai completato un percorso straordinario di trasformazione!
+                
+                📈 RIEPILOGO PERCORSO:
+                
+                SETTIMANA 1: Incontro Conoscitivo
+                ✅ Analisi situazione iniziale
+                ✅ Definizione passato, presente, futuro
+                ✅ Identificazione aree di miglioramento
+                
+                SETTIMANA 2: Consapevolezza di Sé
+                ✅ Test di autostima
+                ✅ Analisi motivazioni profonde
+                ✅ Sviluppo consapevolezza personale
+                
+                SETTIMANA 3: Obiettivi SMART
+                ✅ Definizione obiettivi specifici
+                ✅ Creazione timeline realistica
+                ✅ Pianificazione strategica
+                
+                SETTIMANA 4: Piano di Azione
+                ✅ Identificazione risorse e alleati
+                ✅ Definizione azioni concrete
+                ✅ Strategia di implementazione
+                
+                SETTIMANA 5: Trasformazione Abitudini
+                ✅ Analisi abitudini attuali
+                ✅ Creazione nuove routine
+                ✅ Sistema di tracking progresso
+                
+                SETTIMANA 6: Scoperta Potenzialità
+                ✅ Test creatività e talenti
+                ✅ Identificazione punti di forza
+                ✅ Pianificazione utilizzo talenti
+                
+                SETTIMANA 7: Consolidamento e Futuro
+                ✅ Valutazione progressi raggiunti
+                ✅ Pianificazione mantenimento
+                ✅ Strategia crescita futura
+                
+                🎯 RISULTATI CHIAVE:
+                - Completamento 7/7 settimane
+                - Oltre 280 minuti di coaching personalizzato
+                - Sviluppo di competenze trasversali
+                - Trasformazione abitudini consolidata
+                - Chiarezza su obiettivi futuri
+                
+                🚀 PROSSIMI PASSI:
+                - Continua con le abitudini positive sviluppate
+                - Rivedi obiettivi mensilmente
+                - Mantieni focus su crescita continua
+                - Condividi la tua trasformazione
+                - Celebra ogni piccolo progresso
+                
+                💬 MESSAGGIO FINALE:
+                Hai dimostrato coraggio, determinazione e costanza.
+                Questa trasformazione è solo l'inizio di una vita
+                straordinaria. Continua a credere in te stesso!
+                
+                Con orgoglio e ammirazione,
+                Andrea Padoan 🏆
+            `;
+            
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Report_Finale_Trasformazione_Lifestyle.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Report finale scaricato! Il tuo viaggio è documentato.', 'success');
+        }
+
+        function planFuture() {
+            const futureMessage = `
+                🚀 PIANIFICAZIONE FUTURA ATTIVATA!
+                
+                Ora che hai completato la trasformazione, è il momento
+                di pianificare il tuo futuro straordinario!
+                
+                Suggerimenti per i prossimi 6 mesi:
+                - Imposta nuovi obiettivi SMART
+                - Mantieni le abitudini positive
+                - Sviluppa ulteriormente i tuoi talenti
+                - Aiuta altri nel loro percorso
+                - Continua a crescere ogni giorno
+                
+                Il tuo futuro inizia ora! 🌟
+            `;
+            
+            showMessage(futureMessage, 'info');
+        }
+
+        function showCelebrationMessage() {
+            // Create celebration animation
+            const celebration = document.createElement('div');
+            celebration.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                    <div style="background: white; padding: 3rem; border-radius: 16px; text-align: center; max-width: 500px;">
+                        <h2 style="font-size: 2rem; color: #1e293b; margin-bottom: 1rem;">🎉 TRASFORMAZIONE COMPLETATA! 🎉</h2>
+                        <p style="font-size: 1.2rem; color: #475569; margin-bottom: 2rem;">Hai raggiunto un traguardo straordinario!</p>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 2rem; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer;">🏆 Continua la Celebrazione</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(celebration);
+            
+            setTimeout(() => {
+                celebration.remove();
+            }, 10000);
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo completato! Hai finito il tuo percorso di trasformazione!', 'success');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px; line-height: 1.4;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 6000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
