@@ -788,7 +788,7 @@
         </div>
     </main>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK + Claude AI System -->
     <script type="module">
         // Import Firebase functions
         import { db } from './firebase.js';
@@ -796,6 +796,9 @@
         
         // Import Lifestyle Coaching System
         import { LifestyleCoachingSystem, generatePersonalizedContent } from './lifestyle-coaching-system.js';
+        
+        // Import Claude AI System
+        import { AutomaticCoachingSystem, ClaudeConversationManager } from './claude-ai-coaching-system.js';
         
         // Make functions available globally
         window.firebaseDB = db;
@@ -806,10 +809,12 @@
         window.firebaseServerTimestamp = serverTimestamp;
         window.LifestyleCoachingSystem = LifestyleCoachingSystem;
         window.generatePersonalizedContent = generatePersonalizedContent;
+        window.AutomaticCoachingSystem = AutomaticCoachingSystem;
+        window.ClaudeConversationManager = ClaudeConversationManager;
     </script>
     
     <script>
-        // User data with coaching system
+        // User data with automatic coaching system
         let userData = {
             name: "Utente",
             scores: {
@@ -822,7 +827,8 @@
             progress: [],
             chatHistory: [],
             coachingSystem: null,
-            currentPhase: 1,
+            automaticCoaching: null,
+            currentWeek: 1,
             completedPhases: []
         };
 
@@ -831,11 +837,50 @@
             // Load user data from Firebase
             await loadUserDataFromFirebase();
             
-            // Initialize coaching system
-            initializeCoachingSystem();
+            // Initialize coaching systems
+            await initializeCoachingSystems();
             
             // Update UI with user data
             updateDashboard();
+        }
+
+        async function initializeCoachingSystems() {
+            // Initialize original coaching system
+            initializeCoachingSystem();
+            
+            // Initialize automatic Claude AI system
+            await initializeAutomaticCoaching();
+        }
+
+        async function initializeAutomaticCoaching() {
+            if (userData.quadrant && userData.consciousnessLevel) {
+                try {
+                    // Check if AutomaticCoachingSystem is available
+                    if (typeof window.AutomaticCoachingSystem === 'function') {
+                        userData.automaticCoaching = new window.AutomaticCoachingSystem();
+                        
+                        // Initialize user in automatic system
+                        const userId = localStorage.getItem('lifestyleUserId');
+                        if (userId) {
+                            await userData.automaticCoaching.initializeUser(userId, {
+                                quadrant: userData.quadrant,
+                                consciousnessLevel: userData.consciousnessLevel,
+                                motivationDrivers: userData.motivationDrivers || [],
+                                challenges: userData.challenges || [],
+                                readinessLevel: userData.readinessLevel || 3,
+                                scores: userData.scores,
+                                name: userData.name
+                            });
+                        }
+                        
+                        console.log('🤖 Sistema automatico Claude AI inizializzato');
+                    } else {
+                        console.warn('⚠️ Sistema automatico non disponibile');
+                    }
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione sistema automatico:', error);
+                }
+            }
         }
 
         function initializeCoachingSystem() {
@@ -1136,12 +1181,12 @@
             }
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
             if (message) {
-                // Add user message
+                // Add user message to chat
                 const messagesContainer = document.getElementById('chatMessages');
                 messagesContainer.innerHTML += `
                     <div class="message user">
@@ -1153,27 +1198,86 @@
                 // Clear input
                 input.value = '';
                 
-                // Simulate coach response
-                setTimeout(() => {
-                    const responses = [
-                        "Grazie per la domanda! Sono qui per aiutarti. 😊",
-                        "Ottima osservazione! Questo è un aspetto importante del tuo percorso.",
-                        "Ti capisco perfettamente. Affrontiamo questo insieme passo dopo passo.",
-                        "Fantastico! Vedo che stai prendendo il controllo della situazione."
-                    ];
-                    
-                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                    
-                    messagesContainer.innerHTML += `
-                        <div class="message coach">
-                            <p>${randomResponse}</p>
-                            <div class="message-time">Proprio ora</div>
-                        </div>
-                    `;
-                    
-                    // Scroll to bottom
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 1000);
+                // Send to Claude AI system
+                if (userData.automaticCoaching) {
+                    try {
+                        const userId = localStorage.getItem('lifestyleUserId');
+                        const response = await userData.automaticCoaching.handleUserMessage(userId, message);
+                        
+                        if (response.success) {
+                            // Add Andrea's response
+                            setTimeout(() => {
+                                messagesContainer.innerHTML += `
+                                    <div class="message coach">
+                                        <p>${response.response}</p>
+                                        <div class="message-time">Proprio ora</div>
+                                    </div>
+                                `;
+                                
+                                // Scroll to bottom
+                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                            }, 1000);
+                        } else {
+                            // Fallback response
+                            setTimeout(() => {
+                                messagesContainer.innerHTML += `
+                                    <div class="message coach">
+                                        <p>Grazie per il messaggio! Sto elaborando una risposta personalizzata per te. 😊</p>
+                                        <div class="message-time">Proprio ora</div>
+                                    </div>
+                                `;
+                                
+                                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                            }, 1000);
+                        }
+                    } catch (error) {
+                        console.error('❌ Errore invio messaggio:', error);
+                        
+                        // Fallback to original system
+                        setTimeout(() => {
+                            const responses = [
+                                "Grazie per la domanda! Sono qui per aiutarti nel tuo percorso. 😊",
+                                "Ottima osservazione! Questo è un aspetto importante della tua crescita.",
+                                "Ti capisco perfettamente. Affrontiamo questo insieme passo dopo passo.",
+                                "Fantastico! Vedo che stai prendendo il controllo della situazione."
+                            ];
+                            
+                            const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                            
+                            messagesContainer.innerHTML += `
+                                <div class="message coach">
+                                    <p>${randomResponse}</p>
+                                    <div class="message-time">Proprio ora</div>
+                                </div>
+                            `;
+                            
+                            // Scroll to bottom
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        }, 1000);
+                    }
+                } else {
+                    // Fallback to original system
+                    setTimeout(() => {
+                        const responses = [
+                            "Grazie per la domanda! Sono qui per aiutarti. 😊",
+                            "Ottima osservazione! Questo è un aspetto importante del tuo percorso.",
+                            "Ti capisco perfettamente. Affrontiamo questo insieme passo dopo passo.",
+                            "Fantastico! Vedo che stai prendendo il controllo della situazione."
+                        ];
+                        
+                        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                        
+                        messagesContainer.innerHTML += `
+                            <div class="message coach">
+                                <p>${randomResponse}</p>
+                                <div class="message-time">Proprio ora</div>
+                            </div>
+                        `;
+                        
+                        // Scroll to bottom
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }, 1000);
+                }
                 
                 // Scroll to bottom
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
