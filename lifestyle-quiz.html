@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lifestyle Assessment Quiz</title>
+    <title>Lifestyle Assessment Quiz - 6 Profili</title>
     <style>
         * {
             margin: 0;
@@ -474,6 +474,21 @@
             border-left-color: #16a34a;
         }
 
+        .profile-card.warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border-left-color: #f59e0b;
+        }
+
+        .profile-card.purple {
+            background: linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%);
+            border-left-color: #7c3aed;
+        }
+
+        .profile-card.blue {
+            background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+            border-left-color: #2563eb;
+        }
+
         .profile-card h3 {
             font-size: 1.5rem;
             font-weight: bold;
@@ -490,6 +505,18 @@
 
         .profile-card.success h3 {
             color: #16a34a;
+        }
+
+        .profile-card.warning h3 {
+            color: #f59e0b;
+        }
+
+        .profile-card.purple h3 {
+            color: #7c3aed;
+        }
+
+        .profile-card.blue h3 {
+            color: #2563eb;
         }
 
         .profile-text {
@@ -702,6 +729,88 @@
     </script>
     
     <script>
+        // 6 LIFESTYLE PROFILES SYSTEM
+        const LIFESTYLE_PROFILES = {
+            'stressato_esaurito': {
+                name: 'Stressato Esaurito',
+                emoji: '😰',
+                color: 'warning',
+                description: 'Burnout, sovraccarico e bisogno di recupero',
+                approach: 'Recupero graduale e gestione dello stress',
+                strengths: ['Resistenza', 'Dedizione', 'Capacità di sacrificio'],
+                challenges: ['Burnout', 'Stress cronico', 'Mancanza di energia'],
+                goals: ['Recuperare energia', 'Gestire lo stress', 'Trovare equilibrio'],
+                strategies: ['Tecniche di rilassamento', 'Boundaries lavorativi', 'Self-care quotidiano'],
+                language: 'Comprensivo, rassicurante, orientato al recupero',
+                timeline: 'Lento ma costante, priorità al benessere'
+            },
+            'procrastinatore_bloccato': {
+                name: 'Procrastinatore Bloccato',
+                emoji: '⏳',
+                color: 'blue',
+                description: 'Rimanda continuamente, manca di azione concreta',
+                approach: 'Sblocco mentale e azione guidata',
+                strengths: ['Creatività', 'Visione', 'Potenziale nascosto'],
+                challenges: ['Procrastinazione', 'Paralisi decisionale', 'Mancanza di azione'],
+                goals: ['Iniziare ad agire', 'Superare i blocchi', 'Creare momentum'],
+                strategies: ['Micro-azioni', 'Accountability', 'Sistemi di reward'],
+                language: 'Motivazionale, orientato all\'azione, pratico',
+                timeline: 'Passi piccoli ma immediati, focus sull\'azione'
+            },
+            'perfezionista_insoddisfatto': {
+                name: 'Perfezionista Insoddisfatto',
+                emoji: '🎯',
+                color: 'purple',
+                description: 'Standard troppo alti, mai soddisfatto dei risultati',
+                approach: 'Accettazione e progress over perfection',
+                strengths: ['Attenzione al dettaglio', 'Standard elevati', 'Qualità'],
+                challenges: ['Perfezionismo paralizzante', 'Insoddisfazione', 'Stress da performance'],
+                goals: ['Accettare "buono abbastanza"', 'Celebrare i progressi', 'Ridurre l\'autocritica'],
+                strategies: ['Progress tracking', 'Mindfulness', 'Reframing cognitivo'],
+                language: 'Paziente, orientato al progresso, anti-perfezionismo',
+                timeline: 'Graduale, con focus sui piccoli miglioramenti'
+            },
+            'dispersivo_confuso': {
+                name: 'Dispersivo Confuso',
+                emoji: '🤯',
+                color: 'primary',
+                description: 'Troppe cose in mente, manca focus e chiarezza',
+                approach: 'Chiarezza, focus e prioritizzazione',
+                strengths: ['Versatilità', 'Apertura mentale', 'Multitasking'],
+                challenges: ['Mancanza di focus', 'Confusione', 'Dispersione energetica'],
+                goals: ['Trovare chiarezza', 'Definire priorità', 'Concentrarsi sull\'essenziale'],
+                strategies: ['Mind mapping', 'Matrice priorità', 'Single-tasking'],
+                language: 'Chiaro, strutturato, orientato al focus',
+                timeline: 'Strutturato, con obiettivi chiari e specifici'
+            },
+            'motivato_inconsistente': {
+                name: 'Motivato Inconsistente',
+                emoji: '🎢',
+                color: 'secondary',
+                description: 'Entusiasmo a ondate, difficoltà a mantenere costanza',
+                approach: 'Sistemi e routine per la consistenza',
+                strengths: ['Entusiasmo', 'Energia quando motivato', 'Capacità di sprint'],
+                challenges: ['Inconsistenza', 'Motivazione altalenante', 'Difficoltà nel mantenere ritmo'],
+                goals: ['Creare consistenza', 'Sistemi automatici', 'Mantenere momentum'],
+                strategies: ['Habit stacking', 'Tracking visivo', 'Reward systems'],
+                language: 'Energico, orientato ai sistemi, motivazionale',
+                timeline: 'Costante, con sistemi di supporto e monitoraggio'
+            },
+            'equilibrato_ottimizzatore': {
+                name: 'Equilibrato Ottimizzatore',
+                emoji: '⚡',
+                color: 'success',
+                description: 'Situazione già buona, cerca ottimizzazione e crescita',
+                approach: 'Fine-tuning e crescita avanzata',
+                strengths: ['Equilibrio', 'Autodisciplina', 'Visione a lungo termine'],
+                challenges: ['Compiacenza', 'Plateau', 'Mancanza di sfide'],
+                goals: ['Ottimizzare performance', 'Nuove sfide', 'Crescita continua'],
+                strategies: ['Biohacking', 'Advanced techniques', 'Mentoring'],
+                language: 'Sofisticato, orientato alla performance, consulenziale',
+                timeline: 'Avanzato, con focus su ottimizzazione e crescita'
+            }
+        };
+
         class LifestyleQuiz {
             constructor() {
                 this.currentStep = 0;
@@ -712,143 +821,452 @@
                 this.showingContactForm = false;
                 
                 this.questions = [
+                    // === STRESS/BURNOUT QUESTIONS (5) ===
                     {
-                        id: 'behavioral_competence',
-                        title: 'Competenza Comportamentale',
-                        icon: '⚡',
-                        question: 'Quanto sei sicuro di avere le competenze pratiche per raggiungere i tuoi obiettivi di stile di vita?',
-                        subtitle: 'Valuta le tue abilità concrete',
+                        id: 'stress_level',
+                        title: 'Livello di Stress',
+                        icon: '😰',
+                        question: 'Come descriveresti il tuo livello di stress negli ultimi 30 giorni?',
+                        subtitle: 'Il tuo stato emotivo e fisico generale',
                         type: 'scale',
-                        category: 'assessment',
+                        category: 'stress',
                         options: [
-                            { value: 1, label: 'Per niente', emoji: '😟' },
-                            { value: 2, label: 'Poco', emoji: '😐' },
-                            { value: 3, label: 'Abbastanza', emoji: '🙂' },
-                            { value: 4, label: 'Molto', emoji: '😊' },
-                            { value: 5, label: 'Completamente', emoji: '🤩' }
+                            { value: 1, label: 'Rilassato', emoji: '😌' },
+                            { value: 2, label: 'Gestibile', emoji: '🙂' },
+                            { value: 3, label: 'Moderato', emoji: '😐' },
+                            { value: 4, label: 'Alto', emoji: '😟' },
+                            { value: 5, label: 'Estremo', emoji: '😰' }
                         ]
                     },
                     {
-                        id: 'transitional_competence',
-                        title: 'Gestione del Cambiamento',
-                        icon: '🎯',
-                        question: 'Quanto sei bravo a gestire gli ostacoli emotivi e mentali durante i cambiamenti?',
-                        subtitle: 'La tua resilienza nei momenti difficili',
+                        id: 'energy_depletion',
+                        title: 'Esaurimento Energetico',
+                        icon: '🔋',
+                        question: 'Quanto spesso ti senti completamente scarico di energie?',
+                        subtitle: 'La tua batteria personale',
                         type: 'scale',
-                        category: 'assessment',
+                        category: 'energy',
                         options: [
-                            { value: 1, label: 'Molto difficile', emoji: '😰' },
+                            { value: 1, label: 'Mai', emoji: '🔋' },
+                            { value: 2, label: 'Raramente', emoji: '🔄' },
+                            { value: 3, label: 'Qualche volta', emoji: '🪫' },
+                            { value: 4, label: 'Spesso', emoji: '⚡' },
+                            { value: 5, label: 'Sempre', emoji: '💀' }
+                        ]
+                    },
+                    {
+                        id: 'work_overwhelm',
+                        title: 'Sovraccarico Lavorativo',
+                        icon: '💼',
+                        question: 'Quanto spesso ti senti sopraffatto dal lavoro?',
+                        subtitle: 'La tua esperienza lavorativa quotidiana',
+                        type: 'scale',
+                        category: 'work',
+                        options: [
+                            { value: 1, label: 'Mai', emoji: '😌' },
+                            { value: 2, label: 'Raramente', emoji: '🙂' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '😟' },
+                            { value: 5, label: 'Sempre', emoji: '😵' }
+                        ]
+                    },
+                    {
+                        id: 'sleep_quality',
+                        title: 'Qualità del Sonno',
+                        icon: '😴',
+                        question: 'Come valuti la qualità del tuo sonno?',
+                        subtitle: 'Il tuo riposo e recupero',
+                        type: 'scale',
+                        category: 'sleep',
+                        options: [
+                            { value: 1, label: 'Pessima', emoji: '😵' },
+                            { value: 2, label: 'Scarsa', emoji: '😪' },
+                            { value: 3, label: 'Nella media', emoji: '😐' },
+                            { value: 4, label: 'Buona', emoji: '😌' },
+                            { value: 5, label: 'Eccellente', emoji: '😴' }
+                        ]
+                    },
+                    {
+                        id: 'burnout_signs',
+                        title: 'Segnali di Burnout',
+                        icon: '🔥',
+                        question: 'Quali di questi segnali riconosci in te? (seleziona tutti quelli che si applicano)',
+                        subtitle: 'Sintomi di esaurimento',
+                        type: 'multiple',
+                        category: 'burnout',
+                        options: [
+                            { value: 'exhaustion', label: 'Esaurimento fisico costante', emoji: '💀' },
+                            { value: 'cynicism', label: 'Cinismo verso il lavoro', emoji: '😒' },
+                            { value: 'detachment', label: 'Distacco emotivo', emoji: '🚫' },
+                            { value: 'irritability', label: 'Irritabilità frequente', emoji: '😠' },
+                            { value: 'physical_symptoms', label: 'Sintomi fisici (mal di testa, tensione)', emoji: '🤕' },
+                            { value: 'lost_motivation', label: 'Perdita di motivazione', emoji: '📉' },
+                            { value: 'none', label: 'Nessuno di questi', emoji: '✅' }
+                        ]
+                    },
+
+                    // === PROCRASTINATION QUESTIONS (4) ===
+                    {
+                        id: 'action_delay',
+                        title: 'Tendenza al Rimando',
+                        icon: '⏳',
+                        question: 'Quando hai un compito importante, di solito:',
+                        subtitle: 'Il tuo pattern di azione',
+                        type: 'single',
+                        category: 'procrastination',
+                        options: [
+                            { value: 'immediate', label: 'Lo faccio subito', emoji: '⚡' },
+                            { value: 'planned', label: 'Lo pianifico e lo faccio', emoji: '📋' },
+                            { value: 'delay', label: 'Lo rimando un po\'', emoji: '⏰' },
+                            { value: 'last_minute', label: 'Lo faccio all\'ultimo minuto', emoji: '🏃' },
+                            { value: 'avoid', label: 'Spesso lo evito completamente', emoji: '🚫' }
+                        ]
+                    },
+                    {
+                        id: 'decision_paralysis',
+                        title: 'Paralisi Decisionale',
+                        icon: '🤷',
+                        question: 'Davanti a decisioni importanti, quanto spesso rimani bloccato?',
+                        subtitle: 'La tua capacità decisionale',
+                        type: 'scale',
+                        category: 'decisions',
+                        options: [
+                            { value: 1, label: 'Mai', emoji: '⚡' },
+                            { value: 2, label: 'Raramente', emoji: '🤔' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '😕' },
+                            { value: 5, label: 'Sempre', emoji: '🤷' }
+                        ]
+                    },
+                    {
+                        id: 'task_completion',
+                        title: 'Completamento Compiti',
+                        icon: '📋',
+                        question: 'Qual è la tua percentuale di completamento dei compiti che ti poni?',
+                        subtitle: 'Il tuo track record',
+                        type: 'single',
+                        category: 'completion',
+                        options: [
+                            { value: 'high', label: '80-100% - Completo quasi tutto', emoji: '🏆' },
+                            { value: 'medium', label: '60-80% - Completo la maggior parte', emoji: '👍' },
+                            { value: 'low', label: '40-60% - Completamento altalenante', emoji: '📊' },
+                            { value: 'very_low', label: '20-40% - Completo poche cose', emoji: '😞' },
+                            { value: 'minimal', label: '0-20% - Quasi mai completo', emoji: '💔' }
+                        ]
+                    },
+                    {
+                        id: 'procrastination_triggers',
+                        title: 'Trigger di Procrastinazione',
+                        icon: '🎯',
+                        question: 'Cosa ti fa procrastinare di più? (seleziona fino a 3)',
+                        subtitle: 'I tuoi ostacoli principali',
+                        type: 'multiple',
+                        category: 'triggers',
+                        maxSelections: 3,
+                        options: [
+                            { value: 'perfectionism', label: 'Paura di non farlo perfetto', emoji: '🎯' },
+                            { value: 'overwhelm', label: 'Il compito sembra troppo grande', emoji: '🗻' },
+                            { value: 'boring', label: 'Il compito è noioso', emoji: '😴' },
+                            { value: 'unclear', label: 'Non so da dove iniziare', emoji: '🤔' },
+                            { value: 'failure', label: 'Paura di fallire', emoji: '😰' },
+                            { value: 'distractions', label: 'Troppe distrazioni', emoji: '📱' },
+                            { value: 'no_mood', label: 'Non sono dell\'umore giusto', emoji: '😑' }
+                        ]
+                    },
+
+                    // === PERFECTIONISM QUESTIONS (4) ===
+                    {
+                        id: 'satisfaction_level',
+                        title: 'Soddisfazione dei Risultati',
+                        icon: '😤',
+                        question: 'Quanto spesso sei soddisfatto dei tuoi risultati?',
+                        subtitle: 'La tua relazione con i tuoi successi',
+                        type: 'scale',
+                        category: 'satisfaction',
+                        options: [
+                            { value: 1, label: 'Sempre', emoji: '😊' },
+                            { value: 2, label: 'Spesso', emoji: '🙂' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Raramente', emoji: '😕' },
+                            { value: 5, label: 'Mai', emoji: '😤' }
+                        ]
+                    },
+                    {
+                        id: 'standards_pressure',
+                        title: 'Pressione degli Standard',
+                        icon: '📏',
+                        question: 'Quanto pressione ti metti per raggiungere standard elevati?',
+                        subtitle: 'La tua auto-pressione',
+                        type: 'scale',
+                        category: 'pressure',
+                        options: [
+                            { value: 1, label: 'Nessuna pressione', emoji: '😌' },
+                            { value: 2, label: 'Poca pressione', emoji: '🙂' },
+                            { value: 3, label: 'Pressione moderata', emoji: '😐' },
+                            { value: 4, label: 'Molta pressione', emoji: '😟' },
+                            { value: 5, label: 'Pressione estrema', emoji: '😰' }
+                        ]
+                    },
+                    {
+                        id: 'mistake_reaction',
+                        title: 'Reazione agli Errori',
+                        icon: '❌',
+                        question: 'Come reagisci quando commetti un errore?',
+                        subtitle: 'Il tuo rapporto con i fallimenti',
+                        type: 'single',
+                        category: 'mistakes',
+                        options: [
+                            { value: 'learning', label: 'Lo vedo come opportunità di apprendimento', emoji: '📚' },
+                            { value: 'mild_frustration', label: 'Un po\' di frustrazione, poi vado avanti', emoji: '😕' },
+                            { value: 'harsh_criticism', label: 'Mi critico duramente', emoji: '😤' },
+                            { value: 'rumination', label: 'Ci penso per giorni', emoji: '🔄' },
+                            { value: 'devastating', label: 'Mi sento devastato', emoji: '💔' }
+                        ]
+                    },
+                    {
+                        id: 'completion_difficulty',
+                        title: 'Difficoltà nel Completare',
+                        icon: '🏁',
+                        question: 'Quanto spesso hai difficoltà a "finire" i progetti perché non ti sembrano abbastanza buoni?',
+                        subtitle: 'Il tuo rapporto con la finalizzazione',
+                        type: 'scale',
+                        category: 'completion',
+                        options: [
+                            { value: 1, label: 'Mai', emoji: '✅' },
+                            { value: 2, label: 'Raramente', emoji: '👍' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '😟' },
+                            { value: 5, label: 'Sempre', emoji: '🔄' }
+                        ]
+                    },
+
+                    // === FOCUS/CLARITY QUESTIONS (4) ===
+                    {
+                        id: 'mental_clarity',
+                        title: 'Chiarezza Mentale',
+                        icon: '🧠',
+                        question: 'Come descriveresti la tua chiarezza mentale attuale?',
+                        subtitle: 'La tua lucidità e concentrazione',
+                        type: 'single',
+                        category: 'clarity',
+                        options: [
+                            { value: 'crystal_clear', label: 'Cristallina, so esattamente cosa voglio', emoji: '💎' },
+                            { value: 'mostly_clear', label: 'Abbastanza chiara con qualche dubbio', emoji: '🌤️' },
+                            { value: 'cloudy', label: 'Nebbiosa, spesso confusa', emoji: '🌫️' },
+                            { value: 'foggy', label: 'Molto confusa, tutto sembra sfocato', emoji: '🌪️' },
+                            { value: 'overwhelmed', label: 'Sopraffatta, non so da dove guardare', emoji: '🤯' }
+                        ]
+                    },
+                    {
+                        id: 'priority_setting',
+                        title: 'Definizione Priorità',
+                        icon: '🎯',
+                        question: 'Quanto ti riesce facile definire le tue priorità?',
+                        subtitle: 'La tua capacità di scegliere',
+                        type: 'scale',
+                        category: 'priorities',
+                        options: [
+                            { value: 1, label: 'Molto difficile', emoji: '🤷' },
                             { value: 2, label: 'Difficile', emoji: '😕' },
                             { value: 3, label: 'Nella media', emoji: '😐' },
-                            { value: 4, label: 'Abbastanza bravo', emoji: '😌' },
-                            { value: 5, label: 'Molto bravo', emoji: '💪' }
+                            { value: 4, label: 'Facile', emoji: '😊' },
+                            { value: 5, label: 'Molto facile', emoji: '🎯' }
                         ]
                     },
                     {
-                        id: 'consciousness_level',
-                        title: 'Livello di Coscienza',
-                        icon: '🧠',
-                        question: 'Quale affermazione ti rappresenta di più in questo momento della tua vita?',
-                        subtitle: 'Il tuo approccio alla vita',
+                        id: 'attention_span',
+                        title: 'Durata dell\'Attenzione',
+                        icon: '⏱️',
+                        question: 'Per quanto tempo riesci a concentrarti su un compito senza distrarti?',
+                        subtitle: 'La tua capacità di focus',
                         type: 'single',
-                        category: 'personality',
+                        category: 'attention',
                         options: [
-                            { value: 1, label: 'Voglio risultati immediati e gratificazioni veloci', emoji: '⚡' },
-                            { value: 2, label: 'Preferisco seguire regole chiare e tradizioni consolidate', emoji: '📋' },
-                            { value: 3, label: 'Sono orientato al successo e ai risultati concreti', emoji: '🎯' },
-                            { value: 4, label: 'Valorizzo la crescita personale e il benessere della comunità', emoji: '🌱' }
+                            { value: 'very_short', label: 'Meno di 15 minuti', emoji: '⚡' },
+                            { value: 'short', label: '15-30 minuti', emoji: '⏰' },
+                            { value: 'medium', label: '30-60 minuti', emoji: '🕐' },
+                            { value: 'long', label: '1-2 ore', emoji: '🕑' },
+                            { value: 'very_long', label: 'Oltre 2 ore', emoji: '🎯' }
                         ]
                     },
                     {
-                        id: 'current_life_satisfaction',
-                        title: 'Soddisfazione Attuale',
-                        icon: '⭐',
-                        question: 'Come descriveresti il tuo livello di soddisfazione generale nella vita?',
-                        subtitle: 'Il tuo stato emotivo generale',
+                        id: 'information_overload',
+                        title: 'Sovraccarico Informativo',
+                        icon: '📊',
+                        question: 'Quanto spesso ti senti sopraffatto dalla quantità di informazioni che devi processare?',
+                        subtitle: 'Il tuo rapporto con l\'informazione',
                         type: 'scale',
-                        category: 'wellbeing',
+                        category: 'overload',
                         options: [
-                            { value: 1, label: 'Molto insoddisfatto', emoji: '😔' },
-                            { value: 2, label: 'Insoddisfatto', emoji: '😞' },
+                            { value: 1, label: 'Mai', emoji: '😌' },
+                            { value: 2, label: 'Raramente', emoji: '🙂' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '😟' },
+                            { value: 5, label: 'Sempre', emoji: '🤯' }
+                        ]
+                    },
+
+                    // === CONSISTENCY QUESTIONS (4) ===
+                    {
+                        id: 'motivation_pattern',
+                        title: 'Pattern Motivazionale',
+                        icon: '🎢',
+                        question: 'La tua motivazione nel tempo è:',
+                        subtitle: 'Come varia la tua energia',
+                        type: 'single',
+                        category: 'motivation',
+                        options: [
+                            { value: 'stable', label: 'Costante e stabile', emoji: '📈' },
+                            { value: 'gradual', label: 'Cresce gradualmente', emoji: '📊' },
+                            { value: 'waves', label: 'A ondate: alti e bassi', emoji: '🌊' },
+                            { value: 'explosive', label: 'Esplosiva ma breve', emoji: '💥' },
+                            { value: 'declining', label: 'In costante diminuzione', emoji: '📉' }
+                        ]
+                    },
+                    {
+                        id: 'habit_maintenance',
+                        title: 'Mantenimento Abitudini',
+                        icon: '🔄',
+                        question: 'Quanto ti riesce facile mantenere nuove abitudini?',
+                        subtitle: 'La tua costanza comportamentale',
+                        type: 'scale',
+                        category: 'habits',
+                        options: [
+                            { value: 1, label: 'Molto difficile', emoji: '😞' },
+                            { value: 2, label: 'Difficile', emoji: '😕' },
+                            { value: 3, label: 'Nella media', emoji: '😐' },
+                            { value: 4, label: 'Facile', emoji: '😊' },
+                            { value: 5, label: 'Molto facile', emoji: '💪' }
+                        ]
+                    },
+                    {
+                        id: 'routine_preference',
+                        title: 'Rapporto con le Routine',
+                        icon: '📅',
+                        question: 'Come ti trovi con le routine strutturate?',
+                        subtitle: 'Il tuo stile di vita',
+                        type: 'single',
+                        category: 'routine',
+                        options: [
+                            { value: 'love', label: 'Le amo, mi danno sicurezza', emoji: '📋' },
+                            { value: 'helpful', label: 'Utili ma non troppo rigide', emoji: '📝' },
+                            { value: 'neutral', label: 'Indifferente alle routine', emoji: '🤷' },
+                            { value: 'restrictive', label: 'Mi sento limitato', emoji: '🔒' },
+                            { value: 'hate', label: 'Le odio, preferisco improvvisare', emoji: '🚫' }
+                        ]
+                    },
+                    {
+                        id: 'consistency_barriers',
+                        title: 'Ostacoli alla Costanza',
+                        icon: '🚧',
+                        question: 'Cosa ti impedisce di essere costante? (seleziona fino a 3)',
+                        subtitle: 'Le tue barriere principali',
+                        type: 'multiple',
+                        category: 'barriers',
+                        maxSelections: 3,
+                        options: [
+                            { value: 'motivation_drops', label: 'Calo di motivazione', emoji: '📉' },
+                            { value: 'time_constraints', label: 'Mancanza di tempo', emoji: '⏰' },
+                            { value: 'distractions', label: 'Troppe distrazioni', emoji: '📱' },
+                            { value: 'perfectionism', label: 'Se non riesco a fare tutto perfetto, mollo', emoji: '🎯' },
+                            { value: 'boredom', label: 'Mi annoio facilmente', emoji: '😴' },
+                            { value: 'external_pressures', label: 'Pressioni esterne', emoji: '👥' },
+                            { value: 'self_doubt', label: 'Dubbi su me stesso', emoji: '😔' }
+                        ]
+                    },
+
+                    // === OPTIMIZATION QUESTIONS (4) ===
+                    {
+                        id: 'current_satisfaction',
+                        title: 'Soddisfazione Generale',
+                        icon: '⭐',
+                        question: 'Quanto sei soddisfatto della tua vita attuale?',
+                        subtitle: 'Il tuo livello di contentezza',
+                        type: 'scale',
+                        category: 'life_satisfaction',
+                        options: [
+                            { value: 1, label: 'Molto insoddisfatto', emoji: '😞' },
+                            { value: 2, label: 'Insoddisfatto', emoji: '😕' },
                             { value: 3, label: 'Neutrale', emoji: '😐' },
                             { value: 4, label: 'Soddisfatto', emoji: '😊' },
                             { value: 5, label: 'Molto soddisfatto', emoji: '🥰' }
                         ]
                     },
                     {
-                        id: 'motivation_driver',
-                        title: 'Driver Motivazionali',
-                        icon: '❤️',
-                        question: 'Cosa ti motiva di più nella vita? (seleziona fino a 3 opzioni)',
-                        subtitle: 'Le tue fonti di energia principale',
-                        type: 'multiple',
-                        category: 'motivation',
-                        maxSelections: 3,
+                        id: 'optimization_mindset',
+                        title: 'Mentalità di Ottimizzazione',
+                        icon: '⚡',
+                        question: 'Anche quando le cose vanno bene, pensi sempre a come migliorare?',
+                        subtitle: 'La tua spinta al miglioramento',
+                        type: 'scale',
+                        category: 'optimization',
                         options: [
-                            { value: 'health', label: 'Salute e benessere fisico', emoji: '🏃' },
-                            { value: 'confidence', label: 'Fiducia in me stesso', emoji: '💪' },
-                            { value: 'social', label: 'Essere apprezzato dagli altri', emoji: '👥' },
-                            { value: 'achievement', label: 'Raggiungere obiettivi ambiziosi', emoji: '🏆' },
-                            { value: 'time', label: 'Risparmiare tempo ed essere efficiente', emoji: '⏰' },
-                            { value: 'creativity', label: 'Esprimere la mia creatività', emoji: '🎨' },
-                            { value: 'family', label: 'Essere un buon genitore/partner', emoji: '👨‍👩‍👧' },
-                            { value: 'money', label: 'Sicurezza finanziaria', emoji: '💰' }
+                            { value: 1, label: 'Mai', emoji: '😌' },
+                            { value: 2, label: 'Raramente', emoji: '🙂' },
+                            { value: 3, label: 'Qualche volta', emoji: '😐' },
+                            { value: 4, label: 'Spesso', emoji: '🤔' },
+                            { value: 5, label: 'Sempre', emoji: '⚡' }
                         ]
                     },
                     {
-                        id: 'current_challenges',
-                        title: 'Sfide Attuali',
+                        id: 'growth_investment',
+                        title: 'Investimento nella Crescita',
+                        icon: '📈',
+                        question: 'Quanto tempo/denaro investi attualmente nella tua crescita personale?',
+                        subtitle: 'Il tuo commitment al miglioramento',
+                        type: 'single',
+                        category: 'investment',
+                        options: [
+                            { value: 'none', label: 'Niente o quasi', emoji: '🚫' },
+                            { value: 'minimal', label: 'Molto poco', emoji: '📉' },
+                            { value: 'moderate', label: 'Una quantità moderata', emoji: '📊' },
+                            { value: 'significant', label: 'Parecchio', emoji: '📈' },
+                            { value: 'major', label: 'È una priorità importante', emoji: '🚀' }
+                        ]
+                    },
+                    {
+                        id: 'advanced_techniques',
+                        title: 'Interesse per Tecniche Avanzate',
+                        icon: '🔬',
+                        question: 'Quanto ti interessano tecniche avanzate di produttività, benessere o performance?',
+                        subtitle: 'La tua curiosità per l\'ottimizzazione',
+                        type: 'scale',
+                        category: 'advanced_interest',
+                        options: [
+                            { value: 1, label: 'Per niente', emoji: '😑' },
+                            { value: 2, label: 'Poco', emoji: '😐' },
+                            { value: 3, label: 'Moderatamente', emoji: '🙂' },
+                            { value: 4, label: 'Molto', emoji: '😊' },
+                            { value: 5, label: 'Estremamente', emoji: '🤩' }
+                        ]
+                    },
+
+                    // === GENERAL ASSESSMENT QUESTIONS (4) ===
+                    {
+                        id: 'main_challenges',
+                        title: 'Sfide Principali',
                         icon: '🛡️',
-                        question: 'Quali sono le tue principali sfide attuali? (seleziona tutte quelle che si applicano)',
-                        subtitle: 'Gli ostacoli che vuoi superare',
+                        question: 'Quali sono le tue 3 sfide principali in questo momento?',
+                        subtitle: 'I tuoi ostacoli più significativi',
                         type: 'multiple',
                         category: 'challenges',
+                        maxSelections: 3,
                         options: [
-                            { value: 'procrastination', label: 'Procrastinazione e rimandare', emoji: '⏳' },
-                            { value: 'low_energy', label: 'Bassa energia e stanchezza', emoji: '😴' },
-                            { value: 'anxiety', label: 'Ansia e stress', emoji: '😰' },
-                            { value: 'low_self_esteem', label: 'Bassa autostima', emoji: '😔' },
-                            { value: 'bad_habits', label: 'Cattive abitudini', emoji: '🚫' },
-                            { value: 'lack_focus', label: 'Mancanza di concentrazione', emoji: '🤯' },
-                            { value: 'time_management', label: 'Gestione del tempo', emoji: '⏰' },
-                            { value: 'work_life_balance', label: 'Equilibrio vita-lavoro', emoji: '⚖️' }
+                            { value: 'stress', label: 'Gestione dello stress', emoji: '😰' },
+                            { value: 'procrastination', label: 'Procrastinazione', emoji: '⏳' },
+                            { value: 'perfectionism', label: 'Perfezionismo eccessivo', emoji: '🎯' },
+                            { value: 'focus', label: 'Mancanza di focus', emoji: '🤯' },
+                            { value: 'consistency', label: 'Mancanza di costanza', emoji: '🎢' },
+                            { value: 'energy', label: 'Bassa energia', emoji: '🔋' },
+                            { value: 'time', label: 'Gestione del tempo', emoji: '⏰' },
+                            { value: 'balance', label: 'Equilibrio vita-lavoro', emoji: '⚖️' }
                         ]
                     },
                     {
-                        id: 'daily_routine',
-                        title: 'Routine Quotidiana',
-                        icon: '🕐',
-                        question: 'Come descriveresti la tua routine quotidiana attuale?',
-                        subtitle: 'Il tuo ritmo di vita',
-                        type: 'single',
-                        category: 'lifestyle',
-                        options: [
-                            { value: 'chaotic', label: 'Caotica, ogni giorno è diverso', emoji: '🌪️' },
-                            { value: 'loose', label: 'Flessibile, con alcuni punti fissi', emoji: '🌊' },
-                            { value: 'structured', label: 'Strutturata, con orari definiti', emoji: '📅' },
-                            { value: 'rigid', label: 'Rigida, seguo sempre lo stesso schema', emoji: '🗓️' }
-                        ]
-                    },
-                    {
-                        id: 'goal_setting_history',
-                        title: 'Esperienza con gli Obiettivi',
-                        icon: '📈',
-                        question: 'Qual è la tua esperienza nel raggiungere gli obiettivi che ti poni?',
-                        subtitle: 'Il tuo track record',
-                        type: 'single',
-                        category: 'achievement',
-                        options: [
-                            { value: 'rarely', label: 'Raramente li raggiungo', emoji: '😞' },
-                            { value: 'sometimes', label: 'A volte li raggiungo', emoji: '😐' },
-                            { value: 'often', label: 'Spesso li raggiungo', emoji: '😊' },
-                            { value: 'always', label: 'Li raggiungo quasi sempre', emoji: '🏆' }
-                        ]
-                    },
-                    {
-                        id: 'support_system',
-                        title: 'Sistema di Supporto',
+                        id: 'social_support',
+                        title: 'Supporto Sociale',
                         icon: '👥',
-                        question: 'Quanto supporto senti di avere dalle persone intorno a te?',
+                        question: 'Come valuti il supporto delle persone intorno a te?',
                         subtitle: 'La tua rete di sostegno',
                         type: 'scale',
                         category: 'social',
@@ -861,171 +1279,11 @@
                         ]
                     },
                     {
-                        id: 'physical_activity',
-                        title: 'Attività Fisica',
-                        icon: '💪',
-                        question: 'Quanto spesso fai attività fisica attualmente?',
-                        subtitle: 'Il tuo livello di movimento',
-                        type: 'single',
-                        category: 'health',
-                        options: [
-                            { value: 'never', label: 'Mai o quasi mai', emoji: '🛋️' },
-                            { value: 'rarely', label: 'Raramente (1-2 volte al mese)', emoji: '🚶' },
-                            { value: 'sometimes', label: 'Qualche volta (1-2 volte a settimana)', emoji: '🏃' },
-                            { value: 'regularly', label: 'Regolarmente (3-4 volte a settimana)', emoji: '💪' },
-                            { value: 'daily', label: 'Quotidianamente', emoji: '🏋️' }
-                        ]
-                    },
-                    {
-                        id: 'sleep_quality',
-                        title: 'Qualità del Sonno',
-                        icon: '🌙',
-                        question: 'Come valuti la qualità del tuo sonno?',
-                        subtitle: 'Il tuo riposo notturno',
-                        type: 'scale',
-                        category: 'health',
-                        options: [
-                            { value: 1, label: 'Pessima', emoji: '😴' },
-                            { value: 2, label: 'Scarsa', emoji: '😪' },
-                            { value: 3, label: 'Nella media', emoji: '😐' },
-                            { value: 4, label: 'Buona', emoji: '😌' },
-                            { value: 5, label: 'Eccellente', emoji: '🛌' }
-                        ]
-                    },
-                    {
-                        id: 'stress_management',
-                        title: 'Gestione dello Stress',
-                        icon: '🧭',
-                        question: 'Come gestisci tipicamente lo stress?',
-                        subtitle: 'Le tue strategie di coping',
-                        type: 'multiple',
-                        category: 'coping',
-                        options: [
-                            { value: 'exercise', label: 'Esercizio fisico', emoji: '🏃' },
-                            { value: 'meditation', label: 'Meditazione/mindfulness', emoji: '🧘' },
-                            { value: 'social', label: 'Parlare con amici/famiglia', emoji: '👥' },
-                            { value: 'hobbies', label: 'Hobby e attività creative', emoji: '🎨' },
-                            { value: 'avoid', label: 'Evito le situazioni stressanti', emoji: '🚫' },
-                            { value: 'work', label: 'Mi butto nel lavoro', emoji: '💼' },
-                            { value: 'food', label: 'Mangiare (comfort food)', emoji: '🍫' },
-                            { value: 'nothing', label: 'Non ho strategie specifiche', emoji: '🤷' }
-                        ]
-                    },
-                    {
-                        id: 'self_care_emotional',
-                        title: 'Self-Care Emotivo',
-                        icon: '❤️',
-                        question: 'Quanto tempo dedichi al tuo benessere emotivo?',
-                        subtitle: 'La cura delle tue emozioni',
-                        type: 'scale',
-                        category: 'selfcare',
-                        options: [
-                            { value: 1, label: 'Mai', emoji: '😞' },
-                            { value: 2, label: 'Raramente', emoji: '😕' },
-                            { value: 3, label: 'Qualche volta', emoji: '😐' },
-                            { value: 4, label: 'Spesso', emoji: '😊' },
-                            { value: 5, label: 'Sempre', emoji: '🥰' }
-                        ]
-                    },
-                    {
-                        id: 'work_satisfaction',
-                        title: 'Soddisfazione Professionale',
-                        icon: '☕',
-                        question: 'Quanto sei soddisfatto della tua situazione lavorativa/professionale?',
-                        subtitle: 'Il tuo rapporto con il lavoro',
-                        type: 'scale',
-                        category: 'professional',
-                        options: [
-                            { value: 1, label: 'Molto insoddisfatto', emoji: '😫' },
-                            { value: 2, label: 'Insoddisfatto', emoji: '😞' },
-                            { value: 3, label: 'Neutrale', emoji: '😐' },
-                            { value: 4, label: 'Soddisfatto', emoji: '😊' },
-                            { value: 5, label: 'Molto soddisfatto', emoji: '🤩' }
-                        ]
-                    },
-                    {
-                        id: 'learning_growth',
-                        title: 'Crescita Personale',
-                        icon: '💡',
-                        question: 'Quanto è importante per te la crescita personale e l\'apprendimento continuo?',
-                        subtitle: 'Il tuo desiderio di miglioramento',
-                        type: 'scale',
-                        category: 'growth',
-                        options: [
-                            { value: 1, label: 'Per niente importante', emoji: '😑' },
-                            { value: 2, label: 'Poco importante', emoji: '😐' },
-                            { value: 3, label: 'Abbastanza importante', emoji: '🙂' },
-                            { value: 4, label: 'Molto importante', emoji: '😊' },
-                            { value: 5, label: 'Fondamentale', emoji: '🤩' }
-                        ]
-                    },
-                    {
-                        id: 'relationship_quality',
-                        title: 'Qualità delle Relazioni',
-                        icon: '👥',
-                        question: 'Come valuti la qualità delle tue relazioni personali?',
-                        subtitle: 'I tuoi rapporti interpersonali',
-                        type: 'scale',
-                        category: 'social',
-                        options: [
-                            { value: 1, label: 'Pessima', emoji: '💔' },
-                            { value: 2, label: 'Scarsa', emoji: '😞' },
-                            { value: 3, label: 'Nella media', emoji: '😐' },
-                            { value: 4, label: 'Buona', emoji: '😊' },
-                            { value: 5, label: 'Eccellente', emoji: '💕' }
-                        ]
-                    },
-                    {
-                        id: 'decision_making',
-                        title: 'Processo Decisionale',
-                        icon: '🧩',
-                        question: 'Come prendi solitamente le decisioni importanti?',
-                        subtitle: 'Il tuo stile decisionale',
-                        type: 'single',
-                        category: 'personality',
-                        options: [
-                            { value: 'intuitive', label: 'Seguo l\'istinto e le emozioni', emoji: '💭' },
-                            { value: 'analytical', label: 'Analizzo tutti i pro e contro', emoji: '📊' },
-                            { value: 'social', label: 'Chiedo consigli ad altri', emoji: '👥' },
-                            { value: 'avoid', label: 'Rimando finché non sono costretto', emoji: '⏳' }
-                        ]
-                    },
-                    {
-                        id: 'time_perspective',
-                        title: 'Prospettiva Temporale',
-                        icon: '📅',
-                        question: 'Su quale orizzonte temporale ti concentri di più?',
-                        subtitle: 'La tua visione del tempo',
-                        type: 'single',
-                        category: 'mindset',
-                        options: [
-                            { value: 'past', label: 'Rifletto spesso sul passato', emoji: '⏪' },
-                            { value: 'present', label: 'Vivo nel momento presente', emoji: '🎯' },
-                            { value: 'near_future', label: 'Pianifico i prossimi mesi', emoji: '📅' },
-                            { value: 'far_future', label: 'Penso a lungo termine (anni)', emoji: '🔮' }
-                        ]
-                    },
-                    {
-                        id: 'home_environment',
-                        title: 'Ambiente Domestico',
-                        icon: '🏠',
-                        question: 'Come descriveresti il tuo ambiente domestico?',
-                        subtitle: 'Il tuo spazio personale',
-                        type: 'single',
-                        category: 'environment',
-                        options: [
-                            { value: 'chaotic', label: 'Caotico e disorganizzato', emoji: '🌪️' },
-                            { value: 'messy', label: 'Un po\' disordinato ma vivibile', emoji: '🏠' },
-                            { value: 'organized', label: 'Organizzato e pulito', emoji: '🏡' },
-                            { value: 'minimalist', label: 'Minimalista e zen', emoji: '🧘' }
-                        ]
-                    },
-                    {
-                        id: 'coaching_readiness',
-                        title: 'Apertura al Coaching',
-                        icon: '🧭',
-                        question: 'Quanto sei pronto a impegnarti in un percorso di coaching strutturato?',
-                        subtitle: 'Il tuo livello di commitment',
+                        id: 'change_readiness',
+                        title: 'Apertura al Cambiamento',
+                        icon: '🦋',
+                        question: 'Quanto sei pronto a cambiare le tue abitudini per migliorare?',
+                        subtitle: 'Il tuo commitment alla trasformazione',
                         type: 'scale',
                         category: 'readiness',
                         options: [
@@ -1034,6 +1292,22 @@
                             { value: 3, label: 'Curioso di provare', emoji: '😊' },
                             { value: 4, label: 'Molto motivato', emoji: '💪' },
                             { value: 5, label: 'Completamente pronto', emoji: '🚀' }
+                        ]
+                    },
+                    {
+                        id: 'success_definition',
+                        title: 'Definizione di Successo',
+                        icon: '🏆',
+                        question: 'Per te, il successo nel miglioramento personale significa:',
+                        subtitle: 'La tua visione del successo',
+                        type: 'single',
+                        category: 'success',
+                        options: [
+                            { value: 'survive', label: 'Sopravvivere alle sfide quotidiane', emoji: '💪' },
+                            { value: 'balance', label: 'Trovare equilibrio e serenità', emoji: '⚖️' },
+                            { value: 'growth', label: 'Crescere e migliorarsi costantemente', emoji: '📈' },
+                            { value: 'excellence', label: 'Raggiungere l\'eccellenza', emoji: '🏆' },
+                            { value: 'impact', label: 'Fare la differenza nel mondo', emoji: '🌍' }
                         ]
                     }
                 ];
@@ -1101,54 +1375,20 @@
             }
 
             generateProfile() {
-                const behavioral = this.answers.behavioral_competence || 3;
-                const transitional = this.answers.transitional_competence || 3;
-                const consciousness = this.answers.consciousness_level || 2;
-                const readiness = this.answers.coaching_readiness || 3;
+                // Advanced profile generation with 6 categories
+                const profileType = this.calculateProfileType();
+                const profileData = LIFESTYLE_PROFILES[profileType];
                 
-                let quadrant = '';
-                let approach = '';
-                
-                if (behavioral >= 4 && transitional >= 4) {
-                    quadrant = 'Q1: Coaching Opzionale';
-                    approach = 'Hai già ottime competenze. Il coaching può aiutarti a raggiungere livelli ancora più elevati.';
-                } else if (behavioral >= 4 && transitional < 4) {
-                    quadrant = 'Q2: Training Tecnico';
-                    approach = 'Hai competenze pratiche ma devi lavorare sulla gestione emotiva del cambiamento.';
-                } else if (behavioral < 4 && transitional >= 4) {
-                    quadrant = 'Q3: Coaching Emotivo';
-                    approach = 'Sei bravo nella gestione emotiva ma hai bisogno di competenze pratiche specifiche.';
-                } else {
-                    quadrant = 'Q4: Coaching Completo';
-                    approach = 'Beneficerai di un approccio completo che combina coaching e training pratico.';
-                }
-
-                const consciousnessLabels = {
-                    1: 'Opportunista - Risultati Immediati',
-                    2: 'Conformista - Struttura e Regole', 
-                    3: 'Achiever - Successo e Performance',
-                    4: 'Pluralista - Crescita e Benessere'
-                };
-
-                const wellbeingScore = Math.round(((this.answers.current_life_satisfaction || 3) + 
-                                                  (this.answers.sleep_quality || 3) + 
-                                                  (this.answers.self_care_emotional || 3)) / 3);
-                
-                const healthScore = Math.round(((this.getPhysicalActivityScore() + 
-                                              (this.answers.sleep_quality || 3)) / 2));
-
-                const professionalScore = this.answers.work_satisfaction || 3;
-                const socialScore = Math.round(((this.answers.support_system || 3) + 
-                                               (this.answers.relationship_quality || 3)) / 2);
+                // Calculate wellbeing scores
+                const wellbeingScore = this.calculateWellbeingScore();
+                const healthScore = this.calculateHealthScore();
+                const professionalScore = this.calculateProfessionalScore();
+                const socialScore = this.answers.social_support || 3;
 
                 this.profile = {
                     ...this.contactData,
-                    quadrant,
-                    approach,
-                    consciousnessLevel: consciousnessLabels[consciousness],
-                    motivationDrivers: this.answers.motivation_driver || [],
-                    challenges: this.answers.current_challenges || [],
-                    readinessLevel: readiness,
+                    profileType: profileType,
+                    profileData: profileData,
                     scores: {
                         wellbeing: wellbeingScore,
                         health: healthScore,
@@ -1156,25 +1396,329 @@
                         social: socialScore
                     },
                     insights: {
-                        goalAchievement: this.answers.goal_setting_history,
-                        stressCoping: this.answers.stress_management || [],
-                        timeOrientation: this.answers.time_perspective,
-                        decisionStyle: this.answers.decision_making
-                    }
+                        stressLevel: this.answers.current_stress_level || 3,
+                        actionTendency: this.answers.action_tendency || 'planned',
+                        perfectionism: this.answers.perfectionism_level || 3,
+                        motivationPattern: this.answers.motivation_pattern || 'waves',
+                        readinessLevel: this.answers.change_readiness || 3
+                    },
+                    challenges: this.answers.main_challenges || [],
+                    personalizedAnalysis: this.generatePersonalizedAnalysis(profileType, profileData)
                 };
                 
                 this.render();
             }
 
-            getPhysicalActivityScore() {
-                const activity = this.answers.physical_activity;
-                switch(activity) {
-                    case 'daily': return 5;
-                    case 'regularly': return 4;
-                    case 'sometimes': return 3;
-                    case 'rarely': return 2;
-                    default: return 1;
+            calculateProfileType() {
+                // Advanced profiling with 25 questions
+                const stress = this.answers.stress_level || 3;
+                const energy = this.answers.energy_depletion || 3;
+                const overwhelm = this.answers.work_overwhelm || 3;
+                const sleep = this.answers.sleep_quality || 3;
+                const burnout = this.answers.burnout_signs || [];
+                
+                const actionDelay = this.answers.action_delay || 'planned';
+                const decisionParalysis = this.answers.decision_paralysis || 3;
+                const completion = this.answers.task_completion || 'medium';
+                const triggers = this.answers.procrastination_triggers || [];
+                
+                const satisfaction = this.answers.satisfaction_level || 3;
+                const standards = this.answers.standards_pressure || 3;
+                const mistakes = this.answers.mistake_reaction || 'mild_frustration';
+                const completionDiff = this.answers.completion_difficulty || 3;
+                
+                const clarity = this.answers.mental_clarity || 'mostly_clear';
+                const priorities = this.answers.priority_setting || 3;
+                const attention = this.answers.attention_span || 'medium';
+                const overload = this.answers.information_overload || 3;
+                
+                const motivation = this.answers.motivation_pattern || 'waves';
+                const habits = this.answers.habit_maintenance || 3;
+                const routine = this.answers.routine_preference || 'helpful';
+                const barriers = this.answers.consistency_barriers || [];
+                
+                const lifeSatisfaction = this.answers.current_satisfaction || 3;
+                const optimization = this.answers.optimization_mindset || 3;
+                const investment = this.answers.growth_investment || 'moderate';
+                const advanced = this.answers.advanced_techniques || 3;
+                
+                // Calculate profile scores
+                let scores = {
+                    stressato_esaurito: 0,
+                    procrastinatore_bloccato: 0,
+                    perfezionista_insoddisfatto: 0,
+                    dispersivo_confuso: 0,
+                    motivato_inconsistente: 0,
+                    equilibrato_ottimizzatore: 0
+                };
+                
+                // STRESSATO ESAURITO scoring
+                if (stress >= 4) scores.stressato_esaurito += 3;
+                if (energy >= 4) scores.stressato_esaurito += 3;
+                if (overwhelm >= 4) scores.stressato_esaurito += 3;
+                if (sleep <= 2) scores.stressato_esaurito += 2;
+                if (burnout.length >= 3) scores.stressato_esaurito += 4;
+                if (burnout.includes('exhaustion')) scores.stressato_esaurito += 2;
+                
+                // PROCRASTINATORE BLOCCATO scoring
+                if (actionDelay === 'last_minute' || actionDelay === 'avoid') scores.procrastinatore_bloccato += 4;
+                if (decisionParalysis >= 4) scores.procrastinatore_bloccato += 3;
+                if (completion === 'low' || completion === 'very_low' || completion === 'minimal') scores.procrastinatore_bloccato += 3;
+                if (triggers.includes('perfectionism')) scores.procrastinatore_bloccato += 2;
+                if (triggers.includes('overwhelm')) scores.procrastinatore_bloccato += 2;
+                
+                // PERFEZIONISTA INSODDISFATTO scoring
+                if (satisfaction >= 4) scores.perfezionista_insoddisfatto += 3;
+                if (standards >= 4) scores.perfezionista_insoddisfatto += 3;
+                if (mistakes === 'harsh_criticism' || mistakes === 'rumination' || mistakes === 'devastating') scores.perfezionista_insoddisfatto += 3;
+                if (completionDiff >= 4) scores.perfezionista_insoddisfatto += 3;
+                if (triggers.includes('perfectionism')) scores.perfezionista_insoddisfatto += 2;
+                
+                // DISPERSIVO CONFUSO scoring
+                if (clarity === 'foggy' || clarity === 'overwhelmed') scores.dispersivo_confuso += 4;
+                if (priorities <= 2) scores.dispersivo_confuso += 3;
+                if (attention === 'very_short' || attention === 'short') scores.dispersivo_confuso += 3;
+                if (overload >= 4) scores.dispersivo_confuso += 3;
+                
+                // MOTIVATO INCONSISTENTE scoring
+                if (motivation === 'waves' || motivation === 'explosive') scores.motivato_inconsistente += 4;
+                if (habits <= 2) scores.motivato_inconsistente += 3;
+                if (barriers.includes('motivation_drops')) scores.motivato_inconsistente += 2;
+                if (barriers.includes('boredom')) scores.motivato_inconsistente += 2;
+                if (routine === 'restrictive' || routine === 'hate') scores.motivato_inconsistente += 2;
+                
+                // EQUILIBRATO OTTIMIZZATORE scoring
+                if (lifeSatisfaction >= 4) scores.equilibrato_ottimizzatore += 3;
+                if (optimization >= 4) scores.equilibrato_ottimizzatore += 3;
+                if (investment === 'significant' || investment === 'major') scores.equilibrato_ottimizzatore += 3;
+                if (advanced >= 4) scores.equilibrato_ottimizzatore += 3;
+                if (stress <= 2 && energy <= 2) scores.equilibrato_ottimizzatore += 2;
+                
+                // Find the highest scoring profile
+                let maxScore = 0;
+                let selectedProfile = 'motivato_inconsistente'; // default
+                
+                for (const [profile, score] of Object.entries(scores)) {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        selectedProfile = profile;
+                    }
                 }
+                
+                // If no clear winner, use fallback logic
+                if (maxScore < 5) {
+                    // Fallback based on main challenges
+                    const challenges = this.answers.main_challenges || [];
+                    if (challenges.includes('stress')) return 'stressato_esaurito';
+                    if (challenges.includes('procrastination')) return 'procrastinatore_bloccato';
+                    if (challenges.includes('perfectionism')) return 'perfezionista_insoddisfatto';
+                    if (challenges.includes('focus')) return 'dispersivo_confuso';
+                    if (challenges.includes('consistency')) return 'motivato_inconsistente';
+                    if (lifeSatisfaction >= 4) return 'equilibrato_ottimizzatore';
+                }
+                
+                return selectedProfile;
+            }
+
+            calculateWellbeingScore() {
+                const stress = this.answers.current_stress_level || 3;
+                const satisfaction = this.answers.current_satisfaction || 3;
+                const energy = this.answers.energy_levels || 'variable';
+                
+                let score = satisfaction;
+                if (stress >= 4) score -= 1;
+                if (energy === 'depleted') score -= 1;
+                if (energy === 'high_stable') score += 1;
+                
+                return Math.max(1, Math.min(5, Math.round(score)));
+            }
+
+            calculateHealthScore() {
+                const energy = this.answers.energy_levels || 'variable';
+                const stress = this.answers.current_stress_level || 3;
+                
+                let score = 3;
+                if (energy === 'high_stable') score = 5;
+                else if (energy === 'variable') score = 3;
+                else if (energy === 'low_stable') score = 2;
+                else if (energy === 'depleted') score = 1;
+                
+                if (stress >= 4) score -= 1;
+                
+                return Math.max(1, Math.min(5, Math.round(score)));
+            }
+
+            calculateProfessionalScore() {
+                const overwhelm = this.answers.work_overwhelm || 3;
+                const satisfaction = this.answers.current_satisfaction || 3;
+                
+                let score = 6 - overwhelm; // Inverted because overwhelm is negative
+                score = (score + satisfaction) / 2;
+                
+                return Math.max(1, Math.min(5, Math.round(score)));
+            }
+
+            generatePersonalizedAnalysis(profileType, profileData) {
+                const name = this.contactData.name || 'Amico/a';
+                const challenges = this.answers.main_challenges || [];
+                const stress = this.answers.current_stress_level || 3;
+                const readiness = this.answers.change_readiness || 3;
+                
+                // Create completely personalized analysis based on profile
+                const analyses = {
+                    'stressato_esaurito': this.generateStressedAnalysis(name, challenges, stress, readiness),
+                    'procrastinatore_bloccato': this.generateProcrastinatorAnalysis(name, challenges, stress, readiness),
+                    'perfezionista_insoddisfatto': this.generatePerfectionistAnalysis(name, challenges, stress, readiness),
+                    'dispersivo_confuso': this.generateConfusedAnalysis(name, challenges, stress, readiness),
+                    'motivato_inconsistente': this.generateInconsistentAnalysis(name, challenges, stress, readiness),
+                    'equilibrato_ottimizzatore': this.generateOptimizerAnalysis(name, challenges, stress, readiness)
+                };
+                
+                return analyses[profileType] || analyses['motivato_inconsistente'];
+            }
+
+            generateStressedAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> vedo che stai attraversando un periodo molto intenso e impegnativo. Il tuo profilo mi dice che sei una persona che dà tutto se stesso, ma che ora sta pagando il prezzo di un impegno eccessivo. Ti riconosco perfettamente - sono stato esattamente dove sei tu ora.</p>
+                    
+                    <div class="warning">
+                        <p><strong>La tua situazione:</strong> Sei in una fase di burnout o pre-burnout. Il tuo livello di stress è elevato e le tue energie sono al limite. Non è una debolezza - è il segnale che hai dato tutto quello che avevi.</p>
+                    </div>
+                    
+                    <p><strong>La mia esperienza personale:</strong> Quando ero manager, ho vissuto esattamente la tua situazione. Sveglia alle 6, riunioni infinite, mail anche la domenica. Pensavo che fosse normale essere sempre stanco, sempre in tensione. Poi ho capito che non era sostenibile.</p>
+                    
+                    <p><strong>Cosa mi ha insegnato l'esperienza:</strong> Il recupero non è un lusso, è una necessità. Non puoi continuare a correre con il serbatoio vuoto. La prima cosa che faremo insieme sarà riempire quel serbatoio, lentamente ma costantemente.</p>
+                    
+                    <p><strong>Il tuo percorso sarà diverso:</strong> Non ti darò una lista di cose da fare in più. Ti aiuterò a fare meno, ma meglio. Ti insegnerò a dire no, a creare dei boundaries, a rispettare i tuoi limiti senza sentirti in colpa.</p>
+                    
+                    <p><strong>Le tue sfide specifiche:</strong> ${challenges.includes('stress') ? 'La gestione dello stress è chiaramente la tua priorità numero uno.' : ''} ${challenges.includes('time') ? 'Il tempo sembra scapparti di mano, ma ti insegnerò a riprenderlo.' : ''} ${challenges.includes('balance') ? 'L\'equilibrio vita-lavoro non è un mito - è una competenza che si può imparare.' : ''}</p>
+                    
+                    <p><strong>La mia promessa:</strong> Non ti chiederò di fare di più. Ti insegnerò a stare meglio con quello che fai. Inizieremo con piccoli cambiamenti che ti daranno energia invece di toglierla. Il tuo benessere è la priorità assoluta.</p>
+                    
+                    <p><strong>Cosa aspettarti:</strong> Le prime settimane saranno dedicate al recupero. Ti insegnerò tecniche di gestione dello stress, come creare routine che ti ricaricano invece di svuotarti, come proteggere il tuo tempo e la tua energia.</p>
+                    
+                    <p><strong>Il tuo superpotere nascosto:</strong> La tua capacità di resistenza e dedizione sono straordinarie. Una volta che imparerai a canalizzarle correttamente, diventerai inarrestabile. Ma prima, dobbiamo curarti.</p>
+                `;
+            }
+
+            generateProcrastinatorAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> riconosco in te una persona con un potenziale enorme che però fatica a trasformarlo in azione concreta. Non è pigrizia - è un blocco mentale che conosco bene e che si può superare.</p>
+                    
+                    <div class="highlight">
+                        <p><strong>La verità sulla procrastinazione:</strong> Non rimandi perché non sai cosa fare. Rimandi perché hai paura di non farlo abbastanza bene, o perché l'obiettivo ti sembra troppo grande. È un meccanismo di protezione della tua mente.</p>
+                    </div>
+                    
+                    <p><strong>Quello che vedo in te:</strong> Hai idee brillanti, visione chiara, ma quando arriva il momento di agire, qualcosa ti blocca. Magari hai provato molte volte a cambiare, ma ogni volta ti sei fermato dopo pochi giorni. Non sei tu il problema - è il metodo.</p>
+                    
+                    <p><strong>La mia esperienza con la procrastinazione:</strong> Anche io ho attraversato periodi dove sapevo esattamente cosa fare, ma non riuscivo a iniziare. Ho scoperto che la procrastinazione non si combatte con la forza di volontà, ma con la strategia giusta.</p>
+                    
+                    <p><strong>Il tuo nuovo approccio:</strong> Dimentica i grandi gesti eroici. Ti insegnerò la tecnica dei "micro-passi" - azioni così piccole che è impossibile non farle. Un passo alla volta, costruiremo il tuo momentum.</p>
+                    
+                    <p><strong>Le tue sfide specifiche:</strong> ${challenges.includes('procrastination') ? 'La procrastinazione è chiaramente il tuo ostacolo principale, ma è anche il più risolvibile.' : ''} ${challenges.includes('focus') ? 'La mancanza di focus si risolve con la chiarezza degli obiettivi.' : ''} ${challenges.includes('consistency') ? 'La costanza si costruisce con piccole vittorie quotidiane.' : ''}</p>
+                    
+                    <p><strong>La tua trasformazione:</strong> Nelle prime settimane, ti farò sperimentare il potere dell'azione immediata. Ti darò compiti così semplici che li farai senza pensarci. Ogni piccola azione completata costruirà la tua fiducia.</p>
+                    
+                    <p><strong>Il sistema anti-procrastinazione:</strong> Ti insegnerò il metodo "2-minuti": se una cosa richiede meno di 2 minuti, la fai subito. Ti darò tecniche per spezzare i progetti grandi in micro-azioni. Creerai sistemi di accountability che ti manterranno in movimento.</p>
+                    
+                    <p><strong>Il tuo superpotere nascosto:</strong> La tua capacità di visione e creatività sono straordinarie. Una volta che avrai sbloccato l'azione, diventerai una forza inarrestabile. Il mondo ha bisogno di quello che hai da offrire.</p>
+                `;
+            }
+
+            generatePerfectionistAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> vedo in te una persona con standard altissimi e una qualità del lavoro straordinaria. Ma sento anche la frustrazione di non sentirti mai veramente soddisfatto di quello che raggiungi. Ti capisco profondamente.</p>
+                    
+                    <div class="warning">
+                        <p><strong>Il paradosso del perfezionismo:</strong> I tuoi standard elevati sono la tua forza, ma stanno diventando la tua prigione. Stai sacrificando la tua felicità e il tuo benessere per un ideale di perfezione che non esiste.</p>
+                    </div>
+                    
+                    <p><strong>La mia esperienza personale:</strong> Anch'io sono stato un perfezionista ossessivo. Rivedevo le email dieci volte, non ero mai soddisfatto dei risultati, anche quando erano oggettivamente eccellenti. Ho capito che non era l'eccellenza che cercavo, ma l'approvazione e la sicurezza.</p>
+                    
+                    <p><strong>Quello che ho imparato:</strong> Il perfezionismo non è sinonimo di qualità. Spesso è il nemico della qualità, perché ti impedisce di finire i progetti, di sperimentare, di crescere. "Fatto è meglio che perfetto" non è una resa - è saggezza.</p>
+                    
+                    <p><strong>Il tuo nuovo mindset:</strong> Ti insegnerò a distinguere tra eccellenza (che è sana) e perfezionismo (che è paralizzante). Imparerai a celebrare il progresso invece di ossessionarti sulla perfezione. Scoprirai che "abbastanza buono" spesso è più che sufficiente.</p>
+                    
+                    <p><strong>Le tue sfide specifiche:</strong> ${challenges.includes('perfectionism') ? 'Il perfezionismo è chiaramente il tuo ostacolo principale, ma è anche la tua più grande opportunità di crescita.' : ''} ${challenges.includes('stress') ? 'Lo stress che provi deriva spesso dai tuoi standard irraggiungibili.' : ''} ${challenges.includes('consistency') ? 'La costanza si sviluppa quando smetti di aspettare il momento perfetto.' : ''}</p>
+                    
+                    <p><strong>La tua trasformazione:</strong> Nelle prime settimane, ti farò sperimentare il potere del "abbastanza buono". Ti darò compiti con limiti di tempo stretti, dove la perfezione è impossibile. Imparerai a consegnare e a essere orgoglioso del risultato.</p>
+                    
+                    <p><strong>Il sistema anti-perfezionismo:</strong> Ti insegnerò la regola dell'80/20: il 20% dello sforzo produce l'80% dei risultati. Imparerai a identificare quando sei nel 20% utile e quando stai sprecando tempo nel 80% di rifinitura inutile.</p>
+                    
+                    <p><strong>Il tuo superpotere rivelato:</strong> La tua attenzione ai dettagli e i tuoi standard elevati sono un dono raro. Ma quando li userai strategicamente invece che ossessivamente, diventerai incredibilmente produttivo e sereno.</p>
+                `;
+            }
+
+            generateConfusedAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> vedo in te una persona con tanti talenti e interessi, ma che si sente sopraffatta da tutte le possibilità. Non è mancanza di capacità - è eccesso di opzioni. Ti aiuterò a trovare la tua strada.</p>
+                    
+                    <div class="highlight">
+                        <p><strong>Il dono della versatilità:</strong> La tua mente aperta e curiosa è un grande vantaggio, ma senza focus diventa dispersione. Il problema non è quello che sai fare, ma scegliere su cosa concentrarti.</p>
+                    </div>
+                    
+                    <p><strong>Quello che riconosco in te:</strong> Hai mille idee, mille progetti, mille cose che ti interessano. Ogni giorno nasce qualcosa di nuovo che cattura la tua attenzione. È bellissimo, ma anche estenuante. Ti senti come se stessi correndo in tutte le direzioni senza andare da nessuna parte.</p>
+                    
+                    <p><strong>La mia esperienza con la confusione:</strong> Anche io ho attraversato periodi dove avevo troppe opzioni e non sapevo quale scegliere. Ho imparato che la chiarezza non arriva pensando di più, ma semplificando e scegliendo meno.</p>
+                    
+                    <p><strong>Il tuo percorso verso la chiarezza:</strong> Ti insegnerò l'arte della prioritizzazione. Non si tratta di rinunciare a tutto, ma di scegliere consapevolmente su cosa concentrare la tua energia limitata. Meno cose, fatte meglio.</p>
+                    
+                    <p><strong>Le tue sfide specifiche:</strong> ${challenges.includes('focus') ? 'La mancanza di focus è chiaramente il tuo ostacolo principale, ma è anche il più risolvibile.' : ''} ${challenges.includes('time') ? 'Il tempo sembra scapparti perché lo stai spalmando su troppe cose.' : ''} ${challenges.includes('consistency') ? 'La costanza arriva quando hai obiettivi chiari e focalizzati.' : ''}</p>
+                    
+                    <p><strong>La tua trasformazione:</strong> Nelle prime settimane, faremo "pulizia mentale". Ti insegnerò a usare mappe mentali, matrici di priorità, e tecniche di decision-making. Trasformeremo il caos in chiarezza.</p>
+                    
+                    <p><strong>Il sistema della chiarezza:</strong> Ti insegnerò la regola del "3 massimo": mai più di 3 progetti principali contemporaneamente. Imparerai a dire no alle distrazioni e sì alle tue priorità. Creerai un sistema per catturare e organizzare le idee senza esserne sopraffatto.</p>
+                    
+                    <p><strong>Il tuo superpotere nascosto:</strong> La tua capacità di vedere connessioni e opportunità è straordinaria. Una volta che avrai imparato a focalizzarti, questa versatilità diventerà la tua arma segreta per innovare e creare.</p>
+                `;
+            }
+
+            generateInconsistentAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> riconosco in te una persona con un'energia contagiosa quando è motivata, ma che fatica a mantenere la costanza nel tempo. Non è mancanza di volontà - è mancanza di sistemi. Ti aiuterò a costruirli.</p>
+                    
+                    <div class="success">
+                        <p><strong>La tua forza nascosta:</strong> Quando sei motivato, sei inarrestabile. Il problema non è la tua capacità, ma la sostenibilità. Ti insegnerò a creare sistemi che mantengano vivo il tuo entusiasmo.</p>
+                    </div>
+                    
+                    <p><strong>Quello che vedo in te:</strong> Hai momenti di incredibile produttività e motivazione, seguiti da periodi di stallo. È come guidare premendo alternativamente acceleratore e freno. Non è efficiente, e soprattutto è frustrante.</p>
+                    
+                    <p><strong>La mia esperienza con l'inconsistenza:</strong> Anch'io ho avuto periodi di "tutto o niente". Una settimana palestra tutti i giorni, la settimana dopo pausa completa. Ho imparato che la costanza non si basa sulla motivazione, ma sui sistemi.</p>
+                    
+                    <p><strong>Il segreto della costanza:</strong> Non aspettare di sentirti motivato per agire. Crea sistemi così semplici che puoi seguirli anche quando non hai voglia. La motivazione è il starter, l'abitudine è il motore.</p>
+                    
+                    <p><strong>Le tue sfide specifiche:</strong> ${challenges.includes('consistency') ? 'La mancanza di costanza è chiaramente il tuo ostacolo principale, ma è anche il più trasformativo da risolvere.' : ''} ${challenges.includes('energy') ? 'I tuoi alti e bassi di energia sono normali - imparerai a lavorarci, non contro.' : ''} ${challenges.includes('focus') ? 'Il focus arriva quando hai sistemi che ti guidano automaticamente.' : ''}</p>
+                    
+                    <p><strong>La tua trasformazione:</strong> Nelle prime settimane, costruiremo insieme sistemi di tracciamento visivo. Vedrai i tuoi progressi in tempo reale, e questo alimenterà la tua motivazione intrinseca. Piccole vittorie quotidiane costruiscono grandi risultati.</p>
+                    
+                    <p><strong>Il sistema della costanza:</strong> Ti insegnerò l'habit stacking: collegare nuove abitudini a quelle esistenti. Creerai catene di successo che si autoalimentano. Imparerai a gestire i giorni "no" senza rompere la catena.</p>
+                    
+                    <p><strong>Il tuo superpotere rivelato:</strong> La tua capacità di sprint e la tua energia quando sei motivato sono straordinarie. Una volta che avrai imparato a mantenerle costanti, diventerai una forza della natura.</p>
+                `;
+            }
+
+            generateOptimizerAnalysis(name, challenges, stress, readiness) {
+                return `
+                    <p><strong>Ciao ${name},</strong> vedo in te una persona che ha già raggiunto un buon equilibrio nella vita, ma che cerca continuamente di migliorare e ottimizzare. Non hai problemi gravi - hai opportunità di crescita. Il mio ruolo sarà quello di un consulente avanzato.</p>
+                    
+                    <div class="success">
+                        <p><strong>La tua posizione privilegiata:</strong> Sei già avanti rispetto alla maggior parte delle persone. Il tuo livello di consapevolezza e la tua ricerca di miglioramento continuo sono segni di maturità personale.</p>
+                    </div>
+                    
+                    <p><strong>Quello che riconosco in te:</strong> Hai una vita sostanzialmente equilibrata, buone abitudini, e una visione chiara. Ma senti che c'è ancora margine di crescita. Non stai cercando di risolvere problemi - stai cercando di raggiungere l'eccellenza.</p>
+                    
+                    <p><strong>La mia esperienza con l'ottimizzazione:</strong> Anch'io ho attraversato questa fase. Quando le cose vanno bene, la sfida diventa trovare il "next level". Non si tratta più di sopravvivere, ma di prosperare al massimo delle tue potenzialità.</p>
+                    
+                    <p><strong>Il tuo percorso di eccellenza:</strong> Ti guiderò attraverso tecniche avanzate di ottimizzazione. Non cambieremo tutto, ma perfezioneremo quello che già funziona. Piccoli aggiustamenti che producono grandi risultati.</p>
+                    
+                    <p><strong>Le tue opportunità specifiche:</strong> ${challenges.includes('perfectionism') ? 'Il perfezionismo può essere canalizzato in eccellenza sostenibile.' : ''} ${challenges.includes('focus') ? 'Possiamo affinare ulteriormente il tuo focus per risultati ancora migliori.' : ''} ${challenges.includes('balance') ? 'L\'equilibrio può essere ottimizzato per massimizzare sia performance che benessere.' : ''}</p>
+                    
+                    <p><strong>La tua evoluzione:</strong> Nelle prime settimane, faremo un audit completo della tua vita. Identificheremo le aree con il maggior potenziale di miglioramento. Introdurremo tecniche avanzate di biohacking, produttività e benessere.</p>
+                    
+                    <p><strong>Il sistema dell'eccellenza:</strong> Ti insegnerò principi di ottimizzazione marginale: miglioramenti dell'1% che si compongono nel tempo. Imparerai a misurare e monitorare i tuoi progressi con precisione scientifica.</p>
+                    
+                    <p><strong>Il tuo superpotere amplificato:</strong> La tua autodisciplina e la tua visione a lungo termine sono già straordinarie. Le porteremo al livello successivo, creando un sistema di vita che ti permetterà di raggiungere risultati che oggi sembrano impossibili.</p>
+                `;
             }
 
             render() {
@@ -1188,7 +1732,7 @@
             }
 
             renderContactForm() {
-                const progress = 95; // Almost done
+                const progress = 95;
                 
                 this.container.innerHTML = `
                     <div class="header">
@@ -1200,7 +1744,7 @@
                         <div class="progress-section">
                             <div class="progress-header">
                                 <span class="progress-text">Quasi finito!</span>
-                                <span class="progress-text">20 di 20 ✓</span>
+                                <span class="progress-text">25 di 25 ✓</span>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: ${progress}%"></div>
@@ -1295,27 +1839,38 @@
             }
 
             renderProfile() {
+                const profile = this.profile.profileData;
+                const colorClass = profile.color;
+                
                 this.container.innerHTML = `
                     <div class="profile-header">
-                        <h1>🎯 Ciao ${this.profile.name}!</h1>
-                        <p>Il tuo profilo lifestyle personalizzato è pronto</p>
+                        <h1>${profile.emoji} Ciao ${this.profile.name}!</h1>
+                        <p>Il tuo profilo: ${profile.name}</p>
                     </div>
                     <div class="profile-content">
                         <div class="profile-section">
                             <div class="profile-grid">
-                                <div class="profile-card primary">
-                                    <h3>📊 Il Tuo Quadrante</h3>
-                                    <p class="profile-text">${this.profile.quadrant}</p>
-                                    <p class="profile-description">${this.profile.approach}</p>
-                                </div>
-                                <div class="profile-card secondary">
-                                    <h3>🧠 Livello di Coscienza</h3>
-                                    <p class="profile-text">${this.profile.consciousnessLevel}</p>
+                                <div class="profile-card ${colorClass}">
+                                    <h3>${profile.emoji} ${profile.name}</h3>
+                                    <p class="profile-text">${profile.description}</p>
+                                    <p class="profile-description">${profile.approach}</p>
                                     <div class="readiness-meter">
-                                        <div class="readiness-label">Motivazione: ${this.profile.readinessLevel}/5</div>
+                                        <div class="readiness-label">Motivazione al Cambiamento: ${this.profile.insights.readinessLevel}/5</div>
                                         <div class="readiness-bar">
-                                            <div class="readiness-fill" style="width: ${(this.profile.readinessLevel / 5) * 100}%"></div>
+                                            <div class="readiness-fill" style="width: ${(this.profile.insights.readinessLevel / 5) * 100}%"></div>
                                         </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-card secondary">
+                                    <h3>🎯 I Tuoi Punti di Forza</h3>
+                                    <div class="list-container">
+                                        ${profile.strengths.map(strength => `
+                                            <div class="list-item">
+                                                <div class="list-icon">✨</div>
+                                                <div class="list-text">${strength}</div>
+                                            </div>
+                                        `).join('')}
                                     </div>
                                 </div>
                             </div>
@@ -1323,7 +1878,7 @@
                         
                         <div class="profile-section">
                             <div class="profile-card success">
-                                <h3>📈 Le Tue Aree di Valutazione</h3>
+                                <h3>📊 Le Tue Aree di Valutazione</h3>
                                 <div class="dashboard-grid">
                                     ${Object.entries(this.profile.scores).map(([key, score]) => `
                                         <div class="dashboard-item">
@@ -1340,42 +1895,47 @@
                         
                         <div class="profile-section">
                             <div class="profile-grid">
-                                ${this.profile.motivationDrivers.length > 0 ? `
-                                    <div class="profile-card secondary">
-                                        <h3>💪 Tue Motivazioni</h3>
-                                        <div class="list-container">
-                                            ${this.profile.motivationDrivers.slice(0, 3).map(driver => `
-                                                <div class="list-item">
-                                                    <div class="list-icon">✓</div>
-                                                    <div class="list-text">${driver}</div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
+                                <div class="profile-card warning">
+                                    <h3>🎯 Le Tue Sfide</h3>
+                                    <div class="list-container">
+                                        ${profile.challenges.map(challenge => `
+                                            <div class="list-item">
+                                                <div class="list-icon">⚡</div>
+                                                <div class="list-text">${challenge}</div>
+                                            </div>
+                                        `).join('')}
                                     </div>
-                                ` : ''}
+                                </div>
                                 
-                                ${this.profile.challenges.length > 0 ? `
-                                    <div class="profile-card primary">
-                                        <h3>⚡ Sfide da Superare</h3>
-                                        <div class="list-container">
-                                            ${this.profile.challenges.slice(0, 3).map(challenge => `
-                                                <div class="list-item">
-                                                    <div class="list-icon">🎯</div>
-                                                    <div class="list-text">${challenge}</div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
+                                <div class="profile-card blue">
+                                    <h3>🚀 I Tuoi Obiettivi</h3>
+                                    <div class="list-container">
+                                        ${profile.goals.map(goal => `
+                                            <div class="list-item">
+                                                <div class="list-icon">🎯</div>
+                                                <div class="list-text">${goal}</div>
+                                            </div>
+                                        `).join('')}
                                     </div>
-                                ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-section">
+                            <div class="profile-card primary">
+                                <h3>📝 Analisi Dettagliata del Tuo Profilo</h3>
+                                <div class="profile-description" style="line-height: 1.8; font-size: 1.1rem;">
+                                    ${this.profile.personalizedAnalysis}
+                                </div>
                             </div>
                         </div>
                         
                         <div class="profile-section">
                             <div class="cta-section">
                                 <h3>🚀 Inizia Ora la Tua Trasformazione</h3>
-                                <p>Il tuo percorso personalizzato di 7 settimane ti aspetta nella dashboard</p>
+                                <p>Il tuo percorso personalizzato di 7 settimane basato sul profilo "${profile.name}" ti aspetta</p>
                                 <button class="cta-button" onclick="saveProfileAndRedirect()">
-                                    🎯 Accedi alla Tua Dashboard Personale
+                                    ${profile.emoji} Accedi alla Tua Dashboard Personale
                                 </button>
                             </div>
                         </div>
@@ -1392,7 +1952,7 @@
                 this.container.innerHTML = `
                     <div class="header">
                         <h1>🎯 Lifestyle Assessment</h1>
-                        <p>Scopri il tuo profilo personalizzato in 20 domande</p>
+                        <p>Scopri il tuo profilo personalizzato in 25 domande</p>
                     </div>
                     
                     <div class="content">
@@ -1557,8 +2117,8 @@
                     ...profileData,
                     userId: userId,
                     timestamp: window.firebaseServerTimestamp(),
-                    source: 'lifestyle_quiz',
-                    version: '1.0',
+                    source: 'lifestyle_quiz_6profiles',
+                    version: '2.0',
                     
                     // Convert answers to serializable format
                     answers: quiz.answers,
@@ -1590,14 +2150,15 @@
                         phone: profileData.phone || '',
                         gender: profileData.gender || '',
                         city: profileData.city || '',
-                        source: 'lifestyle_quiz',
+                        source: 'lifestyle_quiz_6profiles',
                         leadScore: calculateLeadScore(profileData),
                         status: 'new',
                         
-                        // Lifestyle specific data
-                        quadrant: profileData.quadrant,
-                        consciousnessLevel: profileData.consciousnessLevel,
-                        readinessLevel: profileData.readinessLevel,
+                        // New 6-profile specific data
+                        profileType: profileData.profileType,
+                        profileName: profileData.profileData.name,
+                        readinessLevel: profileData.insights.readinessLevel,
+                        stressLevel: profileData.insights.stressLevel,
                         challenges: profileData.challenges,
                         scores: profileData.scores,
                         
@@ -1617,32 +2178,32 @@
             let score = 0;
             
             // Score based on readiness level (30 points max)
-            if (profileData.readinessLevel) {
-                score += profileData.readinessLevel * 6;
+            if (profileData.insights.readinessLevel) {
+                score += profileData.insights.readinessLevel * 6;
             }
             
-            // Score based on quadrant (25 points max)
-            if (profileData.quadrant) {
-                if (profileData.quadrant.includes('Q4')) score += 25;
-                else if (profileData.quadrant.includes('Q3')) score += 20;
-                else if (profileData.quadrant.includes('Q2')) score += 15;
-                else if (profileData.quadrant.includes('Q1')) score += 10;
-            }
+            // Score based on profile type (25 points max)
+            const profileScores = {
+                'stressato_esaurito': 25,
+                'procrastinatore_bloccato': 20,
+                'perfezionista_insoddisfatto': 22,
+                'dispersivo_confuso': 18,
+                'motivato_inconsistente': 15,
+                'equilibrato_ottimizzatore': 10
+            };
+            score += profileScores[profileData.profileType] || 15;
             
-            // Score based on consciousness level (20 points max)
-            if (profileData.consciousnessLevel) {
-                if (profileData.consciousnessLevel.includes('Pluralista')) score += 20;
-                else if (profileData.consciousnessLevel.includes('Achiever')) score += 15;
-                else if (profileData.consciousnessLevel.includes('Conformista')) score += 10;
-                else if (profileData.consciousnessLevel.includes('Opportunista')) score += 5;
+            // Score based on stress level (20 points max - higher stress = higher score)
+            if (profileData.insights.stressLevel) {
+                score += profileData.insights.stressLevel * 4;
             }
             
             // Score based on challenges (15 points max)
             if (profileData.challenges && profileData.challenges.length > 0) {
-                score += Math.min(profileData.challenges.length * 3, 15);
+                score += Math.min(profileData.challenges.length * 5, 15);
             }
             
-            // Score based on wellbeing scores (10 points max)
+            // Score based on wellbeing scores (10 points max - lower scores = higher lead score)
             if (profileData.scores) {
                 const avgScore = Object.values(profileData.scores).reduce((a, b) => a + b, 0) / Object.keys(profileData.scores).length;
                 if (avgScore < 3) score += 10;
