@@ -3,7 +3,7 @@
 
 // === CONFIGURAZIONE CLAUDE AI ===
 const CLAUDE_CONFIG = {
-    apiKey: process.env.ANTHROPIC_API_KEY || 'your-api-key-here',
+    apiKey: process.env.CLAUDE_KEY || 'your-api-key-here',
     model: 'claude-3-sonnet-20240229',
     maxTokens: 4000,
     temperature: 0.7
@@ -193,9 +193,20 @@ class ClaudeConversationManager {
     }
 
     async callClaudeAPI(message) {
-        // Qui si integra con l'API di Anthropic
-        // Per ora ritorna una risposta simulata
-        return this.generateSimulatedResponse(message);
+        try {
+            // Integrazione con Claude API tramite window.claude.complete
+            if (typeof window !== 'undefined' && window.claude && window.claude.complete) {
+                const response = await window.claude.complete(message);
+                return response;
+            } else {
+                console.warn('⚠️ Claude API non disponibile, uso fallback');
+                return this.generateSimulatedResponse(message);
+            }
+        } catch (error) {
+            console.error('❌ Errore Claude API:', error);
+            // Fallback alla risposta simulata
+            return this.generateSimulatedResponse(message);
+        }
     }
 
     generateSimulatedResponse(message) {
