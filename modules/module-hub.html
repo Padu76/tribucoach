@@ -1,1 +1,925 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il Tuo Percorso di Trasformazione - 7 Settimane</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 3rem;
+        }
+
+        .progress-overview {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 3rem;
+        }
+
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Modules Grid */
+        .modules-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .modules-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .modules-subtitle {
+            font-size: 1.2rem;
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 3rem;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card.active {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            border: 2px solid #ea580c;
+        }
+
+        .module-card.locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .module-card.locked::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(0,0,0,0.1) 50%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            position: relative;
+        }
+
+        .module-card.locked .module-icon {
+            background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+        }
+
+        .module-info {
+            flex: 1;
+        }
+
+        .module-week {
+            font-size: 0.9rem;
+            color: #ea580c;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-card.locked .module-week {
+            color: #94a3b8;
+        }
+
+        .module-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .module-card.locked .module-title {
+            color: #94a3b8;
+        }
+
+        .module-duration {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .module-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-card.locked .module-description {
+            color: #94a3b8;
+        }
+
+        .module-features {
+            margin-bottom: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .module-card.locked .feature-item {
+            color: #94a3b8;
+        }
+
+        .module-action {
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-locked {
+            background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 100%);
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .lock-icon {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 30px;
+            height: 30px;
+            background: #94a3b8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* Timeline */
+        .timeline-section {
+            background: white;
+            padding: 4rem 0;
+            margin-top: 4rem;
+        }
+
+        .timeline-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .timeline-title {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 3rem;
+        }
+
+        .timeline {
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #ea580c, #16a34a);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .timeline-week {
+            font-size: 0.9rem;
+            color: #ea580c;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title-item {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-desc {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .timeline-dot {
+            width: 20px;
+            height: 20px;
+            background: #ea580c;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .timeline-item:nth-child(4) .timeline-dot {
+            background: #16a34a;
+        }
+
+        .timeline-item:nth-child(5) .timeline-dot,
+        .timeline-item:nth-child(6) .timeline-dot,
+        .timeline-item:nth-child(7) .timeline-dot {
+            background: #16a34a;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .cta-description {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            background: white;
+            color: #1e293b;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline::before {
+                left: 30px;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .timeline-item:nth-child(even) {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .timeline-content {
+                margin-left: 60px;
+                margin-right: 0;
+            }
+            
+            .timeline-dot {
+                left: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🎯 LifestyleFitnessCoach</div>
+            <a href="../user-dashboard.html" class="back-button">← Torna alla Dashboard</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content fade-in-up">
+            <h1 class="hero-title">Il Tuo Percorso di Trasformazione</h1>
+            <p class="hero-subtitle">7 Settimane per Cambiare la Tua Vita</p>
+            <p class="hero-description">
+                Benvenuto nel sistema di coaching più completo e personalizzato che abbia mai creato. 
+                Ogni settimana è progettata per guidarti attraverso una trasformazione profonda e duratura, 
+                con il supporto continuo di Andrea Padoan e strumenti pratici testati su migliaia di persone.
+            </p>
+            
+            <div class="progress-overview">
+                <h3 class="progress-title">🚀 Il Tuo Percorso in Numeri</h3>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">7</div>
+                        <div class="stat-label">Settimane Intensive</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">40</div>
+                        <div class="stat-label">Minuti per Sessione</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Supporto Andrea AI</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Personalizzato</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules Section -->
+    <section class="modules-section">
+        <h2 class="modules-title">I Tuoi 7 Moduli di Trasformazione</h2>
+        <p class="modules-subtitle">Ogni modulo è progettato per costruire sulla settimana precedente</p>
+        
+        <div class="modules-grid">
+            <!-- Week 1 - ACTIVE -->
+            <div class="module-card active" onclick="startModule(1)">
+                <div class="module-header">
+                    <div class="module-icon">
+                        🤝
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 1</div>
+                        <h3 class="module-title">Incontro Conoscitivo</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Iniziamo il nostro viaggio insieme! Analizzeremo la tua situazione attuale, 
+                    esploreremo il tuo passato e definiremo chiaramente i tuoi obiettivi futuri. 
+                    Questa è la base su cui costruiremo la tua trasformazione.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">✅ Analisi situazione attuale</div>
+                    <div class="feature-item">✅ Domande sul passato e presente</div>
+                    <div class="feature-item">✅ Definizione obiettivi futuri</div>
+                    <div class="feature-item">✅ Coaching personale con Andrea</div>
+                </div>
+                <div class="module-action">
+                    <a href="week-1.html" class="btn btn-primary">🚀 Inizia Ora</a>
+                </div>
+            </div>
+
+            <!-- Week 2 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        🧠
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 2</div>
+                        <h3 class="module-title">Consapevolezza di Sé</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Esploriamo le tue motivazioni profonde e scopriamo cosa ti spinge veramente verso il cambiamento. 
+                    Attraverso test specifici e coaching mirato, svilupperai una consapevolezza di sé più profonda.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">🔍 Test di autostima</div>
+                    <div class="feature-item">🎯 Identificazione motivazioni</div>
+                    <div class="feature-item">💪 Esercizi di consapevolezza</div>
+                    <div class="feature-item">📋 Compiti pratici</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+
+            <!-- Week 3 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        🎯
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 3</div>
+                        <h3 class="module-title">Obiettivi SMART</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Trasformiamo i tuoi desideri in obiettivi concreti e raggiungibili. 
+                    Imparerai il metodo SMART e creeremo insieme una strategia chiara per il tuo successo.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">🎯 Metodo SMART</div>
+                    <div class="feature-item">📊 Definizione obiettivi</div>
+                    <div class="feature-item">📈 Strategia di successo</div>
+                    <div class="feature-item">🗓️ Timeline personalizzata</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+
+            <!-- Week 4 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        📋
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 4</div>
+                        <h3 class="module-title">Piano di Azione</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Creiamo il tuo piano di azione personalizzato e dettagliato. 
+                    Ogni obiettivo diventerà una serie di passi concreti e actionable che potrai seguire facilmente.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">📝 Piano personalizzato</div>
+                    <div class="feature-item">⚡ Azioni concrete</div>
+                    <div class="feature-item">🤝 Identificazione alleati</div>
+                    <div class="feature-item">🚧 Gestione ostacoli</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+
+            <!-- Week 5 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        🔄
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 5</div>
+                        <h3 class="module-title">Trasformazione Abitudini</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Costruiamo insieme le abitudini che ti porteranno al successo. 
+                    Focus su routine sostenibili e cambiamenti duraturi che si integreranno naturalmente nella tua vita.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">🔄 Nuove abitudini</div>
+                    <div class="feature-item">🏃 Routine mattutine</div>
+                    <div class="feature-item">🌅 Rituali serali</div>
+                    <div class="feature-item">💪 Cambiamenti duraturi</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+
+            <!-- Week 6 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        ⭐
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 6</div>
+                        <h3 class="module-title">Scopri le Tue Potenzialità</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Identifichiamo e valorizziamo i tuoi punti di forza nascosti. 
+                    Celebriamo i progressi raggiunti e pianifichiamo la crescita futura basata sulle tue potenzialità uniche.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">⭐ Test creatività</div>
+                    <div class="feature-item">💎 Scoperta talenti</div>
+                    <div class="feature-item">🚀 Potenziamento skills</div>
+                    <div class="feature-item">🏆 Celebrazione successi</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+
+            <!-- Week 7 - LOCKED -->
+            <div class="module-card locked">
+                <div class="lock-icon">🔒</div>
+                <div class="module-header">
+                    <div class="module-icon">
+                        🏆
+                    </div>
+                    <div class="module-info">
+                        <div class="module-week">SETTIMANA 7</div>
+                        <h3 class="module-title">Consolidamento e Futuro</h3>
+                        <div class="module-duration">⏱️ 40 minuti</div>
+                    </div>
+                </div>
+                <p class="module-description">
+                    Consolidiamo tutti i risultati raggiunti e pianifichiamo il mantenimento a lungo termine. 
+                    Celebriamo il tuo incredibile percorso di trasformazione e prepariamo il futuro.
+                </p>
+                <div class="module-features">
+                    <div class="feature-item">🏆 Bilancio finale</div>
+                    <div class="feature-item">📈 Valutazione progressi</div>
+                    <div class="feature-item">🔮 Pianificazione futura</div>
+                    <div class="feature-item">🎉 Celebrazione successi</div>
+                </div>
+                <div class="module-action">
+                    <button class="btn btn-locked">🔒 Bloccato</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline Section -->
+    <section class="timeline-section">
+        <div class="timeline-container">
+            <h2 class="timeline-title">La Tua Timeline di Trasformazione</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 1</div>
+                        <h3 class="timeline-title-item">Punto di Partenza</h3>
+                        <p class="timeline-desc">Conosciamoci e analizziamo la tua situazione attuale</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 2</div>
+                        <h3 class="timeline-title-item">Consapevolezza</h3>
+                        <p class="timeline-desc">Scopriamo le tue motivazioni profonde</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 3</div>
+                        <h3 class="timeline-title-item">Obiettivi Chiari</h3>
+                        <p class="timeline-desc">Trasformiamo i desideri in obiettivi concreti</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 4</div>
+                        <h3 class="timeline-title-item">Piano di Azione</h3>
+                        <p class="timeline-desc">Creiamo la tua strategia personalizzata</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 5</div>
+                        <h3 class="timeline-title-item">Nuove Abitudini</h3>
+                        <p class="timeline-desc">Costruiamo routine sostenibili e durature</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 6</div>
+                        <h3 class="timeline-title-item">Potenzialità</h3>
+                        <p class="timeline-desc">Scopriamo e valorizziamo i tuoi talenti</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-week">Settimana 7</div>
+                        <h3 class="timeline-title-item">Trasformazione Completa</h3>
+                        <p class="timeline-desc">Consolidiamo i risultati e pianifichiamo il futuro</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2 class="cta-title">Inizia Oggi la Tua Trasformazione</h2>
+            <p class="cta-description">
+                Il momento perfetto per cambiare la tua vita è adesso. 
+                Ogni giorno che aspetti è un giorno in meno verso la versione migliore di te stesso.
+            </p>
+            <a href="week-1.html" class="cta-button">
+                🚀 Inizia la Settimana 1
+            </a>
+        </div>
+    </section>
+
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation classes
+            const elements = document.querySelectorAll('.fade-in-up');
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+
+            // Check user progress
+            loadUserProgress();
+        });
+
+        function loadUserProgress() {
+            try {
+                const progress = localStorage.getItem('lifestyleProgress');
+                if (progress) {
+                    const progressData = JSON.parse(progress);
+                    updateModuleAccess(progressData);
+                }
+            } catch (error) {
+                console.error('Error loading progress:', error);
+            }
+        }
+
+        function updateModuleAccess(progressData) {
+            const moduleCards = document.querySelectorAll('.module-card');
+            
+            moduleCards.forEach((card, index) => {
+                const weekNumber = index + 1;
+                
+                if (progressData.completedWeeks.includes(weekNumber - 1) && weekNumber <= progressData.currentWeek + 1) {
+                    card.classList.remove('locked');
+                    card.classList.add('active');
+                    
+                    // Update button
+                    const button = card.querySelector('.btn');
+                    if (button) {
+                        button.className = 'btn btn-primary';
+                        button.innerHTML = `🚀 Inizia Settimana ${weekNumber}`;
+                        button.onclick = () => startModule(weekNumber);
+                    }
+                }
+            });
+        }
+
+        function startModule(weekNumber) {
+            // Check if module is accessible
+            const moduleCard = document.querySelector(`.module-card:nth-child(${weekNumber})`);
+            if (moduleCard && moduleCard.classList.contains('locked')) {
+                showMessage('⚠️ Questo modulo sarà disponibile dopo aver completato i precedenti!', 'warning');
+                return;
+            }
+
+            // Redirect to specific week
+            window.location.href = `week-${weekNumber}.html`;
+        }
+
+        function showMessage(message, type = 'info') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'warning' ? '#f59e0b' : '#16a34a';
+            
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
