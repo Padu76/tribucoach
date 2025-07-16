@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 5 - Trasformazione Abitudini | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #8b5cf6;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #8b5cf6;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Habits Framework */
+        .habits-framework {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .framework-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .habits-cycle {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .cycle-step {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .cycle-step::after {
+            content: '→';
+            position: absolute;
+            right: -1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #8b5cf6;
+        }
+
+        .cycle-step:last-child::after {
+            display: none;
+        }
+
+        .cycle-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+        }
+
+        .cycle-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .cycle-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Session Container */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #8b5cf6;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #8b5cf6;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .habits-cycle {
+                grid-template-columns: 1fr;
+            }
+            
+            .cycle-step::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🔄 Settimana 5 - Trasformazione Abitudini</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Settimana 5! 🔄</h1>
+            <p class="welcome-subtitle">Trasformazione Abitudini - Cambiamenti Duraturi</p>
+            <p class="welcome-description">
+                È il momento di costruire abitudini che ti porteranno al successo! Le abitudini sono la base di ogni trasformazione duratura. 
+                Oggi imparerai a creare routine sostenibili, a eliminare pattern negativi e a costruire un sistema di abitudini che 
+                ti supporterà automaticamente nel raggiungimento dei tuoi obiettivi.
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">🔄</div>
+                <div class="coach-message">
+                    <h3>Il Potere delle Abitudini</h3>
+                    <p>Le abitudini sono il pilota automatico del successo. Quando costruisci le abitudini giuste, 
+                    il cambiamento diventa inevitabile. Oggi creeremo il tuo sistema di abitudini vincente!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Habits Framework -->
+        <section class="habits-framework fade-in">
+            <h2 class="framework-title">🧠 Il Ciclo delle Abitudini</h2>
+            <div class="habits-cycle">
+                <div class="cycle-step">
+                    <div class="cycle-number">1</div>
+                    <h3 class="cycle-title">Trigger</h3>
+                    <p class="cycle-description">Il segnale che innesca l'abitudine</p>
+                </div>
+                <div class="cycle-step">
+                    <div class="cycle-number">2</div>
+                    <h3 class="cycle-title">Routine</h3>
+                    <p class="cycle-description">L'azione che compi automaticamente</p>
+                </div>
+                <div class="cycle-step">
+                    <div class="cycle-number">3</div>
+                    <h3 class="cycle-title">Ricompensa</h3>
+                    <p class="cycle-description">Il beneficio che rinforza l'abitudine</p>
+                </div>
+                <div class="cycle-step">
+                    <div class="cycle-number">4</div>
+                    <h3 class="cycle-title">Ripetizione</h3>
+                    <p class="cycle-description">La costanza che rende tutto automatico</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching Abitudini</h2>
+                        <p class="panel-subtitle">Costruiamo le tue abitudini vincenti</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea ti aiuta a trasformare le tue abitudini</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Siamo arrivati al cuore della trasformazione: le abitudini! Tutto quello che sei oggi è il risultato delle tue abitudini passate. 
+                            La bella notizia è che puoi cambiarle. Iniziamo dal presente: qual è l'abitudine che più ti ostacola nel raggiungere i tuoi obiettivi? 🔄
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Condividi le tue abitudini attuali...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">🔄</div>
+                    <div>
+                        <h2 class="panel-title">Trasformazione Abitudini</h2>
+                        <p class="panel-subtitle">Progetta le tue nuove routine</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso trasformazione: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="habitsForm">
+                    <!-- Sezione 1: Abitudini Attuali -->
+                    <div class="form-section" id="section1">
+                        <h3>🔍 Analisi Abitudini Attuali</h3>
+                        <div class="form-group">
+                            <label for="currentHabits">Quali sono le tue abitudini attuali (positive e negative)?</label>
+                            <textarea id="currentHabits" placeholder="Elenca le tue abitudini principali durante la giornata..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="badHabits">Quali abitudini ti ostacolano di più?</label>
+                            <textarea id="badHabits" placeholder="Abitudini che ti allontanano dai tuoi obiettivi..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="goodHabits">Quali abitudini positive hai già?</label>
+                            <textarea id="goodHabits" placeholder="Comportamenti che già ti supportano..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="triggers">Quali sono i tuoi trigger principali?</label>
+                            <textarea id="triggers" placeholder="Situazioni, emozioni o momenti che scatenano le tue abitudini..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Nuove Abitudini -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>✨ Progettazione Nuove Abitudini</h3>
+                        <div class="form-group">
+                            <label for="newHabits">Quali nuove abitudini vuoi creare?</label>
+                            <textarea id="newHabits" placeholder="Abitudini che ti porteranno verso i tuoi obiettivi..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="morningRoutine">Progetta la tua routine mattutina ideale:</label>
+                            <textarea id="morningRoutine" placeholder="Come vorresti iniziare ogni giornata?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="eveningRoutine">Progetta la tua routine serale ideale:</label>
+                            <textarea id="eveningRoutine" placeholder="Come vorresti concludere ogni giornata?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="keystone">Qual è la tua abitudine chiave (keystone habit)?</label>
+                            <textarea id="keystone" placeholder="L'abitudine che innescherà tutte le altre positive..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Strategia Implementazione -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>🎯 Strategia di Implementazione</h3>
+                        <div class="form-group">
+                            <label for="habitStack">Come collegherai le nuove abitudini a quelle esistenti?</label>
+                            <textarea id="habitStack" placeholder="Dopo [abitudine esistente], farò [nuova abitudine]..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="environment">Come modificherai il tuo ambiente?</label>
+                            <textarea id="environment" placeholder="Cambiamenti fisici per supportare le nuove abitudini..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="rewards">Quali ricompense ti darai?</label>
+                            <textarea id="rewards" placeholder="Come ti premierai quando mantieni le nuove abitudini..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="tracking">Come monitorerai i tuoi progressi?</label>
+                            <textarea id="tracking" placeholder="Sistema per tracciare le tue abitudini quotidiane..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Stile di Vita -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>🌟 Stile di Vita Ideale</h3>
+                        <div class="form-group">
+                            <label for="idealDay">Descrivi la tua giornata ideale tra 30 anni:</label>
+                            <textarea id="idealDay" placeholder="Come sarà una giornata normale quando avrai raggiunto i tuoi obiettivi..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="inspiration">Cosa ti ispira di più nella vita?</label>
+                            <textarea id="inspiration" placeholder="Momenti, attività o situazioni che ti fanno sentire ispirato..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="obstacles">Quali ostacoli potresti incontrare?</label>
+                            <textarea id="obstacles" placeholder="Sfide nel mantenere le nuove abitudini e come superarle..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="commitment">Qual è il tuo impegno per i prossimi 30 giorni?</label>
+                            <textarea id="commitment" placeholder="La tua promessa per i primi 30 giorni di trasformazione..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">✅ Completa Sessione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <h2 class="completion-title">🎉 Settimana 5 Completata!</h2>
+            <p class="completion-message">
+                Straordinario! Hai creato un sistema di abitudini personalizzato che ti supporterà automaticamente nel raggiungimento dei tuoi obiettivi. 
+                Ora hai tutto quello che serve per trasformare la tua vita attraverso piccoli cambiamenti quotidiani. 
+                I prossimi 30 giorni saranno cruciali per consolidare queste nuove abitudini.
+            </p>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">📚 I Tuoi Compiti per Questa Settimana</h3>
+                <ul class="homework-list">
+                    <li>✅ Inizia la tua nuova routine mattutina domani</li>
+                    <li>✅ Crea un sistema di tracking per le tue abitudini</li>
+                    <li>✅ Modifica il tuo ambiente per supportare le nuove abitudini</li>
+                    <li>✅ Pratica l'abitudine chiave per 7 giorni consecutivi</li>
+                    <li>✅ Elimina gradualmente una cattiva abitudine</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 La settimana 6 si sbloccherà automaticamente tra 7 giorni. 
+                    Usa questo tempo per consolidare le tue nuove abitudini!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-success" onclick="downloadHomework()">📄 Scarica Compiti PDF</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 6</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 4;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Mi spiace, ho avuto un intoppo. Riprova!", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                try {
+                    const prompt = `
+                    Sei Andrea Padoan, un life coach esperto che sta conducendo la quinta sessione "Trasformazione Abitudini".
+                    
+                    Contesto: È la settimana 5 di un percorso di 7 settimane. L'obiettivo è aiutare l'utente a costruire 
+                    abitudini sostenibili e durature che lo supportino nel raggiungimento dei suoi obiettivi.
+                    
+                    Utente dice: "${userMessage}"
+                    
+                    Rispondi come Andrea con:
+                    - Focus sulla creazione di abitudini sostenibili
+                    - Domande che aiutano a identificare trigger e routine
+                    - Guida verso cambiamenti graduali e realistici
+                    - Supporto per superare la resistenza al cambiamento
+                    - Massimo 2-3 frasi
+                    
+                    Rispondi SOLO con la risposta di Andrea, senza prefissi.
+                    `;
+                    
+                    const response = await window.claude.complete(prompt);
+                    return response.trim();
+                } catch (error) {
+                    console.error('Claude AI error:', error);
+                }
+            }
+            
+            return getPersonalizedFallbackResponse(userMessage);
+        }
+
+        function getPersonalizedFallbackResponse(message) {
+            const responses = [
+                "Le abitudini sono potenti! Dimmi, quando è il momento in cui questa abitudine si manifesta di più?",
+                "Perfetto! Ora identifichiamo il trigger. Cosa scatena esattamente questa abitudine?",
+                "Ottimo! Vedo che sei consapevole. Qual è la ricompensa che ottieni da questa abitudine?",
+                "Interessante! Ora pensiamo a come sostituire questa abitudine con una più funzionale. Cosa potresti fare invece?",
+                "Fantastico! Il cambiamento inizia sempre dalla consapevolezza. Come ti senti quando metti in pratica questa abitudine?"
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('abitudine') || lowerMessage.includes('routine')) {
+                return "Le abitudini sono il pilota automatico della nostra vita! La chiave è renderle consapevoli. Dimmi, come ti senti mentre metti in pratica questa abitudine?";
+            }
+            
+            if (lowerMessage.includes('mattina') || lowerMessage.includes('mattutina')) {
+                return "La routine mattutina è magica! Come inizi la giornata determina come la vivi. Qual è la prima cosa che fai quando ti svegli?";
+            }
+            
+            if (lowerMessage.includes('sera') || lowerMessage.includes('serale')) {
+                return "La routine serale è fondamentale per un buon riposo! Come concludi la giornata influenza anche quella successiva. Cosa fai prima di andare a letto?";
+            }
+            
+            if (lowerMessage.includes('difficile') || lowerMessage.includes('fatica') || lowerMessage.includes('problema')) {
+                return "Ti capisco! Cambiare abitudini può essere sfidante. La chiave è iniziare piccolo e essere costanti. Qual è il più piccolo cambiamento che potresti fare?";
+            }
+            
+            if (lowerMessage.includes('trigger') || lowerMessage.includes('scatena')) {
+                return "Identificare i trigger è fondamentale! Sono i segnali che innescano le nostre abitudini. In che momento o situazione si presenta questa abitudine?";
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+            
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.value.trim()) filled++;
+            });
+            
+            const sectionProgress = (filled / inputs.length) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#habitsForm input, #habitsForm textarea, #habitsForm select');
+            formElements.forEach(element => {
+                formData[element.id] = element.value;
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week5SessionData', JSON.stringify(sessionData));
+            
+            // Update user progress
+            updateUserProgress();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateUserProgress() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(5)) {
+                    progress.completedWeeks.push(5);
+                    progress.currentWeek = 6;
+                    progress.lastUpdate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+
+        function downloadHomework() {
+            const homeworkContent = `
+                COMPITI SETTIMANA 5 - TRASFORMAZIONE ABITUDINI
+                
+                Andrea Padoan - Lifestyle Coach
+                
+                Ciao! Ecco i tuoi compiti per trasformare le tue abitudini:
+                
+                1. ROUTINE MATTUTINA (ogni giorno)
+                   - Inizia la tua nuova routine mattutina domani
+                   - Dedica i primi 30 minuti della giornata a te stesso
+                   - Includi: idratazione, movimento, riflessione
+                   - Mantieni costanza per 7 giorni consecutivi
+                
+                2. HABIT TRACKER (quotidiano)
+                   - Crea un sistema di tracking per le tue abitudini
+                   - Segna ogni giorno le abitudini completate
+                   - Usa un'app, un foglio o un calendario
+                   - Celebra i piccoli progressi
+                
+                3. AMBIENTE MODIFICATO (questa settimana)
+                   - Cambia il tuo ambiente per supportare le nuove abitudini
+                   - Rimuovi i trigger delle cattive abitudini
+                   - Aggiungi elementi che facilitano quelle positive
+                   - Preparati per il successo
+                
+                4. ABITUDINE CHIAVE (30 giorni)
+                   - Pratica la tua abitudine chiave per 7 giorni
+                   - Collegala a un'abitudine già consolidata
+                   - Inizia piccolo e aumenta gradualmente
+                   - Non saltare mai due giorni consecutivi
+                
+                5. ELIMINAZIONE GRADUALE (processo continuo)
+                   - Identifica una cattiva abitudine da eliminare
+                   - Sostituiscila con una positiva
+                   - Usa la regola dei 2 minuti per iniziare
+                   - Sii paziente con te stesso
+                
+                RICORDA: La settimana 6 si attiverà automaticamente tra 7 giorni.
+                Usa questo tempo per consolidare le tue nuove abitudini!
+                
+                Per il tuo successo,
+                Andrea 🔄
+            `;
+            
+            const blob = new Blob([homeworkContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Compiti_Settimana_5_Trasformazione_Abitudini_Andrea_Padoan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Compiti scaricati! Inizia la tua trasformazione oggi stesso.', 'success');
+        }
+
+        function scheduleNextSession() {
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            
+            const message = `📅 La tua prossima sessione (Settimana 6 - Scopri le Tue Potenzialità) sarà disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}. Continua con le tue nuove abitudini!`;
+            
+            showMessage(message, 'info');
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo scaduto! Puoi comunque completare la trasformazione delle abitudini.', 'warning');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
