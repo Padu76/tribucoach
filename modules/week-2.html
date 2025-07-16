@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 2 - Consapevolezza di Sé | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #22c55e;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #16a34a;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Session Container */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #16a34a;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #16a34a;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Self-Esteem Scale */
+        .scale-group {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .scale-question {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .scale-input {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .scale-input input[type="radio"] {
+            width: auto;
+        }
+
+        .scale-input label {
+            font-size: 0.8rem;
+            margin: 0;
+            padding: 0.25rem;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #16a34a;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .scale-group {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🧠 Settimana 2 - Consapevolezza di Sé</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Settimana 2! 🧠</h1>
+            <p class="welcome-subtitle">Consapevolezza di Sé - Scopri le tue Motivazioni</p>
+            <p class="welcome-description">
+                Eccoci alla seconda settimana! Oggi esploreremo le tue motivazioni profonde e svilupperemo una maggiore consapevolezza di te stesso. 
+                Attraverso il test dell'autostima e domande mirate, scopriremo cosa ti spinge veramente verso il cambiamento. 
+                Questa sessione è fondamentale per costruire basi solide per il tuo percorso di trasformazione.
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">🧠</div>
+                <div class="coach-message">
+                    <h3>Sviluppiamo la Consapevolezza</h3>
+                    <p>La consapevolezza di sé è la chiave di ogni trasformazione. Quando conosci davvero te stesso, 
+                    le tue motivazioni e i tuoi schemi mentali, puoi finalmente dirigere la tua vita verso ciò che desideri veramente.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching Consapevolezza</h2>
+                        <p class="panel-subtitle">Esploriamo le tue motivazioni profonde</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea è qui per guidarti nella scoperta di te stesso</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Come stai dopo la prima settimana? Spero tu abbia avuto modo di riflettere su quello che abbiamo discusso. 
+                            Oggi andiamo più in profondità: esploreremo le tue motivazioni vere, quelle che spesso sono nascoste anche a noi stessi. 
+                            Dimmi, cosa hai scoperto di te in questa settimana di osservazione? 🤔
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Condividi le tue riflessioni con Andrea...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">📊</div>
+                    <div>
+                        <h2 class="panel-title">Test di Autostima</h2>
+                        <p class="panel-subtitle">Valutiamo il tuo livello di autostima</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso test: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="awarenessForm">
+                    <!-- Sezione 1: Test Autostima -->
+                    <div class="form-section" id="section1">
+                        <h3>📊 Test di Autostima</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #64748b;">
+                            Assegna un punteggio da 1 a 5 (1=per nulla, 2=raramente, 3=spesso, 4=molto spesso, 5=sempre)
+                        </p>
+                        
+                        <div class="scale-group">
+                            <div class="scale-question">1) Mi piaccio come sono</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q1" value="1" id="q1_1" onchange="updateProgress()">
+                                <label for="q1_1">1</label>
+                                <input type="radio" name="q1" value="2" id="q1_2" onchange="updateProgress()">
+                                <label for="q1_2">2</label>
+                                <input type="radio" name="q1" value="3" id="q1_3" onchange="updateProgress()">
+                                <label for="q1_3">3</label>
+                                <input type="radio" name="q1" value="4" id="q1_4" onchange="updateProgress()">
+                                <label for="q1_4">4</label>
+                                <input type="radio" name="q1" value="5" id="q1_5" onchange="updateProgress()">
+                                <label for="q1_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scale-group">
+                            <div class="scale-question">2) Conduco una vita equilibrata</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q2" value="1" id="q2_1" onchange="updateProgress()">
+                                <label for="q2_1">1</label>
+                                <input type="radio" name="q2" value="2" id="q2_2" onchange="updateProgress()">
+                                <label for="q2_2">2</label>
+                                <input type="radio" name="q2" value="3" id="q2_3" onchange="updateProgress()">
+                                <label for="q2_3">3</label>
+                                <input type="radio" name="q2" value="4" id="q2_4" onchange="updateProgress()">
+                                <label for="q2_4">4</label>
+                                <input type="radio" name="q2" value="5" id="q2_5" onchange="updateProgress()">
+                                <label for="q2_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scale-group">
+                            <div class="scale-question">3) Mi sento soddisfatto del mio attuale lavoro</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q3" value="1" id="q3_1" onchange="updateProgress()">
+                                <label for="q3_1">1</label>
+                                <input type="radio" name="q3" value="2" id="q3_2" onchange="updateProgress()">
+                                <label for="q3_2">2</label>
+                                <input type="radio" name="q3" value="3" id="q3_3" onchange="updateProgress()">
+                                <label for="q3_3">3</label>
+                                <input type="radio" name="q3" value="4" id="q3_4" onchange="updateProgress()">
+                                <label for="q3_4">4</label>
+                                <input type="radio" name="q3" value="5" id="q3_5" onchange="updateProgress()">
+                                <label for="q3_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scale-group">
+                            <div class="scale-question">4) Sono una persona ottimista</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q4" value="1" id="q4_1" onchange="updateProgress()">
+                                <label for="q4_1">1</label>
+                                <input type="radio" name="q4" value="2" id="q4_2" onchange="updateProgress()">
+                                <label for="q4_2">2</label>
+                                <input type="radio" name="q4" value="3" id="q4_3" onchange="updateProgress()">
+                                <label for="q4_3">3</label>
+                                <input type="radio" name="q4" value="4" id="q4_4" onchange="updateProgress()">
+                                <label for="q4_4">4</label>
+                                <input type="radio" name="q4" value="5" id="q4_5" onchange="updateProgress()">
+                                <label for="q4_5">5</label>
+                            </div>
+                        </div>
+
+                        <div class="scale-group">
+                            <div class="scale-question">5) Riesco a portare a termine quello che inizio</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q5" value="1" id="q5_1" onchange="updateProgress()">
+                                <label for="q5_1">1</label>
+                                <input type="radio" name="q5" value="2" id="q5_2" onchange="updateProgress()">
+                                <label for="q5_2">2</label>
+                                <input type="radio" name="q5" value="3" id="q5_3" onchange="updateProgress()">
+                                <label for="q5_3">3</label>
+                                <input type="radio" name="q5" value="4" id="q5_4" onchange="updateProgress()">
+                                <label for="q5_4">4</label>
+                                <input type="radio" name="q5" value="5" id="q5_5" onchange="updateProgress()">
+                                <label for="q5_5">5</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Consapevolezza Attuale -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>🔍 Consapevolezza Attuale</h3>
+                        <div class="form-group">
+                            <label for="currentLife">Come stai vivendo il presente?</label>
+                            <textarea id="currentLife" placeholder="Descrivi come vivi questo momento della tua vita..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="wantChange">Cosa non ti piace e vorresti cambiare?</label>
+                            <textarea id="wantChange" placeholder="Cosa della tua vita attuale non ti soddisfa?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="selfCare">Che significato attribuisci alla frase 'prendersi cura di se'?</label>
+                            <textarea id="selfCare" placeholder="Per te cosa significa prendersi cura di sé?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="selfCareTime">Quanto tempo investi in attività per te stesso?</label>
+                            <select id="selfCareTime" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="molto">Molto tempo - oltre 2 ore al giorno</option>
+                                <option value="abbastanza">Abbastanza - 1-2 ore al giorno</option>
+                                <option value="poco">Poco - 30 minuti al giorno</option>
+                                <option value="molto_poco">Molto poco - meno di 30 minuti</option>
+                                <option value="niente">Niente - non ho tempo per me</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Motivazioni Profonde -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>💪 Motivazioni Profonde</h3>
+                        <div class="form-group">
+                            <label for="deepMotivation">Cosa ti spinge veramente verso il cambiamento?</label>
+                            <textarea id="deepMotivation" placeholder="Qual è la motivazione più profonda dietro il tuo desiderio di cambiare?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="frequentEmotion">Identifica un'emozione che provi spesso</label>
+                            <textarea id="frequentEmotion" placeholder="Quale emozione provi più frequentemente durante le tue giornate?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="emotionImpact">Come ti senti quando provi questa emozione?</label>
+                            <textarea id="emotionImpact" placeholder="Descrivi come ti fa stare questa emozione..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="emotionPurpose">A cosa ti serve questa emozione?</label>
+                            <textarea id="emotionPurpose" placeholder="Rifletti: questa emozione ha una funzione nella tua vita?" onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Aspettative -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>🎯 Aspettative e Valori</h3>
+                        <div class="form-group">
+                            <label for="expectations">Cosa ti aspetti da questo percorso?</label>
+                            <textarea id="expectations" placeholder="Quali sono le tue aspettative per questo percorso di coaching?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="futureVision">Come ti vuoi vedere?</label>
+                            <textarea id="futureVision" placeholder="Descrivi come vorresti essere al termine di questo percorso..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeline">In quanto tempo pensi di raggiungerlo?</label>
+                            <select id="timeline" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="1_mese">1 mese</option>
+                                <option value="3_mesi">3 mesi</option>
+                                <option value="6_mesi">6 mesi</option>
+                                <option value="1_anno">1 anno</option>
+                                <option value="piu_1_anno">Più di 1 anno</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="coreValues">Quali sono i tuoi valori più importanti?</label>
+                            <textarea id="coreValues" placeholder="Elenca i 3-5 valori che guidano la tua vita..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">✅ Completa Sessione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <h2 class="completion-title">🎉 Settimana 2 Completata!</h2>
+            <p class="completion-message">
+                Eccellente lavoro! Hai completato il percorso di consapevolezza di sé. Ora conosci meglio le tue motivazioni profonde 
+                e hai una visione più chiara di chi sei veramente. Questa settimana concentrati sui compiti per consolidare 
+                queste importanti scoperte su te stesso.
+            </p>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">📚 I Tuoi Compiti per Questa Settimana</h3>
+                <ul class="homework-list">
+                    <li>✅ Scrivi la tua giornata ideale tra 30 anni</li>
+                    <li>✅ Identifica i tuoi 3 valori fondamentali</li>
+                    <li>✅ Fai un diario delle emozioni per 7 giorni</li>
+                    <li>✅ Pratica 15 minuti di auto-riflessione quotidiana</li>
+                    <li>✅ Elenca 3 momenti di ispirazione della tua vita</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 La settimana 3 si sbloccherà automaticamente tra 7 giorni. 
+                    Usa questo tempo per approfondire la conoscenza di te stesso!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-success" onclick="downloadHomework()">📄 Scarica Compiti PDF</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 3</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 4;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Mi dispiace, ho avuto un problema tecnico. Puoi ripetere?", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                try {
+                    const prompt = `
+                    Sei Andrea Padoan, un life coach esperto che sta conducendo la seconda sessione "Consapevolezza di Sé".
+                    
+                    Contesto: È la settimana 2 di un percorso di 7 settimane. L'obiettivo è aiutare l'utente a sviluppare 
+                    consapevolezza di sé, scoprire le motivazioni profonde e identificare i valori fondamentali.
+                    
+                    Utente dice: "${userMessage}"
+                    
+                    Rispondi come Andrea con:
+                    - Focus sulla consapevolezza e auto-riflessione
+                    - Domande che portano all'introspezione
+                    - Riferimenti alla tua esperienza di trasformazione
+                    - Guida verso la scoperta dei valori personali
+                    - Massimo 2-3 frasi
+                    
+                    Rispondi SOLO con la risposta di Andrea, senza prefissi.
+                    `;
+                    
+                    const response = await window.claude.complete(prompt);
+                    return response.trim();
+                } catch (error) {
+                    console.error('Claude AI error:', error);
+                }
+            }
+            
+            return getPersonalizedFallbackResponse(userMessage);
+        }
+
+        function getPersonalizedFallbackResponse(message) {
+            const responses = [
+                "Interessante riflessione! La consapevolezza di sé è un viaggio, non una destinazione. Cosa hai scoperto di te in questa settimana?",
+                "Perfetto! Vedo che stai iniziando a guardarti dentro. Nella mia trasformazione, ho scoperto che spesso le nostre motivazioni più profonde sono nascoste. Quale emozione provi più spesso?",
+                "Molto bene! L'auto-riflessione è la chiave. Quando ho iniziato a conoscermi davvero, la mia vita è cambiata completamente. Cosa ti spinge veramente verso il cambiamento?",
+                "Eccellente! Stai sviluppando una consapevolezza importante. I nostri valori guidano ogni nostra scelta. Quali sono i valori che senti più importanti per te?",
+                "Grande lavoro! La consapevolezza delle proprie emozioni è fondamentale. Come ti senti quando provi questa emozione che hai descritto?"
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('emozione') || lowerMessage.includes('sentimento')) {
+                return "Le emozioni sono la nostra bussola interna. Anch'io ho dovuto imparare a riconoscerle e accettarle. Come ti fa stare fisicamente questa emozione?";
+            }
+            
+            if (lowerMessage.includes('valore') || lowerMessage.includes('importante')) {
+                return "I valori sono le nostre radici profonde. Nella mia trasformazione, ho scoperto che vivere allineato ai propri valori è la chiave della felicità. Quale valore senti che ti manca nella tua vita attuale?";
+            }
+            
+            if (lowerMessage.includes('motivazione') || lowerMessage.includes('spinge')) {
+                return "Le motivazioni profonde sono il motore del cambiamento. Ho imparato che le motivazioni esterne sono temporanee, quelle interne sono durature. Cosa ti motiva davvero dal profondo?";
+            }
+            
+            if (lowerMessage.includes('consapevolezza') || lowerMessage.includes('consapevole')) {
+                return "La consapevolezza è il primo passo verso la libertà. Quando ho iniziato a osservarmi senza giudizio, tutto è cambiato. Cosa noti di diverso in te ultimamente?";
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            
+            let filled = 0;
+            let total = 0;
+            
+            if (currentSection === 1) {
+                // Count radio buttons
+                const radioGroups = ['q1', 'q2', 'q3', 'q4', 'q5'];
+                radioGroups.forEach(group => {
+                    total++;
+                    const checked = document.querySelector(`input[name="${group}"]:checked`);
+                    if (checked) filled++;
+                });
+            } else {
+                // Count other inputs
+                const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    total++;
+                    if (input.value.trim()) filled++;
+                });
+            }
+            
+            const sectionProgress = (filled / total) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#awarenessForm input, #awarenessForm textarea, #awarenessForm select');
+            formElements.forEach(element => {
+                if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.id] = element.value;
+                }
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week2SessionData', JSON.stringify(sessionData));
+            
+            // Update user progress
+            updateUserProgress();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateUserProgress() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(2)) {
+                    progress.completedWeeks.push(2);
+                    progress.currentWeek = 3;
+                    progress.lastUpdate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+
+        function downloadHomework() {
+            const homeworkContent = `
+                COMPITI SETTIMANA 2 - CONSAPEVOLEZZA DI SÉ
+                
+                Andrea Padoan - Lifestyle Coach
+                
+                Ciao! Ecco i tuoi compiti per approfondire la consapevolezza di te stesso:
+                
+                1. VISIONE FUTURA (30 minuti)
+                   - Scrivi dettagliatamente la tua giornata ideale tra 30 anni
+                   - Dove sei? Con chi? Cosa fai? Come ti senti?
+                   - Sii specifico e concreto
+                
+                2. VALORI FONDAMENTALI (20 minuti)
+                   - Identifica i tuoi 3 valori fondamentali
+                   - Scrivi perché sono importanti per te
+                   - Come li stai vivendo nella tua vita attuale?
+                
+                3. DIARIO DELLE EMOZIONI (10 minuti al giorno)
+                   - Ogni sera annota le emozioni provate durante la giornata
+                   - Cosa le ha scatenate?
+                   - Come hai reagito?
+                
+                4. AUTO-RIFLESSIONE QUOTIDIANA (15 minuti al giorno)
+                   - Momento di silenzio e riflessione
+                   - Cosa ho imparato di me oggi?
+                   - Come posso migliorare domani?
+                
+                5. MOMENTI DI ISPIRAZIONE
+                   - Elenca 3 momenti della tua vita in cui ti sei sentito più ispirato
+                   - Cosa avevano in comune?
+                   - Come puoi ricreare quelle condizioni?
+                
+                RICORDA: La settimana 3 si attiverà automaticamente tra 7 giorni.
+                Usa questo tempo per sviluppare una consapevolezza più profonda di te stesso!
+                
+                Con stima,
+                Andrea 🧠
+            `;
+            
+            const blob = new Blob([homeworkContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Compiti_Settimana_2_Consapevolezza_Andrea_Padoan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Compiti scaricati! Inizia il tuo viaggio di consapevolezza.', 'success');
+        }
+
+        function scheduleNextSession() {
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            
+            const message = `📅 La tua prossima sessione (Settimana 3 - Obiettivi SMART) sarà disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}. Continua il tuo percorso!`;
+            
+            showMessage(message, 'info');
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo scaduto! Puoi comunque completare la sessione con calma.', 'warning');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
