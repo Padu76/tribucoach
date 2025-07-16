@@ -113,7 +113,7 @@
             padding: 0.5rem 1rem;
             border-radius: 8px;
             font-weight: 600;
-            min-width: 200px;
+            min-width: 250px;
         }
 
         .phase-step.active {
@@ -215,7 +215,7 @@
             margin-top: 0.5rem;
         }
 
-        /* Phase 1 - Quick Test */
+        /* Phase 1 - Complete Questionnaire */
         .phase1-section {
             background: white;
             border-radius: 16px;
@@ -289,6 +289,19 @@
             transition: width 0.3s ease;
         }
 
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -320,7 +333,7 @@
 
         .form-group textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
         }
 
         /* Phase 2 - AI Deep Dive */
@@ -335,6 +348,25 @@
 
         .phase2-section.active {
             display: block;
+        }
+
+        .coaching-intro {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .coaching-intro h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .coaching-intro p {
+            color: #ea580c;
+            line-height: 1.6;
         }
 
         .chat-container {
@@ -463,6 +495,16 @@
             background: #94a3b8;
             color: white;
             cursor: not-allowed;
+        }
+
+        /* Navigation Buttons */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
         }
 
         /* Time Warning */
@@ -598,6 +640,11 @@
             .phase-arrow {
                 transform: rotate(90deg);
             }
+            
+            .form-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -624,12 +671,12 @@
         <div class="phase-indicator">
             <div class="phase-step active" id="phaseStep1">
                 <span>📋</span>
-                <span>Fase 1: Test Conoscitivo</span>
+                <span>Fase 1: Questionario Conoscitivo Completo</span>
             </div>
             <div class="phase-arrow">→</div>
             <div class="phase-step inactive" id="phaseStep2">
                 <span>🤖</span>
-                <span>Fase 2: Approfondimento AI</span>
+                <span>Fase 2: Approfondimento Coaching AI</span>
             </div>
         </div>
 
@@ -639,101 +686,195 @@
             <p class="welcome-subtitle">Incontro Conoscitivo - Settimana 1</p>
             
             <div class="process-explanation">
-                <h3 class="process-title">🎯 Come Funziona la Tua Sessione</h3>
+                <h3 class="process-title">🎯 Il Tuo Percorso di Coaching Personalizzato</h3>
                 <div class="process-steps">
                     <div class="process-step">
                         <div class="step-number">1</div>
-                        <div class="step-title">Test Conoscitivo</div>
+                        <div class="step-title">Questionario Conoscitivo Completo</div>
                         <div class="step-description">
-                            Rispondi a poche domande essenziali per darmi una panoramica della tua situazione attuale.
+                            17 domande approfondite per esplorare il tuo passato, presente e futuro. 
+                            Questo mi darà un panorama completo della tua situazione.
                         </div>
-                        <div class="step-duration">⏱️ 3 minuti</div>
+                        <div class="step-duration">⏱️ 10-15 minuti</div>
                     </div>
                     <div class="process-step">
                         <div class="step-number">2</div>
-                        <div class="step-title">Approfondimento AI</div>
+                        <div class="step-title">Approfondimento Coaching AI</div>
                         <div class="step-description">
-                            Chatto con te per approfondire i tuoi obiettivi, il tuo passato e il tuo futuro con domande personalizzate.
+                            Attraverso domande potenti personalizzate, faremo emergere nuove consapevolezze 
+                            e definiremo insieme i tuoi obiettivi autentici.
                         </div>
-                        <div class="step-duration">⏱️ 25-35 minuti</div>
+                        <div class="step-duration">⏱️ 20-25 minuti</div>
                     </div>
                 </div>
             </div>
             
             <button class="btn btn-primary" onclick="startPhase1()">
-                🚀 Inizia la Sessione
+                🚀 Inizia il Tuo Percorso di Conoscenza
             </button>
         </section>
 
-        <!-- Phase 1: Quick Test -->
+        <!-- Phase 1: Complete Questionnaire -->
         <section class="phase1-section" id="phase1Section">
             <div class="phase-header">
                 <div class="phase-icon">📋</div>
                 <div>
-                    <h2 class="phase-title">Fase 1: Test Conoscitivo</h2>
-                    <p class="phase-subtitle">Poche domande per iniziare a conoscerti</p>
+                    <h2 class="phase-title">Fase 1: Questionario Conoscitivo Completo</h2>
+                    <p class="phase-subtitle">Esploriamo insieme la tua storia, il presente e i tuoi obiettivi</p>
                 </div>
             </div>
             
             <div class="form-progress">
-                <div class="form-progress-text">Progresso: <span id="phase1Progress">0%</span></div>
+                <div class="form-progress-text">Progresso: <span id="phase1Progress">0%</span> - Sezione <span id="currentSectionNum">1</span> di 5</div>
                 <div class="form-progress-bar">
                     <div class="form-progress-fill" id="phase1ProgressFill" style="width: 0%"></div>
                 </div>
             </div>
             
             <form id="phase1Form">
-                <div class="form-group">
-                    <label for="currentSituation">Descrivi la tua situazione attuale in poche parole:</label>
-                    <textarea id="currentSituation" placeholder="Es: Manager stressato, mamma sempre di corsa, studente demotivato..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                <!-- Sezione 1: Informazioni Personali -->
+                <div class="form-section" id="section1">
+                    <h3>📝 Informazioni Personali</h3>
+                    <div class="form-group">
+                        <label for="currentSituation">Descrivi la tua situazione attuale in poche parole:</label>
+                        <textarea id="currentSituation" placeholder="Es: Manager stressato, mamma sempre di corsa, studente demotivato..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="dailyLife">Come descriveresti una tua giornata tipo?</label>
+                        <textarea id="dailyLife" placeholder="Raccontami come si svolge una giornata normale..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="lifestyle">Conduci una vita dinamica o sedentaria?</label>
+                        <select id="lifestyle" onchange="updatePhase1Progress(); autoSave()">
+                            <option value="">Seleziona...</option>
+                            <option value="molto_dinamica">Molto dinamica - sempre in movimento</option>
+                            <option value="dinamica">Dinamica - abbastanza attivo</option>
+                            <option value="equilibrata">Equilibrata - momenti attivi e di riposo</option>
+                            <option value="sedentaria">Sedentaria - principalmente davanti al computer</option>
+                            <option value="molto_sedentaria">Molto sedentaria - quasi sempre fermo</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="mainChallenge">Qual è la tua sfida principale in questo momento?</label>
-                    <textarea id="mainChallenge" placeholder="Cosa ti sta ostacolando di più?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+
+                <!-- Sezione 2: Il Tuo Passato -->
+                <div class="form-section" id="section2" style="display: none;">
+                    <h3>🔙 Il Tuo Passato</h3>
+                    <div class="form-group">
+                        <label for="pastDecision">Quando è stata l'ultima volta che hai preso una decisione importante per te?</label>
+                        <textarea id="pastDecision" placeholder="Dimmi dell'ultima decisione che ha cambiato qualcosa nella tua vita..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pastSuccess">Qual è stata la cosa più importante che hai fatto nella tua vita?</label>
+                        <textarea id="pastSuccess" placeholder="Racconta il tuo successo o momento di cui sei più orgoglioso..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pastChallenge">Cosa ti ha fatto e ti fa superare meglio gli ostacoli?</label>
+                        <textarea id="pastChallenge" placeholder="Quali sono le tue strategie per superare le difficoltà?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="mainGoal">Qual è il tuo obiettivo principale?</label>
-                    <textarea id="mainGoal" placeholder="Cosa vuoi raggiungere con questo percorso?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+
+                <!-- Sezione 3: Il Tuo Presente -->
+                <div class="form-section" id="section3" style="display: none;">
+                    <h3>📍 Il Tuo Presente</h3>
+                    <div class="form-group">
+                        <label for="currentMoment">In che momento sei della tua vita?</label>
+                        <textarea id="currentMoment" placeholder="Cosa caratterizza questo periodo della tua vita?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="workSatisfaction">Il lavoro ti soddisfa?</label>
+                        <select id="workSatisfaction" onchange="updatePhase1Progress(); autoSave()">
+                            <option value="">Seleziona...</option>
+                            <option value="molto_soddisfatto">Molto soddisfatto - amo quello che faccio</option>
+                            <option value="soddisfatto">Soddisfatto - nel complesso va bene</option>
+                            <option value="neutro">Neutro - né soddisfatto né insoddisfatto</option>
+                            <option value="insoddisfatto">Insoddisfatto - non mi piace quello che faccio</option>
+                            <option value="molto_insoddisfatto">Molto insoddisfatto - odio il mio lavoro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="selfCare">Ti concedi tempo sufficiente per lo svago e la cura di te?</label>
+                        <select id="selfCare" onchange="updatePhase1Progress(); autoSave()">
+                            <option value="">Seleziona...</option>
+                            <option value="sempre">Sempre - ho un buon equilibrio</option>
+                            <option value="spesso">Spesso - riesco a ritagliarmi del tempo</option>
+                            <option value="a_volte">A volte - dipende dal periodo</option>
+                            <option value="raramente">Raramente - sono sempre impegnato</option>
+                            <option value="mai">Mai - non ho tempo per me</option>
+                        </select>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="lifestyle">Come descriveresti il tuo stile di vita?</label>
-                    <select id="lifestyle" onchange="updatePhase1Progress(); autoSave()">
-                        <option value="">Seleziona...</option>
-                        <option value="molto_dinamico">Molto dinamico - sempre in movimento</option>
-                        <option value="equilibrato">Equilibrato - momenti attivi e di riposo</option>
-                        <option value="sedentario">Sedentario - principalmente statico</option>
-                        <option value="caotico">Caotico - senza routine fisse</option>
-                    </select>
+
+                <!-- Sezione 4: Il Tuo Futuro -->
+                <div class="form-section" id="section4" style="display: none;">
+                    <h3>🚀 Il Tuo Futuro</h3>
+                    <div class="form-group">
+                        <label for="changeReason">Quando ti sei reso conto di voler cambiare? Cosa è scattato?</label>
+                        <textarea id="changeReason" placeholder="Racconta il momento in cui hai deciso che dovevi cambiare qualcosa..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="dreamGoal">Qual è il tuo obiettivo da sogno?</label>
+                        <textarea id="dreamGoal" placeholder="Se potessi realizzare qualsiasi cosa, cosa vorresti raggiungere?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="yearGoal">Quale obiettivo ti puoi dare per quest'anno?</label>
+                        <textarea id="yearGoal" placeholder="Un obiettivo realistico ma sfidante per i prossimi 12 mesi..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="monthGoal">Obiettivo entro il prossimo mese:</label>
+                        <textarea id="monthGoal" placeholder="Cosa vuoi raggiungere nei prossimi 30 giorni?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="motivationLevel">Come ti senti motivato in questo momento?</label>
-                    <select id="motivationLevel" onchange="updatePhase1Progress(); autoSave()">
-                        <option value="">Seleziona...</option>
-                        <option value="molto_motivato">Molto motivato - pronto a tutto</option>
-                        <option value="motivato">Motivato - voglio cambiare</option>
-                        <option value="incerto">Incerto - non so da dove iniziare</option>
-                        <option value="demotivato">Demotivato - fatico a reagire</option>
-                    </select>
+
+                <!-- Sezione 5: Le Tue Motivazioni -->
+                <div class="form-section" id="section5" style="display: none;">
+                    <h3>💪 Le Tue Motivazioni</h3>
+                    <div class="form-group">
+                        <label for="mainDesire">Qual è il desiderio principale che ti spinge?</label>
+                        <textarea id="mainDesire" placeholder="Cosa vuoi davvero raggiungere con questo percorso?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mainPain">Cosa ti fa maggiormente soffrire della tua situazione attuale?</label>
+                        <textarea id="mainPain" placeholder="Cosa non sopporti più della tua vita attuale?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="mainJoy">Cosa ti fa maggiormente gioire?</label>
+                        <textarea id="mainJoy" placeholder="Cosa ti rende davvero felice?" onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="feelGood">Cosa ti fa sentire bene?</label>
+                        <textarea id="feelGood" placeholder="Attività, momenti, situazioni che ti danno energia positiva..." onchange="updatePhase1Progress(); autoSave()"></textarea>
+                    </div>
                 </div>
-                
-                <button type="button" class="btn btn-success" id="completePhase1Btn" onclick="completePhase1()" disabled>
-                    ✅ Completa Test e Passa alla Fase 2
-                </button>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                    <div>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completePhase1Btn" onclick="completePhase1()" style="display: none;">✅ Completa e Passa al Coaching AI</button>
+                    </div>
+                </div>
             </form>
         </section>
 
-        <!-- Phase 2: AI Deep Dive -->
+        <!-- Phase 2: AI Coaching Deep Dive -->
         <section class="phase2-section" id="phase2Section">
             <div class="phase-header">
                 <div class="phase-icon">🤖</div>
                 <div>
-                    <h2 class="phase-title">Fase 2: Approfondimento con Andrea AI</h2>
-                    <p class="phase-subtitle">Ora approfondiamo insieme la tua storia e i tuoi obiettivi</p>
+                    <h2 class="phase-title">Fase 2: Approfondimento Coaching con Andrea AI</h2>
+                    <p class="phase-subtitle">Attraverso domande potenti, faremo emergere nuove consapevolezze</p>
                 </div>
+            </div>
+            
+            <div class="coaching-intro">
+                <h3>🎯 Il Mio Approccio di Coaching con Te</h3>
+                <p>
+                    Ho analizzato le tue 17 risposte e ora voglio accompagnarti in un viaggio di scoperta. 
+                    Attraverso <strong>domande potenti</strong> ti aiuterò a guardare dentro di te, 
+                    far emergere il tuo <strong>potenziale nascosto</strong> e definire chiaramente 
+                    il tuo <strong>stato desiderato</strong>. Non ci sono risposte giuste o sbagliate, 
+                    solo la tua autentica verità.
+                </p>
             </div>
             
             <div class="time-warning" id="timeWarning">
@@ -746,44 +887,36 @@
             
             <div class="chat-status">
                 <div class="status-dot"></div>
-                <span>Andrea è online e pronto ad approfondire con te</span>
+                <span>Andrea è pronto per il coaching profondo con te</span>
             </div>
             
             <div class="chat-container" id="chatContainer">
-                <div class="message coach">
-                    <div class="message-content">
-                        Perfetto! Ho letto le tue risposte e sono molto interessanti. Ora voglio approfondire alcuni aspetti per conoscerti meglio e aiutarti al meglio. Iniziamo dalla tua situazione attuale: quando hai capito che era il momento di cambiare qualcosa? 🤔
-                    </div>
-                    <div class="message-time">Proprio ora</div>
-                </div>
+                <!-- Messages will be added here -->
             </div>
             
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Scrivi la tua risposta ad Andrea...">
+                <input type="text" id="chatInput" placeholder="Prenditi il tempo che serve per rispondere ad Andrea...">
                 <button class="btn btn-primary" onclick="sendChatMessage()">Invia</button>
             </div>
         </section>
 
         <!-- Completion Section -->
         <section class="completion-section" id="completionSection">
-            <h2 class="completion-title">🎉 Sessione Completata!</h2>
+            <h2 class="completion-title">🎉 Sessione di Coaching Completata!</h2>
             <p class="completion-message">
-                Fantastico! Abbiamo raccolto tutte le informazioni necessarie per personalizzare il tuo percorso. 
-                Ecco i tuoi compiti personalizzati per questa settimana.
+                Che viaggio incredibile abbiamo fatto insieme! Attraverso il questionario completo e il nostro coaching approfondito, 
+                abbiamo fatto emergere aspetti importanti della tua storia e definito chiaramente i tuoi obiettivi autentici.
             </p>
             
             <div class="homework-section">
-                <h3 class="homework-title">📚 I Tuoi Compiti Personalizzati</h3>
+                <h3 class="homework-title">📚 I Tuoi Compiti Personalizzati di Coaching</h3>
                 <ul class="homework-list" id="personalizedHomework">
-                    <li>✅ Rifletti sulla tua storia e sui momenti chiave che abbiamo discusso</li>
-                    <li>✅ Dedica 10 minuti al giorno alla riflessione sui tuoi obiettivi</li>
-                    <li>✅ Osserva i tuoi pattern quotidiani</li>
-                    <li>✅ Pratica una piccola azione verso il tuo obiettivo principale</li>
+                    <!-- Will be generated based on coaching session -->
                 </ul>
             </div>
             
             <div class="completion-actions">
-                <button class="btn btn-success" onclick="downloadPersonalizedHomework()">📄 Scarica Compiti Personalizzati</button>
+                <button class="btn btn-success" onclick="downloadPersonalizedHomework()">📄 Scarica Piano Personalizzato</button>
                 <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
                 <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 2</button>
             </div>
@@ -799,12 +932,34 @@
         let sessionDuration = 40 * 60 * 1000; // 40 minutes
         let timerInterval;
         let currentPhase = 'welcome';
+        let currentSection = 1;
+        let totalSections = 5;
         let phase1Data = {};
         let chatHistory = [];
         let andreaAICoach = null;
         let userProfile = null;
         let sessionExtended = false;
         let autoSaveInterval;
+        let coachingInsights = [];
+
+        // Coaching principles for AI
+        const COACHING_PRINCIPLES = {
+            objectives: [
+                "Comprendere lo stato presente e lo stato desiderato",
+                "Fare chiarezza e connettere con autenticità",
+                "Utilizzare intelligenza emotiva ed intuitiva",
+                "Far emergere nuove consapevolezze",
+                "Definire obiettivi autentici",
+                "Tirare fuori la migliore versione di sé"
+            ],
+            methods: [
+                "Domande potenti che lasciano spazio e tempo",
+                "Ascolto attivo privo di giudizio",
+                "Ricerca del potenziale inespresso",
+                "Sviluppo fiducia reciproca",
+                "Miglioramento performance attraverso azioni concrete"
+            ]
+        };
 
         // Initialize session
         document.addEventListener('DOMContentLoaded', function() {
@@ -871,6 +1026,11 @@
                         });
                     }
                     
+                    // Restore current section
+                    if (sessionData.currentSection) {
+                        currentSection = sessionData.currentSection;
+                    }
+                    
                     // Restore chat history
                     if (sessionData.chatHistory) {
                         chatHistory = sessionData.chatHistory;
@@ -883,6 +1043,7 @@
                         // Show the correct phase
                         if (currentPhase === 'phase1') {
                             startPhase1();
+                            showSection(currentSection);
                         } else if (currentPhase === 'phase2') {
                             startPhase2();
                             restoreChatHistory();
@@ -925,22 +1086,15 @@
             try {
                 const sessionData = {
                     currentPhase: currentPhase,
+                    currentSection: currentSection,
                     phase1Data: phase1Data,
                     chatHistory: chatHistory,
+                    coachingInsights: coachingInsights,
                     sessionStartTime: sessionStartTime,
                     lastSaved: new Date().toISOString()
                 };
                 
                 localStorage.setItem('week1SessionInProgress', JSON.stringify(sessionData));
-                
-                // Visual feedback
-                const saveIndicator = document.getElementById('saveIndicator');
-                if (saveIndicator) {
-                    saveIndicator.style.opacity = '1';
-                    setTimeout(() => {
-                        saveIndicator.style.opacity = '0';
-                    }, 1000);
-                }
             } catch (error) {
                 console.error('❌ Error auto-saving:', error);
             }
@@ -957,8 +1111,54 @@
             document.getElementById('phaseStep1').className = 'phase-step active';
             document.getElementById('phaseStep2').className = 'phase-step inactive';
             
+            showSection(1);
             updatePhase1Progress();
             autoSave();
+        }
+
+        function showSection(sectionNum) {
+            // Hide all sections
+            for (let i = 1; i <= totalSections; i++) {
+                document.getElementById(`section${i}`).style.display = 'none';
+            }
+            
+            // Show current section
+            document.getElementById(`section${sectionNum}`).style.display = 'block';
+            currentSection = sectionNum;
+            
+            // Update section indicator
+            document.getElementById('currentSectionNum').textContent = sectionNum;
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const completeBtn = document.getElementById('completePhase1Btn');
+            
+            prevBtn.style.display = sectionNum === 1 ? 'none' : 'inline-flex';
+            
+            if (sectionNum === totalSections) {
+                nextBtn.style.display = 'none';
+                completeBtn.style.display = 'inline-flex';
+            } else {
+                nextBtn.style.display = 'inline-flex';
+                completeBtn.style.display = 'none';
+            }
+            
+            updatePhase1Progress();
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                showSection(currentSection + 1);
+                autoSave();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                showSection(currentSection - 1);
+                autoSave();
+            }
         }
 
         function updatePhase1Progress() {
@@ -977,14 +1177,19 @@
             document.getElementById('phase1Progress').textContent = `${Math.round(progress)}%`;
             document.getElementById('phase1ProgressFill').style.width = `${progress}%`;
             
-            // Enable/disable complete button
-            const completeBtn = document.getElementById('completePhase1Btn');
-            if (progress === 100) {
-                completeBtn.disabled = false;
-                completeBtn.className = 'btn btn-success';
-            } else {
-                completeBtn.disabled = true;
-                completeBtn.className = 'btn btn-disabled';
+            // Enable/disable complete button if on last section
+            if (currentSection === totalSections) {
+                const completeBtn = document.getElementById('completePhase1Btn');
+                const currentSectionInputs = document.getElementById(`section${currentSection}`).querySelectorAll('input, textarea, select');
+                const currentFilled = Array.from(currentSectionInputs).filter(input => input.value.trim()).length;
+                
+                if (currentFilled === currentSectionInputs.length) {
+                    completeBtn.disabled = false;
+                    completeBtn.className = 'btn btn-success';
+                } else {
+                    completeBtn.disabled = true;
+                    completeBtn.className = 'btn btn-disabled';
+                }
             }
         }
 
@@ -1006,33 +1211,45 @@
             // Update phase indicator
             document.getElementById('phaseStep2').className = 'phase-step active';
             
-            // Generate first AI question based on phase 1 data
-            generateFirstAIQuestion();
+            // Generate first coaching question based on complete phase 1 data
+            generateFirstCoachingQuestion();
             
             autoSave();
         }
 
-        function generateFirstAIQuestion() {
+        function generateFirstCoachingQuestion() {
             if (chatHistory.length === 0) {
-                // Generate personalized first question based on phase 1 data
-                let firstQuestion = `Perfetto! Ho letto le tue risposte e sono molto interessanti. `;
-                
-                if (phase1Data.currentSituation) {
-                    firstQuestion += `Vedo che ti descrivi come "${phase1Data.currentSituation}". `;
-                }
-                
-                if (phase1Data.mainChallenge) {
-                    firstQuestion += `La tua sfida principale è "${phase1Data.mainChallenge}". `;
-                }
-                
-                firstQuestion += `Dimmi, quando hai capito per la prima volta che era il momento di cambiare qualcosa nella tua vita? C'è stato un momento specifico o è stata una realizzazione graduale? 🤔`;
-                
-                // Add first AI message
+                // Analyze the 17 responses and generate a powerful coaching question
+                const firstQuestion = generatePowerfulOpeningQuestion();
                 addChatMessage(firstQuestion, 'coach');
             } else {
                 // Restore existing chat if resuming
                 restoreChatHistory();
             }
+        }
+
+        function generatePowerfulOpeningQuestion() {
+            // Analyze key themes from the 17 responses
+            let question = `Ho letto tutte le tue 17 risposte con grande attenzione, e c'è qualcosa di molto autentico che emerge dalla tua storia. `;
+            
+            // Focus on the transformation moment
+            if (phase1Data.changeReason) {
+                question += `Mi ha colpito particolarmente quando hai scritto che ti sei reso conto di voler cambiare: "${phase1Data.changeReason}". `;
+            }
+            
+            // Connect present state with desired future
+            if (phase1Data.currentSituation && phase1Data.dreamGoal) {
+                question += `Vedo che oggi ti descrivi come "${phase1Data.currentSituation}" ma il tuo obiettivo da sogno è "${phase1Data.dreamGoal}". `;
+            }
+            
+            // Ask a powerful coaching question
+            question += `\n\nOra, voglio farti una domanda potente e ti chiedo di prendere tutto il tempo che serve per rispondere dal profondo del tuo cuore: 
+            
+**Se tra un anno dovessi guardare indietro a questo momento, cosa vorresti essere riuscito a scoprire di te stesso che oggi ancora non conosci?** 🤔
+            
+Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
+            
+            return question;
         }
 
         function restoreChatHistory() {
@@ -1062,16 +1279,16 @@
             addChatMessage(message, 'user');
             input.value = '';
             
-            // Get AI response
+            // Get AI coaching response
             try {
-                const aiResponse = await getAIResponse(message);
+                const coachingResponse = await getCoachingResponse(message);
                 setTimeout(() => {
-                    addChatMessage(aiResponse, 'coach');
-                }, 1000);
+                    addChatMessage(coachingResponse, 'coach');
+                }, 1500); // Slightly longer delay for thoughtful coaching
             } catch (error) {
-                console.error('❌ Error getting AI response:', error);
+                console.error('❌ Error getting coaching response:', error);
                 setTimeout(() => {
-                    addChatMessage("Scusa, ho avuto un problema tecnico. Puoi ripetere?", 'coach');
+                    addChatMessage("Dammi un momento per riflettere sulla tua risposta... Puoi ripetere?", 'coach');
                 }, 1000);
             }
         }
@@ -1094,18 +1311,26 @@
             
             // Store in history
             chatHistory.push({ sender, content, time });
+            
+            // Extract insights if it's a user message
+            if (sender === 'user') {
+                extractCoachingInsights(content);
+            }
+            
             autoSave();
         }
 
-        async function getAIResponse(userMessage) {
-            // Build context with phase 1 data and chat history
-            const context = {
+        async function getCoachingResponse(userMessage) {
+            // Build comprehensive context for coaching
+            const coachingContext = {
                 phase1Data: phase1Data,
                 chatHistory: chatHistory,
-                userProfile: userProfile
+                coachingInsights: coachingInsights,
+                userProfile: userProfile,
+                coachingPrinciples: COACHING_PRINCIPLES
             };
             
-            // Try Andrea AI first
+            // Try Andrea AI with coaching context
             if (andreaAICoach) {
                 try {
                     const response = await andreaAICoach.sendMessage(userMessage, 1);
@@ -1113,44 +1338,109 @@
                         return response.response;
                     }
                 } catch (error) {
-                    console.error('❌ Andrea AI error:', error);
+                    console.error('❌ Andrea AI coaching error:', error);
                 }
             }
             
-            // Fallback to contextual response
-            return generateContextualResponse(userMessage, context);
+            // Fallback to sophisticated coaching response
+            return generateCoachingResponse(userMessage, coachingContext);
         }
 
-        function generateContextualResponse(userMessage, context) {
-            // Intelligent responses based on context
+        function generateCoachingResponse(userMessage, context) {
+            // Sophisticated coaching responses based on principles
+            const messageCount = context.chatHistory.filter(m => m.sender === 'user').length;
+            
+            // Different coaching approaches based on conversation depth
+            if (messageCount <= 2) {
+                // Early exploration - dig deeper into emotions and motivations
+                return generateExplorationResponse(userMessage, context);
+            } else if (messageCount <= 4) {
+                // Middle - challenge assumptions and explore possibilities
+                return generateChallengeResponse(userMessage, context);
+            } else {
+                // Later - action orientation and commitment
+                return generateActionResponse(userMessage, context);
+            }
+        }
+
+        function generateExplorationResponse(userMessage, context) {
             const responses = [
-                "Interessante! Capisco perfettamente. Quando ho iniziato il mio percorso di cambiamento, anch'io mi sono sentito così. Dimmi, cosa pensi che ti abbia trattenuto finora dal fare questo passo?",
-                "Ti capisco benissimo. La tua situazione mi ricorda molto la mia esperienza passata. Secondo te, qual è stata la goccia che ha fatto traboccare il vaso?",
-                "Perfetto, stiamo andando nella direzione giusta. Quello che mi dici è molto importante. Come ti immagini la tua vita tra un anno se riuscissimo a superare insieme questa sfida?",
-                "Molto bene! Vedo che stai riflettendo profondamente. Questo è esattamente quello che serve. Parlami del tuo supporto: hai persone intorno a te che credono in questo cambiamento?",
-                "Ottimo insight! La consapevolezza è il primo passo. Ora dimmi, se dovessi scegliere una sola cosa da cambiare per prima, quale sarebbe e perché?"
+                `Quello che condividi è molto profondo. Sento una grande autenticità nelle tue parole. Quando pensi a questa trasformazione che desideri, cosa senti nel corpo? C'è eccitazione, paura, o qualcos'altro?`,
+                
+                `Ti ringrazio per la tua onestà. Quello che mi dici risuona con la mia esperienza di quando ho iniziato il mio percorso. Se dovessi immaginare la persona che vuoi diventare, cosa farebbe diversamente domani mattina appena sveglio?`,
+                
+                `Interessante... Sento che c'è qualcosa di molto importante in quello che stai dicendo. Se questa parte di te che vuole cambiare potesse parlare, cosa ti direbbe? Che messaggio ha per te?`,
+                
+                `La tua risposta tocca qualcosa di molto vero. Nel mio lavoro ho imparato che spesso le risposte più autentiche arrivano quando ci permettiamo di sentire davvero. Cosa ti sta impedendo di essere già la persona che vuoi diventare?`
             ];
             
-            // Simple keyword-based personalization
-            const lowerMessage = userMessage.toLowerCase();
-            
-            if (lowerMessage.includes('stress') || lowerMessage.includes('pressione')) {
-                return `Ti capisco perfettamente! Lo stress è stato il mio compagno per 12 anni. Ho scoperto che spesso nasce dal tentativo di controllare tutto. Quando senti di più questa pressione durante la giornata?`;
-            }
-            
-            if (lowerMessage.includes('lavoro') || lowerMessage.includes('ufficio')) {
-                return `Ah, il lavoro... quanto ti capisco! Anch'io ho vissuto anni di stress lavorativo. La buona notizia è che si può trovare un equilibrio. Cosa ti piacerebbe che fosse diverso nel tuo rapporto con il lavoro?`;
-            }
-            
-            if (lowerMessage.includes('famiglia') || lowerMessage.includes('figli')) {
-                return `La famiglia è fondamentale, ma può anche essere fonte di stress. Ho imparato che prendersi cura di sé è il miglior regalo per i nostri cari. Come vorresti gestire meglio questo equilibrio?`;
-            }
-            
-            if (lowerMessage.includes('tempo') || lowerMessage.includes('mai tempo')) {
-                return `La gestione del tempo è una sfida comune! Anch'io mi sentivo sempre in corsa. Dimmi, se potessi recuperare 2 ore al giorno, cosa faresti con quel tempo?`;
+            // Personalize based on phase 1 data
+            if (context.phase1Data.mainPain) {
+                return `Quello che condividi risuona profondamente con me. Quando hai scritto che ti fa soffrire "${context.phase1Data.mainPain}", ho sentito una grande verità. Ora, ascoltando le tue parole, mi chiedo: se potessi trasformare questa sofferenza in una forza, come sarebbe? Che superpotere nasconde dentro di sé?`;
             }
             
             return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateChallengeResponse(userMessage, context) {
+            const responses = [
+                `Le tue parole mi fanno riflettere... Sento che hai una consapevolezza molto profonda. Ora voglio farti una domanda che potrebbe sembrare provocatoria: cosa accadrebbe se scoprissi che tutto quello che credi di non saper fare, in realtà lo sai già fare?`,
+                
+                `Quello che dici è molto potente. Mi viene in mente una cosa: spesso ciò che pensiamo sia il nostro limite, in realtà è la porta verso la nostra trasformazione. Se questa situazione che vivi fosse perfetta per insegnarti esattamente quello che devi imparare, cosa ti starebbe insegnando?`,
+                
+                `Sento una forza incredibile nelle tue parole, anche se forse tu non te ne rendi conto. Facciamo un esperimento mentale: se fossi già la versione migliore di te stesso, come vedresti la situazione che stai vivendo ora?`,
+                
+                `Le tue risposte mi mostrano una persona che ha dentro di sé risorse enormi. Mi chiedo: se dovessi dare un consiglio al te stesso di un anno fa, cosa gli diresti? E cosa pensi che il te stesso di un anno nel futuro direbbe al te di oggi?`
+            ];
+            
+            // Challenge based on specific data
+            if (context.phase1Data.pastSuccess) {
+                return `Quando mi hai raccontato del tuo successo passato - "${context.phase1Data.pastSuccess}" - ho visto una persona capace di grandi cose. Ora mi chiedo: quella stessa forza che ti ha permesso di ottenere quel risultato, dov'è ora? È ancora dentro di te, vero? Come potresti riattivarla per questa nuova sfida?`;
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function generateActionResponse(userMessage, context) {
+            const responses = [
+                `Sento che stiamo arrivando al cuore di qualcosa di molto importante. Le nostre parole stanno creando chiarezza. Ora voglio spostarci verso l'azione: se dovessi fare UNA cosa domani che ti avvicini a questa versione migliore di te stesso, cosa sarebbe? Qualcosa di piccolo ma significativo.`,
+                
+                `La nostra conversazione mi sta mostrando un potenziale incredibile in te. Ora è il momento di trasformare questa consapevolezza in movimento. Quale piccolo esperimento potresti fare questa settimana per testare questa nuova versione di te stesso?`,
+                
+                `Quello che stiamo scoprendo insieme è oro puro. Sento che sei pronto per il prossimo passo. Se dovessi impegnarti con me stesso qui e ora su UNA cosa che farai diversamente da oggi, cosa sarebbe? Qualcosa che onori questa nuova consapevolezza.`,
+                
+                `Le tue risposte mi stanno confermando quello che pensavo: hai tutto dentro di te per creare questo cambiamento. Ora la domanda è: sei pronto a fidarti di te stesso? Qual è il primo piccolo passo coraggioso che puoi fare?`
+            ];
+            
+            // Action-oriented based on goals
+            if (context.phase1Data.monthGoal) {
+                return `Tutto quello che abbiamo esplorato insieme sta prendendo forma. Ricordi che hai scritto come obiettivo del mese: "${context.phase1Data.monthGoal}". Ora, con tutto quello che abbiamo scoperto, come vedi questo obiettivo? È ancora autentico per te? E se sì, quale piccola azione di oggi può avvicinarti a questo risultato?`;
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function extractCoachingInsights(userMessage) {
+            // Extract key insights from user responses for homework personalization
+            const insights = [];
+            
+            if (userMessage.toLowerCase().includes('paura') || userMessage.toLowerCase().includes('timore')) {
+                insights.push('Lavoro su paure e limitazioni');
+            }
+            
+            if (userMessage.toLowerCase().includes('energia') || userMessage.toLowerCase().includes('forza')) {
+                insights.push('Focus su energie e risorse personali');
+            }
+            
+            if (userMessage.toLowerCase().includes('cambiare') || userMessage.toLowerCase().includes('trasformare')) {
+                insights.push('Motivazione al cambiamento forte');
+            }
+            
+            if (userMessage.toLowerCase().includes('famiglia') || userMessage.toLowerCase().includes('relazioni')) {
+                insights.push('Importanza relazioni e supporto sociale');
+            }
+            
+            coachingInsights.push(...insights);
         }
 
         function show30MinuteWarning() {
@@ -1160,7 +1450,7 @@
         function continueSession() {
             sessionExtended = true;
             document.getElementById('timeWarning').classList.remove('active');
-            showMessage('✅ Sessione estesa di 10 minuti. Continuiamo!', 'success');
+            showMessage('✅ Sessione estesa di 10 minuti. Il nostro coaching continua!', 'success');
         }
 
         function endSession() {
@@ -1174,6 +1464,7 @@
             const finalSessionData = {
                 phase1Data: phase1Data,
                 chatHistory: chatHistory,
+                coachingInsights: coachingInsights,
                 completedAt: new Date().toISOString(),
                 sessionDuration: Date.now() - sessionStartTime,
                 userProfile: userProfile
@@ -1189,32 +1480,48 @@
             document.getElementById('phase2Section').classList.remove('active');
             document.getElementById('completionSection').classList.add('active');
             
-            // Generate personalized homework
-            generatePersonalizedHomework();
+            // Generate personalized coaching homework
+            generateCoachingHomework();
             
             document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function generatePersonalizedHomework() {
+        function generateCoachingHomework() {
             const homeworkList = document.getElementById('personalizedHomework');
             let homework = [];
             
-            // Base homework
-            homework.push("✅ Rifletti sulla tua storia e sui momenti chiave che abbiamo discusso");
-            homework.push("✅ Dedica 10 minuti al giorno alla riflessione sui tuoi obiettivi");
+            // Base coaching homework
+            homework.push("✅ Pratica 10 minuti di riflessione quotidiana sulle consapevolezze emerse");
+            homework.push("✅ Rileggi le tue risposte del questionario e nota cosa è cambiato");
             
-            // Personalized based on phase 1 data
-            if (phase1Data.mainChallenge) {
-                homework.push(`✅ Osserva quando si manifesta di più "${phase1Data.mainChallenge}" durante la giornata`);
+            // Personalized based on phase 1 key data
+            if (phase1Data.dreamGoal) {
+                homework.push(`✅ Visualizza ogni mattina il tuo obiettivo da sogno: "${phase1Data.dreamGoal}"`);
             }
             
-            if (phase1Data.mainGoal) {
-                homework.push(`✅ Fai una piccola azione quotidiana verso "${phase1Data.mainGoal}"`);
+            if (phase1Data.pastSuccess) {
+                homework.push(`✅ Identifica 3 qualità che ti hanno permesso di ottenere: "${phase1Data.pastSuccess}"`);
             }
             
-            if (phase1Data.motivationLevel === 'demotivato') {
-                homework.push("✅ Identifica 3 cose che ti danno energia e praticane una ogni giorno");
+            if (phase1Data.mainPain) {
+                homework.push(`✅ Trasforma "${phase1Data.mainPain}" in una domanda potente: "Come posso...?"`);
             }
+            
+            // Based on coaching insights
+            if (coachingInsights.includes('Lavoro su paure e limitazioni')) {
+                homework.push("✅ Scrivi una lettera di incoraggiamento a te stesso per quando hai paura");
+            }
+            
+            if (coachingInsights.includes('Focus su energie e risorse personali')) {
+                homework.push("✅ Crea una 'mappa delle tue energie' e identifica cosa le alimenta");
+            }
+            
+            if (coachingInsights.includes('Motivazione al cambiamento forte')) {
+                homework.push("✅ Fai una piccola azione coraggiosa ogni giorno verso il cambiamento");
+            }
+            
+            // Always add
+            homework.push("✅ Tieni un diario delle scoperte: cosa impari ogni giorno su di te?");
             
             // Update homework list
             homeworkList.innerHTML = homework.map(item => `<li>${item}</li>`).join('');
@@ -1239,57 +1546,95 @@
 
         function downloadPersonalizedHomework() {
             const homeworkContent = `
-                COMPITI PERSONALIZZATI SETTIMANA 1
+                PIANO PERSONALIZZATO DI COACHING - SETTIMANA 1
                 
                 Andrea Padoan - Lifestyle Coach
                 
-                Ciao ${userProfile?.name || 'Amico/a'}!
+                Caro/a ${userProfile?.name || 'Amico/a'},
                 
-                Ecco i tuoi compiti personalizzati basati sulla nostra sessione:
+                Che sessione straordinaria abbiamo vissuto insieme! 
+                Attraverso le tue 17 risposte approfondite e il nostro coaching,
+                sono emersi aspetti autentici e potenti della tua storia.
+                
+                === LA TUA SITUAZIONE ATTUALE ===
+                Situazione: "${phase1Data.currentSituation || 'In fase di riflessione'}"
+                Sfida principale: "${phase1Data.mainPain || 'Da definire insieme'}"
+                Obiettivo da sogno: "${phase1Data.dreamGoal || 'In fase di scoperta'}"
+                
+                === LE TUE RISORSE ===
+                Successo passato: "${phase1Data.pastSuccess || 'Molte risorse da scoprire'}"
+                Strategie per superare ostacoli: "${phase1Data.pastChallenge || 'In via di sviluppo'}"
+                Fonte di gioia: "${phase1Data.mainJoy || 'Da esplorare insieme'}"
+                
+                === COMPITI PERSONALIZZATI ===
                 
                 1. RIFLESSIONE QUOTIDIANA (10 minuti)
-                   - Rifletti sui momenti chiave della nostra conversazione
-                   - Cosa hai scoperto di nuovo su te stesso?
-                   
-                2. OBIETTIVO PRINCIPALE
-                   - Fai una piccola azione quotidiana verso: "${phase1Data.mainGoal || 'il tuo obiettivo'}"
-                   - Anche 5 minuti al giorno fanno la differenza
-                   
-                3. SFIDA PRINCIPALE
-                   - Osserva quando si manifesta: "${phase1Data.mainChallenge || 'la tua sfida'}"
-                   - Nota i pattern e i trigger
-                   
-                4. SITUAZIONE ATTUALE
-                   - Rifletti su come descriveresti oggi la tua situazione
-                   - Confronta con: "${phase1Data.currentSituation || 'la tua situazione attuale'}"
-                   
-                5. ENERGIA E MOTIVAZIONE
-                   - Identifica 3 momenti/attività che ti danno energia
-                   - Praticane almeno una ogni giorno
+                   - Rileggi le consapevolezze emerse dal nostro coaching
+                   - Domandati: "Cosa sto imparando oggi su me stesso?"
+                   - Annota le tue scoperte in un diario
                 
-                La settimana 2 si sbloccherà tra 7 giorni.
-                Usa questo tempo per mettere in pratica quello che abbiamo scoperto!
+                2. CONNESSIONE CON IL TUO OBIETTIVO DA SOGNO
+                   - Visualizza ogni mattina: "${phase1Data.dreamGoal || 'il tuo obiettivo autentico'}"
+                   - Senti nel corpo cosa provi quando lo immagini realizzato
+                   - Chiedi a te stesso: "Cosa posso fare oggi per avvicinarmi?"
                 
-                Un abbraccio,
+                3. TRASFORMAZIONE DELLE SFIDE IN RISORSE
+                   - Lavora su: "${phase1Data.mainPain || 'le tue sfide principali'}"
+                   - Trasforma in domanda potente: "Come posso trasformare questo in forza?"
+                   - Identifica una piccola azione quotidiana di miglioramento
+                
+                4. ATTIVAZIONE DELLE TUE RISORSE PASSATE
+                   - Rifletti sul tuo successo: "${phase1Data.pastSuccess || 'i tuoi successi passati'}"
+                   - Identifica 3 qualità che ti hanno permesso quel risultato
+                   - Come puoi riattivare quelle qualità oggi?
+                
+                5. MOMENTO DI GIOIA QUOTIDIANO
+                   - Connettiti con: "${phase1Data.mainJoy || 'ciò che ti rende felice'}"
+                   - Dedica almeno 10 minuti al giorno a questa fonte di energia
+                   - Osserva come influenza il resto della tua giornata
+                
+                === INSIGHTS DAL NOSTRO COACHING ===
+                ${coachingInsights.length > 0 ? coachingInsights.map(insight => `• ${insight}`).join('\n                ') : '• Ricorda le consapevolezze emerse dalla nostra conversazione'}
+                
+                === DOMANDE POTENTI PER LA SETTIMANA ===
+                • Se fossi già la migliore versione di me stesso, come agirei oggi?
+                • Cosa mi sta insegnando questa situazione che sto vivendo?
+                • Quale piccolo passo coraggioso posso fare oggi?
+                • Di cosa ho bisogno per fidarmi di più di me stesso?
+                
+                === PROSSIMI PASSI ===
+                La Settimana 2 si sbloccherà tra 7 giorni.
+                Usa questo tempo per integrare le consapevolezze emerse.
+                Ricorda: il cambiamento autentico inizia da piccoli passi quotidiani.
+                
+                === MESSAGGIO PERSONALE ===
+                ${userProfile?.name || 'Amico/a'}, ho sentito una grande autenticità nelle tue parole.
+                Il percorso che hai iniziato oggi è quello verso la migliore versione di te stesso.
+                Abbi fiducia nel processo e ricorda: hai già dentro di te tutto quello che serve.
+                
+                Il tuo coach,
                 Andrea 🚀
+                
+                P.S. Se durante la settimana emergono riflessioni importanti,
+                annotale nel tuo diario. Le riprenderemo nella Settimana 2.
             `;
             
             const blob = new Blob([homeworkContent], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Compiti_Personalizzati_Settimana_1_${userProfile?.name || 'Utente'}.txt`;
+            a.download = `Piano_Coaching_Settimana_1_${userProfile?.name || 'Utente'}.txt`;
             a.click();
             URL.revokeObjectURL(url);
             
-            showMessage('📄 Compiti personalizzati scaricati!', 'success');
+            showMessage('📄 Piano di coaching personalizzato scaricato!', 'success');
         }
 
         function scheduleNextSession() {
             const nextWeekDate = new Date();
             nextWeekDate.setDate(nextWeekDate.getDate() + 7);
             
-            const message = `📅 Settimana 2 disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}!`;
+            const message = `📅 Settimana 2 "Consapevolezza di Sé" disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}!`;
             showMessage(message, 'info');
             
             localStorage.setItem('nextSessionReminder', nextWeekDate.toISOString());
@@ -1330,6 +1675,22 @@
                 autoSave();
             }
         });
+
+        // Add slide-in animation style
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
