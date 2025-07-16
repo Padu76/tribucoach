@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Tua Dashboard Lifestyle - Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .user-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .user-level {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-text {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .coach-card {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .coach-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .coach-info h3 {
+            margin: 0;
+            color: #1e293b;
+            font-size: 1.2rem;
+        }
+
+        .coach-info p {
+            margin: 0;
+            color: #ea580c;
+            font-size: 0.9rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .card-icon.primary {
+            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+        }
+
+        .card-icon.secondary {
+            background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+        }
+
+        .card-icon.success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+
+        .card-icon.warning {
+            background: linear-gradient(135deg, #eab308 0%, #facc15 100%);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        /* Profile Stats */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.5);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .stat-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(30,41,59,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .progress-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .progress-badge {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-item {
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ea580c;
+        }
+
+        .progress-item.completed {
+            border-left-color: #16a34a;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .progress-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-item-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .progress-status {
+            font-size: 0.9rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .progress-status.completed {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .progress-status.in-progress {
+            background: #fed7aa;
+            color: #ea580c;
+        }
+
+        .progress-status.pending {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .progress-item-description {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #ea580c;
+            color: #ea580c;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Chat Section */
+        .chat-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background: #f1f5f9;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            margin-right: auto;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #ea580c;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .progress-item-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🎯 LifestyleFitnessCoach</div>
+            <div class="user-info">
+                <div class="user-avatar">👤</div>
+                <div>
+                    <div class="user-name" id="userName">Il tuo nome</div>
+                    <div class="user-level">Lifestyle Explorer</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section">
+            <h1 class="welcome-title">Benvenuto nel Tuo Percorso di Trasformazione! 🚀</h1>
+            <p class="welcome-text">
+                Hai completato il test iniziale e ora sei pronto per iniziare il tuo viaggio verso una vita più sana e equilibrata.
+            </p>
+            <div class="coach-card">
+                <div class="coach-avatar">👨‍💼</div>
+                <div class="coach-info">
+                    <h3>Andrea Padoan</h3>
+                    <p>Il tuo Lifestyle Coach personale</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Stats -->
+        <section class="dashboard-grid">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon primary">📊</div>
+                    <div>
+                        <div class="card-title">Il Tuo Profilo</div>
+                        <div class="card-subtitle">Risultati del test iniziale</div>
+                    </div>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="wellbeingScore">4</div>
+                        <div class="stat-label">Benessere</div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="healthScore">3</div>
+                        <div class="stat-label">Salute</div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" style="width: 60%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="socialScore">4</div>
+                        <div class="stat-label">Sociale</div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="professionalScore">3</div>
+                        <div class="stat-label">Lavoro</div>
+                        <div class="stat-bar">
+                            <div class="stat-fill" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon secondary">🎯</div>
+                    <div>
+                        <div class="card-title">Obiettivi Attivi</div>
+                        <div class="card-subtitle">I tuoi focus principali</div>
+                    </div>
+                </div>
+                <div id="activeGoals">
+                    <div class="progress-item">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">Migliorare la qualità del sonno</div>
+                            <div class="progress-status in-progress">In corso</div>
+                        </div>
+                        <div class="progress-item-description">
+                            Implementare una routine serale rilassante e ottimizzare l'ambiente di riposo.
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">Aumentare l'attività fisica</div>
+                            <div class="progress-status pending">Da iniziare</div>
+                        </div>
+                        <div class="progress-item-description">
+                            Incorporare 30 minuti di movimento nella routine quotidiana.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon success">✅</div>
+                    <div>
+                        <div class="card-title">Progressi Recenti</div>
+                        <div class="card-subtitle">Ultimi 7 giorni</div>
+                    </div>
+                </div>
+                <div id="recentProgress">
+                    <div class="progress-item completed">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">Test iniziale completato</div>
+                            <div class="progress-status completed">Completato</div>
+                        </div>
+                        <div class="progress-item-description">
+                            Hai completato con successo il test del tuo stile di vita.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="card-icon warning">💡</div>
+                    <div>
+                        <div class="card-title">Prossimi Passi</div>
+                        <div class="card-subtitle">Raccomandazioni personalizzate</div>
+                    </div>
+                </div>
+                <div id="nextSteps">
+                    <div class="progress-item">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">Sessione 1-on-1 con Andrea</div>
+                            <div class="progress-status pending">Programmata</div>
+                        </div>
+                        <div class="progress-item-description">
+                            Approfondiamo i risultati del test e definiamo il tuo piano personalizzato.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section class="chat-section">
+            <div class="chat-header">
+                <div class="coach-avatar">👨‍💼</div>
+                <div>
+                    <h3>Chat con Andrea</h3>
+                    <p>Il tuo coach è qui per aiutarti</p>
+                </div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message coach">
+                    <p>Ciao! Complimenti per aver completato il test iniziale! 🎉</p>
+                    <div class="message-time">Proprio ora</div>
+                </div>
+                <div class="message coach">
+                    <p>Ho analizzato i tuoi risultati e ho preparato alcune raccomandazioni personalizzate. Sei pronto per iniziare il tuo percorso di trasformazione?</p>
+                    <div class="message-time">Proprio ora</div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Scrivi un messaggio ad Andrea...">
+                <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="#" class="btn btn-primary" onclick="scheduleSession()">
+                📅 Prenota Sessione 1-on-1
+            </a>
+            <a href="lifestyle-quiz.html" class="btn btn-secondary">
+                🔄 Rifai il Test
+            </a>
+            <a href="#" class="btn btn-success" onclick="viewFullProfile()">
+                📋 Visualizza Profilo Completo
+            </a>
+        </div>
+    </main>
+
+    <script>
+        // Simulated user data - in production this would come from Firebase
+        let userData = {
+            name: "Utente",
+            scores: {
+                wellbeing: 4,
+                health: 3,
+                social: 4,
+                professional: 3
+            },
+            goals: [],
+            progress: [],
+            chatHistory: []
+        };
+
+        // Initialize dashboard
+        function initDashboard() {
+            // Load user data from localStorage or Firebase
+            loadUserData();
+            
+            // Update UI with user data
+            updateDashboard();
+        }
+
+        function loadUserData() {
+            // Try to load from localStorage first
+            const savedData = localStorage.getItem('lifestyleQuizResults');
+            if (savedData) {
+                try {
+                    const profileData = JSON.parse(savedData);
+                    userData.scores = profileData.scores || userData.scores;
+                    userData.name = profileData.name || userData.name;
+                    updateScoresDisplay();
+                } catch (e) {
+                    console.log('Error loading saved data:', e);
+                }
+            }
+        }
+
+        function updateDashboard() {
+            // Update user name
+            document.getElementById('userName').textContent = userData.name;
+            
+            // Update scores
+            updateScoresDisplay();
+            
+            // Generate personalized goals based on scores
+            generatePersonalizedGoals();
+        }
+
+        function updateScoresDisplay() {
+            const scores = userData.scores;
+            
+            // Update score values and bars
+            Object.entries(scores).forEach(([key, value]) => {
+                const scoreElement = document.getElementById(key + 'Score');
+                if (scoreElement) {
+                    scoreElement.textContent = value;
+                    
+                    // Update progress bar
+                    const bar = scoreElement.parentElement.querySelector('.stat-fill');
+                    if (bar) {
+                        bar.style.width = (value / 5) * 100 + '%';
+                    }
+                }
+            });
+        }
+
+        function generatePersonalizedGoals() {
+            const goals = [];
+            const scores = userData.scores;
+            
+            // Generate goals based on lowest scores
+            if (scores.health < 4) {
+                goals.push({
+                    title: "Migliorare la forma fisica",
+                    description: "Incorporare 30 minuti di attività fisica nella routine quotidiana.",
+                    status: "pending"
+                });
+            }
+            
+            if (scores.wellbeing < 4) {
+                goals.push({
+                    title: "Aumentare il benessere emotivo",
+                    description: "Praticare tecniche di mindfulness e gestione dello stress.",
+                    status: "pending"
+                });
+            }
+            
+            if (scores.professional < 4) {
+                goals.push({
+                    title: "Migliorare l'equilibrio vita-lavoro",
+                    description: "Definire confini chiari tra tempo lavorativo e personale.",
+                    status: "pending"
+                });
+            }
+            
+            // Update goals display
+            const goalsContainer = document.getElementById('activeGoals');
+            if (goals.length > 0) {
+                goalsContainer.innerHTML = goals.map(goal => `
+                    <div class="progress-item">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">${goal.title}</div>
+                            <div class="progress-status ${goal.status}">Da iniziare</div>
+                        </div>
+                        <div class="progress-item-description">${goal.description}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                // Add user message
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML += `
+                    <div class="message user">
+                        <p>${message}</p>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                `;
+                
+                // Clear input
+                input.value = '';
+                
+                // Simulate coach response
+                setTimeout(() => {
+                    const responses = [
+                        "Grazie per la domanda! Sono qui per aiutarti. 😊",
+                        "Ottima osservazione! Questo è un aspetto importante del tuo percorso.",
+                        "Ti capisco perfettamente. Affrontiamo questo insieme passo dopo passo.",
+                        "Fantastico! Vedo che stai prendendo il controllo della situazione."
+                    ];
+                    
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    
+                    messagesContainer.innerHTML += `
+                        <div class="message coach">
+                            <p>${randomResponse}</p>
+                            <div class="message-time">Proprio ora</div>
+                        </div>
+                    `;
+                    
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }, 1000);
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function scheduleSession() {
+            alert('Perfetto! Ti reindirizzerò alla pagina di prenotazione dove potrai scegliere il giorno e l\'orario più adatto per la tua sessione 1-on-1 con Andrea.');
+            // In production: window.location.href = 'booking.html';
+        }
+
+        function viewFullProfile() {
+            alert('Qui potrai visualizzare il tuo profilo completo con tutti i dettagli del test e le raccomandazioni personalizzate.');
+            // In production: window.location.href = 'profile.html';
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
