@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 3 - Obiettivi SMART | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #3b82f6;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #3b82f6;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Session Container */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* SMART Goals Framework */
+        .smart-framework {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .smart-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .smart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .smart-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .smart-letter {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+
+        .smart-word {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .smart-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .smart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🎯 Settimana 3 - Obiettivi SMART</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Settimana 3! 🎯</h1>
+            <p class="welcome-subtitle">Obiettivi SMART - Trasforma i Sogni in Realtà</p>
+            <p class="welcome-description">
+                Oggi trasformeremo i tuoi desideri in obiettivi concreti e raggiungibili! Il metodo SMART ti aiuterà a definire 
+                obiettivi Specifici, Misurabili, Raggiungibili, Rilevanti e Temporizzati. Questa è la settimana in cui i tuoi sogni 
+                iniziano a diventare piani d'azione. Preparati a dare forma concreta alla tua visione!
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">🎯</div>
+                <div class="coach-message">
+                    <h3>Metodo SMART per il Successo</h3>
+                    <p>Gli obiettivi ben definiti sono già metà del successo. Oggi imparerai a trasformare i tuoi sogni 
+                    in obiettivi chiari e actionable. È il momento di dare direzione concreta ai tuoi desideri!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SMART Framework -->
+        <section class="smart-framework fade-in">
+            <h2 class="smart-title">Il Framework SMART</h2>
+            <div class="smart-grid">
+                <div class="smart-item">
+                    <div class="smart-letter">S</div>
+                    <div class="smart-word">Specifico</div>
+                    <div class="smart-description">Definisci esattamente cosa vuoi raggiungere</div>
+                </div>
+                <div class="smart-item">
+                    <div class="smart-letter">M</div>
+                    <div class="smart-word">Misurabile</div>
+                    <div class="smart-description">Stabilisci come misurare i tuoi progressi</div>
+                </div>
+                <div class="smart-item">
+                    <div class="smart-letter">A</div>
+                    <div class="smart-word">Raggiungibile</div>
+                    <div class="smart-description">Assicurati che sia realistico e fattibile</div>
+                </div>
+                <div class="smart-item">
+                    <div class="smart-letter">R</div>
+                    <div class="smart-word">Rilevante</div>
+                    <div class="smart-description">Deve essere importante per te</div>
+                </div>
+                <div class="smart-item">
+                    <div class="smart-letter">T</div>
+                    <div class="smart-word">Temporizzato</div>
+                    <div class="smart-description">Definisci una scadenza chiara</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching Obiettivi</h2>
+                        <p class="panel-subtitle">Definiamo insieme i tuoi obiettivi SMART</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea ti aiuta a definire obiettivi chiari e raggiungibili</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Perfetto! Siamo arrivati al momento più importante: definire i tuoi obiettivi SMART. 
+                            Dopo aver sviluppato la consapevolezza di te stesso, ora è il momento di dare direzione concreta ai tuoi desideri. 
+                            Dimmi, qual è il primo obiettivo che vorresti raggiungere? 🚀
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Condividi il tuo obiettivo principale...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">📋</div>
+                    <div>
+                        <h2 class="panel-title">Definizione Obiettivi SMART</h2>
+                        <p class="panel-subtitle">Crea i tuoi obiettivi strutturati</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso definizione: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="smartGoalsForm">
+                    <!-- Sezione 1: Obiettivo Principale -->
+                    <div class="form-section" id="section1">
+                        <h3>🎯 Obiettivo Principale</h3>
+                        <div class="form-group">
+                            <label for="mainGoal">Qual è il tuo obiettivo da sogno a lungo termine?</label>
+                            <textarea id="mainGoal" placeholder="Descrivi il tuo obiettivo più importante e ambizioso..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="yearGoal">Quale obiettivo ti puoi dare per quest'anno?</label>
+                            <textarea id="yearGoal" placeholder="Un obiettivo annuale realistico ma sfidante..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="overcomeLimits">Se riuscissi a superare i tuoi limiti, sarebbe lo stesso obiettivo?</label>
+                            <select id="overcomeLimits" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="si">Sì, è quello che voglio davvero</option>
+                                <option value="no_piu_ambizioso">No, punterei più in alto</option>
+                                <option value="no_diverso">No, cambierei completamente</option>
+                                <option value="non_sicuro">Non sono sicuro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Analisi SMART -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>📊 Analisi SMART</h3>
+                        <div class="form-group">
+                            <label for="specific">SPECIFICO: Definisci esattamente cosa vuoi raggiungere</label>
+                            <textarea id="specific" placeholder="Descrivi dettagliatamente il tuo obiettivo..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="measurable">MISURABILE: Come misurerai i tuoi progressi?</label>
+                            <textarea id="measurable" placeholder="Definisci i parametri per misurare il successo..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="achievable">RAGGIUNGIBILE: È realistico con le tue risorse attuali?</label>
+                            <select id="achievable" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="si">Sì, è completamente raggiungibile</option>
+                                <option value="si_con_sforzo">Sì, con impegno e sacrificio</option>
+                                <option value="forse">Forse, dipende dalle circostanze</option>
+                                <option value="difficile">Difficile, ma non impossibile</option>
+                                <option value="troppo_ambizioso">Troppo ambizioso per ora</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="relevant">RILEVANTE: Perché è importante per te?</label>
+                            <textarea id="relevant" placeholder="Spiega perché questo obiettivo è fondamentale per la tua vita..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Timeline e Azioni -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>⏰ Timeline e Azioni</h3>
+                        <div class="form-group">
+                            <label for="timebound">TEMPORIZZATO: Entro quando vuoi raggiungere questo obiettivo?</label>
+                            <input type="date" id="timebound" onchange="updateProgress()">
+                        </div>
+                        <div class="form-group">
+                            <label for="actions">Quali azioni concrete puoi fare per raggiungerlo?</label>
+                            <textarea id="actions" placeholder="Elenca le azioni specifiche che devi compiere..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="resources">Quali risorse ti servono per raggiungere questo obiettivo?</label>
+                            <textarea id="resources" placeholder="Tempo, denaro, competenze, supporto..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="obstacles">Quali ostacoli potresti incontrare?</label>
+                            <textarea id="obstacles" placeholder="Identifica i possibili ostacoli e come superarli..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Piano Dettagliato -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>📋 Piano Dettagliato</h3>
+                        <div class="form-group">
+                            <label for="monthlyGoal">Obiettivo mensile (primi 30 giorni):</label>
+                            <textarea id="monthlyGoal" placeholder="Cosa vuoi raggiungere nel primo mese?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="weeklyGoals">Obiettivi settimanali che potresti inserire:</label>
+                            <textarea id="weeklyGoals" placeholder="Definisci micro-obiettivi settimanali..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyAction">Cosa puoi iniziare a fare domani?</label>
+                            <textarea id="dailyAction" placeholder="La prima azione concreta che farai domani..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="accountability">Chi ti supporterà in questo percorso?</label>
+                            <textarea id="accountability" placeholder="Identifica le persone che ti aiuteranno..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">✅ Completa Sessione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <h2 class="completion-title">🎉 Settimana 3 Completata!</h2>
+            <p class="completion-message">
+                Fantastico! Hai definito i tuoi obiettivi SMART e ora hai una roadmap chiara per raggiungerli. 
+                I tuoi sogni sono diventati piani concreti con scadenze precise. Questa settimana focalizziati 
+                sul mettere in pratica le prime azioni che hai definito.
+            </p>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">📚 I Tuoi Compiti per Questa Settimana</h3>
+                <ul class="homework-list">
+                    <li>✅ Scrivi i tuoi obiettivi SMART su un foglio e appendilo in vista</li>
+                    <li>✅ Crea una timeline visiva del tuo percorso</li>
+                    <li>✅ Identifica e contatta i tuoi alleati di supporto</li>
+                    <li>✅ Inizia con la prima azione concreta che hai definito</li>
+                    <li>✅ Tieni un diario quotidiano dei progressi</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 La settimana 4 si sbloccherà automaticamente tra 7 giorni. 
+                    Usa questo tempo per iniziare concretamente a lavorare sui tuoi obiettivi!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-success" onclick="downloadHomework()">📄 Scarica Compiti PDF</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 4</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 4;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Scusa, ho avuto un piccolo intoppo. Puoi ripetere?", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                try {
+                    const prompt = `
+                    Sei Andrea Padoan, un life coach esperto che sta conducendo la terza sessione "Obiettivi SMART".
+                    
+                    Contesto: È la settimana 3 di un percorso di 7 settimane. L'obiettivo è aiutare l'utente a definire 
+                    obiettivi Specifici, Misurabili, Raggiungibili, Rilevanti e Temporizzati.
+                    
+                    Utente dice: "${userMessage}"
+                    
+                    Rispondi come Andrea con:
+                    - Focus sulla definizione di obiettivi SMART
+                    - Domande che aiutano a specificare e concretizzare
+                    - Riferimenti al framework SMART
+                    - Guida verso obiettivi realistici ma sfidanti
+                    - Massimo 2-3 frasi
+                    
+                    Rispondi SOLO con la risposta di Andrea, senza prefissi.
+                    `;
+                    
+                    const response = await window.claude.complete(prompt);
+                    return response.trim();
+                } catch (error) {
+                    console.error('Claude AI error:', error);
+                }
+            }
+            
+            return getPersonalizedFallbackResponse(userMessage);
+        }
+
+        function getPersonalizedFallbackResponse(message) {
+            const responses = [
+                "Ottimo obiettivo! Ora rendiamolo più specifico. Puoi descrivermi esattamente cosa significherebbe per te raggiungerlo?",
+                "Perfetto! Vedo che hai le idee chiare. Adesso dobbiamo definire come misurerai i tuoi progressi. Quali potrebbero essere dei parametri concreti?",
+                "Interessante! Questo obiettivo mi sembra ambizioso ma realistico. Come pensi di suddividerlo in passi più piccoli?",
+                "Fantastico! Sento che questo obiettivo è davvero importante per te. Cosa ti motiva di più a raggiungerlo?",
+                "Eccellente direzione! Ora dobbiamo dargli una scadenza. Entro quando vorresti averlo raggiunto?"
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('obiettivo') || lowerMessage.includes('voglio') || lowerMessage.includes('desidero')) {
+                return "Perfetto! Ora aiutami a capire meglio: questo obiettivo è specifico abbastanza? Puoi descrivermi esattamente cosa significherebbe per te raggiungerlo?";
+            }
+            
+            if (lowerMessage.includes('tempo') || lowerMessage.includes('quando') || lowerMessage.includes('scadenza')) {
+                return "Ottimo! La temporizzazione è fondamentale. Un obiettivo senza scadenza è solo un sogno. Quale sarebbe una scadenza realistica ma sfidante?";
+            }
+            
+            if (lowerMessage.includes('difficile') || lowerMessage.includes('impossibile') || lowerMessage.includes('non riesco')) {
+                return "Ti capisco! A volte gli obiettivi sembrano troppo grandi. La chiave è spezzarli in parti più piccole. Quale sarebbe il primo piccolo passo?";
+            }
+            
+            if (lowerMessage.includes('misurare') || lowerMessage.includes('come') || lowerMessage.includes('parametri')) {
+                return "Esatto! Quello che non si misura non si migliora. Quali potrebbero essere dei segnali concreti che ti dicono che stai andando nella direzione giusta?";
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+            
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.value.trim()) filled++;
+            });
+            
+            const sectionProgress = (filled / inputs.length) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#smartGoalsForm input, #smartGoalsForm textarea, #smartGoalsForm select');
+            formElements.forEach(element => {
+                formData[element.id] = element.value;
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week3SessionData', JSON.stringify(sessionData));
+            
+            // Update user progress
+            updateUserProgress();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateUserProgress() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(3)) {
+                    progress.completedWeeks.push(3);
+                    progress.currentWeek = 4;
+                    progress.lastUpdate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+
+        function downloadHomework() {
+            const homeworkContent = `
+                COMPITI SETTIMANA 3 - OBIETTIVI SMART
+                
+                Andrea Padoan - Lifestyle Coach
+                
+                Ciao! Ecco i tuoi compiti per trasformare gli obiettivi in realtà:
+                
+                1. OBIETTIVI SMART VISIBILI (15 minuti)
+                   - Scrivi i tuoi obiettivi SMART su un foglio
+                   - Appendilo in un posto dove lo vedi ogni giorno
+                   - Leggilo ogni mattina appena sveglio
+                
+                2. TIMELINE VISIVA (30 minuti)
+                   - Crea una timeline del tuo percorso
+                   - Segna le milestone principali
+                   - Usa colori e simboli per rendere tutto visuale
+                
+                3. ALLEATI DI SUPPORTO (20 minuti)
+                   - Identifica 3 persone che ti supporteranno
+                   - Contattale e condividi i tuoi obiettivi
+                   - Chiedi il loro supporto nel percorso
+                
+                4. PRIMA AZIONE CONCRETA (OGGI)
+                   - Fai subito la prima azione che hai definito
+                   - Non rimandare: inizia oggi stesso
+                   - Segna sul calendario tutte le azioni future
+                
+                5. DIARIO DEI PROGRESSI (5 minuti al giorno)
+                   - Ogni sera scrivi cosa hai fatto verso i tuoi obiettivi
+                   - Cosa è andato bene? Cosa puoi migliorare?
+                   - Celebra ogni piccolo progresso!
+                
+                RICORDA: La settimana 4 si attiverà automaticamente tra 7 giorni.
+                Usa questo tempo per iniziare concretamente a lavorare sui tuoi obiettivi!
+                
+                Verso i tuoi sogni,
+                Andrea 🎯
+            `;
+            
+            const blob = new Blob([homeworkContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Compiti_Settimana_3_Obiettivi_SMART_Andrea_Padoan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Compiti scaricati! Inizia subito a lavorare sui tuoi obiettivi.', 'success');
+        }
+
+        function scheduleNextSession() {
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            
+            const message = `📅 La tua prossima sessione (Settimana 4 - Piano di Azione) sarà disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}. È ora di agire!`;
+            
+            showMessage(message, 'info');
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo scaduto! Puoi comunque completare la definizione dei tuoi obiettivi.', 'warning');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
