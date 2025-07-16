@@ -445,28 +445,168 @@
         }
 
         /* Responsive */
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #64748b;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-body h3 {
+            color: #1e293b;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-body ul {
+            margin-left: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal-body li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        /* Animation */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Coaching specific styles */
+        .coaching-phase-card {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .coaching-phase-card h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .coaching-phase-card .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .coaching-phase-card .progress-fill {
+            background: white;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .coaching-phase-card small {
+            opacity: 0.9;
+        }
+
+        .homework-card {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .homework-card h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .homework-card .btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            margin-top: 1rem;
+        }
+
+        .homework-card .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
         @media (max-width: 768px) {
-            .header-content {
-                padding: 0 1rem;
+            .modal-content {
+                width: 95%;
+                margin: 1rem;
             }
-
-            .main-content {
+            
+            .modal-header,
+            .modal-body,
+            .modal-footer {
                 padding: 1rem;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .progress-item-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
             }
         }
     </style>
@@ -549,27 +689,18 @@
                 <div class="card-header">
                     <div class="card-icon secondary">🎯</div>
                     <div>
-                        <div class="card-title">Obiettivi Attivi</div>
-                        <div class="card-subtitle">I tuoi focus principali</div>
+                        <div class="card-title">Percorso Coaching</div>
+                        <div class="card-subtitle">La tua fase attuale</div>
                     </div>
                 </div>
-                <div id="activeGoals">
+                <div id="currentPhase">
                     <div class="progress-item">
                         <div class="progress-item-header">
-                            <div class="progress-item-title">Migliorare la qualità del sonno</div>
-                            <div class="progress-status in-progress">In corso</div>
+                            <div class="progress-item-title">Caricamento percorso...</div>
+                            <div class="progress-status pending">Inizializzazione</div>
                         </div>
                         <div class="progress-item-description">
-                            Implementare una routine serale rilassante e ottimizzare l'ambiente di riposo.
-                        </div>
-                    </div>
-                    <div class="progress-item">
-                        <div class="progress-item-header">
-                            <div class="progress-item-title">Aumentare l'attività fisica</div>
-                            <div class="progress-status pending">Da iniziare</div>
-                        </div>
-                        <div class="progress-item-description">
-                            Incorporare 30 minuti di movimento nella routine quotidiana.
+                            Stiamo preparando il tuo percorso personalizzato di coaching.
                         </div>
                     </div>
                 </div>
@@ -579,18 +710,18 @@
                 <div class="card-header">
                     <div class="card-icon success">✅</div>
                     <div>
-                        <div class="card-title">Progressi Recenti</div>
-                        <div class="card-subtitle">Ultimi 7 giorni</div>
+                        <div class="card-title">Obiettivi Attivi</div>
+                        <div class="card-subtitle">I tuoi focus principali</div>
                     </div>
                 </div>
-                <div id="recentProgress">
-                    <div class="progress-item completed">
+                <div id="activeGoals">
+                    <div class="progress-item">
                         <div class="progress-item-header">
-                            <div class="progress-item-title">Test iniziale completato</div>
-                            <div class="progress-status completed">Completato</div>
+                            <div class="progress-item-title">Caricamento obiettivi...</div>
+                            <div class="progress-status pending">Generazione</div>
                         </div>
                         <div class="progress-item-description">
-                            Hai completato con successo il test del tuo stile di vita.
+                            Stiamo generando i tuoi obiettivi personalizzati.
                         </div>
                     </div>
                 </div>
@@ -598,20 +729,20 @@
 
             <div class="dashboard-card">
                 <div class="card-header">
-                    <div class="card-icon warning">💡</div>
+                    <div class="card-icon warning">📝</div>
                     <div>
-                        <div class="card-title">Prossimi Passi</div>
-                        <div class="card-subtitle">Raccomandazioni personalizzate</div>
+                        <div class="card-title">Compito Attuale</div>
+                        <div class="card-subtitle">La tua attività di oggi</div>
                     </div>
                 </div>
-                <div id="nextSteps">
+                <div id="nextHomework">
                     <div class="progress-item">
                         <div class="progress-item-header">
-                            <div class="progress-item-title">Sessione 1-on-1 con Andrea</div>
-                            <div class="progress-status pending">Programmata</div>
+                            <div class="progress-item-title">Preparazione compito...</div>
+                            <div class="progress-status pending">Personalizzazione</div>
                         </div>
                         <div class="progress-item-description">
-                            Approfondiamo i risultati del test e definiamo il tuo piano personalizzato.
+                            Stiamo preparando il tuo compito personalizzato.
                         </div>
                     </div>
                 </div>
@@ -645,20 +776,40 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <a href="#" class="btn btn-primary" onclick="scheduleSession()">
-                📅 Prenota Sessione 1-on-1
-            </a>
-            <a href="lifestyle-quiz.html" class="btn btn-secondary">
+            <button class="btn btn-primary" onclick="viewPhaseDetails()">
+                📚 Dettagli Fase Attuale
+            </button>
+            <button class="btn btn-secondary" onclick="window.location.href='lifestyle-quiz.html'">
                 🔄 Rifai il Test
-            </a>
-            <a href="#" class="btn btn-success" onclick="viewFullProfile()">
-                📋 Visualizza Profilo Completo
-            </a>
+            </button>
+            <button class="btn btn-success" onclick="scheduleSession()">
+                📅 Prenota con Andrea
+            </button>
         </div>
     </main>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase functions
+        import { db } from './firebase.js';
+        import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        
+        // Import Lifestyle Coaching System
+        import { LifestyleCoachingSystem, generatePersonalizedContent } from './lifestyle-coaching-system.js';
+        
+        // Make functions available globally
+        window.firebaseDB = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseUpdateDoc = updateDoc;
+        window.firebaseDoc = doc;
+        window.firebaseServerTimestamp = serverTimestamp;
+        window.LifestyleCoachingSystem = LifestyleCoachingSystem;
+        window.generatePersonalizedContent = generatePersonalizedContent;
+    </script>
+    
     <script>
-        // Simulated user data - now loads from Firebase
+        // User data with coaching system
         let userData = {
             name: "Utente",
             scores: {
@@ -669,7 +820,10 @@
             },
             goals: [],
             progress: [],
-            chatHistory: []
+            chatHistory: [],
+            coachingSystem: null,
+            currentPhase: 1,
+            completedPhases: []
         };
 
         // Initialize dashboard
@@ -677,8 +831,31 @@
             // Load user data from Firebase
             await loadUserDataFromFirebase();
             
+            // Initialize coaching system
+            initializeCoachingSystem();
+            
             // Update UI with user data
             updateDashboard();
+        }
+
+        function initializeCoachingSystem() {
+            if (userData.quadrant && userData.consciousnessLevel) {
+                const userProfile = {
+                    quadrant: userData.quadrant,
+                    consciousnessLevel: userData.consciousnessLevel,
+                    motivationDrivers: userData.motivationDrivers || [],
+                    challenges: userData.challenges || [],
+                    readinessLevel: userData.readinessLevel || 3,
+                    scores: userData.scores
+                };
+                
+                try {
+                    userData.coachingSystem = new window.LifestyleCoachingSystem(userProfile);
+                    console.log('✅ Sistema coaching inizializzato');
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione coaching system:', error);
+                }
+            }
         }
 
         async function loadUserDataFromFirebase() {
@@ -754,8 +931,101 @@
             // Update scores
             updateScoresDisplay();
             
-            // Generate personalized goals based on scores
-            generatePersonalizedGoals();
+            // Update coaching content
+            updateCoachingContent();
+            
+            // Generate personalized goals based on coaching system
+            generateCoachingGoals();
+        }
+
+        function updateCoachingContent() {
+            if (!userData.coachingSystem) return;
+            
+            const currentPhaseContent = userData.coachingSystem.getCurrentPhaseContent();
+            const progressReport = userData.coachingSystem.getProgressReport();
+            
+            // Update current phase info
+            const currentPhaseElement = document.getElementById('currentPhase');
+            if (currentPhaseElement) {
+                currentPhaseElement.innerHTML = `
+                    <h4>📚 Fase Attuale: ${currentPhaseContent.title}</h4>
+                    <p>${currentPhaseContent.objective}</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progressReport.progressPercentage}%"></div>
+                    </div>
+                    <small>Progresso: ${progressReport.completed}/${progressReport.total} fasi completate</small>
+                `;
+            }
+            
+            // Update next homework
+            const nextHomework = userData.coachingSystem.getNextHomework();
+            const homeworkElement = document.getElementById('nextHomework');
+            if (homeworkElement && nextHomework) {
+                homeworkElement.innerHTML = `
+                    <h4>📝 Compito Attuale</h4>
+                    <p><strong>${nextHomework.title}</strong></p>
+                    <p>${nextHomework.homework}</p>
+                    <button class="btn btn-primary" onclick="completeHomework()">Segna come Completato</button>
+                `;
+            }
+        }
+
+        function generateCoachingGoals() {
+            if (!userData.coachingSystem) {
+                // Fallback to original goals generation
+                generatePersonalizedGoals();
+                return;
+            }
+            
+            const currentPhaseContent = userData.coachingSystem.getCurrentPhaseContent();
+            const goals = [];
+            
+            // Generate goals based on current phase
+            if (currentPhaseContent.exercises) {
+                currentPhaseContent.exercises.forEach(exercise => {
+                    goals.push({
+                        title: `Completa: ${exercise.replace(/_/g, ' ')}`,
+                        description: `Esercizio della fase ${currentPhaseContent.title}`,
+                        status: "pending",
+                        phase: currentPhaseContent.phase
+                    });
+                });
+            }
+            
+            // Add goals based on challenges
+            if (userData.challenges) {
+                userData.challenges.forEach(challenge => {
+                    const goalMap = {
+                        'procrastination': 'Superare la procrastinazione',
+                        'low_energy': 'Aumentare i livelli di energia',
+                        'anxiety': 'Gestire stress e ansia',
+                        'low_self_esteem': 'Sviluppare autostima'
+                    };
+                    
+                    if (goalMap[challenge]) {
+                        goals.push({
+                            title: goalMap[challenge],
+                            description: `Obiettivo personalizzato per ${challenge}`,
+                            status: "pending",
+                            priority: "high"
+                        });
+                    }
+                });
+            }
+            
+            // Update goals display
+            const goalsContainer = document.getElementById('activeGoals');
+            if (goals.length > 0) {
+                goalsContainer.innerHTML = goals.map(goal => `
+                    <div class="progress-item">
+                        <div class="progress-item-header">
+                            <div class="progress-item-title">${goal.title}</div>
+                            <div class="progress-status ${goal.status}">${goal.status === 'pending' ? 'Da completare' : 'Completato'}</div>
+                        </div>
+                        <div class="progress-item-description">${goal.description}</div>
+                    </div>
+                `).join('');
+            }
         }
 
         function updateScoresDisplay() {
@@ -864,14 +1134,126 @@
             }
         }
 
+        async function completeHomework() {
+            if (!userData.coachingSystem) return;
+            
+            try {
+                // Mark homework as completed
+                const success = userData.coachingSystem.advanceToNextPhase();
+                
+                if (success) {
+                    // Save progress to Firebase
+                    await saveProgressToFirebase();
+                    
+                    // Update UI
+                    updateCoachingContent();
+                    
+                    // Show success message
+                    showSuccessMessage('Complimenti! Hai completato questa fase del percorso. 🎉');
+                } else {
+                    showSuccessMessage('Congratulazioni! Hai completato tutto il percorso di coaching! 🏆');
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore completamento homework:', error);
+                alert('Si è verificato un errore. Riprova più tardi.');
+            }
+        }
+
+        async function saveProgressToFirebase() {
+            try {
+                if (!window.firebaseDB) return;
+                
+                const userId = localStorage.getItem('lifestyleUserId');
+                if (!userId) return;
+                
+                const progressData = {
+                    userId: userId,
+                    currentPhase: userData.coachingSystem.currentPhase,
+                    completedPhases: userData.coachingSystem.completedPhases,
+                    progressReport: userData.coachingSystem.getProgressReport(),
+                    timestamp: window.firebaseServerTimestamp(),
+                    source: 'user_dashboard'
+                };
+                
+                await window.firebaseAddDoc(
+                    window.firebaseCollection(window.firebaseDB, 'lifestyle_progress'),
+                    progressData
+                );
+                
+                console.log('✅ Progresso salvato su Firebase');
+                
+            } catch (error) {
+                console.error('❌ Errore salvataggio progresso:', error);
+            }
+        }
+
+        function showSuccessMessage(message) {
+            // Create success notification
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; animation: slideIn 0.3s ease-out;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function viewPhaseDetails() {
+            if (!userData.coachingSystem) return;
+            
+            const currentPhaseContent = userData.coachingSystem.getCurrentPhaseContent();
+            
+            // Create modal with phase details
+            const modal = document.createElement('div');
+            modal.innerHTML = `
+                <div class="modal-overlay" onclick="closeModal()">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <div class="modal-header">
+                            <h2>📚 ${currentPhaseContent.title}</h2>
+                            <button onclick="closeModal()" class="modal-close">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong>Obiettivo:</strong> ${currentPhaseContent.objective}</p>
+                            <p><strong>Durata:</strong> ${currentPhaseContent.duration}</p>
+                            
+                            ${currentPhaseContent.questions.length > 0 ? `
+                                <h3>🤔 Domande di Riflessione:</h3>
+                                <ul>
+                                    ${currentPhaseContent.questions.map(q => `<li>${q}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            
+                            ${currentPhaseContent.exercises.length > 0 ? `
+                                <h3>🏃 Esercizi:</h3>
+                                <ul>
+                                    ${currentPhaseContent.exercises.map(e => `<li>${e.replace(/_/g, ' ')}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                            
+                            <h3>📝 Compito:</h3>
+                            <p>${currentPhaseContent.homework}</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button onclick="closeModal()" class="btn btn-secondary">Chiudi</button>
+                            <button onclick="completeHomework(); closeModal();" class="btn btn-primary">Completa Fase</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
         function scheduleSession() {
             alert('Perfetto! Ti reindirizzerò alla pagina di prenotazione dove potrai scegliere il giorno e l\'orario più adatto per la tua sessione 1-on-1 con Andrea.');
             // In production: window.location.href = 'booking.html';
-        }
-
-        function viewFullProfile() {
-            alert('Qui potrai visualizzare il tuo profilo completo con tutti i dettagli del test e le raccomandazioni personalizzate.');
-            // In production: window.location.href = 'profile.html';
         }
 
         // Handle Enter key in chat
