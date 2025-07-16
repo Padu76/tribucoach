@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 6 - Scopri le Tue Potenzialità | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #fbbf24;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #f59e0b;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Creativity Test Section */
+        .creativity-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .creativity-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .creativity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .creativity-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .creativity-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .creativity-card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .creativity-description {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        /* Session Container */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Creativity Scale */
+        .creativity-scale {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .scale-question {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .scale-input {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .scale-input input[type="radio"] {
+            width: auto;
+        }
+
+        .scale-input label {
+            font-size: 0.8rem;
+            margin: 0;
+            padding: 0.25rem;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f59e0b;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .creativity-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .creativity-scale {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">⭐ Settimana 6 - Scopri le Tue Potenzialità</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Settimana 6! ⭐</h1>
+            <p class="welcome-subtitle">Scopri le Tue Potenzialità - Valorizza i Tuoi Talenti</p>
+            <p class="welcome-description">
+                Sei arrivato alla penultima settimana! Ora è il momento di identificare e valorizzare le tue potenzialità uniche. 
+                Attraverso test di creatività e domande mirate, scopriremo i tuoi talenti nascosti e come utilizzarli per accelerare 
+                il raggiungimento dei tuoi obiettivi. Preparati a celebrare i tuoi progressi!
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">⭐</div>
+                <div class="coach-message">
+                    <h3>Valorizza i Tuoi Talenti</h3>
+                    <p>Ognuno di noi ha talenti unici che aspettano solo di essere scoperti e sviluppati. 
+                    Oggi ti aiuterò a identificare le tue potenzialità e a trasformarle in superpoteri!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Creativity Test Section -->
+        <section class="creativity-section fade-in">
+            <h2 class="creativity-title">🎨 Le Tue Aree di Potenzialità</h2>
+            <div class="creativity-grid">
+                <div class="creativity-card">
+                    <div class="creativity-icon">🎨</div>
+                    <h3 class="creativity-card-title">Creatività</h3>
+                    <p class="creativity-description">
+                        Capacità di generare idee innovative e pensare fuori dagli schemi
+                    </p>
+                </div>
+                <div class="creativity-card">
+                    <div class="creativity-icon">🎯</div>
+                    <h3 class="creativity-card-title">Realizzazione</h3>
+                    <p class="creativity-description">
+                        Abilità nel trasformare le idee in progetti concreti e risultati
+                    </p>
+                </div>
+                <div class="creativity-card">
+                    <div class="creativity-icon">🔍</div>
+                    <h3 class="creativity-card-title">Esplorazione</h3>
+                    <p class="creativity-description">
+                        Curiosità nel scoprire nuove possibilità e apertura al cambiamento
+                    </p>
+                </div>
+                <div class="creativity-card">
+                    <div class="creativity-icon">💡</div>
+                    <h3 class="creativity-card-title">Elaborazione</h3>
+                    <p class="creativity-description">
+                        Capacità di sviluppare e perfezionare le idee in modo sistematico
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching Potenzialità</h2>
+                        <p class="panel-subtitle">Scopriamo i tuoi talenti nascosti</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea ti aiuta a identificare le tue potenzialità</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Siamo quasi alla fine del nostro viaggio! È il momento di celebrare quello che hai già raggiunto e di scoprire i tuoi talenti unici. 
+                            Tutti hanno potenzialità straordinarie, spesso nascoste. Dimmi, in quale momento della tua vita ti sei sentito più in sintonia con te stesso? 
+                            Quando hai sentito che quello che stavi facendo era davvero "tuo"? ⭐
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Racconta i tuoi momenti di eccellenza...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">⭐</div>
+                    <div>
+                        <h2 class="panel-title">Test delle Potenzialità</h2>
+                        <p class="panel-subtitle">Scopri i tuoi talenti creativi</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso scoperta: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="potentialForm">
+                    <!-- Sezione 1: Test Creatività -->
+                    <div class="form-section" id="section1">
+                        <h3>🎨 Test sulla Creatività</h3>
+                        <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #64748b;">
+                            Valuta ogni affermazione da 1 a 4 (1=per niente, 2=abbastanza, 3=quasi sempre, 4=sempre)
+                        </p>
+                        
+                        <div class="creativity-scale">
+                            <div class="scale-question">Sento che la mia vita ha uno scopo</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q1" value="1" id="q1_1" onchange="updateProgress()">
+                                <label for="q1_1">1</label>
+                                <input type="radio" name="q1" value="2" id="q1_2" onchange="updateProgress()">
+                                <label for="q1_2">2</label>
+                                <input type="radio" name="q1" value="3" id="q1_3" onchange="updateProgress()">
+                                <label for="q1_3">3</label>
+                                <input type="radio" name="q1" value="4" id="q1_4" onchange="updateProgress()">
+                                <label for="q1_4">4</label>
+                            </div>
+                        </div>
+
+                        <div class="creativity-scale">
+                            <div class="scale-question">Sono ottimista verso il futuro</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q2" value="1" id="q2_1" onchange="updateProgress()">
+                                <label for="q2_1">1</label>
+                                <input type="radio" name="q2" value="2" id="q2_2" onchange="updateProgress()">
+                                <label for="q2_2">2</label>
+                                <input type="radio" name="q2" value="3" id="q2_3" onchange="updateProgress()">
+                                <label for="q2_3">3</label>
+                                <input type="radio" name="q2" value="4" id="q2_4" onchange="updateProgress()">
+                                <label for="q2_4">4</label>
+                            </div>
+                        </div>
+
+                        <div class="creativity-scale">
+                            <div class="scale-question">Provo entusiasmo per qualcosa di straordinario</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q3" value="1" id="q3_1" onchange="updateProgress()">
+                                <label for="q3_1">1</label>
+                                <input type="radio" name="q3" value="2" id="q3_2" onchange="updateProgress()">
+                                <label for="q3_2">2</label>
+                                <input type="radio" name="q3" value="3" id="q3_3" onchange="updateProgress()">
+                                <label for="q3_3">3</label>
+                                <input type="radio" name="q3" value="4" id="q3_4" onchange="updateProgress()">
+                                <label for="q3_4">4</label>
+                            </div>
+                        </div>
+
+                        <div class="creativity-scale">
+                            <div class="scale-question">Sono molto abile nel capire gli altri</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q4" value="1" id="q4_1" onchange="updateProgress()">
+                                <label for="q4_1">1</label>
+                                <input type="radio" name="q4" value="2" id="q4_2" onchange="updateProgress()">
+                                <label for="q4_2">2</label>
+                                <input type="radio" name="q4" value="3" id="q4_3" onchange="updateProgress()">
+                                <label for="q4_3">3</label>
+                                <input type="radio" name="q4" value="4" id="q4_4" onchange="updateProgress()">
+                                <label for="q4_4">4</label>
+                            </div>
+                        </div>
+
+                        <div class="creativity-scale">
+                            <div class="scale-question">Finisco sempre quello che ho iniziato</div>
+                            <div class="scale-input">
+                                <input type="radio" name="q5" value="1" id="q5_1" onchange="updateProgress()">
+                                <label for="q5_1">1</label>
+                                <input type="radio" name="q5" value="2" id="q5_2" onchange="updateProgress()">
+                                <label for="q5_2">2</label>
+                                <input type="radio" name="q5" value="3" id="q5_3" onchange="updateProgress()">
+                                <label for="q5_3">3</label>
+                                <input type="radio" name="q5" value="4" id="q5_4" onchange="updateProgress()">
+                                <label for="q5_4">4</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Talenti e Gratificazioni -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>🌟 Talenti e Gratificazioni</h3>
+                        <div class="form-group">
+                            <label for="naturalTalents">Quali sono le cose che nella vita ti vengono facili?</label>
+                            <textarea id="naturalTalents" placeholder="Attività che fai senza sforzo, che ti riescono naturalmente..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="gratification">Cosa ti gratifica di più?</label>
+                            <textarea id="gratification" placeholder="Attività che ti fanno sentire realizzato e soddisfatto..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="neverStop">Quale attività desideri fare di più e non vorresti mai smettere?</label>
+                            <textarea id="neverStop" placeholder="Quello che potresti fare per ore senza stancarti..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="timeInvested">Quanto tempo dedichi a perseguire ciò che ti gratifica?</label>
+                            <select id="timeInvested" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="molto">Molto tempo - è la mia priorità</option>
+                                <option value="abbastanza">Abbastanza - cerco di ritagliarmi del tempo</option>
+                                <option value="poco">Poco - solo nei ritagli di tempo</option>
+                                <option value="molto_poco">Molto poco - raramente</option>
+                                <option value="niente">Niente - non ho tempo per quello che mi piace</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Esperienze di Successo -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>🏆 Esperienze di Successo</h3>
+                        <div class="form-group">
+                            <label for="childhoodDream">Qual è il desiderio più forte della tua infanzia?</label>
+                            <textarea id="childhoodDream" placeholder="Cosa sognavi di diventare o fare da bambino?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="proudestAchievement">Qual è la cosa più importante che hai fatto nella tua vita?</label>
+                            <textarea id="proudestAchievement" placeholder="Il risultato o l'esperienza di cui sei più orgoglioso..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="greatestHappiness">Qual è la cosa che ti ha dato più felicità?</label>
+                            <textarea id="greatestHappiness" placeholder="Il momento o l'esperienza che ti ha reso più felice..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mostMotivated">In quale periodo della tua vita ti sei sentito maggiormente motivato?</label>
+                            <textarea id="mostMotivated" placeholder="Quando eri più carico e determinato..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Potenzialità Future -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>🚀 Potenzialità Future</h3>
+                        <div class="form-group">
+                            <label for="unlimitedResources">Se avessi risorse economiche e tempo illimitato, quale attività svolgeresti?</label>
+                            <textarea id="unlimitedResources" placeholder="Cosa faresti se non avessi limiti di tempo o denaro?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="bestQualities">Quali qualità ami di più di te?</label>
+                            <textarea id="bestQualities" placeholder="I tuoi tratti caratteriali preferiti..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="shareQualities">Quali parti delle tue qualità vorresti condividere con gli altri?</label>
+                            <textarea id="shareQualities" placeholder="Come potresti usare i tuoi talenti per aiutare gli altri..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="benefitsToOthers">Che benefici immagini ne riceverebbero?</label>
+                            <textarea id="benefitsToOthers" placeholder="Come il mondo sarebbe migliore grazie ai tuoi talenti..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">✅ Completa Sessione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <h2 class="completion-title">🎉 Settimana 6 Completata!</h2>
+            <p class="completion-message">
+                Straordinario! Hai scoperto e celebrato le tue potenzialità uniche. Ora conosci i tuoi talenti nascosti e sai come utilizzarli 
+                per accelerare il raggiungimento dei tuoi obiettivi. Sei a un passo dalla trasformazione completa - 
+                resta solo l'ultima settimana per consolidare tutto!
+            </p>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">📚 I Tuoi Compiti per Questa Settimana</h3>
+                <ul class="homework-list">
+                    <li>✅ Dedica 1 ora al giorno alla tua attività preferita</li>
+                    <li>✅ Condividi i tuoi talenti con qualcuno</li>
+                    <li>✅ Crea un progetto che utilizzi le tue potenzialità</li>
+                    <li>✅ Celebra i progressi raggiunti finora</li>
+                    <li>✅ Pianifica come utilizzare i tuoi talenti nel futuro</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 La settimana 7 si sbloccherà automaticamente tra 7 giorni. 
+                    Usa questo tempo per valorizzare e utilizzare le tue potenzialità!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-success" onclick="downloadHomework()">📄 Scarica Compiti PDF</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 7</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 4;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Scusa, ho avuto un problema. Riprova!", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                try {
+                    const prompt = `
+                    Sei Andrea Padoan, un life coach esperto che sta conducendo la sesta sessione "Scopri le Tue Potenzialità".
+                    
+                    Contesto: È la settimana 6 di un percorso di 7 settimane. L'obiettivo è aiutare l'utente a identificare 
+                    e valorizzare i suoi talenti unici e le sue potenzialità nascoste.
+                    
+                    Utente dice: "${userMessage}"
+                    
+                    Rispondi come Andrea con:
+                    - Focus sulla scoperta e valorizzazione dei talenti
+                    - Domande che aiutano a identificare le potenzialità nascoste
+                    - Celebrazione dei progressi e dei successi raggiunti
+                    - Guida verso l'utilizzo dei talenti per il futuro
+                    - Massimo 2-3 frasi
+                    
+                    Rispondi SOLO con la risposta di Andrea, senza prefissi.
+                    `;
+                    
+                    const response = await window.claude.complete(prompt);
+                    return response.trim();
+                } catch (error) {
+                    console.error('Claude AI error:', error);
+                }
+            }
+            
+            return getPersonalizedFallbackResponse(userMessage);
+        }
+
+        function getPersonalizedFallbackResponse(message) {
+            const responses = [
+                "Fantastico! Vedo che hai delle potenzialità uniche. Dimmi di più su questo talento - quando lo usi di più?",
+                "Interessante! Questo mi dice molto dei tuoi punti di forza. Come potresti utilizzare questa capacità per i tuoi obiettivi?",
+                "Perfetto! Riconosco in te un talento naturale. Cosa ti impedisce di svilupparlo ancora di più?",
+                "Ottimo! Vedo che hai passione per questo. Come ti senti quando metti in pratica questo talento?",
+                "Straordinario! Questo è esattamente il tipo di potenzialità che può fare la differenza. Come potresti condividerla con gli altri?"
+            ];
+            
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('talento') || lowerMessage.includes('bravo') || lowerMessage.includes('capacità')) {
+                return "Fantastico! Riconoscere i propri talenti è il primo passo per valorizzarli. Dimmi, quando ti senti più in sintonia con questa capacità?";
+            }
+            
+            if (lowerMessage.includes('creatività') || lowerMessage.includes('creativo') || lowerMessage.includes('idea')) {
+                return "La creatività è un superpotere! Ho notato che le persone creative spesso sottovalutano questo dono. Come potresti usare la tua creatività per raggiungere i tuoi obiettivi?";
+            }
+            
+            if (lowerMessage.includes('passione') || lowerMessage.includes('amo') || lowerMessage.includes('piace')) {
+                return "Le passioni sono la bussola della vita! Quando seguiamo ciò che amiamo, tutto diventa più facile. Quanto tempo dedichi attualmente a questa passione?";
+            }
+            
+            if (lowerMessage.includes('difficile') || lowerMessage.includes('non sono') || lowerMessage.includes('non ho')) {
+                return "Ti capisco! Spesso i nostri talenti più grandi sono proprio quelli che diamo per scontati. Cosa ti viene naturale fare che gli altri trovano difficile?";
+            }
+            
+            if (lowerMessage.includes('bambino') || lowerMessage.includes('piccolo') || lowerMessage.includes('infanzia')) {
+                return "I sogni dell'infanzia sono spesso i più puri! Raccontano chi siamo veramente. Cosa di quel sogno è ancora vivo in te oggi?";
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            
+            let filled = 0;
+            let total = 0;
+            
+            if (currentSection === 1) {
+                // Count radio buttons
+                const radioGroups = ['q1', 'q2', 'q3', 'q4', 'q5'];
+                radioGroups.forEach(group => {
+                    total++;
+                    const checked = document.querySelector(`input[name="${group}"]:checked`);
+                    if (checked) filled++;
+                });
+            } else {
+                // Count other inputs
+                const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    total++;
+                    if (input.value.trim()) filled++;
+                });
+            }
+            
+            const sectionProgress = (filled / total) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#potentialForm input, #potentialForm textarea, #potentialForm select');
+            formElements.forEach(element => {
+                if (element.type === 'radio') {
+                    if (element.checked) {
+                        formData[element.name] = element.value;
+                    }
+                } else {
+                    formData[element.id] = element.value;
+                }
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week6SessionData', JSON.stringify(sessionData));
+            
+            // Update user progress
+            updateUserProgress();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateUserProgress() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(6)) {
+                    progress.completedWeeks.push(6);
+                    progress.currentWeek = 7;
+                    progress.lastUpdate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+
+        function downloadHomework() {
+            const homeworkContent = `
+                COMPITI SETTIMANA 6 - SCOPRI LE TUE POTENZIALITÀ
+                
+                Andrea Padoan - Lifestyle Coach
+                
+                Ciao! Ecco i tuoi compiti per valorizzare le tue potenzialità:
+                
+                1. TEMPO PER I TUOI TALENTI (1 ora al giorno)
+                   - Dedica almeno 1 ora al giorno alla tua attività preferita
+                   - Quella che ti gratifica di più e ti viene naturale
+                   - Osserva come ti senti durante e dopo
+                   - Nota i progressi che fai
+                
+                2. CONDIVISIONE DEI TALENTI (questa settimana)
+                   - Condividi i tuoi talenti con qualcuno
+                   - Insegna, aiuta o collabora usando le tue capacità
+                   - Nota l'impatto positivo che hai sugli altri
+                   - Celebra la gioia di essere utile
+                
+                3. PROGETTO PERSONALE (inizia questa settimana)
+                   - Crea un piccolo progetto che utilizzi le tue potenzialità
+                   - Può essere creativo, pratico o di aiuto ad altri
+                   - Inizia piccolo ma inizia subito
+                   - Documenta il processo e i risultati
+                
+                4. CELEBRAZIONE DEI PROGRESSI (oggi)
+                   - Fai una lista di tutti i progressi raggiunti finora
+                   - Celebra ogni piccolo miglioramento
+                   - Ringraziati per il coraggio e la costanza
+                   - Condividi i tuoi successi con qualcuno
+                
+                5. PIANIFICAZIONE FUTURA (30 minuti)
+                   - Pianifica come utilizzare i tuoi talenti nel futuro
+                   - Sogna in grande: come potresti impattare il mondo?
+                   - Scrivi 3 modi per sviluppare ulteriormente le tue potenzialità
+                   - Crea un piano d'azione per i prossimi 6 mesi
+                
+                RICORDA: La settimana 7 si attiverà automaticamente tra 7 giorni.
+                Usa questo tempo per valorizzare e utilizzare le tue potenzialità!
+                
+                Sei straordinario,
+                Andrea ⭐
+            `;
+            
+            const blob = new Blob([homeworkContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Compiti_Settimana_6_Potenzialita_Andrea_Padoan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Compiti scaricati! È ora di brillare con i tuoi talenti.', 'success');
+        }
+
+        function scheduleNextSession() {
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            
+            const message = `📅 La tua ultima sessione (Settimana 7 - Consolidamento e Futuro) sarà disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}. Siamo quasi alla fine!`;
+            
+            showMessage(message, 'info');
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo scaduto! Puoi comunque completare la scoperta delle tue potenzialità.', 'warning');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
