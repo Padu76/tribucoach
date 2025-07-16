@@ -9,142 +9,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            // Update profile analysis
-            generateProfileAnalysis();
-        }
-
-        function generateProfileAnalysis() {
-            const scores = userData.scores;
-            const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
-            const averageScore = totalScore / Object.keys(scores).length;
-            
-            const analysisElement = document.getElementById('profileAnalysis');
-            if (!analysisElement) return;
-
-            // Identify strengths and weaknesses
-            const strengths = [];
-            const weaknesses = [];
-            
-            Object.entries(scores).forEach(([area, score]) => {
-                const areaNames = {
-                    wellbeing: 'Benessere Emotivo',
-                    health: 'Salute Fisica',
-                    social: 'Relazioni Sociali',
-                    professional: 'Vita Professionale'
-                };
-                
-                if (score >= 4) {
-                    strengths.push(areaNames[area]);
-                } else if (score <= 2) {
-                    weaknesses.push(areaNames[area]);
-                }
-            });
-
-            // Generate personalized analysis
-            let analysis = `
-                <p><strong>Ciao ${userData.name},</strong> ho analizzato attentamente i risultati del tuo test e voglio condividere con te alcune riflessioni importanti sulla tua situazione attuale.</p>
-                
-                <div class="highlight">
-                    <p><strong>La tua situazione in sintesi:</strong> Il tuo punteggio medio è ${averageScore.toFixed(1)}/5, che indica ${averageScore >= 4 ? 'una buona base di partenza con margini di miglioramento' : averageScore >= 3 ? 'una situazione equilibrata ma con potenziale di crescita significativo' : 'diverse aree che richiedono attenzione e supporto'}.</p>
-                </div>
-                
-                <p>Dopo 12 anni come manager stressato e la mia trasformazione personale, riconosco perfettamente i segnali che emergono dal tuo profilo. <strong>La buona notizia è che sei già sulla strada giusta</strong> - il fatto che tu abbia completato questo test dimostra una consapevolezza e una volontà di migliorare che non tutti possiedono.</p>
-            `;
-
-            // Add strengths analysis
-            if (strengths.length > 0) {
-                analysis += `
-                    <div class="success">
-                        <p><strong>I tuoi punti di forza:</strong> Eccelli in ${strengths.join(' e ')}. Questo è fantastico e rappresenta una base solida su cui costruire. ${strengths.includes('Benessere Emotivo') ? 'La tua stabilità emotiva ti darà la forza per affrontare i cambiamenti.' : ''} ${strengths.includes('Relazioni Sociali') ? 'Le tue relazioni positive sono un supporto prezioso per il tuo percorso.' : ''}</p>
-                    </div>
-                `;
-            }
-
-            // Add weaknesses analysis
-            if (weaknesses.length > 0) {
-                analysis += `
-                    <div class="warning">
-                        <p><strong>Le aree che richiedono attenzione:</strong> ${weaknesses.join(' e ')} mostrano punteggi più bassi. Non ti preoccupare - ho aiutato centinaia di persone in situazioni simili. ${weaknesses.includes('Salute Fisica') ? 'La forma fisica è spesso il primo domino che fa cadere tutti gli altri positivamente.' : ''} ${weaknesses.includes('Vita Professionale') ? 'Lo stress lavorativo è qualcosa che conosco bene - insieme troveremo strategie per gestirlo.' : ''}</p>
-                    </div>
-                `;
-            }
-
-            // Add personalized insights based on quadrant
-            const quadrant = userData.quadrant?.split(':')[0];
-            switch(quadrant) {
-                case 'Q1':
-                    analysis += `
-                        <p>Dal tuo profilo emerge che sei una persona <strong>competente e determinata</strong>. Hai le capacità per raggiungere i tuoi obiettivi, ma forse ti manca una strategia strutturata o stai cercando di fare tutto da solo. Il mio approccio sarà quello di un consulente esperto che ti affianca senza giudicare.</p>
-                    `;
-                    break;
-                case 'Q2':
-                    analysis += `
-                        <p>Vedo che hai <strong>forza emotiva e resilienza</strong>, ma potresti aver bisogno di supporto nelle competenze tecniche o nelle strategie pratiche. Perfetto - questo è esattamente il tipo di supporto che posso offrirti, guidandoti passo dopo passo.</p>
-                    `;
-                    break;
-                case 'Q3':
-                    analysis += `
-                        <p>Il tuo profilo mostra <strong>competenze tecniche solide</strong> ma potrebbero mancare la motivazione o la spinta emotiva per il cambiamento. Riconosco questo pattern - spesso le persone capaci si bloccano mentalmente. Insieme lavoreremo sul mindset e la motivazione.</p>
-                    `;
-                    break;
-                case 'Q4':
-                    analysis += `
-                        <p>Sento che stai attraversando un momento di <strong>ricerca e crescita</strong>. Hai bisogno di supporto sia pratico che emotivo, e questo è perfettamente normale. Sarò il tuo guide paziente e comprensivo in ogni passo del percorso.</p>
-                    `;
-                    break;
-            }
-
-            analysis += `
-                <p><strong>Perché questo percorso può davvero aiutarti:</strong> Non è il solito corso teorico. È un sistema testato da me personalmente e da centinaia di persone che ho seguito. Ogni settimana riceverai materiali specifici per la tua situazione e avrai accesso diretto a me per domande e supporto.</p>
-                
-                <p>Il percorso è strutturato in <strong>7 settimane progressive</strong> che ti porteranno dalla consapevolezza attuale alla trasformazione concreta. Non ti chiederò di stravolgere la tua vita dall'oggi al domani - insieme procederemo con piccoli passi sostenibili che portano a grandi risultati.</p>
-                
-                <p><strong>Cosa rende questo percorso diverso:</strong> Io ci sono passato. So cosa significa essere stressato, demotivato, con la sensazione di essere in una gabbia. E so anche cosa significa uscirne. Non sono solo un coach - sono qualcuno che ha vissuto la tua stessa trasformazione.</p>
-            `;
-
-            // Add specific challenges if available
-            if (userData.challenges && userData.challenges.length > 0) {
-                const challengeMessages = {
-                    'procrastination': 'la procrastinazione che ti blocca',
-                    'low_energy': 'la mancanza di energia che ti frena',
-                    'anxiety': 'l\'ansia che ti limita',
-                    'low_self_esteem': 'la bassa autostima che ti sabota'
-                };
-                
-                const userChallenges = userData.challenges.map(c => challengeMessages[c] || c).join(', ');
-                analysis += `
-                    <p><strong>Le tue sfide specifiche:</strong> Ho notato che stai affrontando ${userChallenges}. Sono sfide che conosco bene e per le quali ho strategie specifiche e testate. Non sei solo in questo.</p>
-                `;
-            }
-
-            analysis += `
-                <div class="analysis-cta">
-                    <h3>🚀 Sei Pronto per la Trasformazione?</h3>
-                    <p>Questo è il momento perfetto per iniziare. Hai già fatto il passo più difficile: prendere consapevolezza. Ora lascia che ti guidi verso la versione migliore di te stesso.</p>
-                    <button class="btn btn-primary" onclick="startJourney()" style="font-size: 1.1rem; padding: 1rem 2rem;">
-                        ✨ Inizia il Tuo Percorso di Trasformazione
-                    </button>
-                </div>
-            `;
-
-            analysisElement.innerHTML = analysis;
-        }
-
-        function startJourney() {
-            // Scroll to current week focus
-            const currentWeekElement = document.getElementById('currentWeekFocus');
-            if (currentWeekElement) {
-                currentWeekElement.scrollIntoView({ behavior: 'smooth' });
-                
-                // Add emphasis animation
-                currentWeekElement.style.transform = 'scale(1.02)';
-                setTimeout(() => {
-                    currentWeekElement.style.transform = 'scale(1)';
-                }, 300);
-            }
-            
-            // Show welcome message
-            showSuccessMessage('🎉 Perfetto! Benvenuto nel tuo percorso di trasformazione. Scorri in basso per vedere la tua prima settimana!');
         }
 
         body {
@@ -416,6 +280,179 @@
             flex-wrap: wrap;
         }
 
+        /* Profile Analysis Section */
+        .profile-analysis {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .analysis-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .analysis-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        .analysis-content {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            color: #334155;
+            margin-bottom: 2rem;
+        }
+
+        .analysis-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        .analysis-content .highlight {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #ea580c;
+            margin: 1.5rem 0;
+        }
+
+        .analysis-content .warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f59e0b;
+            margin: 1.5rem 0;
+        }
+
+        .analysis-content .success {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #16a34a;
+            margin: 1.5rem 0;
+        }
+
+        .analysis-cta {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .analysis-cta h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-cta p {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(30,41,59,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            transition: width 0.3s ease;
+        }
+
+        .stat-improvement {
+            font-size: 0.9rem;
+            color: #ea580c;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        /* Improvement CTA Section */
+        .improvement-cta {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .improvement-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .improvement-text {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
         /* Chat Section */
         .chat-section {
             background: white;
@@ -542,144 +579,6 @@
         .btn-warning {
             background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
             color: white;
-        }
-
-        /* Profile Analysis Section */
-        .profile-analysis {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-
-        .analysis-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .analysis-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .analysis-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        .analysis-subtitle {
-            font-size: 1rem;
-            color: #64748b;
-        }
-
-        .analysis-content {
-            line-height: 1.8;
-            font-size: 1.1rem;
-            color: #334155;
-            margin-bottom: 2rem;
-        }
-
-        .analysis-content p {
-            margin-bottom: 1.5rem;
-        }
-
-        .analysis-content .highlight {
-            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #ea580c;
-            margin: 1.5rem 0;
-        }
-
-        .analysis-content .warning {
-            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f59e0b;
-            margin: 1.5rem 0;
-        }
-
-        .analysis-content .success {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #16a34a;
-            margin: 1.5rem 0;
-        }
-
-        .analysis-cta {
-            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 2rem;
-        }
-
-        .analysis-cta h3 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
-        }
-
-        .analysis-cta p {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #64748b;
-        }
-
-        .stat-bar {
-            width: 100%;
-            height: 6px;
-            background: rgba(30,41,59,0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .stat-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
-            transition: width 0.3s ease;
         }
 
         /* Animations */
@@ -841,36 +740,54 @@
             </div>
         </section>
 
-        <!-- Stats Grid -->
+        <!-- Stats Grid with Improvement CTA -->
         <section class="stats-grid fade-in">
             <div class="stat-card">
                 <div class="stat-value" id="wellbeingScore">4</div>
-                <div class="stat-label">Benessere</div>
+                <div class="stat-label">Benessere Emotivo</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" style="width: 80%"></div>
+                    <div class="stat-fill" id="wellbeingFill" style="width: 80%"></div>
                 </div>
+                <div class="stat-improvement">Puoi migliorare!</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="healthScore">3</div>
-                <div class="stat-label">Salute</div>
+                <div class="stat-label">Salute Fisica</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" style="width: 60%"></div>
+                    <div class="stat-fill" id="healthFill" style="width: 60%"></div>
                 </div>
+                <div class="stat-improvement">Puoi migliorare!</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="socialScore">4</div>
-                <div class="stat-label">Sociale</div>
+                <div class="stat-label">Relazioni Sociali</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" style="width: 80%"></div>
+                    <div class="stat-fill" id="socialFill" style="width: 80%"></div>
                 </div>
+                <div class="stat-improvement">Puoi migliorare!</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="professionalScore">3</div>
-                <div class="stat-label">Lavoro</div>
+                <div class="stat-label">Vita Professionale</div>
                 <div class="stat-bar">
-                    <div class="stat-fill" style="width: 60%"></div>
+                    <div class="stat-fill" id="professionalFill" style="width: 60%"></div>
                 </div>
+                <div class="stat-improvement">Puoi migliorare!</div>
             </div>
+        </section>
+
+        <!-- Improvement CTA Section -->
+        <section class="improvement-cta fade-in">
+            <h2 class="improvement-title">🎯 Questi Sono i Tuoi Punteggi Attuali</h2>
+            <p class="improvement-text">
+                Hai appena visto i tuoi punteggi nelle 4 aree principali del benessere. 
+                <strong>La buona notizia?</strong> Ogni punteggio può essere migliorato significativamente! 
+                Il mio percorso di 7 settimane è progettato per far crescere tutti questi numeri e, 
+                soprattutto, per farti sentire meglio ogni giorno.
+            </p>
+            <button class="btn btn-primary" onclick="startImprovementJourney()" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                🚀 Inizia Subito il Tuo Miglioramento
+            </button>
         </section>
 
         <!-- Chat Section -->
@@ -938,11 +855,18 @@
                 professional: 3
             },
             chatHistory: [],
-            automaticCoaching: null
+            automaticCoaching: null,
+            quadrant: null,
+            consciousnessLevel: null,
+            readinessLevel: 3,
+            challenges: [],
+            motivationDrivers: []
         };
 
         // Initialize dashboard
         async function initDashboard() {
+            console.log('🚀 Inizializzazione dashboard...');
+            
             // Load user data
             await loadUserData();
             
@@ -951,6 +875,9 @@
             
             // Update UI
             updateDashboard();
+            
+            // FORCE generate profile analysis
+            generateProfileAnalysis();
             
             // Add welcome fade-in effect
             setTimeout(() => {
@@ -963,10 +890,14 @@
 
         async function loadUserData() {
             try {
+                console.log('📊 Caricamento dati utente...');
                 const savedData = localStorage.getItem('lifestyleQuizResults');
                 if (savedData) {
                     const profileData = JSON.parse(savedData);
-                    userData.name = profileData.name || userData.name;
+                    console.log('✅ Dati trovati:', profileData);
+                    
+                    // Update userData with profile data
+                    userData.name = profileData.name || 'Utente';
                     userData.scores = profileData.scores || userData.scores;
                     userData.quadrant = profileData.quadrant;
                     userData.consciousnessLevel = profileData.consciousnessLevel;
@@ -974,7 +905,9 @@
                     userData.challenges = profileData.challenges || [];
                     userData.motivationDrivers = profileData.motivationDrivers || [];
                     
-                    console.log('✅ Dati utente caricati');
+                    console.log('✅ Dati utente caricati:', userData);
+                } else {
+                    console.log('⚠️ Nessun dato trovato, uso dati di default');
                 }
             } catch (error) {
                 console.error('❌ Errore caricamento dati:', error);
@@ -1025,13 +958,14 @@
             
             Object.entries(scores).forEach(([key, value]) => {
                 const scoreElement = document.getElementById(key + 'Score');
+                const fillElement = document.getElementById(key + 'Fill');
+                
                 if (scoreElement) {
                     scoreElement.textContent = value;
-                    
-                    const bar = scoreElement.parentElement.querySelector('.stat-fill');
-                    if (bar) {
-                        bar.style.width = (value / 5) * 100 + '%';
-                    }
+                }
+                
+                if (fillElement) {
+                    fillElement.style.width = (value / 5) * 100 + '%';
                 }
             });
         }
@@ -1112,6 +1046,179 @@
             };
             
             return weekContents[weekNumber];
+        }
+
+        function generateProfileAnalysis() {
+            console.log('🔍 Generazione analisi profilo...');
+            
+            const scores = userData.scores;
+            const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+            const averageScore = totalScore / Object.keys(scores).length;
+            
+            const analysisElement = document.getElementById('profileAnalysis');
+            if (!analysisElement) {
+                console.error('❌ Elemento profileAnalysis non trovato');
+                return;
+            }
+
+            // Identify strengths and weaknesses
+            const strengths = [];
+            const weaknesses = [];
+            
+            Object.entries(scores).forEach(([area, score]) => {
+                const areaNames = {
+                    wellbeing: 'Benessere Emotivo',
+                    health: 'Salute Fisica',
+                    social: 'Relazioni Sociali',
+                    professional: 'Vita Professionale'
+                };
+                
+                if (score >= 4) {
+                    strengths.push(areaNames[area]);
+                } else if (score <= 2) {
+                    weaknesses.push(areaNames[area]);
+                }
+            });
+
+            // Generate 20-25 line personalized analysis
+            let analysis = `
+                <p><strong>Ciao ${userData.name || 'Amico/a'},</strong> ho analizzato attentamente i risultati del tuo test e voglio condividere con te alcune riflessioni importanti sulla tua situazione attuale. Quello che ho davanti è il quadro di una persona che ha il coraggio di guardarsi dentro e decidere di migliorare.</p>
+                
+                <div class="highlight">
+                    <p><strong>La tua situazione in sintesi:</strong> Il tuo punteggio medio è ${averageScore.toFixed(1)}/5, che indica ${averageScore >= 4 ? 'una buona base di partenza con margini di miglioramento interessanti' : averageScore >= 3 ? 'una situazione equilibrata ma con potenziale di crescita significativo' : 'diverse aree che richiedono attenzione e supporto, ma con grandi opportunità di trasformazione'}.</p>
+                </div>
+                
+                <p>Dopo 12 anni come manager stressato e la mia trasformazione personale, riconosco perfettamente i segnali che emergono dal tuo profilo. <strong>La buona notizia è che sei già sulla strada giusta</strong> - il fatto che tu abbia completato questo test dimostra una consapevolezza e una volontà di migliorare che non tutti possiedono. Hai fatto il primo passo più difficile: ammettere che vuoi cambiare.</p>
+                
+                <p><strong>La mia storia ti suonerà familiare:</strong> Per anni ho vissuto in "modalità pilota automatico", correndo da una scadenza all'altra, sempre stressato, sempre stanco. La sveglia suonava e già sapevo che sarebbe stata un'altra giornata identica. Poi ho capito che non era la vita che volevo vivere.</p>
+            `;
+
+            // Add strengths analysis
+            if (strengths.length > 0) {
+                analysis += `
+                    <div class="success">
+                        <p><strong>I tuoi punti di forza:</strong> Eccelli in ${strengths.join(' e ')}. Questo è fantastico e rappresenta una base solida su cui costruire. ${strengths.includes('Benessere Emotivo') ? 'La tua stabilità emotiva ti darà la forza per affrontare i cambiamenti.' : ''} ${strengths.includes('Relazioni Sociali') ? 'Le tue relazioni positive sono un supporto prezioso per il tuo percorso.' : ''} ${strengths.includes('Salute Fisica') ? 'La tua forma fisica è un asset importante che ti darà energia per tutti gli altri cambiamenti.' : ''}</p>
+                    </div>
+                `;
+            }
+
+            // Add weaknesses analysis
+            if (weaknesses.length > 0) {
+                analysis += `
+                    <div class="warning">
+                        <p><strong>Le aree che richiedono attenzione:</strong> ${weaknesses.join(' e ')} mostrano punteggi più bassi. Non ti preoccupare - ho aiutato centinaia di persone in situazioni simili. ${weaknesses.includes('Salute Fisica') ? 'La forma fisica è spesso il primo domino che fa cadere tutti gli altri positivamente.' : ''} ${weaknesses.includes('Vita Professionale') ? 'Lo stress lavorativo è qualcosa che conosco bene - insieme troveremo strategie per gestirlo.' : ''} ${weaknesses.includes('Benessere Emotivo') ? 'Il benessere emotivo è la base di tutto - lavoreremo su questo per darti stabilità.' : ''}</p>
+                    </div>
+                `;
+            }
+
+            // Add personalized insights based on quadrant
+            const quadrant = userData.quadrant?.split(':')[0];
+            switch(quadrant) {
+                case 'Q1':
+                    analysis += `
+                        <p>Dal tuo profilo emerge che sei una persona <strong>competente e determinata</strong>. Hai le capacità per raggiungere i tuoi obiettivi, ma forse ti manca una strategia strutturata o stai cercando di fare tutto da solo. Il mio approccio sarà quello di un consulente esperto che ti affianca senza giudicare. Non hai bisogno di qualcuno che ti dica cosa fare - hai bisogno di qualcuno che ti aiuti a organizzare quello che già sai.</p>
+                    `;
+                    break;
+                case 'Q2':
+                    analysis += `
+                        <p>Vedo che hai <strong>forza emotiva e resilienza</strong>, ma potresti aver bisogno di supporto nelle competenze tecniche o nelle strategie pratiche. Perfetto - questo è esattamente il tipo di supporto che posso offrirti, guidandoti passo dopo passo. La tua stabilità emotiva è un grande vantaggio che ti permetterà di apprendere velocemente.</p>
+                    `;
+                    break;
+                case 'Q3':
+                    analysis += `
+                        <p>Il tuo profilo mostra <strong>competenze tecniche solide</strong> ma potrebbero mancare la motivazione o la spinta emotiva per il cambiamento. Riconosco questo pattern - spesso le persone capaci si bloccano mentalmente. Insieme lavoreremo sul mindset e la motivazione. Hai tutto quello che serve, devi solo "accenderti".</p>
+                    `;
+                    break;
+                case 'Q4':
+                    analysis += `
+                        <p>Sento che stai attraversando un momento di <strong>ricerca e crescita</strong>. Hai bisogno di supporto sia pratico che emotivo, e questo è perfettamente normale. Sarò il tuo guide paziente e comprensivo in ogni passo del percorso. Non ti giudicherò mai - ti sosterrò sempre.</p>
+                    `;
+                    break;
+                default:
+                    analysis += `
+                        <p>Dal tuo profilo vedo una persona <strong>in cerca di miglioramento</strong>. Hai la motivazione e la determinazione per cambiare, e questo è già un grande punto di partenza. Insieme troveremo la strada migliore per te.</p>
+                    `;
+            }
+
+            analysis += `
+                <p><strong>Perché questo percorso può davvero aiutarti:</strong> Non è il solito corso teorico dove ti dicono "mangia sano e fai sport". È un sistema testato da me personalmente e da centinaia di persone che ho seguito. Ogni settimana riceverai materiali specifici per la tua situazione e avrai accesso diretto a me per domande e supporto. Non sei un numero - sei una persona unica con la sua storia.</p>
+                
+                <p>Il percorso è strutturato in <strong>7 settimane progressive</strong> che ti porteranno dalla consapevolezza attuale alla trasformazione concreta. Non ti chiederò di stravolgere la tua vita dall'oggi al domani - insieme procederemo con piccoli passi sostenibili che portano a grandi risultati. Ogni settimana costruiremo su quella precedente.</p>
+                
+                <p><strong>Cosa rende questo percorso diverso:</strong> Io ci sono passato. So cosa significa essere stressato, demotivato, con la sensazione di essere in una gabbia. E so anche cosa significa uscirne. Non sono solo un coach - sono qualcuno che ha vissuto la tua stessa trasformazione. Quando mi scrivi, dall'altra parte c'è qualcuno che capisce davvero.</p>
+                
+                <p><strong>Il metodo che uso:</strong> Non ti darò una lista di cose da fare. Ti guiderò attraverso un processo di scoperta dove tu stesso/a troverai le risposte. Ti fornirò strumenti pratici, testati e adattati alla tua personalità. Non esiste un approccio uguale per tutti - esiste l'approccio giusto per te.</p>
+            `;
+
+            // Add specific challenges if available
+            if (userData.challenges && userData.challenges.length > 0) {
+                const challengeMessages = {
+                    'procrastination': 'la procrastinazione che ti blocca',
+                    'low_energy': 'la mancanza di energia che ti frena',
+                    'anxiety': 'l\'ansia che ti limita',
+                    'low_self_esteem': 'la bassa autostima che ti sabota',
+                    'bad_habits': 'le cattive abitudini che ti ostacolano',
+                    'lack_focus': 'la mancanza di concentrazione che ti disperde',
+                    'time_management': 'la gestione del tempo che ti sfugge',
+                    'work_life_balance': 'l\'equilibrio vita-lavoro che non trovi'
+                };
+                
+                const userChallenges = userData.challenges.map(c => challengeMessages[c] || c).join(', ');
+                analysis += `
+                    <p><strong>Le tue sfide specifiche:</strong> Ho notato che stai affrontando ${userChallenges}. Sono sfide che conosco bene e per le quali ho strategie specifiche e testate. Non sei solo in questo - migliaia di persone prima di te hanno superato gli stessi ostacoli.</p>
+                `;
+            }
+
+            analysis += `
+                <p><strong>Cosa succederà nelle prossime settimane:</strong> Inizieremo dolcemente con un'analisi profonda di dove sei ora. Poi, settimana dopo settimana, costruiremo insieme il tuo nuovo stile di vita. Non sarà sempre facile, ma sarà sempre sostenibile. E io sarò sempre qui.</p>
+                
+                <p><strong>La mia promessa:</strong> Non ti abbandonerò mai. Se hai una domanda, se hai un momento di difficoltà, se hai bisogno di chiarimenti - io ci sono. Il mio obiettivo non è venderti un corso, ma aiutarti a diventare la versione migliore di te stesso/a.</p>
+                
+                <div class="analysis-cta">
+                    <h3>🚀 Sei Pronto per la Trasformazione?</h3>
+                    <p>Questo è il momento perfetto per iniziare. Hai già fatto il passo più difficile: prendere consapevolezza. Ora lascia che ti guidi verso la versione migliore di te stesso.</p>
+                    <button class="btn btn-primary" onclick="startJourney()" style="font-size: 1.1rem; padding: 1rem 2rem;">
+                        ✨ Inizia il Tuo Percorso di Trasformazione
+                    </button>
+                </div>
+            `;
+
+            analysisElement.innerHTML = analysis;
+            console.log('✅ Analisi profilo generata');
+        }
+
+        function startJourney() {
+            // Scroll to current week focus
+            const currentWeekElement = document.getElementById('currentWeekFocus');
+            if (currentWeekElement) {
+                currentWeekElement.scrollIntoView({ behavior: 'smooth' });
+                
+                // Add emphasis animation
+                currentWeekElement.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    currentWeekElement.style.transform = 'scale(1)';
+                }, 300);
+            }
+            
+            // Show welcome message
+            showSuccessMessage('🎉 Perfetto! Benvenuto nel tuo percorso di trasformazione. Scorri in basso per vedere la tua prima settimana!');
+        }
+
+        function startImprovementJourney() {
+            // Scroll to current week focus
+            const currentWeekElement = document.getElementById('currentWeekFocus');
+            if (currentWeekElement) {
+                currentWeekElement.scrollIntoView({ behavior: 'smooth' });
+                
+                // Add emphasis animation
+                currentWeekElement.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    currentWeekElement.style.transform = 'scale(1)';
+                }, 300);
+            }
+            
+            // Show motivational message
+            showSuccessMessage('🚀 Fantastico! Iniziamo subito a migliorare tutti i tuoi punteggi. Il tuo percorso di trasformazione ti aspetta!');
         }
 
         function openChat() {
