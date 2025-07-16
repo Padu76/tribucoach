@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settimana 1 - Incontro Conoscitivo | Andrea Padoan Coach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .session-info {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .timer-display {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            width: 200px;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #22c55e;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Welcome Section */
+        .welcome-section {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ea580c;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+        }
+
+        .coach-intro {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .coach-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .coach-message {
+            flex: 1;
+            text-align: left;
+        }
+
+        .coach-message h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .coach-message p {
+            color: #ea580c;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Session Layout */
+        .session-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .session-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .panel-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-subtitle {
+            font-size: 1rem;
+            color: #64748b;
+        }
+
+        /* Chat Panel */
+        .chat-messages {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            max-width: 85%;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .message.coach {
+            background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+            margin-right: auto;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: #ea580c;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Form Panel */
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h3 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ea580c;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-progress {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-progress-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-progress-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .form-progress-fill {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e293b;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            border-color: #ea580c;
+            color: #ea580c;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-disabled {
+            background: #94a3b8;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        /* Completion Section */
+        .completion-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+
+        .completion-section.active {
+            display: block;
+        }
+
+        .completion-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .completion-message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #475569;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .homework-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .homework-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #16a34a;
+            margin-bottom: 1rem;
+        }
+
+        .homework-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .homework-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .homework-list li:last-child {
+            border-bottom: none;
+        }
+
+        .completion-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* Animations */
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .session-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .welcome-section {
+                padding: 2rem;
+            }
+            
+            .coach-intro {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .completion-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🤝 Settimana 1 - Incontro Conoscitivo</div>
+            <div class="session-info">
+                <div class="timer-display">
+                    ⏱️ <span id="sessionTimer">40:00</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sessionProgress"></div>
+                </div>
+                <a href="module-hub.html" class="back-button">← Torna ai Moduli</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Welcome Section -->
+        <section class="welcome-section fade-in">
+            <h1 class="welcome-title">Benvenuto nella Tua Prima Sessione! 🎉</h1>
+            <p class="welcome-subtitle">Incontro Conoscitivo - Settimana 1</p>
+            <p class="welcome-description">
+                Oggi iniziamo il nostro viaggio insieme! Questa sessione di 40 minuti è dedicata a conoscerti meglio. 
+                Esploreremo il tuo passato, analizzeremo il presente e definiremo chiaramente i tuoi obiettivi per il futuro. 
+                Sarà un mix di coaching personale con me e domande strutturate per raccogliere tutte le informazioni necessarie.
+            </p>
+            
+            <div class="coach-intro">
+                <div class="coach-avatar">👨‍💼</div>
+                <div class="coach-message">
+                    <h3>Ciao! Sono Andrea</h3>
+                    <p>Sono qui per accompagnarti in questo percorso. Sarò il tuo coach, la tua guida e il tuo supporto. 
+                    Iniziamo con qualche domanda per conoscerti meglio, poi procederemo con il questionario strutturato.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Session Container -->
+        <div class="session-container">
+            <!-- Chat Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">💬</div>
+                    <div>
+                        <h2 class="panel-title">Coaching con Andrea</h2>
+                        <p class="panel-subtitle">La tua sessione di coaching personalizzata</p>
+                    </div>
+                </div>
+                
+                <div class="chat-status">
+                    <div class="status-dot"></div>
+                    <span>Andrea è online e pronto ad aiutarti</span>
+                </div>
+                
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message coach">
+                        <div class="message-content">
+                            Ciao! Sono davvero felice di iniziare questo percorso con te. Ho visto il tuo profilo dal test iniziale e sono sicuro che insieme riusciremo a raggiungere grandi risultati. 
+                            Prima di iniziare con le domande strutturate, dimmi: come ti senti oggi all'idea di iniziare questa trasformazione? 🚀
+                        </div>
+                        <div class="message-time">Proprio ora</div>
+                    </div>
+                </div>
+                
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Scrivi la tua risposta ad Andrea...">
+                    <button class="btn btn-primary" onclick="sendMessage()">Invia</button>
+                </div>
+            </div>
+
+            <!-- Form Panel -->
+            <div class="session-panel">
+                <div class="panel-header">
+                    <div class="panel-icon">📋</div>
+                    <div>
+                        <h2 class="panel-title">Questionario Conoscitivo</h2>
+                        <p class="panel-subtitle">Dimmi di più su di te</p>
+                    </div>
+                </div>
+                
+                <div class="form-progress">
+                    <div class="form-progress-text">Progresso questionario: <span id="formProgressText">0%</span></div>
+                    <div class="form-progress-bar">
+                        <div class="form-progress-fill" id="formProgressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <form id="knowledgeForm">
+                    <!-- Sezione 1: Informazioni Personali -->
+                    <div class="form-section" id="section1">
+                        <h3>📝 Informazioni Personali</h3>
+                        <div class="form-group">
+                            <label for="currentSituation">Descrivi la tua situazione attuale in poche parole:</label>
+                            <textarea id="currentSituation" placeholder="Es: Manager stressato, mamma sempre di corsa, studente demotivato..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="dailyLife">Come descriveresti una tua giornata tipo?</label>
+                            <textarea id="dailyLife" placeholder="Raccontami come si svolge una giornata normale..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="lifestyle">Conduci una vita dinamica o sedentaria?</label>
+                            <select id="lifestyle" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="molto_dinamica">Molto dinamica - sempre in movimento</option>
+                                <option value="dinamica">Dinamica - abbastanza attivo</option>
+                                <option value="equilibrata">Equilibrata - momenti attivi e di riposo</option>
+                                <option value="sedentaria">Sedentaria - principalmente davanti al computer</option>
+                                <option value="molto_sedentaria">Molto sedentaria - quasi sempre fermo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 2: Passato -->
+                    <div class="form-section" id="section2" style="display: none;">
+                        <h3>🔙 Il Tuo Passato</h3>
+                        <div class="form-group">
+                            <label for="pastDecision">Quando è stata l'ultima volta che hai preso una decisione importante per te?</label>
+                            <textarea id="pastDecision" placeholder="Dimmi dell'ultima decisione che ha cambiato qualcosa nella tua vita..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="pastSuccess">Qual è stata la cosa più importante che hai fatto nella tua vita?</label>
+                            <textarea id="pastSuccess" placeholder="Racconta il tuo successo o momento di cui sei più orgoglioso..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="pastChallenge">Cosa ti ha fatto e ti fa superare meglio gli ostacoli?</label>
+                            <textarea id="pastChallenge" placeholder="Quali sono le tue strategie per superare le difficoltà?" onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 3: Presente -->
+                    <div class="form-section" id="section3" style="display: none;">
+                        <h3>📍 Il Tuo Presente</h3>
+                        <div class="form-group">
+                            <label for="currentMoment">In che momento sei della tua vita?</label>
+                            <textarea id="currentMoment" placeholder="Cosa caratterizza questo periodo della tua vita?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="workSatisfaction">Il lavoro ti soddisfa?</label>
+                            <select id="workSatisfaction" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="molto_soddisfatto">Molto soddisfatto - amo quello che faccio</option>
+                                <option value="soddisfatto">Soddisfatto - nel complesso va bene</option>
+                                <option value="neutro">Neutro - né soddisfatto né insoddisfatto</option>
+                                <option value="insoddisfatto">Insoddisfatto - non mi piace quello che faccio</option>
+                                <option value="molto_insoddisfatto">Molto insoddisfatto - odio il mio lavoro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="selfCare">Ti concedi tempo sufficiente per lo svago e la cura di te?</label>
+                            <select id="selfCare" onchange="updateProgress()">
+                                <option value="">Seleziona...</option>
+                                <option value="sempre">Sempre - ho un buon equilibrio</option>
+                                <option value="spesso">Spesso - riesco a ritagliarmi del tempo</option>
+                                <option value="a_volte">A volte - dipende dal periodo</option>
+                                <option value="raramente">Raramente - sono sempre impegnato</option>
+                                <option value="mai">Mai - non ho tempo per me</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 4: Futuro -->
+                    <div class="form-section" id="section4" style="display: none;">
+                        <h3>🚀 Il Tuo Futuro</h3>
+                        <div class="form-group">
+                            <label for="changeReason">Quando ti sei reso conto di voler cambiare? Cosa è scattato?</label>
+                            <textarea id="changeReason" placeholder="Racconta il momento in cui hai deciso che dovevi cambiare qualcosa..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="dreamGoal">Qual è il tuo obiettivo da sogno?</label>
+                            <textarea id="dreamGoal" placeholder="Se potessi realizzare qualsiasi cosa, cosa vorresti raggiungere?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="yearGoal">Quale obiettivo ti puoi dare per quest'anno?</label>
+                            <textarea id="yearGoal" placeholder="Un obiettivo realistico ma sfidante per i prossimi 12 mesi..." onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="monthGoal">Obiettivo entro il prossimo mese:</label>
+                            <textarea id="monthGoal" placeholder="Cosa vuoi raggiungere nei prossimi 30 giorni?" onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Sezione 5: Motivazioni -->
+                    <div class="form-section" id="section5" style="display: none;">
+                        <h3>💪 Le Tue Motivazioni</h3>
+                        <div class="form-group">
+                            <label for="mainDesire">Qual è il desiderio principale che ti spinge?</label>
+                            <textarea id="mainDesire" placeholder="Cosa vuoi davvero raggiungere con questo percorso?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mainPain">Cosa ti fa maggiormente soffrire della tua situazione attuale?</label>
+                            <textarea id="mainPain" placeholder="Cosa non sopporti più della tua vita attuale?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mainJoy">Cosa ti fa maggiormente gioire?</label>
+                            <textarea id="mainJoy" placeholder="Cosa ti rende davvero felice?" onchange="updateProgress()"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="feelGood">Cosa ti fa sentire bene?</label>
+                            <textarea id="feelGood" placeholder="Attività, momenti, situazioni che ti danno energia positiva..." onchange="updateProgress()"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
+                        <button type="button" class="btn btn-success" id="completeBtn" onclick="completeSession()" style="display: none;">✅ Completa Sessione</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Completion Section -->
+        <section class="completion-section" id="completionSection">
+            <h2 class="completion-title">🎉 Sessione Completata!</h2>
+            <p class="completion-message">
+                Fantastico! Hai completato la tua prima sessione di coaching. Ho raccolto tutte le informazioni necessarie 
+                per personalizzare il tuo percorso. Ora hai dei compiti da svolgere questa settimana per consolidare 
+                quello che abbiamo scoperto insieme.
+            </p>
+            
+            <div class="homework-section">
+                <h3 class="homework-title">📚 I Tuoi Compiti per Questa Settimana</h3>
+                <ul class="homework-list">
+                    <li>✅ Rifletti sulla tua storia focalizzata (passato, presente, futuro)</li>
+                    <li>✅ Scrivi una lettera ad un amico immaginario sulla tua situazione attuale</li>
+                    <li>✅ Dedica 10 minuti al giorno alla riflessione personale</li>
+                    <li>✅ Osserva i tuoi pattern comportamentali quotidiani</li>
+                    <li>✅ Identifica 3 momenti della giornata in cui ti senti più energico</li>
+                </ul>
+                <p style="margin-top: 1rem; font-style: italic; color: #64748b;">
+                    💡 Ricorda: la settimana 2 si sbloccherà automaticamente tra 7 giorni. 
+                    Usa questo tempo per riflettere e mettere in pratica quello che abbiamo discusso!
+                </p>
+            </div>
+            
+            <div class="completion-actions">
+                <button class="btn btn-success" onclick="downloadHomework()">📄 Scarica Compiti PDF</button>
+                <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
+                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Prossima Sessione</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Session variables
+        let currentSection = 1;
+        let totalSections = 5;
+        let sessionStartTime = Date.now();
+        let sessionDuration = 40 * 60 * 1000; // 40 minutes in milliseconds
+        let timerInterval;
+        let chatResponses = [];
+        let formData = {};
+
+        // Initialize session
+        document.addEventListener('DOMContentLoaded', function() {
+            startSessionTimer();
+            loadUserData();
+            initializeCoaching();
+        });
+
+        function startSessionTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStartTime;
+                const remaining = Math.max(0, sessionDuration - elapsed);
+                
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('sessionTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const progress = (elapsed / sessionDuration) * 100;
+                document.getElementById('sessionProgress').style.width = `${Math.min(progress, 100)}%`;
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    showTimeUpMessage();
+                }
+            }, 1000);
+        }
+
+        function loadUserData() {
+            try {
+                const savedData = localStorage.getItem('lifestyleQuizResults');
+                if (savedData) {
+                    const userData = JSON.parse(savedData);
+                    console.log('User data loaded:', userData);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        function initializeCoaching() {
+            // Initialize coaching system if available
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                console.log('Claude AI coaching system available');
+            } else {
+                console.log('Using fallback coaching responses');
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Get coaching response
+            try {
+                const response = await getCoachingResponse(message);
+                setTimeout(() => {
+                    addMessage(response, 'coach');
+                }, 1000);
+            } catch (error) {
+                console.error('Error getting coaching response:', error);
+                setTimeout(() => {
+                    addMessage("Scusa, ho avuto un problema tecnico. Puoi ripetere la domanda?", 'coach');
+                }, 1000);
+            }
+        }
+
+        function addMessage(content, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const now = new Date();
+            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${content}</div>
+                <div class="message-time">${time}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Store response
+            chatResponses.push({ sender, content, time });
+        }
+
+        async function getCoachingResponse(userMessage) {
+            // Try Claude AI first
+            if (typeof window.claude !== 'undefined' && window.claude.complete) {
+                try {
+                    const prompt = `
+                    Sei Andrea Padoan, un life coach esperto con 12 anni di esperienza come manager stressato che si è trasformato. 
+                    Stai conducendo la prima sessione di coaching "Incontro Conoscitivo" con un utente.
+                    
+                    Contesto: È la settimana 1 di un percorso di 7 settimane. L'obiettivo è conoscere meglio l'utente, 
+                    la sua situazione attuale, il suo passato e i suoi obiettivi futuri.
+                    
+                    Utente dice: "${userMessage}"
+                    
+                    Rispondi come Andrea, con:
+                    - Tono empatico e professionale
+                    - Domande di approfondimento specifiche
+                    - Riferimenti alla tua esperienza personale quando appropriato
+                    - Guida verso la riflessione e la consapevolezza
+                    - Massimo 2-3 frasi
+                    
+                    Rispondi SOLO con la risposta di Andrea, senza prefissi.
+                    `;
+                    
+                    const response = await window.claude.complete(prompt);
+                    return response.trim();
+                } catch (error) {
+                    console.error('Claude AI error:', error);
+                }
+            }
+            
+            // Fallback responses
+            return getPersonalizedFallbackResponse(userMessage);
+        }
+
+        function getPersonalizedFallbackResponse(message) {
+            const responses = [
+                "Capisco perfettamente quello che provi. Anch'io ho vissuto situazioni simili quando ero manager. Puoi dirmi di più su come ti senti in questo momento?",
+                "Interessante! Questo mi fa pensare alla mia esperienza. Quando ho iniziato il mio percorso di cambiamento, ho scoperto che spesso le nostre resistenze nascondono paure profonde. Cosa ti preoccupa di più?",
+                "Perfetto, stiamo andando nella direzione giusta. La consapevolezza è il primo passo verso il cambiamento. Come pensi che questa situazione influenzi le tue giornate?",
+                "Ti ringrazio per la tua onestà. Nel mio percorso ho imparato che essere vulnerabili è in realtà un segno di forza. Cosa vorresti che fosse diverso nella tua vita?",
+                "Molto bene! Vedo che stai riflettendo profondamente. Questo è esattamente quello che serve. Quando hai notato per la prima volta che volevi cambiare qualcosa?"
+            ];
+            
+            // Simple keyword-based personalization
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('stress') || lowerMessage.includes('stanco') || lowerMessage.includes('pressione')) {
+                return "Ti capisco benissimo. Lo stress è stato il mio compagno per 12 anni! Ho imparato che spesso lo stress nasce dal tentativo di controllare tutto. Cosa ti crea maggiore pressione nella tua giornata?";
+            }
+            
+            if (lowerMessage.includes('lavoro') || lowerMessage.includes('ufficio') || lowerMessage.includes('capo')) {
+                return "Ah, il lavoro... quanto ti capisco! Anch'io ho passato anni in un ambiente lavorativo che mi prosciugava. La buona notizia è che si può trovare un equilibrio. Come descriveresti il tuo rapporto con il lavoro?";
+            }
+            
+            if (lowerMessage.includes('famiglia') || lowerMessage.includes('figli') || lowerMessage.includes('partner')) {
+                return "La famiglia è fondamentale, ma spesso diventa anche fonte di stress quando non riusciamo a bilanciare tutto. Ho imparato che prendersi cura di sé è il miglior regalo che possiamo fare ai nostri cari. Come vivi questo equilibrio?";
+            }
+            
+            if (lowerMessage.includes('motivazione') || lowerMessage.includes('energia') || lowerMessage.includes('entusiasmo')) {
+                return "La motivazione è come un fuoco: va alimentata costantemente. Nel mio percorso ho scoperto che la motivazione vera nasce dall'allineamento con i nostri valori profondi. Cosa ti dà davvero energia?";
+            }
+            
+            return responses[Math.floor(Math.random() * responses.length)];
+        }
+
+        function updateProgress() {
+            const sections = document.querySelectorAll('.form-section');
+            const currentSectionEl = sections[currentSection - 1];
+            const inputs = currentSectionEl.querySelectorAll('input, textarea, select');
+            
+            let filled = 0;
+            inputs.forEach(input => {
+                if (input.value.trim()) filled++;
+            });
+            
+            const sectionProgress = (filled / inputs.length) * 100;
+            const totalProgress = ((currentSection - 1) * 100 + sectionProgress) / totalSections;
+            
+            document.getElementById('formProgressText').textContent = `${Math.round(totalProgress)}%`;
+            document.getElementById('formProgressFill').style.width = `${totalProgress}%`;
+        }
+
+        function nextSection() {
+            if (currentSection < totalSections) {
+                // Hide current section
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                
+                // Show next section
+                currentSection++;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                // Update buttons
+                document.getElementById('prevBtn').style.display = 'inline-flex';
+                
+                if (currentSection === totalSections) {
+                    document.getElementById('nextBtn').style.display = 'none';
+                    document.getElementById('completeBtn').style.display = 'inline-flex';
+                }
+                
+                updateProgress();
+            }
+        }
+
+        function prevSection() {
+            if (currentSection > 1) {
+                // Hide current section
+                document.getElementById(`section${currentSection}`).style.display = 'none';
+                
+                // Show previous section
+                currentSection--;
+                document.getElementById(`section${currentSection}`).style.display = 'block';
+                
+                // Update buttons
+                if (currentSection === 1) {
+                    document.getElementById('prevBtn').style.display = 'none';
+                }
+                
+                document.getElementById('nextBtn').style.display = 'inline-flex';
+                document.getElementById('completeBtn').style.display = 'none';
+                
+                updateProgress();
+            }
+        }
+
+        function completeSession() {
+            // Collect all form data
+            const formElements = document.querySelectorAll('#knowledgeForm input, #knowledgeForm textarea, #knowledgeForm select');
+            formElements.forEach(element => {
+                formData[element.id] = element.value;
+            });
+            
+            // Save session data
+            const sessionData = {
+                formData,
+                chatResponses,
+                completedAt: new Date().toISOString(),
+                sessionDuration: Date.now() - sessionStartTime
+            };
+            
+            localStorage.setItem('week1SessionData', JSON.stringify(sessionData));
+            
+            // Update user progress
+            updateUserProgress();
+            
+            // Show completion section
+            document.querySelector('.session-container').style.display = 'none';
+            document.getElementById('completionSection').classList.add('active');
+            
+            // Stop timer
+            clearInterval(timerInterval);
+            
+            // Scroll to completion
+            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateUserProgress() {
+            try {
+                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
+                progress.completedWeeks = progress.completedWeeks || [];
+                
+                if (!progress.completedWeeks.includes(1)) {
+                    progress.completedWeeks.push(1);
+                    progress.currentWeek = 2;
+                    progress.lastUpdate = new Date().toISOString();
+                    
+                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
+                }
+            } catch (error) {
+                console.error('Error updating progress:', error);
+            }
+        }
+
+        function downloadHomework() {
+            // Create homework PDF content
+            const homeworkContent = `
+                COMPITI SETTIMANA 1 - INCONTRO CONOSCITIVO
+                
+                Andrea Padoan - Lifestyle Coach
+                
+                Ciao! Ecco i tuoi compiti per questa settimana:
+                
+                1. RIFLESSIONE GIORNALIERA (10 minuti al giorno)
+                   - Dedica 10 minuti ogni sera a riflettere sulla giornata
+                   - Cosa è andato bene? Cosa potresti migliorare?
+                   - Come ti sei sentito nei diversi momenti?
+                
+                2. LETTERA ALL'AMICO IMMAGINARIO
+                   - Scrivi una lettera ad un amico immaginario
+                   - Racconta la tua situazione attuale senza filtri
+                   - Descrivi i tuoi sogni e le tue paure
+                
+                3. OSSERVAZIONE DEI PATTERN
+                   - Nota i tuoi comportamenti ricorrenti
+                   - Quando ti senti più energico/stanco?
+                   - Quali situazioni ti stressano di più?
+                
+                4. MOMENTI DI ENERGIA
+                   - Identifica 3 momenti della giornata in cui ti senti più energico
+                   - Cosa stai facendo in quei momenti?
+                   - Come puoi replicare quelle condizioni?
+                
+                5. STORIA FOCALIZZATA
+                   - Rifletti su: passato problematico, presente percepito, futuro desiderato
+                   - Scrivi 3 punti per ogni categoria
+                
+                RICORDA: La settimana 2 si attiverà automaticamente tra 7 giorni.
+                Usa questo tempo per metabolizzare quello che abbiamo scoperto insieme!
+                
+                Un abbraccio,
+                Andrea 🚀
+            `;
+            
+            // Create and download file
+            const blob = new Blob([homeworkContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'Compiti_Settimana_1_Andrea_Padoan.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Compiti scaricati! Controlla la cartella download.', 'success');
+        }
+
+        function scheduleNextSession() {
+            const nextWeekDate = new Date();
+            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
+            
+            const message = `📅 La tua prossima sessione (Settimana 2 - Consapevolezza di Sé) sarà disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}. Ti invierò una notifica!`;
+            
+            showMessage(message, 'info');
+            
+            // Set reminder in localStorage
+            localStorage.setItem('nextSessionReminder', nextWeekDate.toISOString());
+        }
+
+        function showTimeUpMessage() {
+            showMessage('⏰ Tempo scaduto! Puoi comunque completare la sessione senza fretta.', 'warning');
+        }
+
+        function showMessage(message, type = 'info') {
+            const colors = {
+                success: '#16a34a',
+                warning: '#f59e0b',
+                info: '#3b82f6',
+                error: '#ef4444'
+            };
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Handle Enter key in chat
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
