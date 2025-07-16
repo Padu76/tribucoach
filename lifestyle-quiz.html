@@ -578,6 +578,19 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase functions
+        import { db } from './firebase.js';
+        import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        
+        // Make functions available globally
+        window.firebaseDB = db;
+        window.firebaseCollection = collection;
+        window.firebaseAddDoc = addDoc;
+        window.firebaseServerTimestamp = serverTimestamp;
+    </script>
+    
     <script>
         class LifestyleQuiz {
             constructor() {
@@ -1272,35 +1285,113 @@
         // Firebase integration
         async function saveToFirebase(profileData) {
             try {
-                // Import Firebase functions
-                const { saveLifestyleProfile, integrateWithExistingSystem } = await import('./firebase-lifestyle-integration.js');
+                console.log('💾 Tentativo salvataggio Firebase...', profileData);
+                
+                // Check if Firebase is available
+                if (!window.firebaseDB) {
+                    console.error('❌ Firebase non disponibile');
+                    return;
+                }
                 
                 // Generate user ID
                 const userId = generateUserId();
                 
-                // Add user ID to profile
-                const extendedProfile = {
+                // Prepare data for Firebase
+                const firebaseData = {
                     ...profileData,
                     userId: userId,
-                    timestamp: new Date().toISOString()
+                    timestamp: window.firebaseServerTimestamp(),
+                    source: 'lifestyle_quiz',
+                    version: '1.0',
+                    
+                    // Convert answers to serializable format
+                    answers: quiz.answers,
+                    
+                    // Add metadata
+                    userAgent: navigator.userAgent,
+                    referrer: document.referrer,
+                    completedAt: new Date().toISOString()
                 };
                 
-                // Save to Firebase
-                const profileId = await saveLifestyleProfile(extendedProfile);
+                // Save to quiz_results collection
+                const docRef = await window.firebaseAddDoc(
+                    window.firebaseCollection(window.firebaseDB, 'quiz_results'), 
+                    firebaseData
+                );
                 
-                // Integrate with existing system
-                await integrateWithExistingSystem({ ...extendedProfile, id: profileId });
+                console.log('✅ Profilo salvato su Firebase:', docRef.id);
                 
-                console.log('✅ Profilo salvato su Firebase:', profileId);
-                
-                // Store profile ID for dashboard
-                localStorage.setItem('lifestyleProfileId', profileId);
+                // Store IDs for dashboard
+                localStorage.setItem('lifestyleProfileId', docRef.id);
                 localStorage.setItem('lifestyleUserId', userId);
+                
+                // Also save to leads collection for admin dashboard
+                await window.firebaseAddDoc(
+                    window.firebaseCollection(window.firebaseDB, 'leads'), 
+                    {
+                        name: profileData.name || 'Utente Lifestyle',
+                        email: profileData.email || '',
+                        phone: profileData.phone || '',
+                        source: 'lifestyle_quiz',
+                        leadScore: calculateLeadScore(profileData),
+                        status: 'new',
+                        
+                        // Lifestyle specific data
+                        quadrant: profileData.quadrant,
+                        consciousnessLevel: profileData.consciousnessLevel,
+                        readinessLevel: profileData.readinessLevel,
+                        challenges: profileData.challenges,
+                        scores: profileData.scores,
+                        
+                        timestamp: window.firebaseServerTimestamp()
+                    }
+                );
+                
+                console.log('✅ Lead salvato per dashboard admin');
                 
             } catch (error) {
                 console.error('❌ Errore salvataggio Firebase:', error);
                 // Continue anyway, data is in localStorage
             }
+        }
+        
+        function calculateLeadScore(profileData) {
+            let score = 0;
+            
+            // Score based on readiness level (30 points max)
+            if (profileData.readinessLevel) {
+                score += profileData.readinessLevel * 6;
+            }
+            
+            // Score based on quadrant (25 points max)
+            if (profileData.quadrant) {
+                if (profileData.quadrant.includes('Q4')) score += 25;
+                else if (profileData.quadrant.includes('Q3')) score += 20;
+                else if (profileData.quadrant.includes('Q2')) score += 15;
+                else if (profileData.quadrant.includes('Q1')) score += 10;
+            }
+            
+            // Score based on consciousness level (20 points max)
+            if (profileData.consciousnessLevel) {
+                if (profileData.consciousnessLevel.includes('Pluralista')) score += 20;
+                else if (profileData.consciousnessLevel.includes('Achiever')) score += 15;
+                else if (profileData.consciousnessLevel.includes('Conformista')) score += 10;
+                else if (profileData.consciousnessLevel.includes('Opportunista')) score += 5;
+            }
+            
+            // Score based on challenges (15 points max)
+            if (profileData.challenges && profileData.challenges.length > 0) {
+                score += Math.min(profileData.challenges.length * 3, 15);
+            }
+            
+            // Score based on wellbeing scores (10 points max)
+            if (profileData.scores) {
+                const avgScore = Object.values(profileData.scores).reduce((a, b) => a + b, 0) / Object.keys(profileData.scores).length;
+                if (avgScore < 3) score += 10;
+                else if (avgScore < 4) score += 5;
+            }
+            
+            return Math.min(Math.max(score, 0), 100);
         }
         
         function generateUserId() {
