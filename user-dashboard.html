@@ -658,7 +658,7 @@
     </main>
 
     <script>
-        // Simulated user data - in production this would come from Firebase
+        // Simulated user data - now loads from Firebase
         let userData = {
             name: "Utente",
             scores: {
@@ -673,15 +673,60 @@
         };
 
         // Initialize dashboard
-        function initDashboard() {
-            // Load user data from localStorage or Firebase
-            loadUserData();
+        async function initDashboard() {
+            // Load user data from Firebase
+            await loadUserDataFromFirebase();
             
             // Update UI with user data
             updateDashboard();
         }
 
-        function loadUserData() {
+        async function loadUserDataFromFirebase() {
+            try {
+                // Get user ID from localStorage
+                const userId = localStorage.getItem('lifestyleUserId');
+                const profileId = localStorage.getItem('lifestyleProfileId');
+                
+                if (userId && profileId) {
+                    // Import Firebase functions
+                    const { 
+                        getLifestyleProfile, 
+                        getLifestyleGoals, 
+                        getLifestyleProgress 
+                    } = await import('./firebase-lifestyle-integration.js');
+                    
+                    // Load profile data
+                    const profile = await getLifestyleProfile(userId);
+                    if (profile) {
+                        userData.name = profile.name || 'Utente';
+                        userData.scores = profile.scores || userData.scores;
+                        userData.quadrant = profile.quadrant;
+                        userData.consciousnessLevel = profile.consciousnessLevel;
+                        userData.readinessLevel = profile.readinessLevel;
+                        userData.challenges = profile.challenges || [];
+                        userData.motivationDrivers = profile.motivationDrivers || [];
+                    }
+                    
+                    // Load goals
+                    userData.goals = await getLifestyleGoals(profileId);
+                    
+                    // Load progress
+                    userData.progress = await getLifestyleProgress(profileId);
+                    
+                    console.log('✅ Dati utente caricati da Firebase');
+                } else {
+                    // Fallback to localStorage
+                    loadUserDataFromLocalStorage();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento da Firebase:', error);
+                // Fallback to localStorage
+                loadUserDataFromLocalStorage();
+            }
+        }
+
+        function loadUserDataFromLocalStorage() {
             // Try to load from localStorage first
             const savedData = localStorage.getItem('lifestyleQuizResults');
             if (savedData) {
@@ -689,7 +734,13 @@
                     const profileData = JSON.parse(savedData);
                     userData.scores = profileData.scores || userData.scores;
                     userData.name = profileData.name || userData.name;
-                    updateScoresDisplay();
+                    userData.quadrant = profileData.quadrant;
+                    userData.consciousnessLevel = profileData.consciousnessLevel;
+                    userData.readinessLevel = profileData.readinessLevel;
+                    userData.challenges = profileData.challenges || [];
+                    userData.motivationDrivers = profileData.motivationDrivers || [];
+                    
+                    console.log('✅ Dati utente caricati da localStorage');
                 } catch (e) {
                     console.log('Error loading saved data:', e);
                 }
