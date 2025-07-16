@@ -850,11 +850,22 @@
                 };
                 
                 try {
-                    userData.coachingSystem = new window.LifestyleCoachingSystem(userProfile);
-                    console.log('✅ Sistema coaching inizializzato');
+                    // Check if LifestyleCoachingSystem is available
+                    if (typeof window.LifestyleCoachingSystem === 'function') {
+                        userData.coachingSystem = new window.LifestyleCoachingSystem(userProfile);
+                        console.log('✅ Sistema coaching inizializzato');
+                    } else {
+                        console.warn('⚠️ LifestyleCoachingSystem non disponibile, usando fallback');
+                        // Usa funzionalità di base senza sistema coaching
+                        userData.coachingSystem = null;
+                    }
                 } catch (error) {
                     console.error('❌ Errore inizializzazione coaching system:', error);
+                    userData.coachingSystem = null;
                 }
+            } else {
+                console.warn('⚠️ Profilo utente incompleto, sistema coaching non inizializzato');
+                userData.coachingSystem = null;
             }
         }
 
@@ -939,7 +950,39 @@
         }
 
         function updateCoachingContent() {
-            if (!userData.coachingSystem) return;
+            if (!userData.coachingSystem) {
+                // Fallback content when coaching system is not available
+                const currentPhaseElement = document.getElementById('currentPhase');
+                if (currentPhaseElement) {
+                    currentPhaseElement.innerHTML = `
+                        <div class="progress-item">
+                            <div class="progress-item-header">
+                                <div class="progress-item-title">📚 Benvenuto nel tuo percorso!</div>
+                                <div class="progress-status pending">Inizializzazione</div>
+                            </div>
+                            <div class="progress-item-description">
+                                Stiamo preparando il tuo percorso personalizzato di coaching basato sul tuo profilo.
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                const homeworkElement = document.getElementById('nextHomework');
+                if (homeworkElement) {
+                    homeworkElement.innerHTML = `
+                        <div class="progress-item">
+                            <div class="progress-item-header">
+                                <div class="progress-item-title">🎯 Primo passo</div>
+                                <div class="progress-status pending">Pronto</div>
+                            </div>
+                            <div class="progress-item-description">
+                                Inizia a riflettere sui tuoi obiettivi e su cosa vuoi migliorare nella tua vita.
+                            </div>
+                        </div>
+                    `;
+                }
+                return;
+            }
             
             const currentPhaseContent = userData.coachingSystem.getCurrentPhaseContent();
             const progressReport = userData.coachingSystem.getProgressReport();
@@ -948,12 +991,14 @@
             const currentPhaseElement = document.getElementById('currentPhase');
             if (currentPhaseElement) {
                 currentPhaseElement.innerHTML = `
-                    <h4>📚 Fase Attuale: ${currentPhaseContent.title}</h4>
-                    <p>${currentPhaseContent.objective}</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progressReport.progressPercentage}%"></div>
+                    <div class="coaching-phase-card">
+                        <h4>📚 Fase ${currentPhaseContent.phase}: ${currentPhaseContent.title}</h4>
+                        <p>${currentPhaseContent.objective}</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressReport.progressPercentage}%"></div>
+                        </div>
+                        <small>Progresso: ${progressReport.completed}/${progressReport.total} fasi completate</small>
                     </div>
-                    <small>Progresso: ${progressReport.completed}/${progressReport.total} fasi completate</small>
                 `;
             }
             
@@ -962,10 +1007,11 @@
             const homeworkElement = document.getElementById('nextHomework');
             if (homeworkElement && nextHomework) {
                 homeworkElement.innerHTML = `
-                    <h4>📝 Compito Attuale</h4>
-                    <p><strong>${nextHomework.title}</strong></p>
-                    <p>${nextHomework.homework}</p>
-                    <button class="btn btn-primary" onclick="completeHomework()">Segna come Completato</button>
+                    <div class="homework-card">
+                        <h4>📝 ${nextHomework.title}</h4>
+                        <p>${nextHomework.homework}</p>
+                        <button class="btn btn-primary" onclick="completeHomework()">Segna come Completato</button>
+                    </div>
                 `;
             }
         }
