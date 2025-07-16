@@ -504,26 +504,4 @@ export {
     LifestyleCoachingSystem
 };
 
-// === ESEMPIO DI UTILIZZO ===
-/*
-const userProfile = {
-    quadrant: "Q3: Coaching Emotivo",
-    consciousnessLevel: "Achiever - Successo e Performance",
-    motivationDrivers: ["salute", "orgoglio", "migliorarsi"],
-    challenges: ["procrastination", "low_energy"],
-    readinessLevel: 4,
-    scores: {
-        wellbeing: 3,
-        health: 2,
-        professional: 4,
-        social: 3
-    }
-};
-
-const coachingSystem = new LifestyleCoachingSystem(userProfile);
-console.log(coachingSystem.getCurrentPhaseContent());
-console.log(coachingSystem.getNextHomework());
-console.log(coachingSystem.getProgressReport());
-*/
-
 console.log('🎯 Sistema Lifestyle Coaching caricato - 7 fasi integrate con personalizzazione completa!');
