@@ -314,6 +314,112 @@
             background: #16a34a;
         }
 
+        /* Contact Form Styles */
+        .contact-form {
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            border-left: 4px solid #16a34a;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #ef4444;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ea580c;
+        }
+
+        .form-select {
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #ea580c;
+        }
+
+        .privacy-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .privacy-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .privacy-text {
+            font-size: 0.875rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .whatsapp-preview {
+            background: #dcfce7;
+            border: 1px solid #16a34a;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .whatsapp-preview-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .whatsapp-preview-text {
+            font-size: 0.875rem;
+            color: #15803d;
+            font-style: italic;
+        }
+
         /* Profile Page Styles */
         .profile-header {
             background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
@@ -566,6 +672,10 @@
             .profile-grid {
                 grid-template-columns: 1fr;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -596,8 +706,10 @@
             constructor() {
                 this.currentStep = 0;
                 this.answers = {};
+                this.contactData = {};
                 this.profile = null;
                 this.container = document.getElementById('quiz-container');
+                this.showingContactForm = false;
                 
                 this.questions = [
                     {
@@ -943,15 +1055,49 @@
                     this.currentStep++;
                     this.render();
                 } else {
-                    this.generateProfile();
+                    this.showContactForm();
                 }
             }
 
             handlePrevious() {
-                if (this.currentStep > 0) {
+                if (this.showingContactForm) {
+                    this.showingContactForm = false;
+                    this.render();
+                } else if (this.currentStep > 0) {
                     this.currentStep--;
                     this.render();
                 }
+            }
+
+            showContactForm() {
+                this.showingContactForm = true;
+                this.render();
+            }
+
+            handleContactSubmit() {
+                // Validate required fields
+                const name = document.getElementById('contactName').value.trim();
+                const phone = document.getElementById('contactPhone').value.trim();
+                const gender = document.getElementById('contactGender').value;
+                const privacy = document.getElementById('privacyConsent').checked;
+
+                if (!name || !phone || !gender || !privacy) {
+                    alert('Compila tutti i campi obbligatori e accetta l\'informativa privacy.');
+                    return;
+                }
+
+                // Save contact data
+                this.contactData = {
+                    name: name,
+                    phone: phone,
+                    gender: gender,
+                    email: document.getElementById('contactEmail').value.trim(),
+                    city: document.getElementById('contactCity').value.trim(),
+                    privacyConsent: privacy
+                };
+
+                // Generate profile
+                this.generateProfile();
             }
 
             generateProfile() {
@@ -996,6 +1142,7 @@
                                                (this.answers.relationship_quality || 3)) / 2);
 
                 this.profile = {
+                    ...this.contactData,
                     quadrant,
                     approach,
                     consciousnessLevel: consciousnessLabels[consciousness],
@@ -1033,22 +1180,131 @@
             render() {
                 if (this.profile) {
                     this.renderProfile();
+                } else if (this.showingContactForm) {
+                    this.renderContactForm();
                 } else {
                     this.renderQuestion();
                 }
             }
 
+            renderContactForm() {
+                const progress = 95; // Almost done
+                
+                this.container.innerHTML = `
+                    <div class="header">
+                        <h1>👤 I Tuoi Dati</h1>
+                        <p>Ultimi dettagli per personalizzare il tuo percorso</p>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span class="progress-text">Quasi finito!</span>
+                                <span class="progress-text">20 di 20 ✓</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="progress-labels">
+                                <span class="progress-label">Inizio</span>
+                                <span class="progress-label">Completamento</span>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-form">
+                            <div class="question-header">
+                                <div class="question-icon">✨</div>
+                                <div class="question-text">
+                                    <h2 class="question-title">Conosciamoci Meglio</h2>
+                                    <p class="question-subtitle">Questi dati mi aiutano a personalizzare il tuo percorso</p>
+                                    <p class="question-description">Tutti i tuoi dati saranno trattati secondo il GDPR</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required" for="contactName">Nome</label>
+                                    <input type="text" id="contactName" class="form-input" placeholder="Il tuo nome" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label required" for="contactPhone">Telefono</label>
+                                    <input type="tel" id="contactPhone" class="form-input" placeholder="+39 123 456 7890" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label required" for="contactGender">Sesso</label>
+                                    <select id="contactGender" class="form-select" required>
+                                        <option value="">Seleziona...</option>
+                                        <option value="M">Maschio</option>
+                                        <option value="F">Femmina</option>
+                                        <option value="Other">Altro</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="contactEmail">Email (opzionale)</label>
+                                    <input type="email" id="contactEmail" class="form-input" placeholder="tua@email.com">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group full-width">
+                                    <label class="form-label" for="contactCity">Città (opzionale)</label>
+                                    <input type="text" id="contactCity" class="form-input" placeholder="La tua città">
+                                </div>
+                            </div>
+                            
+                            <div class="privacy-checkbox">
+                                <input type="checkbox" id="privacyConsent" required>
+                                <label for="privacyConsent" class="privacy-text">
+                                    Accetto l'<strong>informativa privacy</strong> e autorizzo il trattamento dei miei dati personali per ricevere il percorso di coaching personalizzato e comunicazioni relative al servizio.
+                                </label>
+                            </div>
+                            
+                            <div class="whatsapp-preview">
+                                <div class="whatsapp-preview-title">📱 Messaggio WhatsApp che riceverai:</div>
+                                <div class="whatsapp-preview-text">
+                                    "Ciao [Nome]! 👋 Sono Andrea, il tuo Lifestyle Coach. Ho preparato il tuo percorso personalizzato di trasformazione. Accedi qui per iniziare: [link dashboard]"
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="navigation">
+                            <button class="nav-button prev" onclick="quiz.handlePrevious()">
+                                ← Indietro
+                            </button>
+                            
+                            <div class="progress-dots">
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot completed"></div>
+                                <div class="dot current"></div>
+                            </div>
+                            
+                            <button class="nav-button next" onclick="quiz.handleContactSubmit()">
+                                🎯 Genera il Mio Profilo →
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
             renderProfile() {
                 this.container.innerHTML = `
                     <div class="profile-header">
-                        <h1>🎯 Il Tuo Profilo Lifestyle</h1>
-                        <p>Analisi personalizzata basata sulle tue 20 risposte</p>
+                        <h1>🎯 Ciao ${this.profile.name}!</h1>
+                        <p>Il tuo profilo lifestyle personalizzato è pronto</p>
                     </div>
                     <div class="profile-content">
                         <div class="profile-section">
                             <div class="profile-grid">
                                 <div class="profile-card primary">
-                                    <h3>📊 Matrice Decisionale</h3>
+                                    <h3>📊 Il Tuo Quadrante</h3>
                                     <p class="profile-text">${this.profile.quadrant}</p>
                                     <p class="profile-description">${this.profile.approach}</p>
                                 </div>
@@ -1056,7 +1312,7 @@
                                     <h3>🧠 Livello di Coscienza</h3>
                                     <p class="profile-text">${this.profile.consciousnessLevel}</p>
                                     <div class="readiness-meter">
-                                        <div class="readiness-label">Readiness Level: ${this.profile.readinessLevel}/5</div>
+                                        <div class="readiness-label">Motivazione: ${this.profile.readinessLevel}/5</div>
                                         <div class="readiness-bar">
                                             <div class="readiness-fill" style="width: ${(this.profile.readinessLevel / 5) * 100}%"></div>
                                         </div>
@@ -1067,7 +1323,7 @@
                         
                         <div class="profile-section">
                             <div class="profile-card success">
-                                <h3>📈 Dashboard Benessere</h3>
+                                <h3>📈 Le Tue Aree di Valutazione</h3>
                                 <div class="dashboard-grid">
                                     ${Object.entries(this.profile.scores).map(([key, score]) => `
                                         <div class="dashboard-item">
@@ -1100,7 +1356,7 @@
                                 
                                 ${this.profile.challenges.length > 0 ? `
                                     <div class="profile-card primary">
-                                        <h3>⚡ Sfide da Affrontare</h3>
+                                        <h3>⚡ Sfide da Superare</h3>
                                         <div class="list-container">
                                             ${this.profile.challenges.slice(0, 3).map(challenge => `
                                                 <div class="list-item">
@@ -1116,10 +1372,10 @@
                         
                         <div class="profile-section">
                             <div class="cta-section">
-                                <h3>🚀 Inizia il Tuo Percorso</h3>
-                                <p>Trasforma questo profilo in risultati concreti</p>
+                                <h3>🚀 Inizia Ora la Tua Trasformazione</h3>
+                                <p>Il tuo percorso personalizzato di 7 settimane ti aspetta nella dashboard</p>
                                 <button class="cta-button" onclick="saveProfileAndRedirect()">
-                                    Scopri il Tuo Piano Personalizzato
+                                    🎯 Accedi alla Tua Dashboard Personale
                                 </button>
                             </div>
                         </div>
@@ -1190,7 +1446,7 @@
                             </div>
                             
                             <button class="nav-button next" ${!canProceed ? 'disabled' : ''} onclick="quiz.handleNext()">
-                                ${isLastStep ? 'Genera Profilo' : 'Avanti'} →
+                                ${isLastStep ? 'Avanti' : 'Avanti'} →
                             </button>
                         </div>
                     </div>
@@ -1332,6 +1588,8 @@
                         name: profileData.name || 'Utente Lifestyle',
                         email: profileData.email || '',
                         phone: profileData.phone || '',
+                        gender: profileData.gender || '',
+                        city: profileData.city || '',
                         source: 'lifestyle_quiz',
                         leadScore: calculateLeadScore(profileData),
                         status: 'new',
