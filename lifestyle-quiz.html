@@ -1258,17 +1258,53 @@
         // Save profile and redirect function
         function saveProfileAndRedirect() {
             if (quiz.profile) {
-                // Save to localStorage
+                // Save to localStorage as backup
                 localStorage.setItem('lifestyleQuizResults', JSON.stringify(quiz.profile));
                 
-                // Save to Firebase if available
-                if (typeof saveToFirebase === 'function') {
-                    saveToFirebase(quiz.profile);
-                }
+                // Save to Firebase
+                saveToFirebase(quiz.profile);
                 
                 // Redirect to user dashboard
                 window.location.href = 'user-dashboard.html';
             }
+        }
+        
+        // Firebase integration
+        async function saveToFirebase(profileData) {
+            try {
+                // Import Firebase functions
+                const { saveLifestyleProfile, integrateWithExistingSystem } = await import('./firebase-lifestyle-integration.js');
+                
+                // Generate user ID
+                const userId = generateUserId();
+                
+                // Add user ID to profile
+                const extendedProfile = {
+                    ...profileData,
+                    userId: userId,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to Firebase
+                const profileId = await saveLifestyleProfile(extendedProfile);
+                
+                // Integrate with existing system
+                await integrateWithExistingSystem({ ...extendedProfile, id: profileId });
+                
+                console.log('✅ Profilo salvato su Firebase:', profileId);
+                
+                // Store profile ID for dashboard
+                localStorage.setItem('lifestyleProfileId', profileId);
+                localStorage.setItem('lifestyleUserId', userId);
+                
+            } catch (error) {
+                console.error('❌ Errore salvataggio Firebase:', error);
+                // Continue anyway, data is in localStorage
+            }
+        }
+        
+        function generateUserId() {
+            return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
     </script>
 </body>
