@@ -52,6 +52,7 @@
             display: flex;
             list-style: none;
             gap: 2rem;
+            align-items: center;
         }
 
         .nav-links a {
@@ -62,6 +63,27 @@
 
         .nav-links a:hover {
             color: #ff6b35;
+        }
+
+        /* Dashboard Link Button */
+        .dashboard-btn {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(255,107,53,0.3);
+        }
+
+        .dashboard-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.4);
         }
 
         /* Hero Section */
@@ -156,6 +178,47 @@
         .cta-secondary:hover {
             background: white;
             color: #2c3e50;
+        }
+
+        /* User Status Banner */
+        .user-status {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            margin-top: 80px;
+            box-shadow: 0 3px 15px rgba(255,107,53,0.2);
+        }
+
+        .user-status h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-status p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+
+        .continue-btn {
+            background: white;
+            color: #ff6b35;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
 
         /* Problem Section */
@@ -491,9 +554,19 @@
                 <li><a href="#soluzione">La Soluzione</a></li>
                 <li><a href="#coach">Il Coach</a></li>
                 <li><a href="#inizia">Inizia Gratis</a></li>
+                <li><a href="dashboard.html" class="dashboard-btn">🏠 La Mia Area</a></li>
             </ul>
         </nav>
     </header>
+
+    <!-- User Status Banner (show if user has started) -->
+    <section class="user-status" id="userStatus" style="display: none;">
+        <div class="container">
+            <h3>👋 Bentornato nel tuo percorso!</h3>
+            <p>Hai iniziato il tuo cambiamento. Continua da dove avevi lasciato.</p>
+            <a href="dashboard.html" class="continue-btn">🚀 Continua il Percorso</a>
+        </div>
+    </section>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -657,6 +730,17 @@
     <a href="https://wa.me/393478881515" class="whatsapp-btn" target="_blank">📱</a>
 
     <script>
+        // Check if user has started the journey
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for user progress in localStorage or Firebase
+            const userProgress = localStorage.getItem('userProgress');
+            const userStatus = document.getElementById('userStatus');
+            
+            if (userProgress) {
+                userStatus.style.display = 'block';
+            }
+        });
+
         // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
