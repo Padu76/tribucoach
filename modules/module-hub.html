@@ -8,7 +8,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
         // Firebase config
         const firebaseConfig = {
@@ -90,9 +90,11 @@
             }
         }
 
-        // 📈 CARICA PROGRESS UTENTE
+        // 📈 CARICA PROGRESS UTENTE (MIGLIORATO)
         async function loadUserProgress(userId) {
             try {
+                console.log('📈 Caricando progress per utente:', userId);
+                
                 const collections = ['lifestyle_profiles', 'quiz_results'];
                 let progressData = null;
                 
@@ -103,10 +105,11 @@
                         
                         if (docSnap.exists()) {
                             progressData = docSnap.data();
+                            console.log(`✅ Progress caricato da ${collectionName}`);
                             break;
                         }
                     } catch (error) {
-                        console.warn(`Collezione ${collectionName} non trovata:`, error);
+                        console.warn(`⚠️ Errore caricamento da ${collectionName}:`, error);
                     }
                 }
                 
@@ -119,9 +122,9 @@
                         lastUpdate: progressData.lastUpdate || new Date()
                     };
                     
-                    console.log('✅ Progress caricato:', userProgress);
+                    console.log('✅ Progress caricato con successo:', userProgress);
                 } else {
-                    console.log('⚠️ Progress non trovato, inizializzazione default');
+                    console.log('⚠️ Nessun progress trovato, inizializzazione default');
                     userProgress = {
                         userId: userId,
                         currentWeek: 1,
@@ -132,6 +135,13 @@
                 
             } catch (error) {
                 console.error('❌ Errore caricamento progress:', error);
+                // Inizializza default anche in caso di errore
+                userProgress = {
+                    userId: userId,
+                    currentWeek: 1,
+                    completedWeeks: [],
+                    hasStartedCoaching: false
+                };
             }
         }
 
@@ -261,32 +271,54 @@
             }
         };
 
-        // 💾 SALVA PROGRESS SU FIREBASE
+        // 💾 SALVA PROGRESS SU FIREBASE (USANDO SETDOC)
         async function saveProgressToFirebase() {
             try {
-                const collections = ['lifestyle_profiles', 'quiz_results'];
-                let saved = false;
+                console.log('💾 Salvando progress per utente:', userProgress.userId);
                 
-                for (const collectionName of collections) {
-                    try {
-                        const docRef = doc(db, collectionName, userProgress.userId);
-                        await updateDoc(docRef, {
-                            currentWeek: userProgress.currentWeek,
-                            completedWeeks: userProgress.completedWeeks,
-                            hasStartedCoaching: userProgress.hasStartedCoaching,
-                            lastUpdate: serverTimestamp()
-                        });
-                        
-                        console.log(`✅ Progress salvato in ${collectionName}`);
-                        saved = true;
-                        break;
-                    } catch (error) {
-                        console.warn(`⚠️ Impossibile salvare in ${collectionName}:`, error);
-                    }
+                const progressData = {
+                    userId: userProgress.userId,
+                    currentWeek: userProgress.currentWeek,
+                    completedWeeks: userProgress.completedWeeks,
+                    hasStartedCoaching: userProgress.hasStartedCoaching,
+                    lastUpdate: serverTimestamp(),
+                    source: 'module_hub',
+                    version: '1.0'
+                };
+                
+                // Prova prima lifestyle_profiles
+                try {
+                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
+                    await setDoc(docRef, progressData, { merge: true });
+                    console.log('✅ Progress salvato in lifestyle_profiles');
+                    return true;
+                } catch (error) {
+                    console.warn('⚠️ Errore lifestyle_profiles:', error);
                 }
                 
-                if (!saved) {
-                    throw new Error('Impossibile salvare il progress');
+                // Fallback: quiz_results
+                try {
+                    const docRef = doc(db, 'quiz_results', userProgress.userId);
+                    await setDoc(docRef, progressData, { merge: true });
+                    console.log('✅ Progress salvato in quiz_results');
+                    return true;
+                } catch (error) {
+                    console.warn('⚠️ Errore quiz_results:', error);
+                }
+                
+                // Ultimo tentativo: crea nuovo documento
+                try {
+                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
+                    await setDoc(docRef, {
+                        ...progressData,
+                        createdAt: serverTimestamp(),
+                        status: 'active'
+                    });
+                    console.log('✅ Progress salvato come nuovo documento');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Errore creazione nuovo documento:', error);
+                    throw new Error('Impossibile salvare il progress su Firebase');
                 }
                 
             } catch (error) {
@@ -514,23 +546,72 @@
             coachingStory.insertAdjacentHTML('afterend', scoresHtml);
         }
 
-        // 🚀 INIZIA PERCORSO COACHING
-        window.startCoachingJourney = function() {
-            userProgress.hasStartedCoaching = true;
-            userProgress.currentWeek = 1;
+        // 🚀 INIZIA PERCORSO COACHING (MIGLIORATO)
+        window.startCoachingJourney = async function() {
+            console.log('🚀 Avvio percorso coaching...');
             
-            saveProgressToFirebase().then(() => {
-                updateModuleStates();
+            try {
+                // Verifica che userId sia presente
+                if (!userProgress.userId) {
+                    showError('Errore: ID utente non trovato. Rifare il quiz.');
+                    return;
+                }
                 
+                // Aggiorna progress
+                userProgress.hasStartedCoaching = true;
+                userProgress.currentWeek = 1;
+                
+                // Mostra loading
+                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
+                startButtons.forEach(btn => {
+                    btn.textContent = '⏳ Salvando...';
+                    btn.disabled = true;
+                });
+                
+                // Salva su Firebase
+                await saveProgressToFirebase();
+                
+                // Aggiorna UI
+                updateModuleStates();
+                updateProgressBar();
+                
+                // Ripristina pulsanti
+                startButtons.forEach(btn => {
+                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
+                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
+                        '🚀 Inizia Subito il Tuo Miglioramento';
+                    btn.disabled = false;
+                });
+                
+                // Scroll ai moduli
                 document.querySelector('.modules-grid').scrollIntoView({ 
                     behavior: 'smooth' 
                 });
                 
+                // Notifica successo
                 showSuccess('🎉 Percorso coaching iniziato! Ora puoi accedere alla Settimana 1.');
-            }).catch(error => {
-                console.error('Errore avvio coaching:', error);
-                showError('Errore durante l\'avvio. Riprova.');
-            });
+                
+            } catch (error) {
+                console.error('❌ Errore avvio coaching:', error);
+                
+                // Ripristina pulsanti
+                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
+                startButtons.forEach(btn => {
+                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
+                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
+                        '🚀 Inizia Subito il Tuo Miglioramento';
+                    btn.disabled = false;
+                });
+                
+                // Mostra errore specifico
+                if (error.message.includes('offline')) {
+                    showError('Errore di connessione. Controlla la connessione internet e riprova.');
+                } else if (error.message.includes('permission')) {
+                    showError('Errore di autorizzazione. Rifare il quiz per aggiornare i permessi.');
+                } else {
+                    showError('Errore durante l\'avvio del percorso. Riprova tra qualche secondo.');
+                }
+            }
         };
 
         // 🔄 RIFAI QUIZ
