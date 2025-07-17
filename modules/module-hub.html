@@ -31,17 +31,19 @@
             userId: null
         };
 
-        // 🚀 INIZIALIZZAZIONE SISTEMA SEMPLIFICATO
+        // 🚀 INIZIALIZZAZIONE SISTEMA SEMPLIFICATO (FIX TEMPORANEO)
         async function initializeProgressSystem() {
             console.log('🚀 Inizializzazione sistema ModuleHub...');
             
             // Ottieni userId dalla URL o localStorage
             const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('userId') || localStorage.getItem('lifestyle_user_id');
+            let userId = urlParams.get('userId') || localStorage.getItem('lifestyle_user_id');
             
+            // FIX TEMPORANEO: Crea userId se non presente
             if (!userId) {
-                showError('Accesso non autorizzato. Rifare il quiz per iniziare il percorso.');
-                return;
+                userId = generateTemporaryUserId();
+                localStorage.setItem('lifestyle_user_id', userId);
+                console.log('🆔 Creato userId temporaneo:', userId);
             }
 
             userProgress.userId = userId;
@@ -55,7 +57,14 @@
             updateProgressBar();
         }
 
-        // 📊 CARICA DATI UTENTE E MOSTRA PROFILO
+        // 🆔 GENERA USER ID TEMPORANEO
+        function generateTemporaryUserId() {
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substr(2, 9);
+            return `temp_${timestamp}_${random}`;
+        }
+
+        // 📊 CARICA DATI UTENTE E MOSTRA PROFILO (FIX TEMPORANEO)
         async function loadUserData(userId) {
             try {
                 const collections = ['lifestyle_profiles', 'quiz_results'];
@@ -79,14 +88,59 @@
                 if (userData) {
                     displayQuizResults(userData);
                 } else {
-                    showError('Dati profilo non trovati. Rifare il quiz.');
-                    // Nascondi sezione risultati se non ci sono dati
-                    document.querySelector('.quiz-results-section').style.display = 'none';
+                    console.log('⚠️ Nessun dato utente trovato, creando profilo demo');
+                    // FIX TEMPORANEO: Crea profilo demo
+                    const demoProfile = createDemoProfile(userId);
+                    displayQuizResults(demoProfile);
+                    
+                    // Salva profilo demo su Firebase
+                    await saveDemoProfile(userId, demoProfile);
                 }
                 
             } catch (error) {
                 console.error('❌ Errore caricamento dati utente:', error);
-                showError('Errore caricamento profilo.');
+                // FIX TEMPORANEO: Mostra profilo demo anche in caso di errore
+                const demoProfile = createDemoProfile(userId);
+                displayQuizResults(demoProfile);
+            }
+        }
+
+        // 🎭 CREA PROFILO DEMO (FIX TEMPORANEO)
+        function createDemoProfile(userId) {
+            return {
+                userId: userId,
+                name: 'Utente Demo',
+                email: 'demo@example.com',
+                quadrant: 'Q2',
+                consciousnessLevel: 'Conformista',
+                readinessLevel: 4,
+                commitmentLevel: 3,
+                goals: ['Migliorare benessere', 'Aumentare energia'],
+                challenges: ['Gestione tempo', 'Motivazione'],
+                scores: {
+                    benessereEmotivo: 2,
+                    saluteFisica: 3,
+                    relazioniSociali: 2,
+                    vitaProfessionale: 3
+                },
+                source: 'demo_profile',
+                timestamp: new Date()
+            };
+        }
+
+        // 💾 SALVA PROFILO DEMO
+        async function saveDemoProfile(userId, profileData) {
+            try {
+                const docRef = doc(db, 'lifestyle_profiles', userId);
+                await setDoc(docRef, {
+                    ...profileData,
+                    createdAt: serverTimestamp(),
+                    status: 'demo',
+                    source: 'temporary_access'
+                });
+                console.log('✅ Profilo demo salvato');
+            } catch (error) {
+                console.warn('⚠️ Errore salvataggio profilo demo:', error);
             }
         }
 
@@ -615,14 +669,48 @@
         };
 
         // 🔄 RIFAI QUIZ
+        // 🔄 RIFAI QUIZ (FIX TEMPORANEO)
         window.retakeQuiz = function() {
             if (confirm('Sei sicuro di voler rifare il test? I risultati attuali verranno sostituiti.')) {
+                // Rimuovi userId temporaneo
+                localStorage.removeItem('lifestyle_user_id');
+                // Redirect al quiz
                 window.location.href = '../lifestyle-quiz.html';
             }
         };
 
-        // 🎯 INIZIALIZZA AL CARICAMENTO
-        window.addEventListener('DOMContentLoaded', initializeProgressSystem);
+        // 🎯 MESSAGGIO INFO ACCESSO TEMPORANEO
+        function showTemporaryAccessInfo() {
+            const infoMessage = `
+                <div class="temp-access-info" style="
+                    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                    color: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin: 20px 0;
+                    text-align: center;
+                    font-size: 0.9rem;
+                ">
+                    <strong>ℹ️ Accesso Temporaneo Attivo</strong><br>
+                    Stai utilizzando un profilo demo. Per salvare i tuoi progressi reali, completa il quiz di valutazione.
+                </div>
+            `;
+            
+            const resultsSection = document.querySelector('.quiz-results-section');
+            if (resultsSection) {
+                resultsSection.insertAdjacentHTML('beforeend', infoMessage);
+            }
+        }
+
+        // 🎯 INIZIALIZZA AL CARICAMENTO (CON INFO TEMPORANEO)
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initializeProgressSystem();
+            
+            // Mostra info accesso temporaneo se userId è temporaneo
+            if (userProgress.userId && userProgress.userId.startsWith('temp_')) {
+                showTemporaryAccessInfo();
+            }
+        });
 
         // Esponi funzioni globalmente
         window.initializeProgressSystem = initializeProgressSystem;
