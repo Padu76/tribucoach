@@ -111,8 +111,8 @@
                 userId: userId,
                 name: 'Utente Demo',
                 email: 'demo@example.com',
-                quadrant: 'Q2',
-                consciousnessLevel: 'Conformista',
+                profileType: 'Guerriero Determinato',
+                description: 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.',
                 readinessLevel: 4,
                 commitmentLevel: 3,
                 goals: ['Migliorare benessere', 'Aumentare energia'],
@@ -457,9 +457,10 @@
             // Aggiorna info profilo
             document.getElementById('userName').textContent = quizData.name || 'Utente';
             
-            const quadrant = determineQuadrant(quizData);
-            const consciousnessLevel = determineConsciousnessLevel(quizData);
-            document.getElementById('userQuadrant').textContent = `${quadrant}: ${consciousnessLevel}`;
+            const profileType = quizData.profileType || determineProfileType(quizData);
+            const profileDescription = quizData.description || generateProfileDescription(profileType, quizData);
+            
+            document.getElementById('userQuadrant').textContent = profileDescription;
             
             const leadScore = calculateLeadScore(quizData);
             const scoreEl = document.getElementById('leadScore');
@@ -467,34 +468,32 @@
             scoreEl.className = `lead-score ${leadScore >= 70 ? 'high' : leadScore >= 40 ? 'medium' : 'low'}`;
             
             // Genera analisi personalizzata
-            generatePersonalizedAnalysis(quizData, quadrant, consciousnessLevel, leadScore);
+            generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore);
             
             // Calcola e mostra punteggi aree benessere
             calculateAndDisplayWellnessScores(quizData);
         }
 
-        // 🧠 DETERMINA QUADRANTE
-        function determineQuadrant(quizData) {
-            // Logica semplificata per determinare quadrante
+        // 🎭 DETERMINA PROFILO DESCRITTIVO
+        function determineProfileType(quizData) {
             const readiness = quizData.readiness_level || 3;
             const commitment = quizData.commitment_level || 3;
             
-            if (readiness >= 4 && commitment >= 4) return 'Q1';
-            if (readiness >= 4 && commitment < 4) return 'Q2';
-            if (readiness < 4 && commitment >= 4) return 'Q3';
-            return 'Q4';
+            if (readiness >= 4 && commitment >= 4) return 'Atleta in Crescita';
+            if (readiness >= 4 && commitment < 4) return 'Esploratore Motivato';
+            if (readiness < 4 && commitment >= 4) return 'Guerriero Determinato';
+            return 'Guerriero Determinato'; // Default positivo
         }
 
-        // 🎯 DETERMINA LIVELLO COSCIENZA
-        function determineConsciousnessLevel(quizData) {
-            const quadrant = determineQuadrant(quizData);
-            const levels = {
-                'Q1': 'Achiever',
-                'Q2': 'Conformista',
-                'Q3': 'Opportunista',
-                'Q4': 'Pluralista'
+        // 📝 GENERA DESCRIZIONE PROFILO
+        function generateProfileDescription(profileType, quizData) {
+            const descriptions = {
+                'Atleta in Crescita': 'Sei una persona con elevata motivazione e impegno. Hai le competenze per raggiungere grandi risultati nel tuo percorso di crescita personale.',
+                'Esploratore Motivato': 'Hai una forte motivazione al cambiamento e sei pronto a scoprire nuove strategie per migliorare il tuo benessere complessivo.',
+                'Guerriero Determinato': 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.'
             };
-            return levels[quadrant] || 'Conformista';
+            
+            return descriptions[profileType] || descriptions['Guerriero Determinato'];
         }
 
         // 📊 CALCOLA LEAD SCORE
@@ -510,12 +509,15 @@
         }
 
         // 🧠 GENERA ANALISI PERSONALIZZATA
-        function generatePersonalizedAnalysis(quizData, quadrant, consciousnessLevel, leadScore) {
+        function generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore) {
             const name = quizData.name || 'Utente';
             const score = Math.round(leadScore);
             
             // Situazione in sintesi
             let summary = `<p><strong>Ciao ${name}</strong>, ho analizzato i risultati del tuo test e voglio condividere alcune riflessioni sulla tua situazione attuale.</p>`;
+            
+            summary += `<p><strong>Il tuo profilo:</strong> ${profileType}</p>`;
+            summary += `<p>${profileDescription}</p>`;
             
             if (score >= 70) {
                 summary += `<div class="highlight-box success">Il tuo punteggio è ${score}/100, che indica ottime potenzialità per la trasformazione!</div>`;
@@ -525,23 +527,92 @@
             
             document.getElementById('situationSummary').innerHTML = summary;
             
-            // Aree di forza
-            const strengths = ['📈 Hai identificato il bisogno di crescita', '🎯 Sei motivato al cambiamento', '💪 Hai completato il primo passo'];
+            // Aree di forza basate sul profilo
+            const strengths = getProfileStrengths(profileType);
             document.getElementById('strengthsArea').innerHTML = '<ul>' + strengths.map(s => `<li>${s}</li>`).join('') + '</ul>';
             
             // Aree di miglioramento
-            const improvements = ['🏗️ Sviluppo di strategie personalizzate', '🎯 Supporto continuo nel percorso', '💭 Gestione emotiva e mindset'];
+            const improvements = getProfileImprovements(profileType);
             document.getElementById('improvementArea').innerHTML = '<ul>' + improvements.map(i => `<li>${i}</li>`).join('') + '</ul>';
             
-            // Storia coaching
-            const story = `
-                <h3>💭 La mia storia ti suonerà familiare</h3>
-                <p>Dopo 12 anni come manager stressato e la mia trasformazione personale, riconosco i segnali del tuo profilo.</p>
-                <div class="highlight-box info">
-                    <strong>Il tuo livello:</strong> ${consciousnessLevel}. Non ti preoccupare - ho aiutato centinaia di persone in situazioni simili.
-                </div>
-            `;
+            // Storia coaching personalizzata
+            const story = generateCoachingStory(profileType);
             document.getElementById('coachingStory').innerHTML = story;
+        }
+
+        // 🏆 AREE DI FORZA PER PROFILO
+        function getProfileStrengths(profileType) {
+            const strengths = {
+                'Atleta in Crescita': [
+                    '🏆 Elevata motivazione e disciplina',
+                    '🎯 Capacità di mantenere l\'impegno',
+                    '📈 Orientamento ai risultati'
+                ],
+                'Esploratore Motivato': [
+                    '🚀 Grande entusiasmo per il cambiamento',
+                    '💡 Apertura a nuove strategie',
+                    '🌟 Energia positiva e proattività'
+                ],
+                'Guerriero Determinato': [
+                    '💪 Forte volontà di miglioramento',
+                    '🎯 Capacità di affrontare le sfide',
+                    '🌱 Potenziale di crescita elevato'
+                ]
+            };
+            
+            return strengths[profileType] || strengths['Guerriero Determinato'];
+        }
+
+        // ⚡ AREE DI MIGLIORAMENTO PER PROFILO
+        function getProfileImprovements(profileType) {
+            const improvements = {
+                'Atleta in Crescita': [
+                    '⚖️ Equilibrio tra impegno e riposo',
+                    '🧘 Gestione dello stress da performance',
+                    '🤝 Supporto sociale e relazionale'
+                ],
+                'Esploratore Motivato': [
+                    '🛠️ Sviluppo di strategie concrete',
+                    '📊 Monitoraggio dei progressi',
+                    '⏰ Gestione del tempo e priorità'
+                ],
+                'Guerriero Determinato': [
+                    '🧠 Sviluppo della fiducia in sé',
+                    '📈 Creazione di abitudini sostenibili',
+                    '💭 Gestione del dialogo interno'
+                ]
+            };
+            
+            return improvements[profileType] || improvements['Guerriero Determinato'];
+        }
+
+        // 💭 STORIA COACHING PERSONALIZZATA
+        function generateCoachingStory(profileType) {
+            const stories = {
+                'Atleta in Crescita': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>Riconosco in te la determinazione che avevo quando ho iniziato la mia trasformazione. Sei già sulla strada giusta!</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sull'ottimizzazione e sul raggiungimento del massimo potenziale. Hai già le basi, ora possiamo puntare all'eccellenza.
+                    </div>
+                `,
+                'Esploratore Motivato': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>La tua energia e voglia di scoprire nuove strategie mi ricorda quando ho iniziato a cercare il mio percorso di crescita.</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sulla scoperta di metodologie efficaci e sulla trasformazione dell'entusiasmo in risultati concreti.
+                    </div>
+                `,
+                'Guerriero Determinato': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>Dopo 12 anni come manager stressato, riconosco perfettamente la tua determinazione nel voler cambiare. Sei nel posto giusto!</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sulla costruzione di fondamenta solide e sullo sviluppo graduale ma costante del benessere.
+                    </div>
+                `
+            };
+            
+            return stories[profileType] || stories['Guerriero Determinato'];
         }
 
         // 📊 CALCOLA E MOSTRA PUNTEGGI BENESSERE
