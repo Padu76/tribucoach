@@ -4,12 +4,12 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+  apiKey: "AIzaSyDTJgM-2FQBSjqTMQ-IoxflMleSJqTf0I",
   authDomain: "tribucoach-a2254.firebaseapp.com",
   projectId: "tribucoach-a2254",
   storageBucket: "tribucoach-a2254.firebasestorage.app",
   messagingSenderId: "425200296836",
-  appId: "1:425200296836:web:7835188f40f4348567ab48"
+  appId: "1:425200296836:web:af4f3e79f612604ee2b3d1"
 };
 
 // Inizializza Firebase
