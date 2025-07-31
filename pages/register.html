@@ -345,6 +345,26 @@
             margin-right: 10px;
         }
 
+        /* ROLE INDICATOR */
+        .role-indicator {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .role-indicator.admin {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .role-indicator.beta {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -438,7 +458,9 @@
                     class="form-input" 
                     placeholder="La tua email"
                     required
+                    oninput="checkEmailRole()"
                 >
+                <div id="roleIndicator" class="role-indicator"></div>
             </div>
 
             <div class="form-group">
@@ -657,13 +679,18 @@
                     displayName: `${firstName} ${lastName}`
                 });
 
-                // Save user data to Firestore
+                // DETERMINE USER ROLE
+                const userRole = determineUserRole(email);
+                console.log('🔑 User role detected:', userRole);
+
+                // Save user data to Firestore WITH ROLE
                 const userData = {
                     uid: user.uid,
                     firstName: firstName,
                     lastName: lastName,
                     email: email,
                     phone: phone || null,
+                    role: userRole, // ✅ ADD ROLE HERE
                     acceptMarketing: !!acceptMarketing,
                     registrationDate: serverTimestamp(),
                     source: 'website_registration',
@@ -678,9 +705,10 @@
                     name: `${firstName} ${lastName}`,
                     email: email,
                     phone: phone || null,
+                    role: userRole, // ✅ ADD ROLE TO LEAD TOO
                     source: 'website_registration',
                     status: 'new',
-                    leadScore: 50, // Base score for registrations
+                    leadScore: userRole === 'admin' ? 100 : userRole === 'beta' ? 90 : 50,
                     userId: user.uid,
                     timestamp: serverTimestamp()
                 };
@@ -695,19 +723,31 @@
                     console.warn('⚠️ Email verification failed:', emailError);
                 }
 
-                // Save user session
+                // Save user session WITH ROLE
                 localStorage.setItem('userSession', JSON.stringify({
                     uid: user.uid,
                     email: user.email,
                     displayName: user.displayName,
+                    role: userRole, // ✅ SAVE ROLE IN SESSION
                     registrationTime: new Date().toISOString()
                 }));
 
                 // Show success and redirect
-                showSuccess('🎉 Account creato con successo! Benvenuto in LifestyleFitnessCoach!');
+                let successMsg = '🎉 Account creato con successo! Benvenuto in LifestyleFitnessCoach!';
+                if (userRole === 'admin') {
+                    successMsg = '👑 Account ADMIN creato! Accesso completo sbloccato!';
+                } else if (userRole === 'beta') {
+                    successMsg = '🧪 Account BETA TESTER creato! Accesso completo per testing!';
+                }
+                
+                showSuccess(successMsg);
                 
                 setTimeout(() => {
-                    window.location.href = 'lifestyle-quiz.html'; // Start with quiz
+                    // Admin/Beta go to dashboard, users go to quiz
+                    const redirectUrl = (userRole === 'admin' || userRole === 'beta') 
+                        ? 'user-dashboard.html' 
+                        : 'lifestyle-quiz.html';
+                    window.location.href = redirectUrl;
                 }, 2000);
 
             } catch (error) {
@@ -738,6 +778,24 @@
             }
         });
 
+        // ✅ ROLE DETECTION FUNCTION
+        function determineUserRole(email) {
+            const emailLower = email.toLowerCase();
+            
+            // Admin roles
+            if (emailLower.includes('admin') || emailLower === 'andrea@tribucoach.com') {
+                return 'admin';
+            }
+            
+            // Beta tester roles
+            if (emailLower.includes('beta') || emailLower.includes('test')) {
+                return 'beta';
+            }
+            
+            // Regular user
+            return 'user';
+        }
+
         // Utility Functions
         function setLoading(loading) {
             registerButton.disabled = loading;
@@ -762,8 +820,11 @@
             successMessage.style.display = 'none';
         }
 
+        // Make functions global for HTML onclick
+        window.determineUserRole = determineUserRole;
+
         // Initialize
-        console.log('📝 Registration page loaded');
+        console.log('📝 Registration page with roles loaded');
     </script>
 
     <script>
@@ -779,6 +840,38 @@
                 passwordInput.type = 'password';
                 toggleButton.textContent = '👁️';
             }
+        }
+
+        // ✅ CHECK EMAIL ROLE IN REAL-TIME
+        function checkEmailRole() {
+            const email = document.getElementById('email').value.toLowerCase();
+            const roleIndicator = document.getElementById('roleIndicator');
+            
+            if (!email) {
+                roleIndicator.style.display = 'none';
+                return;
+            }
+            
+            let role = 'user';
+            let roleText = '';
+            let roleClass = '';
+            
+            if (email.includes('admin') || email === 'andrea@tribucoach.com') {
+                role = 'admin';
+                roleText = '👑 ADMIN - Accesso completo gratuito';
+                roleClass = 'admin';
+            } else if (email.includes('beta') || email.includes('test')) {
+                role = 'beta';
+                roleText = '🧪 BETA TESTER - Accesso completo per testing';
+                roleClass = 'beta';
+            } else {
+                roleIndicator.style.display = 'none';
+                return;
+            }
+            
+            roleIndicator.textContent = roleText;
+            roleIndicator.className = `role-indicator ${roleClass}`;
+            roleIndicator.style.display = 'block';
         }
     </script>
 </body>
