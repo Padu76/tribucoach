@@ -64,6 +64,79 @@
             font-size: 1rem;
         }
 
+        /* ADMIN CONTROLS - Solo per admin */
+        .admin-controls {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 2px solid rgba(220, 38, 38, 0.5);
+            display: none;
+            animation: adminGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes adminGlow {
+            from { box-shadow: 0 0 20px rgba(220, 38, 38, 0.5); }
+            to { box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 0 40px rgba(220, 38, 38, 0.3); }
+        }
+
+        .admin-controls.visible {
+            display: block;
+        }
+
+        .admin-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .admin-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-title {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .admin-description {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .admin-dashboard-link {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .admin-dashboard-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -238,6 +311,40 @@
             transform: translateY(-1px);
         }
 
+        /* Role indicator */
+        .role-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .role-indicator.visible {
+            display: block;
+        }
+
+        .role-indicator.admin {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .role-indicator.beta {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -260,10 +367,21 @@
             .actions-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .role-indicator {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Role Indicator -->
+    <div id="roleIndicator" class="role-indicator">
+        <span id="roleText">USER</span>
+    </div>
+
     <div class="dashboard-container">
         <!-- Header -->
         <header class="dashboard-header">
@@ -274,11 +392,25 @@
 
         <!-- User Welcome -->
         <div class="user-welcome">
-            <h2>👋 Ciao Utente!</h2>
+            <h2>👋 Ciao <span id="userName">Utente</span>!</h2>
             <div class="user-info">
                 <p>Benvenuto nella tua area personale di coaching</p>
-                <p>Accesso libero a tutti i contenuti</p>
+                <p id="accessInfo">Accesso libero a tutti i contenuti</p>
             </div>
+        </div>
+
+        <!-- Admin Controls - Solo per Admin/Beta -->
+        <div id="adminControls" class="admin-controls">
+            <div class="admin-header">
+                <div class="admin-badge" id="adminBadge">👑 ADMIN</div>
+                <h3 class="admin-title">Pannello di Controllo</h3>
+            </div>
+            <p class="admin-description">
+                Accedi alla dashboard di amministrazione per gestire utenti, monitorare progressi e analytics del sistema di coaching.
+            </p>
+            <a href="admin/admin-dashboard.html" class="admin-dashboard-link">
+                👑 Admin Dashboard - Gestione Utenti
+            </a>
         </div>
 
         <!-- Main Dashboard Grid -->
@@ -353,8 +485,102 @@
         </div>
     </div>
 
+    <!-- Load Auth Guard for role detection -->
+    <script src="../api/auth-guard.js"></script>
+    
     <script>
-        console.log('🏠 Dashboard caricata - Accesso libero');
+        console.log('🏠 Dashboard caricata - Controllo ruoli in corso...');
+
+        // Initialize role detection
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserRole();
+        });
+
+        async function checkUserRole() {
+            try {
+                // Check if AuthGuard is available
+                if (window.AuthGuard) {
+                    const authGuard = new window.AuthGuard();
+                    
+                    try {
+                        const user = await authGuard.getCurrentUser();
+                        
+                        if (user && user.role) {
+                            showUserRole(user);
+                            console.log('✅ Utente riconosciuto:', user.email, 'Ruolo:', user.role);
+                        } else {
+                            showDefaultUser();
+                            console.log('👤 Utente generico - nessun ruolo specifico');
+                        }
+                    } catch (error) {
+                        console.log('👤 Nessun utente loggato - modalità ospite');
+                        showDefaultUser();
+                    }
+                } else {
+                    console.log('⚠️ AuthGuard non disponibile - modalità base');
+                    showDefaultUser();
+                }
+            } catch (error) {
+                console.error('❌ Errore controllo ruoli:', error);
+                showDefaultUser();
+            }
+        }
+
+        function showUserRole(user) {
+            const role = user.role;
+            const email = user.email;
+            const name = user.name || email.split('@')[0];
+
+            // Update user name
+            document.getElementById('userName').textContent = name;
+
+            // Show role indicator
+            const roleIndicator = document.getElementById('roleIndicator');
+            const roleText = document.getElementById('roleText');
+            
+            if (role === 'admin') {
+                roleIndicator.className = 'role-indicator visible admin';
+                roleText.textContent = '👑 ADMIN';
+                
+                // Show admin controls
+                const adminControls = document.getElementById('adminControls');
+                const adminBadge = document.getElementById('adminBadge');
+                adminControls.classList.add('visible');
+                adminBadge.textContent = '👑 ADMIN';
+                
+                // Update access info
+                document.getElementById('accessInfo').textContent = 'Accesso amministratore - Controllo completo sistema';
+                
+            } else if (role === 'beta') {
+                roleIndicator.className = 'role-indicator visible beta';
+                roleText.textContent = '🧪 BETA';
+                
+                // Show admin controls for beta too
+                const adminControls = document.getElementById('adminControls');
+                const adminBadge = document.getElementById('adminBadge');
+                adminControls.classList.add('visible');
+                adminBadge.textContent = '🧪 BETA TESTER';
+                
+                // Update access info
+                document.getElementById('accessInfo').textContent = 'Accesso beta tester - Testing e feedback';
+                
+            } else {
+                roleIndicator.className = 'role-indicator visible';
+                roleText.textContent = '👤 USER';
+                
+                // Update access info
+                document.getElementById('accessInfo').textContent = 'Accesso utente registrato';
+            }
+        }
+
+        function showDefaultUser() {
+            // Default user experience - no special role
+            document.getElementById('userName').textContent = 'Utente';
+            document.getElementById('accessInfo').textContent = 'Accesso libero a tutti i contenuti';
+            
+            // Admin controls stay hidden by default
+            console.log('👤 Modalità utente standard');
+        }
 
         function viewProgress() {
             console.log('📊 Visualizzazione progressi...');
@@ -400,7 +626,7 @@
 
         // Welcome message
         setTimeout(() => {
-            console.log('✅ Dashboard completamente caricata - Nessuna autenticazione richiesta');
+            console.log('✅ Dashboard completamente caricata con controllo ruoli');
         }, 1000);
     </script>
 </body>
