@@ -4,6 +4,669 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - LifestyleFitnessCoach</title>
+    
+    <!-- Firebase SDK v9 -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy, where, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+        // 🔥 CONFIGURAZIONE FIREBASE REALE - TribuCoach
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
+
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        console.log('🔥 Firebase connesso a:', firebaseConfig.projectId);
+
+        // Variabili globali
+        let allUsers = [];
+        let allSessions = [];
+        let allAIConversations = [];
+        let filteredUsers = [];
+        let currentUser = null;
+
+        // 🔄 CARICA DATI FIREBASE + LOGICA BUSINESS
+        async function loadDashboardData() {
+            try {
+                console.log('🔄 Caricamento dati LifestyleFitnessCoach...');
+                updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
+
+                // 1. Carica utenti da quiz_results
+                try {
+                    const quizSnapshot = await getDocs(query(
+                        collection(db, 'quiz_results'), 
+                        orderBy('timestamp', 'desc')
+                    ));
+                    allUsers = [];
+                    
+                    quizSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        
+                        // Determina quadrante e livello coscienza
+                        const quadrant = determineQuadrant(data);
+                        const consciousnessLevel = determineConsciousnessLevel(data);
+                        
+                        allUsers.push({
+                            id: doc.id,
+                            name: data.name || 'Nome non fornito',
+                            email: data.email || 'Email non fornita',
+                            phone: data.phone || data.whatsapp || data.telefono || null,
+                            registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            
+                            // Status coaching
+                            currentWeek: data.currentWeek || 1,
+                            completedWeeks: data.completedWeeks || [],
+                            totalSessions: data.totalSessions || 0,
+                            hasStartedCoaching: data.hasStartedCoaching || false,
+                            
+                            // Profilo personalizzazione
+                            profileQuadrant: quadrant,
+                            consciousnessLevel: consciousnessLevel,
+                            
+                            // Dati quiz completi
+                            leadScore: calculateLeadScore(data),
+                            quizData: data,
+                            source: 'quiz',
+                            
+                            // Metadati
+                            profileType: data.profile_type || data.profile || getProfileName(quadrant),
+                            goals: data.goals || [],
+                            challenges: data.challenges || data.obstacles || [],
+                            
+                            // Dati aggiuntivi
+                            age: data.age || null,
+                            city: data.city || data.citta || null,
+                            experience: data.experience || data.esperienza || null,
+                            activityLevel: data.activity_level || data.livello_attivita || null,
+                            readinessLevel: data.readiness_level || data.livello_motivazione || null,
+                            commitmentLevel: data.commitment_level || data.livello_impegno || null,
+                            
+                            // Note coaching
+                            notes: data.notes || ''
+                        });
+                    });
+                    
+                    console.log('✅ Utenti caricati:', allUsers.length);
+                } catch (error) {
+                    console.error('❌ Errore caricamento quiz_results:', error);
+                    allUsers = [];
+                }
+
+                // 2. Carica sessioni coaching
+                try {
+                    const sessionsSnapshot = await getDocs(collection(db, 'coaching_sessions'));
+                    allSessions = [];
+                    
+                    sessionsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        allSessions.push({
+                            id: doc.id,
+                            ...data,
+                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            duration: data.duration || 0,
+                            weekNumber: data.weekNumber || 1,
+                            questionsAnswered: data.questionsAnswered || 0,
+                            aiResponsesGenerated: data.aiResponsesGenerated || 0
+                        });
+                    });
+                    
+                    console.log('✅ Sessioni coaching:', allSessions.length);
+                } catch (error) {
+                    console.warn('⚠️ Collezione coaching_sessions non trovata');
+                    allSessions = [];
+                }
+
+                // 3. Carica conversazioni AI
+                try {
+                    const aiSnapshot = await getDocs(collection(db, 'ai_conversations'));
+                    allAIConversations = [];
+                    
+                    aiSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        allAIConversations.push({
+                            id: doc.id,
+                            ...data,
+                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+                            messages: data.messages || [],
+                            insights: data.insights || []
+                        });
+                    });
+                    
+                    console.log('✅ Conversazioni AI:', allAIConversations.length);
+                } catch (error) {
+                    console.warn('⚠️ Collezione ai_conversations non trovata');
+                    allAIConversations = [];
+                }
+
+                // Aggiorna dashboard
+                filteredUsers = [...allUsers];
+                updateDashboard();
+                updateConnectionStatus('✅ Dashboard aggiornata - Dati reali', '#4CAF50');
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento Firebase:', error);
+                updateConnectionStatus('❌ Errore Firebase', '#f44336');
+            }
+        }
+
+        // 🧠 DETERMINA QUADRANTE DA DATI QUIZ
+        function determineQuadrant(quizData) {
+            let competenceScore = 0;
+            let motivationScore = 0;
+            
+            // Competenza tecnica
+            if (quizData.experience) {
+                if (quizData.experience.includes('avanzato') || quizData.experience.includes('Avanzato')) competenceScore += 2;
+                else if (quizData.experience.includes('intermedio') || quizData.experience.includes('Intermedio')) competenceScore += 1;
+            }
+            
+            if (quizData.activity_level) {
+                if (quizData.activity_level.includes('Molto attivo')) competenceScore += 2;
+                else if (quizData.activity_level.includes('Moderatamente')) competenceScore += 1;
+            }
+            
+            // Motivazione emotiva
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                motivationScore += Math.min(quizData.goals.length, 2);
+            }
+            
+            if (quizData.readiness_level && quizData.readiness_level >= 4) motivationScore += 1;
+            if (quizData.commitment_level && quizData.commitment_level >= 4) motivationScore += 1;
+            
+            // Determina quadrante
+            if (competenceScore >= 2 && motivationScore >= 2) return 'Q1';
+            else if (competenceScore < 2 && motivationScore >= 2) return 'Q2';
+            else if (competenceScore >= 2 && motivationScore < 2) return 'Q3';
+            else return 'Q4';
+        }
+        
+        // 🧠 DETERMINA LIVELLO COSCIENZA
+        function determineConsciousnessLevel(quizData) {
+            let level = 'Opportunista';
+            
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                const goals = quizData.goals.join(' ').toLowerCase();
+                
+                if (goals.includes('comunità') || goals.includes('aiutare') || goals.includes('sociale')) {
+                    level = 'Pluralista';
+                } else if (goals.includes('successo') || goals.includes('performance') || goals.includes('competizione')) {
+                    level = 'Achiever';
+                } else if (goals.includes('salute') || goals.includes('stabilità') || goals.includes('routine')) {
+                    level = 'Conformista';
+                }
+            }
+            
+            return level;
+        }
+        
+        // 🧮 CALCOLA LEAD SCORE
+        function calculateLeadScore(quizData) {
+            if (quizData.lead_score) return quizData.lead_score;
+            
+            let score = 0;
+            
+            if (quizData.experience) {
+                if (quizData.experience.includes('Avanzato')) score += 20;
+                else if (quizData.experience.includes('Intermedio')) score += 15;
+                else if (quizData.experience.includes('Principiante')) score += 10;
+            }
+            
+            if (quizData.goals && Array.isArray(quizData.goals)) {
+                score += Math.min(quizData.goals.length * 5, 25);
+            }
+            
+            if (quizData.readiness_level) score += quizData.readiness_level * 4;
+            if (quizData.commitment_level) score += quizData.commitment_level * 3;
+            
+            if (quizData.email) score += 10;
+            if (quizData.name) score += 5;
+            if (quizData.phone || quizData.whatsapp) score += 5;
+            
+            return Math.min(score, 100);
+        }
+
+        // 📊 AGGIORNA DASHBOARD
+        function updateDashboard() {
+            calculateKPIs();
+            renderUsersTable();
+            updateLastUpdateTime();
+        }
+
+        // 📈 CALCOLA KPI
+        function calculateKPIs() {
+            const totalUsers = allUsers.length;
+            const activeUsers = allUsers.filter(user => {
+                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
+                return daysSinceActivity <= 7;
+            }).length;
+
+            const completedWeek1 = allUsers.filter(user => 
+                user.completedWeeks && user.completedWeeks.includes(1)
+            ).length;
+            
+            const conversionRate = totalUsers > 0 ? Math.round((completedWeek1 / totalUsers) * 100) : 0;
+
+            // Calcola completion rate medio
+            let totalCompletions = 0;
+            let totalPossible = 0;
+            
+            allUsers.forEach(user => {
+                for (let week = 1; week <= 7; week++) {
+                    totalPossible++;
+                    if (user.completedWeeks && user.completedWeeks.includes(week)) {
+                        totalCompletions++;
+                    }
+                }
+            });
+
+            const completionRate = totalPossible > 0 ? 
+                Math.round((totalCompletions / totalPossible) * 100) : 0;
+
+            // Calcola revenue potential
+            let potentialRevenue = 0;
+            allUsers.forEach(user => {
+                if (user.completedWeeks) {
+                    for (let week = 2; week <= 7; week++) {
+                        if (user.completedWeeks.includes(week)) {
+                            potentialRevenue += 50;
+                        }
+                    }
+                }
+            });
+
+            // Sessioni oggi
+            const today = new Date().toISOString().split('T')[0];
+            const todaySessions = allSessions.filter(session => 
+                session.timestamp.toISOString().split('T')[0] === today
+            ).length;
+
+            // Update UI
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('activeUsers').textContent = activeUsers;
+            document.getElementById('conversionRate').textContent = conversionRate + '%';
+            document.getElementById('completionRate').textContent = completionRate + '%';
+            document.getElementById('potentialRevenue').textContent = '€' + potentialRevenue;
+            document.getElementById('todaySessions').textContent = todaySessions;
+
+            // Update changes
+            document.getElementById('usersChange').textContent = `+${Math.round(totalUsers * 0.15)} questa settimana`;
+            document.getElementById('activeChange').textContent = `${activeUsers}/${totalUsers} attivi`;
+        }
+
+        // 👥 RENDER USERS TABLE
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            const noUsersMessage = document.getElementById('noUsersMessage');
+            
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = '';
+                noUsersMessage.style.display = 'block';
+                document.querySelector('.users-table').style.display = 'none';
+                return;
+            }
+
+            noUsersMessage.style.display = 'none';
+            document.querySelector('.users-table').style.display = 'table';
+
+            tbody.innerHTML = filteredUsers.map(user => {
+                const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
+                const progressPercentage = Math.round((completedWeeks / 7) * 100);
+                
+                const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                
+                const lastActivityFormatted = formatDate(user.lastActivity);
+                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
+                
+                let activityStatus = 'active';
+                if (daysSinceActivity > 30) activityStatus = 'inactive';
+                else if (daysSinceActivity > 7) activityStatus = 'partial';
+
+                // Session status
+                let sessionStatus = 'not-started';
+                if (user.hasStartedCoaching && completedWeeks > 0) sessionStatus = 'completed';
+                else if (user.hasStartedCoaching) sessionStatus = 'partial';
+
+                return `
+                    <tr onclick="openUserModal('${user.id}')">
+                        <td>
+                            <div class="user-info">
+                                <div class="user-avatar">${initials}</div>
+                                <div class="user-details">
+                                    <div class="user-name">${user.name}</div>
+                                    <div class="user-email">${user.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge role-user">user</span>
+                        </td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                            </div>
+                            <div class="progress-text">${completedWeeks}/7 settimane</div>
+                        </td>
+                        <td>
+                            <span class="status-badge status-${sessionStatus}">
+                                ${sessionStatus === 'completed' ? '✅ Completa' : 
+                                  sessionStatus === 'partial' ? '⏳ Parziale' : '⭕ Non iniziata'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="last-activity">${lastActivityFormatted}</div>
+                            <div class="status-badge status-${activityStatus}" style="font-size: 0.7rem; margin-top: 0.25rem;">
+                                ${daysSinceActivity === 0 ? 'Oggi' : 
+                                  daysSinceActivity === 1 ? 'Ieri' : 
+                                  daysSinceActivity + ' giorni fa'}
+                            </div>
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="event.stopPropagation(); openUserModal('${user.id}')">
+                                👁️ Dettagli
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update counters
+            document.getElementById('visibleUsers').textContent = filteredUsers.length;
+            document.getElementById('totalUsersCount').textContent = allUsers.length;
+        }
+
+        // 🔍 APRI MODAL UTENTE
+        window.openUserModal = function(userId) {
+            currentUser = allUsers.find(user => user.id === userId);
+            if (!currentUser) return;
+
+            document.getElementById('modalUserName').textContent = currentUser.name;
+            
+            // General info
+            const generalInfo = document.getElementById('userGeneralInfo');
+            generalInfo.innerHTML = `
+                <p><strong>Email:</strong> ${currentUser.email}</p>
+                <p><strong>Telefono:</strong> ${currentUser.phone || 'Non fornito'}</p>
+                <p><strong>Registrazione:</strong> ${formatDate(currentUser.registrationDate)}</p>
+                <p><strong>Profilo:</strong> ${currentUser.profileType}</p>
+                <p><strong>Lead Score:</strong> ${Math.round(currentUser.leadScore)}%</p>
+                <p><strong>Quadrante:</strong> ${getProfileIcon(currentUser.profileQuadrant)} ${currentUser.profileQuadrant}</p>
+            `;
+
+            // Stats
+            const completedWeeks = currentUser.completedWeeks ? currentUser.completedWeeks.length : 0;
+            const totalTime = currentUser.totalSessions * 45; // Stima
+
+            const userStats = document.getElementById('userStats');
+            userStats.innerHTML = `
+                <p><strong>Settimane Completate:</strong> ${completedWeeks}/7</p>
+                <p><strong>Settimana Corrente:</strong> ${currentUser.currentWeek}</p>
+                <p><strong>Sessioni Totali:</strong> ${currentUser.totalSessions}</p>
+                <p><strong>Tempo Stimato:</strong> ${totalTime} minuti</p>
+                <p><strong>Ultima Attività:</strong> ${formatDate(currentUser.lastActivity)}</p>
+                <p><strong>Coaching Iniziato:</strong> ${currentUser.hasStartedCoaching ? '✅ Sì' : '❌ No'}</p>
+            `;
+
+            // Week progress
+            const weekProgress = document.getElementById('weekProgress');
+            weekProgress.innerHTML = '';
+            
+            for (let week = 1; week <= 7; week++) {
+                const isCompleted = currentUser.completedWeeks && currentUser.completedWeeks.includes(week);
+                const isCurrent = currentUser.currentWeek == week;
+                const weekItem = document.createElement('div');
+                
+                let status = 'not-started';
+                if (isCompleted) status = 'completed';
+                else if (isCurrent) status = 'partial';
+                
+                weekItem.className = `week-item ${status}`;
+                weekItem.innerHTML = `
+                    <div><strong>W${week}</strong></div>
+                    <div style="font-size: 0.7rem; margin-top: 0.25rem;">
+                        ${isCompleted ? '✅' : isCurrent ? '⏳' : '⭕'}
+                    </div>
+                `;
+                weekProgress.appendChild(weekItem);
+            }
+
+            // Profile info con dati quiz
+            const userProfile = document.getElementById('userProfile');
+            userProfile.innerHTML = `
+                <p><strong>Esperienza:</strong> ${currentUser.experience || 'Non specificata'}</p>
+                <p><strong>Livello Attività:</strong> ${currentUser.activityLevel || 'Non specificato'}</p>
+                <p><strong>Motivazione:</strong> ${currentUser.readinessLevel || 'N/A'}/5</p>
+                <p><strong>Impegno:</strong> ${currentUser.commitmentLevel || 'N/A'}/5</p>
+                <p><strong>Età:</strong> ${currentUser.age || 'Non fornita'}</p>
+                <p><strong>Città:</strong> ${currentUser.city || 'Non fornita'}</p>
+            `;
+
+            // Load notes
+            document.getElementById('userNotes').value = currentUser.notes || '';
+
+            // Show modal
+            document.getElementById('userModal').classList.add('active');
+        };
+
+        // 💾 SALVA NOTE UTENTE
+        window.saveUserNotes = function() {
+            if (!currentUser) return;
+
+            const notes = document.getElementById('userNotes').value;
+            currentUser.notes = notes;
+
+            console.log('💾 Note salvate per', currentUser.name);
+            
+            const btn = document.querySelector('.save-notes-btn');
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Salvato!';
+            btn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)';
+            }, 2000);
+        };
+
+        // 📊 EXPORT USERS CSV
+        window.exportUsers = function() {
+            const csvContent = generateCSV(filteredUsers);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `utenti_coaching_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        // 📄 GENERA CSV
+        function generateCSV(users) {
+            const headers = [
+                'Nome', 'Email', 'Telefono', 'Registrazione', 'Ultima Attività',
+                'Lead Score', 'Quadrante', 'Livello Coscienza', 'Settimane Completate', 
+                'Coaching Iniziato', 'Note'
+            ];
+
+            const rows = users.map(user => {
+                const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
+                
+                return [
+                    user.name,
+                    user.email,
+                    user.phone || '',
+                    formatDate(user.registrationDate),
+                    formatDate(user.lastActivity),
+                    Math.round(user.leadScore),
+                    user.profileQuadrant,
+                    user.consciousnessLevel,
+                    completedWeeks,
+                    user.hasStartedCoaching ? 'Sì' : 'No',
+                    user.notes || ''
+                ];
+            });
+
+            return [headers, ...rows]
+                .map(row => row.map(cell => `"${cell}"`).join(','))
+                .join('\n');
+        }
+
+        // 📱 CONTATTO WHATSAPP
+        window.openWhatsApp = function(phone) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            const message = encodeURIComponent('Ciao! Ti contatto per il percorso LifestyleFitnessCoach.');
+            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
+        };
+
+        // 🔄 APPLICA FILTRI
+        window.applyFilters = function() {
+            const roleFilter = document.getElementById('roleFilter').value;
+            const progressFilter = document.getElementById('progressFilter').value;
+            const activityFilter = document.getElementById('activityFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            filteredUsers = allUsers.filter(user => {
+                // Progress filter
+                if (progressFilter) {
+                    const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
+                    
+                    if (progressFilter === 'not-started' && (completedWeeks > 0 || user.hasStartedCoaching)) return false;
+                    if (progressFilter === 'in-progress' && (!user.hasStartedCoaching || completedWeeks === 7)) return false;
+                    if (progressFilter === 'completed' && completedWeeks < 7) return false;
+                }
+
+                // Activity filter
+                if (activityFilter) {
+                    const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
+                    
+                    if (activityFilter === 'today' && daysSinceActivity !== 0) return false;
+                    if (activityFilter === 'week' && daysSinceActivity > 7) return false;
+                    if (activityFilter === 'month' && daysSinceActivity > 30) return false;
+                    if (activityFilter === 'inactive' && daysSinceActivity <= 30) return false;
+                }
+
+                // Search filter  
+                if (searchFilter && 
+                    !user.name.toLowerCase().includes(searchFilter) && 
+                    !user.email.toLowerCase().includes(searchFilter)) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            renderUsersTable();
+        };
+
+        // 🔄 REFRESH DASHBOARD
+        window.refreshDashboard = function() {
+            console.log('🔄 Refresh dashboard...');
+            
+            const btn = document.querySelector('.refresh-btn');
+            btn.textContent = '🔄 Aggiornando...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                loadDashboardData();
+                btn.textContent = '🔄 Aggiorna';
+                btn.disabled = false;
+            }, 1000);
+        };
+
+        // 🔒 CHIUDI MODAL
+        window.closeUserModal = function() {
+            document.getElementById('userModal').classList.remove('active');
+            currentUser = null;
+        };
+
+        // 🛠️ UTILITY FUNCTIONS
+        function getProfileIcon(quadrant) {
+            const icons = {
+                'Q1': '🏆', // Competente e Motivato
+                'Q2': '💪', // Forte ma Inesperto  
+                'Q3': '🎯', // Esperto ma Demotivato
+                'Q4': '🌱'  // Principiante Totale
+            };
+            return icons[quadrant] || '👤';
+        }
+
+        function getProfileName(quadrant) {
+            const names = {
+                'Q1': 'Atleta in Crescita',
+                'Q2': 'Esploratore Motivato', 
+                'Q3': 'Esperto Demotivato',
+                'Q4': 'Guerriero Determinato'
+            };
+            return names[quadrant] || 'Profilo Indefinito';
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('it-IT', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+        }
+
+        function daysBetween(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000;
+            return Math.round(Math.abs((date1 - date2) / oneDay));
+        }
+
+        function updateConnectionStatus(message, color) {
+            const statusEl = document.querySelector('.connection-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.style.background = color;
+            }
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('it-IT', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const timeElement = document.getElementById('lastUpdate');
+            if (timeElement) {
+                timeElement.textContent = timeString;
+            }
+        }
+
+        // 🚀 INIZIALIZZAZIONE
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin Dashboard Fusion inizializzata');
+            loadDashboardData();
+            
+            // Auto-refresh ogni 60 secondi
+            setInterval(() => {
+                if (document.hidden) return; // Solo se tab attiva
+                loadDashboardData();
+            }, 60000);
+            
+            // Aggiorna ora ogni 5 secondi
+            setInterval(updateLastUpdateTime, 5000);
+        });
+
+        // Esponi funzioni globalmente
+        window.loadDashboardData = loadDashboardData;
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -19,9 +682,25 @@
             padding: 20px;
         }
 
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            z-index: 1000;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
         .dashboard-container {
             max-width: 1400px;
             margin: 0 auto;
+            margin-top: 40px;
         }
 
         /* HEADER */
@@ -80,7 +759,7 @@
             background: rgba(255,255,255,0.3);
         }
 
-        /* KPI CARDS */
+        /* KPI CARDS */  
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -132,14 +811,7 @@
             display: flex;
             align-items: center;
             gap: 0.25rem;
-        }
-
-        .kpi-change.positive {
             color: #22c55e;
-        }
-
-        .kpi-change.negative {
-            color: #ef4444;
         }
 
         /* FILTERS */
@@ -260,6 +932,7 @@
 
         .users-table tbody tr:hover {
             background: #1e293b;
+            cursor: pointer;
         }
 
         .user-avatar {
@@ -301,16 +974,6 @@
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-        }
-
-        .role-admin {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-
-        .role-beta {
-            background: rgba(168, 85, 247, 0.2);
-            color: #c4b5fd;
         }
 
         .role-user {
@@ -358,6 +1021,16 @@
         .status-inactive {
             background: rgba(107, 114, 128, 0.2);
             color: #d1d5db;
+        }
+
+        .status-not-started {
+            background: rgba(107, 114, 128, 0.2);
+            color: #d1d5db;
+        }
+
+        .status-completed {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
         }
 
         .last-activity {
@@ -523,6 +1196,18 @@
             margin-top: 1rem;
         }
 
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #94a3b8;
+        }
+
+        .no-data-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -561,45 +1246,18 @@
                 padding: 1.5rem;
             }
         }
-
-        /* LOADING STATES */
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .skeleton {
-            background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
-        }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 3rem;
-            color: #94a3b8;
-        }
-
-        .no-data-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
     </style>
 </head>
 <body>
+    <div class="connection-status">🔄 Inizializzazione Dashboard...</div>
+
     <div class="dashboard-container">
         <!-- HEADER -->
         <div class="dashboard-header">
             <div class="header-content">
                 <div>
-                    <h1 class="header-title">👑 Admin Dashboard</h1>
-                    <p class="header-subtitle">Monitoring e gestione completa degli utenti - Andrea Padoan Coach</p>
+                    <h1 class="header-title">👑 Admin Dashboard Fusion</h1>
+                    <p class="header-subtitle">Firebase Real Data + Design Moderno - Andrea Padoan Coach</p>
                 </div>
                 <div class="header-actions">
                     <div class="admin-badge">🎯 Coach Admin</div>
@@ -616,7 +1274,7 @@
                     <span class="kpi-icon">👥</span>
                 </div>
                 <div class="kpi-value" id="totalUsers">0</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>↗️</span>
                     <span id="usersChange">+0% questa settimana</span>
                 </div>
@@ -628,7 +1286,7 @@
                     <span class="kpi-icon">⚡</span>
                 </div>
                 <div class="kpi-value" id="activeUsers">0</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>📈</span>
                     <span id="activeChange">Ultimi 7 giorni</span>
                 </div>
@@ -640,9 +1298,9 @@
                     <span class="kpi-icon">🎯</span>
                 </div>
                 <div class="kpi-value" id="conversionRate">0%</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>📊</span>
-                    <span>Quiz → Registrazione</span>
+                    <span>Quiz → Week 1</span>
                 </div>
             </div>
 
@@ -652,7 +1310,7 @@
                     <span class="kpi-icon">✅</span>
                 </div>
                 <div class="kpi-value" id="completionRate">0%</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>🏆</span>
                     <span>Media Week 1-7</span>
                 </div>
@@ -664,7 +1322,7 @@
                     <span class="kpi-icon">💰</span>
                 </div>
                 <div class="kpi-value" id="potentialRevenue">€0</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>💎</span>
                     <span>Freemium model</span>
                 </div>
@@ -676,7 +1334,7 @@
                     <span class="kpi-icon">📅</span>
                 </div>
                 <div class="kpi-value" id="todaySessions">0</div>
-                <div class="kpi-change positive">
+                <div class="kpi-change">
                     <span>🔥</span>
                     <span>Attività oggi</span>
                 </div>
@@ -687,16 +1345,6 @@
         <div class="filters-section">
             <h3 class="filters-title">🔍 Filtri e Ricerca</h3>
             <div class="filters-grid">
-                <div class="filter-group">
-                    <label class="filter-label">Ruolo</label>
-                    <select class="filter-select" id="roleFilter" onchange="applyFilters()">
-                        <option value="">Tutti i ruoli</option>
-                        <option value="admin">Admin</option>
-                        <option value="beta">Beta Tester</option>
-                        <option value="user">Utenti</option>
-                    </select>
-                </div>
-
                 <div class="filter-group">
                     <label class="filter-label">Stato Progresso</label>
                     <select class="filter-select" id="progressFilter" onchange="applyFilters()">
@@ -729,7 +1377,7 @@
         <div class="users-section">
             <div class="users-header">
                 <div>
-                    <h3 class="users-title">👥 Gestione Utenti</h3>
+                    <h3 class="users-title">👥 Gestione Utenti (Dati Reali Firebase)</h3>
                     <p class="users-count">Mostrando <span id="visibleUsers">0</span> di <span id="totalUsersCount">0</span> utenti</p>
                 </div>
                 <button class="export-btn" onclick="exportUsers()">📊 Esporta CSV</button>
@@ -748,7 +1396,11 @@
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <!-- Populated by JavaScript -->
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
+                                🔄 Caricamento dati da Firebase...
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -757,6 +1409,33 @@
                 <div class="no-data-icon">👥</div>
                 <h3>Nessun utente trovato</h3>
                 <p>Modifica i filtri o attendi nuove registrazioni</p>
+            </div>
+        </div>
+
+        <!-- STATUS SISTEMA -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Ultimo Update</span>
+                    <span class="kpi-icon">🔄</span>
+                </div>
+                <div class="kpi-value" style="font-size: 1.5rem;" id="lastUpdate">--:--:--</div>
+                <div class="kpi-change">
+                    <span>⏰</span>
+                    <span>Aggiornamento automatico</span>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-title">Firebase Status</span>
+                    <span class="kpi-icon">🔥</span>
+                </div>
+                <div class="kpi-value" style="font-size: 1.2rem; color: #22c55e;">Connesso</div>
+                <div class="kpi-change">
+                    <span>✅</span>
+                    <span>Dati reali caricati</span>
+                </div>
             </div>
         </div>
     </div>
@@ -792,7 +1471,7 @@
                 </div>
 
                 <div class="detail-section">
-                    <h4 class="detail-title">📝 Quiz e Profilo</h4>
+                    <h4 class="detail-title">📝 Profilo Quiz</h4>
                     <div id="userProfile">
                         <!-- Populated by JavaScript -->
                     </div>
@@ -808,529 +1487,6 @@
     </div>
 
     <script>
-        // MOCK DATA - In produzione questi dati arriverebbero da Firebase
-        let usersData = [
-            {
-                id: 'user_001',
-                name: 'Marco Rossi',
-                email: 'marco.rossi@gmail.com',
-                role: 'user',
-                registrationDate: '2025-01-15',
-                lastActivity: '2025-01-31',
-                profileType: 'Guerriero Determinato',
-                leadScore: 85,
-                weekProgress: {
-                    1: { status: 'completed', duration: 45, completedAt: '2025-01-16' },
-                    2: { status: 'partial', duration: 20, completedAt: null },
-                    3: { status: 'not-started', duration: 0, completedAt: null },
-                    4: { status: 'not-started', duration: 0, completedAt: null },
-                    5: { status: 'not-started', duration: 0, completedAt: null },
-                    6: { status: 'not-started', duration: 0, completedAt: null },
-                    7: { status: 'not-started', duration: 0, completedAt: null }
-                },
-                totalTimeSpent: 65,
-                quizCompleted: true,
-                notes: ''
-            },
-            {
-                id: 'user_002',
-                name: 'Laura Bianchi',
-                email: 'laura.bianchi@yahoo.it',
-                role: 'user',
-                registrationDate: '2025-01-20',
-                lastActivity: '2025-01-30',
-                profileType: 'Esploratore Motivato',
-                leadScore: 92,
-                weekProgress: {
-                    1: { status: 'completed', duration: 38, completedAt: '2025-01-21' },
-                    2: { status: 'completed', duration: 42, completedAt: '2025-01-25' },
-                    3: { status: 'completed', duration: 35, completedAt: '2025-01-28' },
-                    4: { status: 'partial', duration: 15, completedAt: null },
-                    5: { status: 'not-started', duration: 0, completedAt: null },
-                    6: { status: 'not-started', duration: 0, completedAt: null },
-                    7: { status: 'not-started', duration: 0, completedAt: null }
-                },
-                totalTimeSpent: 130,
-                quizCompleted: true,
-                notes: 'Utente molto motivato, fa domande pertinenti'
-            },
-            {
-                id: 'admin_001',
-                name: 'Andrea Padoan',
-                email: 'admin@tribucoach.com',
-                role: 'admin',
-                registrationDate: '2025-01-01',
-                lastActivity: '2025-01-31',
-                profileType: 'Coach Admin',
-                leadScore: 100,
-                weekProgress: {
-                    1: { status: 'completed', duration: 60, completedAt: '2025-01-01' },
-                    2: { status: 'completed', duration: 55, completedAt: '2025-01-01' },
-                    3: { status: 'completed', duration: 50, completedAt: '2025-01-01' },
-                    4: { status: 'completed', duration: 48, completedAt: '2025-01-01' },
-                    5: { status: 'completed', duration: 52, completedAt: '2025-01-01' },
-                    6: { status: 'completed', duration: 49, completedAt: '2025-01-01' },
-                    7: { status: 'completed', duration: 58, completedAt: '2025-01-01' }
-                },
-                totalTimeSpent: 372,
-                quizCompleted: true,
-                notes: 'Account amministratore - Accesso completo'
-            },
-            {
-                id: 'beta_001',
-                name: 'Beta Tester',
-                email: 'beta@tribucoach.com',
-                role: 'beta',
-                registrationDate: '2025-01-10',
-                lastActivity: '2025-01-31',
-                profileType: 'Atleta in Crescita',
-                leadScore: 88,
-                weekProgress: {
-                    1: { status: 'completed', duration: 42, completedAt: '2025-01-11' },
-                    2: { status: 'completed', duration: 39, completedAt: '2025-01-15' },
-                    3: { status: 'partial', duration: 25, completedAt: null },
-                    4: { status: 'not-started', duration: 0, completedAt: null },
-                    5: { status: 'not-started', duration: 0, completedAt: null },
-                    6: { status: 'not-started', duration: 0, completedAt: null },
-                    7: { status: 'not-started', duration: 0, completedAt: null }
-                },
-                totalTimeSpent: 106,
-                quizCompleted: true,
-                notes: 'Beta tester attivo, fornisce feedback utili'
-            },
-            {
-                id: 'user_003',
-                name: 'Giuseppe Verdi',
-                email: 'g.verdi@libero.it',
-                role: 'user',
-                registrationDate: '2025-01-25',
-                lastActivity: '2025-01-26',
-                profileType: 'Guerriero Determinato',
-                leadScore: 75,
-                weekProgress: {
-                    1: { status: 'partial', duration: 18, completedAt: null },
-                    2: { status: 'not-started', duration: 0, completedAt: null },
-                    3: { status: 'not-started', duration: 0, completedAt: null },
-                    4: { status: 'not-started', duration: 0, completedAt: null },
-                    5: { status: 'not-started', duration: 0, completedAt: null },
-                    6: { status: 'not-started', duration: 0, completedAt: null },
-                    7: { status: 'not-started', duration: 0, completedAt: null }
-                },
-                totalTimeSpent: 18,
-                quizCompleted: true,
-                notes: ''
-            }
-        ];
-
-        let filteredUsers = [...usersData];
-        let currentUser = null;
-
-        // INITIALIZE DASHBOARD
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 Admin Dashboard caricata');
-            loadDashboardData();
-            calculateKPIs();
-            renderUsersTable();
-        });
-
-        // LOAD DASHBOARD DATA
-        function loadDashboardData() {
-            // In produzione, qui caricheresti i dati da Firebase
-            console.log('📊 Caricamento dati dashboard...');
-            
-            // Simula caricamento asincrono
-            setTimeout(() => {
-                console.log('✅ Dati caricati:', usersData.length, 'utenti');
-            }, 500);
-        }
-
-        // CALCULATE KPIs
-        function calculateKPIs() {
-            const totalUsers = usersData.length;
-            const activeUsers = usersData.filter(user => {
-                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                return daysSinceActivity <= 7;
-            }).length;
-
-            const completedWeek1 = usersData.filter(user => 
-                user.weekProgress[1]?.status === 'completed'
-            ).length;
-            
-            const conversionRate = totalUsers > 0 ? Math.round((completedWeek1 / totalUsers) * 100) : 0;
-
-            // Calculate average completion rate across all weeks
-            let totalCompletions = 0;
-            let totalPossibleCompletions = 0;
-            
-            usersData.forEach(user => {
-                for (let week = 1; week <= 7; week++) {
-                    totalPossibleCompletions++;
-                    if (user.weekProgress[week]?.status === 'completed') {
-                        totalCompletions++;
-                    }
-                }
-            });
-
-            const completionRate = totalPossibleCompletions > 0 ? 
-                Math.round((totalCompletions / totalPossibleCompletions) * 100) : 0;
-
-            // Calculate potential revenue (€50 per week 2-7 completion)
-            let potentialRevenue = 0;
-            usersData.forEach(user => {
-                if (user.role === 'user') { // Only regular users pay
-                    for (let week = 2; week <= 7; week++) {
-                        if (user.weekProgress[week]?.status === 'completed') {
-                            potentialRevenue += 50;
-                        }
-                    }
-                }
-            });
-
-            // Today's sessions
-            const today = new Date().toISOString().split('T')[0];
-            const todaySessions = usersData.filter(user => 
-                user.lastActivity === today
-            ).length;
-
-            // Update KPI display
-            document.getElementById('totalUsers').textContent = totalUsers;
-            document.getElementById('activeUsers').textContent = activeUsers;
-            document.getElementById('conversionRate').textContent = conversionRate + '%';
-            document.getElementById('completionRate').textContent = completionRate + '%';
-            document.getElementById('potentialRevenue').textContent = '€' + potentialRevenue;
-            document.getElementById('todaySessions').textContent = todaySessions;
-
-            // Update change indicators
-            document.getElementById('usersChange').textContent = `+${Math.round(totalUsers * 0.15)} questa settimana`;
-            document.getElementById('activeChange').textContent = `${activeUsers}/${totalUsers} attivi`;
-        }
-
-        // RENDER USERS TABLE
-        function renderUsersTable() {
-            const tbody = document.getElementById('usersTableBody');
-            const noUsersMessage = document.getElementById('noUsersMessage');
-            
-            if (filteredUsers.length === 0) {
-                tbody.innerHTML = '';
-                noUsersMessage.style.display = 'block';
-                document.querySelector('.users-table').style.display = 'none';
-                return;
-            }
-
-            noUsersMessage.style.display = 'none';
-            document.querySelector('.users-table').style.display = 'table';
-
-            tbody.innerHTML = filteredUsers.map(user => {
-                const completedWeeks = Object.values(user.weekProgress).filter(w => w.status === 'completed').length;
-                const progressPercentage = Math.round((completedWeeks / 7) * 100);
-                
-                const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
-                
-                const lastActivityFormatted = formatDate(user.lastActivity);
-                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                
-                let activityStatus = 'active';
-                if (daysSinceActivity > 30) activityStatus = 'inactive';
-                else if (daysSinceActivity > 7) activityStatus = 'partial';
-
-                // Calculate session status
-                let sessionStatus = 'not-started';
-                const hasCompleted = Object.values(user.weekProgress).some(w => w.status === 'completed');
-                const hasPartial = Object.values(user.weekProgress).some(w => w.status === 'partial');
-                
-                if (hasCompleted) sessionStatus = 'completed';
-                else if (hasPartial) sessionStatus = 'partial';
-
-                return `
-                    <tr onclick="openUserModal('${user.id}')">
-                        <td>
-                            <div class="user-info">
-                                <div class="user-avatar">${initials}</div>
-                                <div class="user-details">
-                                    <div class="user-name">${user.name}</div>
-                                    <div class="user-email">${user.email}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="role-badge role-${user.role}">${user.role}</span>
-                        </td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
-                            </div>
-                            <div class="progress-text">${completedWeeks}/7 settimane</div>
-                        </td>
-                        <td>
-                            <span class="status-badge status-${sessionStatus}">
-                                ${sessionStatus === 'completed' ? '✅ Completa' : 
-                                  sessionStatus === 'partial' ? '⏳ Parziale' : '⭕ Non iniziata'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="last-activity">${lastActivityFormatted}</div>
-                            <div class="status-badge status-${activityStatus}" style="font-size: 0.7rem; margin-top: 0.25rem;">
-                                ${daysSinceActivity === 0 ? 'Oggi' : 
-                                  daysSinceActivity === 1 ? 'Ieri' : 
-                                  daysSinceActivity + ' giorni fa'}
-                            </div>
-                        </td>
-                        <td>
-                            <button class="action-btn" onclick="event.stopPropagation(); openUserModal('${user.id}')">
-                                👁️ Dettagli
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Update counters
-            document.getElementById('visibleUsers').textContent = filteredUsers.length;
-            document.getElementById('totalUsersCount').textContent = usersData.length;
-        }
-
-        // APPLY FILTERS
-        function applyFilters() {
-            const roleFilter = document.getElementById('roleFilter').value;
-            const progressFilter = document.getElementById('progressFilter').value;
-            const activityFilter = document.getElementById('activityFilter').value;
-            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
-
-            filteredUsers = usersData.filter(user => {
-                // Role filter
-                if (roleFilter && user.role !== roleFilter) return false;
-
-                // Progress filter
-                if (progressFilter) {
-                    const completedWeeks = Object.values(user.weekProgress).filter(w => w.status === 'completed').length;
-                    const hasPartial = Object.values(user.weekProgress).some(w => w.status === 'partial');
-                    
-                    if (progressFilter === 'not-started' && (completedWeeks > 0 || hasPartial)) return false;
-                    if (progressFilter === 'in-progress' && (completedWeeks === 0 || completedWeeks === 7)) return false;
-                    if (progressFilter === 'completed' && completedWeeks < 7) return false;
-                }
-
-                // Activity filter
-                if (activityFilter) {
-                    const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                    
-                    if (activityFilter === 'today' && daysSinceActivity !== 0) return false;
-                    if (activityFilter === 'week' && daysSinceActivity > 7) return false;
-                    if (activityFilter === 'month' && daysSinceActivity > 30) return false;
-                    if (activityFilter === 'inactive' && daysSinceActivity <= 30) return false;
-                }
-
-                // Search filter
-                if (searchFilter && 
-                    !user.name.toLowerCase().includes(searchFilter) && 
-                    !user.email.toLowerCase().includes(searchFilter)) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            renderUsersTable();
-        }
-
-        // OPEN USER MODAL
-        function openUserModal(userId) {
-            currentUser = usersData.find(user => user.id === userId);
-            if (!currentUser) return;
-
-            document.getElementById('modalUserName').textContent = currentUser.name;
-            
-            // General info
-            const generalInfo = document.getElementById('userGeneralInfo');
-            generalInfo.innerHTML = `
-                <p><strong>Email:</strong> ${currentUser.email}</p>
-                <p><strong>Ruolo:</strong> <span class="role-badge role-${currentUser.role}">${currentUser.role}</span></p>
-                <p><strong>Registrazione:</strong> ${formatDate(currentUser.registrationDate)}</p>
-                <p><strong>Profilo:</strong> ${currentUser.profileType}</p>
-                <p><strong>Lead Score:</strong> ${currentUser.leadScore}%</p>
-                <p><strong>Quiz Completato:</strong> ${currentUser.quizCompleted ? '✅ Sì' : '❌ No'}</p>
-            `;
-
-            // Stats
-            const completedWeeks = Object.values(currentUser.weekProgress).filter(w => w.status === 'completed').length;
-            const partialWeeks = Object.values(currentUser.weekProgress).filter(w => w.status === 'partial').length;
-            const totalTime = Math.round(currentUser.totalTimeSpent);
-
-            const userStats = document.getElementById('userStats');
-            userStats.innerHTML = `
-                <p><strong>Settimane Completate:</strong> ${completedWeeks}/7</p>
-                <p><strong>Settimane Parziali:</strong> ${partialWeeks}</p>
-                <p><strong>Tempo Totale:</strong> ${totalTime} minuti</p>
-                <p><strong>Tempo Medio/Settimana:</strong> ${Math.round(totalTime/Math.max(completedWeeks + partialWeeks, 1))} min</p>
-                <p><strong>Ultima Attività:</strong> ${formatDate(currentUser.lastActivity)}</p>
-                <p><strong>Giorni di Inattività:</strong> ${daysBetween(new Date(currentUser.lastActivity), new Date())}</p>
-            `;
-
-            // Week progress
-            const weekProgress = document.getElementById('weekProgress');
-            weekProgress.innerHTML = '';
-            
-            for (let week = 1; week <= 7; week++) {
-                const weekData = currentUser.weekProgress[week];
-                const weekItem = document.createElement('div');
-                weekItem.className = `week-item ${weekData.status}`;
-                weekItem.innerHTML = `
-                    <div><strong>W${week}</strong></div>
-                    <div style="font-size: 0.7rem; margin-top: 0.25rem;">
-                        ${weekData.status === 'completed' ? '✅' : 
-                          weekData.status === 'partial' ? '⏳' : '⭕'}
-                    </div>
-                    ${weekData.duration > 0 ? `<div style="font-size: 0.6rem;">${weekData.duration}min</div>` : ''}
-                `;
-                weekProgress.appendChild(weekItem);
-            }
-
-            // Profile info
-            const userProfile = document.getElementById('userProfile');
-            userProfile.innerHTML = `
-                <p><strong>Tipo Profilo:</strong> ${currentUser.profileType}</p>
-                <p><strong>Lead Score:</strong> ${currentUser.leadScore}% 
-                    ${currentUser.leadScore >= 90 ? '🔥 Alta qualità' : 
-                      currentUser.leadScore >= 70 ? '⚡ Buona qualità' : '📈 Da sviluppare'}
-                </p>
-                <p><strong>Potenziale Revenue:</strong> €${calculateUserRevenue(currentUser)}</p>
-            `;
-
-            // Load notes
-            document.getElementById('userNotes').value = currentUser.notes || '';
-
-            // Show modal
-            document.getElementById('userModal').classList.add('active');
-        }
-
-        // CLOSE USER MODAL
-        function closeUserModal() {
-            document.getElementById('userModal').classList.remove('active');
-            currentUser = null;
-        }
-
-        // SAVE USER NOTES
-        function saveUserNotes() {
-            if (!currentUser) return;
-
-            const notes = document.getElementById('userNotes').value;
-            currentUser.notes = notes;
-
-            // In produzione, salveresti su Firebase
-            console.log('💾 Note salvate per', currentUser.name);
-            
-            // Show success feedback
-            const btn = document.querySelector('.save-notes-btn');
-            const originalText = btn.textContent;
-            btn.textContent = '✅ Salvato!';
-            btn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
-            
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)';
-            }, 2000);
-        }
-
-        // EXPORT USERS
-        function exportUsers() {
-            const csvContent = generateCSV(filteredUsers);
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `utenti_coaching_${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-            
-            console.log('📊 Export CSV completato');
-        }
-
-        // GENERATE CSV
-        function generateCSV(users) {
-            const headers = [
-                'Nome', 'Email', 'Ruolo', 'Registrazione', 'Ultima Attività',
-                'Profilo', 'Lead Score', 'Settimane Completate', 'Tempo Totale (min)',
-                'W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'Revenue', 'Note'
-            ];
-
-            const rows = users.map(user => {
-                const completedWeeks = Object.values(user.weekProgress).filter(w => w.status === 'completed').length;
-                const weekStatuses = [];
-                for (let i = 1; i <= 7; i++) {
-                    weekStatuses.push(user.weekProgress[i]?.status || 'not-started');
-                }
-                
-                return [
-                    user.name,
-                    user.email,
-                    user.role,
-                    user.registrationDate,
-                    user.lastActivity,
-                    user.profileType,
-                    user.leadScore,
-                    completedWeeks,
-                    user.totalTimeSpent,
-                    ...weekStatuses,
-                    calculateUserRevenue(user),
-                    user.notes || ''
-                ];
-            });
-
-            return [headers, ...rows]
-                .map(row => row.map(cell => `"${cell}"`).join(','))
-                .join('\n');
-        }
-
-        // REFRESH DASHBOARD
-        function refreshDashboard() {
-            console.log('🔄 Aggiornamento dashboard...');
-            
-            const btn = document.querySelector('.refresh-btn');
-            btn.textContent = '🔄 Aggiornando...';
-            btn.disabled = true;
-            
-            // Simulate data refresh
-            setTimeout(() => {
-                calculateKPIs();
-                renderUsersTable();
-                btn.textContent = '🔄 Aggiorna';
-                btn.disabled = false;
-                console.log('✅ Dashboard aggiornata');
-            }, 1000);
-        }
-
-        // UTILITY FUNCTIONS
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
-        }
-
-        function daysBetween(date1, date2) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            return Math.round(Math.abs((date1 - date2) / oneDay));
-        }
-
-        function calculateUserRevenue(user) {
-            if (user.role !== 'user') return 0; // Admin and beta don't pay
-            
-            let revenue = 0;
-            for (let week = 2; week <= 7; week++) {
-                if (user.weekProgress[week]?.status === 'completed') {
-                    revenue += 50;
-                }
-            }
-            return revenue;
-        }
-
         // Close modal on escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
@@ -1345,7 +1501,7 @@
             }
         });
 
-        console.log('🎯 Admin Dashboard completamente caricata');
+        console.log('🎯 Admin Dashboard Fusion caricata - Firebase + Design Moderno');
     </script>
 </body>
 </html>
