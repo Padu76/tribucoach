@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accedi - LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 420px;
+            margin: 1rem;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #ff6b35, #f39c12);
+            color: white;
+            text-align: center;
+            padding: 2.5rem 1.5rem;
+            position: relative;
+        }
+
+        .demo-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 193, 7, 0.9);
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        .login-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .login-form {
+            padding: 2rem;
+        }
+
+        .demo-info {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .demo-info h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-credentials {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ff6b35;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: #ff6b35;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            border: none;
+            padding: 0.875rem 1rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c66;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #6c6;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .form-links a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .form-links a:hover {
+            color: #f39c12;
+            text-decoration: underline;
+        }
+
+        .divider {
+            margin: 1.5rem 0;
+            text-align: center;
+            position: relative;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e1e8ed;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+        }
+
+        .register-link {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 0.5rem;
+            }
+            
+            .login-header {
+                padding: 2rem 1rem;
+            }
+            
+            .login-form {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="demo-badge">🎭 DEMO</div>
+            <h1>🏠 Bentornato!</h1>
+            <p>Accedi al tuo account per continuare il percorso di coaching personalizzato</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="login-form">
+            <!-- Demo Info -->
+            <div class="demo-info">
+                <h3>🔑 Accesso Demo</h3>
+                <p>Sistema in fase di sviluppo</p>
+                <div class="demo-credentials">
+                    <strong>Email:</strong> demo@tribucoach.com<br>
+                    <strong>Password:</strong> demo123
+                </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message"></div>
+            <div id="successMessage" class="success-message"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" class="form-control" placeholder="demo@tribucoach.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-container">
+                        <input type="password" id="password" class="form-control" placeholder="demo123" required>
+                        <button type="button" class="password-toggle" id="togglePassword">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn" class="login-btn">
+                    Accedi al Tuo Account
+                </button>
+            </form>
+
+            <div class="form-links">
+                <a href="forgot-password.html">Hai dimenticato la password?</a>
+            </div>
+
+            <div class="divider">
+                <span>oppure</span>
+            </div>
+
+            <div class="form-links">
+                <a href="index.html">← Torna alla Homepage</a>
+            </div>
+        </div>
+
+        <!-- Register Link -->
+        <div class="register-link">
+            <p>Non hai ancora un account? <a href="register.html">Registrati Gratis</a></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import dal sistema demo
+        import { auth, signInWithEmailAndPassword } from './demo-auth-system.js';
+
+        console.log('🔐 Login page demo loaded');
+
+        // Form elements
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Auto-fill demo credentials
+        emailInput.value = 'demo@tribucoach.com';
+        passwordInput.value = 'demo123';
+
+        // Password toggle
+        togglePasswordBtn.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+
+        // Handle form submission
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showError('Inserisci email e password per continuare.');
+                return;
+            }
+
+            // Show loading state
+            showLoading(true);
+            hideMessages();
+
+            try {
+                console.log('🔐 Tentativo login demo:', email);
+                
+                // Attempt login with demo system
+                const result = await signInWithEmailAndPassword(email, password);
+                
+                console.log('✅ Login demo successful:', result);
+                
+                // Show success message
+                showSuccess('Login effettuato con successo! Reindirizzamento...');
+                
+                // Handle post-login redirect
+                const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+                const targetUrl = redirectPath || '/user-dashboard.html';
+                
+                console.log('🔄 Redirect demo a:', targetUrl);
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 1500);
+                
+            } catch (error) {
+                console.error('❌ Login demo error:', error);
+                
+                let errorMsg = 'Errore durante il login. Riprova.';
+                
+                if (error.code === 'auth/invalid-credential') {
+                    errorMsg = 'Email o password non corretti. Usa le credenziali demo.';
+                } else if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'Questo indirizzo email è già registrato.';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMsg = 'La password deve essere di almeno 6 caratteri.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Indirizzo email non valido.';
+                }
+                
+                showError(errorMsg);
+                showLoading(false);
+            }
+        });
+
+        // Handle saved login message
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedMessage = sessionStorage.getItem('loginMessage');
+            if (savedMessage) {
+                showError(savedMessage);
+                sessionStorage.removeItem('loginMessage');
+            }
+        });
+
+        // Utility functions
+        function showLoading(loading) {
+            if (loading) {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span class="loading-spinner"></span>Accesso in corso...';
+            } else {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Accedi al Tuo Account';
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        // Auto-focus email field
+        emailInput.focus();
+
+        // Quick login button for demo
+        const quickLoginBtn = document.createElement('button');
+        quickLoginBtn.type = 'button';
+        quickLoginBtn.textContent = '⚡ Login Demo Rapido';
+        quickLoginBtn.className = 'login-btn';
+        quickLoginBtn.style.background = 'linear-gradient(45deg, #28a745, #20c997)';
+        quickLoginBtn.style.marginTop = '0.5rem';
+        
+        quickLoginBtn.addEventListener('click', function() {
+            emailInput.value = 'demo@tribucoach.com';
+            passwordInput.value = 'demo123';
+            loginForm.dispatchEvent(new Event('submit'));
+        });
+        
+        loginForm.appendChild(quickLoginBtn);
+
+        console.log('🎭 Sistema demo login pronto - Credenziali precompilate');
+    </script>
+</body>
+</html>
