@@ -383,28 +383,18 @@
     </div>
 
     <script type="module">
+        // Import da firebase-config.js (config corretta)
+        import { auth, db } from './firebase-config.js';
         import { guardDashboard, getCurrentUser, handleLogout } from './auth-guard.js';
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
-
-        // Firebase config - importa dalla configurazione esistente
-        const firebaseConfig = {
-            apiKey: "AIzaSyC8ZOWWqZjQKKWZ5fZEiHjbf_Qq8YaAqNk",
-            authDomain: "lifestylecoach-98e2f.firebaseapp.com",
-            projectId: "lifestylecoach-98e2f",
-            storageBucket: "lifestylecoach-98e2f.firebasestorage.app",
-            messagingSenderId: "567899606781",
-            appId: "1:567899606781:web:7b7b77b1f4b4b7b7b7b7b7"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
         // Inizializza protezione dashboard
         guardDashboard();
 
         // Setup quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🏠 Dashboard inizializzata');
+            
             // Setup logout button
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
@@ -420,9 +410,13 @@
             try {
                 const user = getCurrentUser();
                 if (!user) {
-                    console.log('Utente non disponibile ancora');
+                    console.log('⏳ Utente non disponibile ancora, riprovo...');
+                    // Riprova dopo 1 secondo se l'auth non è ancora completo
+                    setTimeout(loadUserData, 1000);
                     return;
                 }
+
+                console.log('👤 Caricamento dati per:', user.email);
 
                 // Aggiorna UI con dati utente
                 updateUserInterface(user);
@@ -431,7 +425,7 @@
                 await loadUserProgress(user.uid);
 
             } catch (error) {
-                console.error('Errore caricamento dati utente:', error);
+                console.error('❌ Errore caricamento dati utente:', error);
             }
         }
 
@@ -456,18 +450,25 @@
                 const options = { year: 'numeric', month: 'long' };
                 memberSinceEl.textContent = creationDate.toLocaleDateString('it-IT', options);
             }
+
+            console.log('✅ UI aggiornata con dati utente');
         }
 
         // Carica progressi utente dal database
         async function loadUserProgress(userId) {
             try {
+                console.log('📊 Caricamento progressi per userId:', userId);
+
                 // Carica profilo utente
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await getDoc(userDocRef);
                 
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
+                    console.log('✅ Dati utente trovati:', userData);
                     updateProgressStats(userData);
+                } else {
+                    console.log('ℹ️ Profilo utente non trovato nel database');
                 }
 
                 // Carica progressi moduli
@@ -492,8 +493,11 @@
                 document.getElementById('completedWeeks').textContent = completedWeeks;
                 document.getElementById('lessonsCompleted').textContent = lessonsCompleted;
 
+                console.log('📈 Progressi caricati - Settimane:', completedWeeks, 'Lezioni:', lessonsCompleted);
+
             } catch (error) {
-                console.error('Errore caricamento progressi:', error);
+                console.error('❌ Errore caricamento progressi:', error);
+                // Non bloccare l'interfaccia se il caricamento progressi fallisce
             }
         }
 
@@ -511,23 +515,28 @@
         // Funzioni per azioni rapide
         window.openChat = function() {
             // Qui implementeresti l'apertura della chat
+            console.log('💬 Apertura chat...');
             alert('Chat con Andrea in arrivo! 💬');
         };
 
         window.viewProgress = function() {
             // Qui potresti aprire una pagina dettagliata dei progressi
+            console.log('📊 Visualizzazione progressi...');
             alert('Visualizzazione progressi dettagliati in arrivo! 📊');
         };
 
         window.viewCalendar = function() {
+            console.log('📅 Apertura calendario...');
             alert('Calendario personalizzato in arrivo! 📅');
         };
 
         window.viewResources = function() {
+            console.log('📖 Apertura risorse...');
             alert('Libreria risorse in arrivo! 📖');
         };
 
         window.viewCommunity = function() {
+            console.log('👥 Apertura community...');
             alert('Community LifestyleFitnessCoach in arrivo! 👥');
         };
 
