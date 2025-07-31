@@ -1,21 +1,354 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, MessageCircle, User, Bot, Minimize2, Maximize2 } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con Andrea - LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-const AndreaChatSystem = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'andrea',
-      text: "Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋\n\nHo aiutato centinaia di persone a trasformare la loro vita partendo dal mindset. Dimmi, cosa ti ha portato qui oggi?",
-      timestamp: new Date().toLocaleTimeString()
-    }
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const messagesEndRef = useRef(null);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-  const ANDREA_PROMPT = `Sei Andrea Padoan, Lifestyle Coach specializzato nella trasformazione del mindset e degli stili di vita.
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .header-info h2 {
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .header-info p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .message.user .message-avatar {
+            background: #007bff;
+            color: white;
+        }
+
+        .message.andrea .message-avatar {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message.user .message-content {
+            background: #007bff;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.andrea .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #eee;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 70%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff6b35;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(1); opacity: 0.5; }
+            30% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .quick-replies {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .quick-replies p {
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .quick-replies-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-reply-btn {
+            background: #f1f3f4;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .message-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 14px;
+            resize: none;
+            max-height: 100px;
+            min-height: 44px;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 2px rgba(255,107,53,0.2);
+        }
+
+        .send-btn {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-help {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .chat-container {
+                height: calc(100vh - 20px);
+                border-radius: 10px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <a href="../user-dashboard.html" class="back-btn">← Dashboard</a>
+            <div class="avatar">👨‍💼</div>
+            <div class="header-info">
+                <h2>Andrea Padoan</h2>
+                <p>Lifestyle Coach • Online ora</p>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="messages-container" id="messagesContainer">
+            <div class="message andrea">
+                <div class="message-avatar">👨‍💼</div>
+                <div class="message-content">
+                    <div>Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
+
+Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset. Dimmi, cosa ti ha portato qui oggi?</div>
+                    <div class="message-time" id="firstMessageTime"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Replies -->
+        <div class="quick-replies" id="quickReplies">
+            <p>Inizia con una di queste:</p>
+            <div class="quick-replies-container">
+                <button class="quick-reply-btn" onclick="selectQuickReply('🎯 Voglio fare il test lifestyle')">🎯 Voglio fare il test lifestyle</button>
+                <button class="quick-reply-btn" onclick="selectQuickReply('💪 Come posso trovare motivazione?')">💪 Come posso trovare motivazione?</button>
+                <button class="quick-reply-btn" onclick="selectQuickReply('😴 Ho problemi di energia e stress')">😴 Ho problemi di energia e stress</button>
+                <button class="quick-reply-btn" onclick="selectQuickReply('🍎 Aiutami con l\'alimentazione')">🍎 Aiutami con l'alimentazione</button>
+                <button class="quick-reply-btn" onclick="selectQuickReply('🚀 Voglio iniziare il percorso')">🚀 Voglio iniziare il percorso</button>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="input-container">
+            <textarea 
+                id="messageInput" 
+                class="message-input" 
+                placeholder="Scrivi il tuo messaggio..."
+                rows="1"
+            ></textarea>
+            <button id="sendBtn" class="send-btn" onclick="sendMessage()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                </svg>
+            </button>
+        </div>
+        <div class="input-help">
+            Premi Invio per inviare • Shift+Invio per andare a capo
+        </div>
+    </div>
+
+    <script>
+        const ANDREA_PROMPT = `Sei Andrea Padoan, Lifestyle Coach specializzato nella trasformazione del mindset e degli stili di vita.
 
 ## LA TUA STORIA E MISSIONE:
 Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissuto lo stress, la mancanza di energia e la sensazione di vivere in "pilota automatico". Hai capito che il vero cambiamento non inizia dal corpo, ma dalla MENTE.
@@ -44,231 +377,141 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
 
 Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera comprensione per le sfide della persona.`;
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+        let messages = [];
+        let isTyping = false;
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+        // Inizializza chat
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('firstMessageTime').textContent = new Date().toLocaleTimeString();
+            
+            // Auto-resize textarea
+            const input = document.getElementById('messageInput');
+            input.addEventListener('input', function() {
+                this.style.height = '44px';
+                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            });
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim()) return;
+            // Enter to send
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        });
 
-    const userMessage = {
-      id: Date.now(),
-      sender: 'user',
-      text: inputMessage,
-      timestamp: new Date().toLocaleTimeString()
-    };
+        function selectQuickReply(text) {
+            document.getElementById('messageInput').value = text;
+            sendMessage();
+        }
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsTyping(true);
-
-    try {
-      // Costruisci la conversation history per il contesto
-      const conversationHistory = messages.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'assistant',
-        content: msg.text
-      }));
-
-      // API call a Claude
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [
-            { role: "system", content: ANDREA_PROMPT },
-            ...conversationHistory,
-            { role: "user", content: inputMessage }
-          ]
-        })
-      });
-
-      const data = await response.json();
-      const andreaResponse = data.content[0].text;
-
-      const andreaMessage = {
-        id: Date.now() + 1,
-        sender: 'andrea',
-        text: andreaResponse,
-        timestamp: new Date().toLocaleTimeString()
-      };
-
-      setMessages(prev => [...prev, andreaMessage]);
-    } catch (error) {
-      console.error('Errore nella chat:', error);
-      const errorMessage = {
-        id: Date.now() + 1,
-        sender: 'andrea',
-        text: "Mi dispiace, c'è stato un problema tecnico. Riprova tra un momento. Nel frattempo, ricorda: ogni ostacolo è un'opportunità per crescere! 💪",
-        timestamp: new Date().toLocaleTimeString()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const quickReplies = [
-    "🎯 Voglio fare il test lifestyle",
-    "💪 Come posso trovare motivazione?",
-    "😴 Ho problemi di energia e stress",
-    "🍎 Aiutami con l'alimentazione",
-    "🚀 Voglio iniziare il percorso"
-  ];
-
-  const handleQuickReply = (reply) => {
-    setInputMessage(reply);
-  };
-
-  if (isMinimized) {
-    return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => setIsMinimized(false)}
-          className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-        >
-          <MessageCircle size={24} />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-            !
-          </span>
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed bottom-4 right-4 w-96 h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-yellow-500 p-4 text-white rounded-t-2xl">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <span className="text-lg">👨‍💼</span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">Andrea Padoan</h3>
-              <p className="text-sm opacity-90">Lifestyle Coach • Online</p>
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setIsMinimized(true)}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
-            >
-              <Minimize2 size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`flex space-x-2 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                message.sender === 'user' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white'
-              }`}>
-                {message.sender === 'user' ? <User size={16} /> : <span>👨‍💼</span>}
-              </div>
-              <div className={`rounded-2xl p-3 ${
-                message.sender === 'user'
-                  ? 'bg-blue-500 text-white rounded-br-md'
-                  : 'bg-white text-gray-800 rounded-bl-md shadow-sm border'
-              }`}>
-                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                <span className={`text-xs mt-1 block ${
-                  message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                  {message.timestamp}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="flex space-x-2 max-w-[80%]">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-yellow-500 text-white flex items-center justify-center">
-                <span>👨‍💼</span>
-              </div>
-              <div className="bg-white rounded-2xl rounded-bl-md p-3 shadow-sm border">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+        function addMessage(sender, text, timestamp = null) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messageTime = timestamp || new Date().toLocaleTimeString();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatar = sender === 'user' ? '👤' : '👨‍💼';
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatar}</div>
+                <div class="message-content">
+                    <div>${text}</div>
+                    <div class="message-time">${messageTime}</div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Hide quick replies after first user message
+            if (sender === 'user' && messages.length === 0) {
+                document.getElementById('quickReplies').classList.add('hidden');
+            }
+        }
 
-      {/* Quick Replies */}
-      {messages.length <= 2 && (
-        <div className="p-3 border-t bg-white">
-          <p className="text-xs text-gray-600 mb-2">Inizia con una di queste:</p>
-          <div className="flex flex-wrap gap-1">
-            {quickReplies.map((reply, index) => (
-              <button
-                key={index}
-                onClick={() => handleQuickReply(reply)}
-                className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition-colors"
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message andrea';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = `
+                <div class="message-avatar">👨‍💼</div>
+                <div class="typing-indicator">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
 
-      {/* Input */}
-      <div className="p-4 border-t bg-white rounded-b-2xl">
-        <div className="flex space-x-2">
-          <textarea
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Scrivi il tuo messaggio..."
-            rows="1"
-            className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-            disabled={isTyping}
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!inputMessage.trim() || isTyping}
-            className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white p-2 rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={16} />
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          Premi Invio per inviare • Shift+Invio per andare a capo
-        </p>
-      </div>
-    </div>
-  );
-};
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
 
-export default AndreaChatSystem;
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message
+            addMessage('user', message);
+            messages.push({role: 'user', content: message});
+            
+            // Clear input and disable send
+            input.value = '';
+            input.style.height = '44px';
+            sendBtn.disabled = true;
+            isTyping = true;
+            
+            // Show typing
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [
+                            { role: "system", content: ANDREA_PROMPT },
+                            ...messages
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                const andreaResponse = data.content[0].text;
+                
+                hideTypingIndicator();
+                addMessage('andrea', andreaResponse);
+                messages.push({role: 'assistant', content: andreaResponse});
+                
+            } catch (error) {
+                console.error('Errore nella chat:', error);
+                hideTypingIndicator();
+                addMessage('andrea', "Mi dispiace, c'è stato un problema tecnico. Riprova tra un momento. Nel frattempo, ricorda: ogni ostacolo è un'opportunità per crescere! 💪");
+            } finally {
+                isTyping = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+    </script>
+</body>
+</html>
