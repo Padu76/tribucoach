@@ -1,8 +1,7 @@
 // auth-guard.js - Sistema di protezione pagine per LifestyleFitnessCoach
-// Protegge dashboard e moduli coaching da accessi non autorizzati
+// Versione DEMO - Usa sistema demo invece di Firebase
 
-import { auth } from './firebase-config.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js';
+import { auth, onAuthStateChanged } from './demo-auth-system.js';
 
 // Variabili globali
 let currentUser = null;
@@ -11,7 +10,7 @@ let redirectPath = null;
 
 // Inizializzazione del guard
 function initAuthGuard() {
-    console.log('🛡️ Auth Guard inizializzato');
+    console.log('🛡️ Auth Guard inizializzato (DEMO MODE)');
     
     // Salva la pagina corrente per redirect post-login
     redirectPath = window.location.pathname + window.location.search;
@@ -20,19 +19,19 @@ function initAuthGuard() {
     // Mostra loading overlay
     showAuthOverlay();
     
-    // Timeout di sicurezza (10 secondi)
+    // Timeout di sicurezza (5 secondi per demo)
     const timeout = setTimeout(() => {
         console.log('⏰ Auth timeout raggiunto');
         hideAuthOverlay();
         redirectToLogin('Timeout di autenticazione');
-    }, 10000);
+    }, 5000);
     
     // Controlla stato autenticazione
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged((user) => {
         clearTimeout(timeout);
         
         if (user && user.emailVerified) {
-            console.log('✅ Utente autenticato:', user.email);
+            console.log('✅ Utente demo autenticato:', user.email);
             currentUser = user;
             authCheckComplete = true;
             onAuthSuccess();
@@ -43,11 +42,6 @@ function initAuthGuard() {
             console.log('❌ Utente non autenticato');
             redirectToLogin('Accesso richiesto');
         }
-    }, (error) => {
-        clearTimeout(timeout);
-        console.error('❌ Errore controllo auth:', error);
-        hideAuthOverlay();
-        redirectToLogin('Errore di autenticazione');
     });
 }
 
@@ -81,6 +75,7 @@ function showAuthOverlay() {
             <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff6b35; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
             <h3 style="margin: 0 0 10px 0; font-size: 1.4rem;">Verifica accesso...</h3>
             <p style="margin: 0; opacity: 0.8; font-size: 1rem;">Controllo delle credenziali in corso</p>
+            <p style="margin: 10px 0 0 0; opacity: 0.6; font-size: 0.8rem;">🎭 MODALITÀ DEMO</p>
         </div>
         <style>
             @keyframes spin {
@@ -135,7 +130,7 @@ function updateUserInterface() {
         el.textContent = `Ciao ${currentUser.displayName || currentUser.email.split('@')[0]}!`;
     });
     
-    console.log('✅ UI aggiornata con dati utente');
+    console.log('✅ UI aggiornata con dati utente demo');
 }
 
 // Setup funzionalità logout
@@ -204,9 +199,9 @@ async function handleLogout() {
             btn.disabled = true;
         });
         
-        console.log('🚪 Logout in corso...');
+        console.log('🚪 Logout demo in corso...');
         
-        // Logout da Firebase
+        // Logout dal sistema demo
         await auth.signOut();
         
         // Cleanup locale
@@ -217,8 +212,9 @@ async function handleLogout() {
         sessionStorage.clear();
         localStorage.removeItem('lifestyleCoachUser');
         localStorage.removeItem('userProgress');
+        localStorage.removeItem('demoAuthUser'); // Demo specific
         
-        console.log('✅ Logout completato');
+        console.log('✅ Logout demo completato');
         
         // Redirect dopo breve delay
         setTimeout(() => {
@@ -226,7 +222,7 @@ async function handleLogout() {
         }, 500);
         
     } catch (error) {
-        console.error('❌ Errore durante logout:', error);
+        console.error('❌ Errore durante logout demo:', error);
         
         // Ripristina bottoni in caso di errore
         const logoutBtns = document.querySelectorAll('.logout-btn, [data-logout], .dynamic-logout-btn');
@@ -249,21 +245,21 @@ function trackPageAccess() {
             email: currentUser.email,
             page: window.location.pathname,
             timestamp: new Date().toISOString(),
-            userAgent: navigator.userAgent
+            userAgent: navigator.userAgent,
+            mode: 'DEMO'
         };
         
-        console.log('📊 Tracciando accesso pagina:', pageInfo);
+        console.log('📊 Tracciando accesso pagina (DEMO):', pageInfo);
         
-        // Qui potresti integrare con Firebase Analytics
-        if (window.gtag) {
-            gtag('event', 'page_access', {
-                page_path: pageInfo.page,
-                user_id: pageInfo.userId
-            });
-        }
+        // Salva in localStorage per demo
+        const tracking = JSON.parse(localStorage.getItem('demoTracking') || '[]');
+        tracking.push(pageInfo);
+        // Mantieni solo ultimi 50 eventi
+        if (tracking.length > 50) tracking.splice(0, tracking.length - 50);
+        localStorage.setItem('demoTracking', JSON.stringify(tracking));
         
     } catch (error) {
-        console.warn('⚠️ Errore nel tracking:', error);
+        console.warn('⚠️ Errore nel tracking demo:', error);
     }
 }
 
@@ -281,7 +277,7 @@ function handlePostLoginRedirect() {
 
 // Redirect al login
 function redirectToLogin(reason = '') {
-    console.log('🔄 Redirect al login:', reason);
+    console.log('🔄 Redirect al login (DEMO):', reason);
     
     // Salva pagina corrente per redirect post-login
     const currentPage = window.location.pathname + window.location.search;
@@ -298,7 +294,7 @@ function redirectToLogin(reason = '') {
 
 // Redirect per email verification
 function redirectToEmailVerification() {
-    console.log('📧 Redirect per verifica email');
+    console.log('📧 Redirect per verifica email (DEMO)');
     sessionStorage.setItem('loginMessage', 'Verifica la tua email prima di accedere');
     window.location.href = '/login.html';
 }
@@ -329,7 +325,11 @@ function showErrorMessage(message) {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     `;
     
-    errorDiv.textContent = message;
+    errorDiv.innerHTML = `
+        <div>${message}</div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">🎭 DEMO MODE</div>
+    `;
+    
     document.body.appendChild(errorDiv);
     
     // Auto-remove dopo 5 secondi
@@ -343,7 +343,7 @@ function showErrorMessage(message) {
 
 // Funzione per proteggere specifiche pagine
 function guardPage(requiredRole = null) {
-    console.log('🛡️ Protezione pagina attivata');
+    console.log('🛡️ Protezione pagina attivata (DEMO)');
     
     if (!authCheckComplete) {
         initAuthGuard();
@@ -357,28 +357,27 @@ function guardPage(requiredRole = null) {
     
     // Controllo ruolo se specificato
     if (requiredRole) {
-        // Qui potresti aggiungere logica per controllo ruoli
-        console.log('🔐 Controllo ruolo:', requiredRole);
+        console.log('🔐 Controllo ruolo (DEMO):', requiredRole);
     }
     
-    console.log('✅ Accesso autorizzato');
+    console.log('✅ Accesso autorizzato (DEMO)');
 }
 
 // Funzione per proteggere moduli coaching
 function guardModulePage() {
-    console.log('🎯 Protezione modulo coaching');
+    console.log('🎯 Protezione modulo coaching (DEMO)');
     guardPage();
 }
 
 // Funzione per proteggere dashboard
 function guardDashboard() {
-    console.log('📊 Protezione dashboard');
+    console.log('📊 Protezione dashboard (DEMO)');
     guardPage();
 }
 
 // Funzione per proteggere area admin
 function guardAdminPage() {
-    console.log('👨‍💼 Protezione area admin');
+    console.log('👨‍💼 Protezione area admin (DEMO)');
     guardPage('admin');
 }
 
@@ -399,7 +398,7 @@ if (document.readyState === 'loading') {
     initAuthGuard();
 }
 
-// Export delle funzioni principali (SINGOLO EXPORT)
+// Export delle funzioni principali
 export { 
     initAuthGuard,
     guardPage,
