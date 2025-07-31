@@ -583,6 +583,163 @@
             border-bottom: none;
         }
 
+        /* CTA FREEMIUM SECTION */
+        .cta-freemium-section {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 16px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-freemium-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            pointer-events: none;
+        }
+
+        .cta-freemium-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .cta-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-value-prop {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .value-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .value-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .value-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .value-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .cta-pricing {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .price-header {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .price-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .price-description {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta-primary {
+            background: white;
+            color: #1e293b;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-cta-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-cta-secondary {
+            background: transparent;
+            color: white;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cta-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .admin-badge {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .admin-badge.visible {
+            display: block;
+            animation: slideInRight 0.3s ease-out;
+        }
+
         .completion-actions {
             display: flex;
             justify-content: center;
@@ -610,6 +767,11 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .fade-in {
@@ -645,10 +807,41 @@
                 flex-direction: column;
                 gap: 1rem;
             }
+
+            .cta-value-prop {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .cta-title {
+                font-size: 1.8rem;
+            }
+
+            .price-amount {
+                font-size: 2.5rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-cta-primary,
+            .btn-cta-secondary {
+                width: 100%;
+                max-width: 300px;
+                text-align: center;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Admin Badge -->
+    <div id="adminBadge" class="admin-badge">
+        <span id="adminBadgeText">👑 ADMIN</span>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="header-content">
@@ -914,15 +1107,58 @@
                     <!-- Will be generated based on coaching session -->
                 </ul>
             </div>
+
+            <!-- CTA FREEMIUM SECTION -->
+            <section class="cta-freemium-section" id="ctaFreemiumSection">
+                <div class="cta-freemium-content">
+                    <h2 class="cta-title">🚀 Continua il Tuo Percorso di Trasformazione</h2>
+                    <p class="cta-subtitle">Hai appena completato la prima tappa. Ora è il momento di approfondire!</p>
+                    
+                    <div class="cta-value-prop">
+                        <div class="value-item">
+                            <div class="value-icon">🧠</div>
+                            <div class="value-title">Settimana 2: Consapevolezza di Sé</div>
+                            <div class="value-description">Esplora le tue motivazioni profonde e identifica i veri driver del cambiamento</div>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-icon">🎯</div>
+                            <div class="value-title">Coaching Approfondito</div>
+                            <div class="value-description">Sessioni guidate con Andrea per sviluppare la tua intelligenza emotiva</div>
+                        </div>
+                        <div class="value-item">
+                            <div class="value-icon">💎</div>
+                            <div class="value-title">Strumenti Esclusivi</div>
+                            <div class="value-description">Esercizi pratici e template personalizzati per la tua crescita</div>
+                        </div>
+                    </div>
+                    
+                    <div class="cta-pricing">
+                        <div class="price-header">Sblocca la prossima settimana</div>
+                        <div class="price-amount">€50</div>
+                        <div class="price-description">Accesso completo alla Settimana 2 + Materiali Esclusivi</div>
+                    </div>
+                    
+                    <div class="cta-buttons">
+                        <button class="btn-cta-primary" onclick="unlockWeek2()">
+                            🔓 Sblocca Settimana 2 - €50
+                        </button>
+                        <button class="btn-cta-secondary" onclick="learnMore()">
+                            📚 Scopri di Più
+                        </button>
+                    </div>
+                </div>
+            </section>
             
             <div class="completion-actions">
                 <button class="btn btn-success" onclick="downloadPersonalizedHomework()">📄 Scarica Piano Personalizzato</button>
                 <a href="module-hub.html" class="btn btn-secondary">← Torna ai Moduli</a>
-                <button class="btn btn-primary" onclick="scheduleNextSession()">📅 Programma Settimana 2</button>
             </div>
         </section>
     </main>
 
+    <!-- Load Auth Guard -->
+    <script src="../api/auth-guard.js"></script>
+    
     <!-- Load Andrea AI Coach System -->
     <script src="../andrea-ai-coach.js"></script>
     
@@ -941,6 +1177,7 @@
         let sessionExtended = false;
         let autoSaveInterval;
         let coachingInsights = [];
+        let authGuard = null;
 
         // Coaching principles for AI
         const COACHING_PRINCIPLES = {
@@ -963,12 +1200,41 @@
 
         // Initialize session
         document.addEventListener('DOMContentLoaded', function() {
+            initializeAuthGuard();
             startSessionTimer();
             loadUserProfile();
             loadSavedSession();
             initializeAndreaAI();
             startAutoSave();
         });
+
+        function initializeAuthGuard() {
+            if (window.AuthGuard) {
+                authGuard = new window.AuthGuard();
+                
+                // Week-1 is always free, but check user role for admin badge
+                authGuard.getCurrentUser().then(user => {
+                    if (user && user.role) {
+                        showAdminBadge(user.role);
+                    }
+                }).catch(error => {
+                    console.log('No user logged in, Week-1 is free for all');
+                });
+            }
+        }
+
+        function showAdminBadge(role) {
+            const badge = document.getElementById('adminBadge');
+            const badgeText = document.getElementById('adminBadgeText');
+            
+            if (role === 'admin') {
+                badgeText.textContent = '👑 ADMIN';
+                badge.classList.add('visible');
+            } else if (role === 'beta') {
+                badgeText.textContent = '🧪 BETA';
+                badge.classList.add('visible');
+            }
+        }
 
         function startSessionTimer() {
             timerInterval = setInterval(() => {
@@ -1483,7 +1749,30 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
             // Generate personalized coaching homework
             generateCoachingHomework();
             
+            // Show CTA based on user role
+            showFreemiumCTA();
+            
             document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function showFreemiumCTA() {
+            try {
+                // Check if user has admin/beta access
+                if (authGuard) {
+                    const user = await authGuard.getCurrentUser();
+                    if (user && (user.role === 'admin' || user.role === 'beta')) {
+                        // Hide CTA for admin/beta users
+                        document.getElementById('ctaFreemiumSection').style.display = 'none';
+                        return;
+                    }
+                }
+                
+                // Show CTA for regular users
+                document.getElementById('ctaFreemiumSection').style.display = 'block';
+            } catch (error) {
+                // Show CTA by default if can't determine user role
+                document.getElementById('ctaFreemiumSection').style.display = 'block';
+            }
         }
 
         function generateCoachingHomework() {
@@ -1603,7 +1892,7 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
                 • Di cosa ho bisogno per fidarmi di più di me stesso?
                 
                 === PROSSIMI PASSI ===
-                La Settimana 2 si sbloccherà tra 7 giorni.
+                La Settimana 2 si può sbloccare per €50.
                 Usa questo tempo per integrare le consapevolezze emerse.
                 Ricorda: il cambiamento autentico inizia da piccoli passi quotidiani.
                 
@@ -1630,14 +1919,36 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
             showMessage('📄 Piano di coaching personalizzato scaricato!', 'success');
         }
 
-        function scheduleNextSession() {
-            const nextWeekDate = new Date();
-            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
-            
-            const message = `📅 Settimana 2 "Consapevolezza di Sé" disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}!`;
-            showMessage(message, 'info');
-            
-            localStorage.setItem('nextSessionReminder', nextWeekDate.toISOString());
+        // FREEMIUM CTA FUNCTIONS
+        async function unlockWeek2() {
+            try {
+                // Check if user has admin/beta access
+                if (authGuard) {
+                    const user = await authGuard.getCurrentUser();
+                    if (user && (user.role === 'admin' || user.role === 'beta')) {
+                        // Admin/Beta users get free access
+                        showMessage('🎉 Accesso completo! Settimana 2 sbloccata per il tuo ruolo speciale.', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'week-2.html';
+                        }, 2000);
+                        return;
+                    }
+                }
+                
+                // Regular users need to pay
+                showMessage('🚧 Sistema di pagamento in preparazione! Presto potrai sbloccare la Settimana 2.', 'info');
+                
+                // TODO: Integrate payment system here
+                // For now, show placeholder
+                
+            } catch (error) {
+                console.error('❌ Error unlocking week 2:', error);
+                showMessage('❌ Errore nel sistema. Contatta il supporto.', 'error');
+            }
+        }
+
+        function learnMore() {
+            showMessage('📚 La Settimana 2 "Consapevolezza di Sé" ti aiuterà a esplorare le tue motivazioni profonde e identificare i veri driver del cambiamento. Include sessioni guidate, esercizi pratici e strumenti esclusivi per la tua crescita personale.', 'info');
         }
 
         function showMessage(message, type = 'info') {
