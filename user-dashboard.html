@@ -44,6 +44,24 @@
             font-weight: 300;
         }
 
+        .demo-banner {
+            background: rgba(255, 193, 7, 0.9);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
         .user-welcome {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
@@ -260,40 +278,15 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-
-        /* Loading overlay */
-        .auth-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(44, 62, 80, 0.95);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            color: white;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid #ff6b35;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
+        <!-- Demo Banner -->
+        <div class="demo-banner">
+            🎭 MODALITÀ DEMO ATTIVA - Sistema di test per sviluppo
+        </div>
+
         <!-- Header with logout -->
         <header class="dashboard-header">
             <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
@@ -303,10 +296,11 @@
 
         <!-- User Welcome -->
         <div class="user-welcome">
-            <h2>👋 Ciao <span class="user-name">Utente</span>!</h2>
+            <h2>👋 Ciao <span class="user-name">Utente Demo</span>!</h2>
             <div class="user-info">
-                <p>Email: <span class="user-email">user@example.com</span></p>
+                <p>Email: <span class="user-email">demo@tribucoach.com</span></p>
                 <p>Membro dal: <span id="memberSince">Gennaio 2025</span></p>
+                <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">🎭 Account demo per test</p>
             </div>
         </div>
 
@@ -347,22 +341,22 @@
 
         <!-- Progress Section -->
         <div class="progress-section">
-            <h3>📈 I Tuoi Risultati</h3>
+            <h3>📈 I Tuoi Risultati (Demo)</h3>
             <div class="progress-stats">
                 <div class="stat-item">
-                    <span class="stat-number" id="completedWeeks">0</span>
+                    <span class="stat-number" id="completedWeeks">3</span>
                     <div class="stat-label">Settimane Completate</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="totalPoints">0</span>
+                    <span class="stat-number" id="totalPoints">750</span>
                     <div class="stat-label">Punti Benessere</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="streakDays">0</span>
+                    <span class="stat-number" id="streakDays">12</span>
                     <div class="stat-label">Giorni Consecutivi</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="lessonsCompleted">0</span>
+                    <span class="stat-number" id="lessonsCompleted">18</span>
                     <div class="stat-label">Lezioni Completate</div>
                 </div>
             </div>
@@ -383,17 +377,16 @@
     </div>
 
     <script type="module">
-        // Import da firebase-config.js (config corretta)
-        import { auth, db } from './firebase-config.js';
+        // Import da sistema demo invece di Firebase
+        import { auth, db, doc, getDoc, collection, query, where, getDocs } from './demo-auth-system.js';
         import { guardDashboard, getCurrentUser, handleLogout } from './auth-guard.js';
-        import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
         // Inizializza protezione dashboard
         guardDashboard();
 
         // Setup quando il DOM è pronto
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏠 Dashboard inizializzata');
+            console.log('🏠 Dashboard demo inizializzata');
             
             // Setup logout button
             const logoutBtn = document.getElementById('logoutBtn');
@@ -410,22 +403,22 @@
             try {
                 const user = getCurrentUser();
                 if (!user) {
-                    console.log('⏳ Utente non disponibile ancora, riprovo...');
+                    console.log('⏳ Utente demo non disponibile ancora, riprovo...');
                     // Riprova dopo 1 secondo se l'auth non è ancora completo
                     setTimeout(loadUserData, 1000);
                     return;
                 }
 
-                console.log('👤 Caricamento dati per:', user.email);
+                console.log('👤 Caricamento dati demo per:', user.email);
 
                 // Aggiorna UI con dati utente
                 updateUserInterface(user);
 
-                // Carica progressi utente
+                // Carica progressi utente (demo)
                 await loadUserProgress(user.uid);
 
             } catch (error) {
-                console.error('❌ Errore caricamento dati utente:', error);
+                console.error('❌ Errore caricamento dati utente demo:', error);
             }
         }
 
@@ -451,97 +444,146 @@
                 memberSinceEl.textContent = creationDate.toLocaleDateString('it-IT', options);
             }
 
-            console.log('✅ UI aggiornata con dati utente');
+            console.log('✅ UI demo aggiornata con dati utente');
         }
 
-        // Carica progressi utente dal database
+        // Carica progressi utente dal sistema demo
         async function loadUserProgress(userId) {
             try {
-                console.log('📊 Caricamento progressi per userId:', userId);
+                console.log('📊 Caricamento progressi demo per userId:', userId);
 
-                // Carica profilo utente
-                const userDocRef = doc(db, 'users', userId);
-                const userDoc = await getDoc(userDocRef);
-                
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    console.log('✅ Dati utente trovati:', userData);
-                    updateProgressStats(userData);
-                } else {
-                    console.log('ℹ️ Profilo utente non trovato nel database');
-                }
+                // Simula caricamento dati con delay
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Carica progressi moduli
-                const progressQuery = query(
-                    collection(db, 'userProgress'),
-                    where('userId', '==', userId)
-                );
-                
-                const progressSnapshot = await getDocs(progressQuery);
-                let completedWeeks = 0;
-                let lessonsCompleted = 0;
+                // Dati demo randomici ma realistici
+                const demoStats = {
+                    completedWeeks: Math.floor(Math.random() * 7) + 1,
+                    totalPoints: Math.floor(Math.random() * 1000) + 200,
+                    streakDays: Math.floor(Math.random() * 30) + 5,
+                    lessonsCompleted: Math.floor(Math.random() * 25) + 10
+                };
 
-                progressSnapshot.forEach(doc => {
-                    const progress = doc.data();
-                    if (progress.completed) {
-                        if (progress.type === 'week') completedWeeks++;
-                        if (progress.type === 'lesson') lessonsCompleted++;
-                    }
-                });
+                // Aggiorna le statistiche con i dati demo
+                document.getElementById('completedWeeks').textContent = demoStats.completedWeeks;
+                document.getElementById('totalPoints').textContent = demoStats.totalPoints;
+                document.getElementById('streakDays').textContent = demoStats.streakDays;
+                document.getElementById('lessonsCompleted').textContent = demoStats.lessonsCompleted;
 
-                // Aggiorna statistiche
-                document.getElementById('completedWeeks').textContent = completedWeeks;
-                document.getElementById('lessonsCompleted').textContent = lessonsCompleted;
+                console.log('📈 Progressi demo caricati:', demoStats);
 
-                console.log('📈 Progressi caricati - Settimane:', completedWeeks, 'Lezioni:', lessonsCompleted);
+                // Salva in localStorage per consistenza
+                localStorage.setItem('demoUserStats', JSON.stringify(demoStats));
 
             } catch (error) {
-                console.error('❌ Errore caricamento progressi:', error);
-                // Non bloccare l'interfaccia se il caricamento progressi fallisce
+                console.error('❌ Errore caricamento progressi demo:', error);
+                // Mostra valori di default se caricamento fallisce
+                showDefaultStats();
             }
         }
 
-        // Aggiorna statistiche progressi
-        function updateProgressStats(userData) {
-            if (userData.wellnessScore) {
-                document.getElementById('totalPoints').textContent = userData.wellnessScore;
-            }
+        // Mostra statistiche di default
+        function showDefaultStats() {
+            const defaultStats = {
+                completedWeeks: 3,
+                totalPoints: 750,
+                streakDays: 12,
+                lessonsCompleted: 18
+            };
 
-            if (userData.currentStreak) {
-                document.getElementById('streakDays').textContent = userData.currentStreak;
-            }
+            Object.keys(defaultStats).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = defaultStats[key];
+                }
+            });
         }
 
         // Funzioni per azioni rapide
         window.openChat = function() {
-            // Qui implementeresti l'apertura della chat
-            console.log('💬 Apertura chat...');
-            alert('Chat con Andrea in arrivo! 💬');
+            console.log('💬 Apertura chat demo...');
+            showDemoAlert('Chat con Andrea', 'Chat demo in arrivo! 💬\n\nNella versione completa potrai parlare direttamente con Andrea 24/7.');
         };
 
         window.viewProgress = function() {
-            // Qui potresti aprire una pagina dettagliata dei progressi
-            console.log('📊 Visualizzazione progressi...');
-            alert('Visualizzazione progressi dettagliati in arrivo! 📊');
+            console.log('📊 Visualizzazione progressi demo...');
+            showDemoAlert('Progressi Dettagliati', 'Visualizzazione progressi dettagliati in arrivo! 📊\n\nPotrai vedere grafici, analisi e trend del tuo percorso.');
         };
 
         window.viewCalendar = function() {
-            console.log('📅 Apertura calendario...');
-            alert('Calendario personalizzato in arrivo! 📅');
+            console.log('📅 Apertura calendario demo...');
+            showDemoAlert('Calendario Personalizzato', 'Calendario personalizzato in arrivo! 📅\n\nPotrai pianificare obiettivi e tracciare abitudini.');
         };
 
         window.viewResources = function() {
-            console.log('📖 Apertura risorse...');
-            alert('Libreria risorse in arrivo! 📖');
+            console.log('📖 Apertura risorse demo...');
+            showDemoAlert('Libreria Risorse', 'Libreria risorse in arrivo! 📖\n\nGuide, ebook, video e materiali esclusivi.');
         };
 
         window.viewCommunity = function() {
-            console.log('👥 Apertura community...');
-            alert('Community LifestyleFitnessCoach in arrivo! 👥');
+            console.log('👥 Apertura community demo...');
+            showDemoAlert('Community LifestyleFitnessCoach', 'Community in arrivo! 👥\n\nConnettiti con altri membri del percorso.');
         };
 
-        // Auto-refresh dati ogni 5 minuti
+        // Alert personalizzato per demo
+        function showDemoAlert(title, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 2rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                z-index: 10000;
+                max-width: 400px;
+                text-align: center;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            `;
+
+            alertDiv.innerHTML = `
+                <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1.3rem;">${title}</h3>
+                <p style="color: #666; line-height: 1.6; margin-bottom: 1.5rem; white-space: pre-line;">${message}</p>
+                <button onclick="this.parentElement.remove()" style="
+                    background: linear-gradient(45deg, #ff6b35, #f39c12);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-weight: 600;
+                ">OK</button>
+            `;
+
+            document.body.appendChild(alertDiv);
+
+            // Auto-remove dopo 10 secondi
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 10000);
+        }
+
+        // Auto-refresh dati ogni 5 minuti (per demo)
         setInterval(loadUserData, 5 * 60 * 1000);
+
+        // Carica statistiche salvate se disponibili
+        const savedStats = localStorage.getItem('demoUserStats');
+        if (savedStats) {
+            try {
+                const stats = JSON.parse(savedStats);
+                Object.keys(stats).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.textContent = stats[key];
+                    }
+                });
+            } catch (error) {
+                console.warn('⚠️ Errore caricamento statistiche salvate:', error);
+            }
+        }
     </script>
 </body>
 </html>
