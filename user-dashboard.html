@@ -44,24 +44,6 @@
             font-weight: 300;
         }
 
-        .demo-banner {
-            background: rgba(255, 193, 7, 0.9);
-            color: #000;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            text-align: center;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
         .user-welcome {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
@@ -234,11 +216,11 @@
             transform: translateY(-2px);
         }
 
-        .logout-btn {
+        .back-btn {
             position: absolute;
             top: 20px;
             right: 20px;
-            background: rgba(239, 68, 68, 0.9);
+            background: rgba(59, 130, 246, 0.9);
             color: white;
             border: none;
             padding: 8px 16px;
@@ -248,10 +230,11 @@
             font-weight: 500;
             transition: all 0.2s ease;
             z-index: 1000;
+            text-decoration: none;
         }
 
-        .logout-btn:hover {
-            background: rgba(239, 68, 68, 1);
+        .back-btn:hover {
+            background: rgba(59, 130, 246, 1);
             transform: translateY(-1px);
         }
 
@@ -282,25 +265,19 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Demo Banner -->
-        <div class="demo-banner">
-            🎭 MODALITÀ DEMO ATTIVA - Sistema di test per sviluppo
-        </div>
-
-        <!-- Header with logout -->
+        <!-- Header -->
         <header class="dashboard-header">
-            <button class="logout-btn" id="logoutBtn">🚪 Logout</button>
+            <a href="index.html" class="back-btn">← Homepage</a>
             <h1>La Mia Area</h1>
             <p>Il tuo centro di controllo per il cambiamento</p>
         </header>
 
         <!-- User Welcome -->
         <div class="user-welcome">
-            <h2>👋 Ciao <span class="user-name">Utente Demo</span>!</h2>
+            <h2>👋 Ciao Utente!</h2>
             <div class="user-info">
-                <p>Email: <span class="user-email">demo@tribucoach.com</span></p>
-                <p>Membro dal: <span id="memberSince">Gennaio 2025</span></p>
-                <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 0.5rem;">🎭 Account demo per test</p>
+                <p>Benvenuto nella tua area personale di coaching</p>
+                <p>Accesso libero a tutti i contenuti</p>
             </div>
         </div>
 
@@ -341,22 +318,22 @@
 
         <!-- Progress Section -->
         <div class="progress-section">
-            <h3>📈 I Tuoi Risultati (Demo)</h3>
+            <h3>📈 I Tuoi Risultati</h3>
             <div class="progress-stats">
                 <div class="stat-item">
-                    <span class="stat-number" id="completedWeeks">3</span>
+                    <span class="stat-number">4</span>
                     <div class="stat-label">Settimane Completate</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="totalPoints">750</span>
+                    <span class="stat-number">850</span>
                     <div class="stat-label">Punti Benessere</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="streakDays">12</span>
+                    <span class="stat-number">15</span>
                     <div class="stat-label">Giorni Consecutivi</div>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number" id="lessonsCompleted">18</span>
+                    <span class="stat-number">22</span>
                     <div class="stat-label">Lezioni Completate</div>
                 </div>
             </div>
@@ -376,214 +353,61 @@
         </div>
     </div>
 
-    <script type="module">
-        // Import da sistema demo invece di Firebase
-        import { auth, db, doc, getDoc, collection, query, where, getDocs } from './demo-auth-system.js';
-        import { guardDashboard, getCurrentUser, handleLogout } from './auth-guard.js';
-
-        // Inizializza protezione dashboard
-        guardDashboard();
-
-        // Setup quando il DOM è pronto
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🏠 Dashboard demo inizializzata');
-            
-            // Setup logout button
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', handleLogout);
-            }
-
-            // Carica dati utente
-            loadUserData();
-        });
-
-        // Carica dati utente e progressi
-        async function loadUserData() {
-            try {
-                const user = getCurrentUser();
-                if (!user) {
-                    console.log('⏳ Utente demo non disponibile ancora, riprovo...');
-                    // Riprova dopo 1 secondo se l'auth non è ancora completo
-                    setTimeout(loadUserData, 1000);
-                    return;
-                }
-
-                console.log('👤 Caricamento dati demo per:', user.email);
-
-                // Aggiorna UI con dati utente
-                updateUserInterface(user);
-
-                // Carica progressi utente (demo)
-                await loadUserProgress(user.uid);
-
-            } catch (error) {
-                console.error('❌ Errore caricamento dati utente demo:', error);
-            }
-        }
-
-        // Aggiorna interfaccia utente
-        function updateUserInterface(user) {
-            // Nome utente
-            const userNameElements = document.querySelectorAll('.user-name');
-            userNameElements.forEach(el => {
-                el.textContent = user.displayName || user.email.split('@')[0];
-            });
-
-            // Email utente
-            const userEmailElements = document.querySelectorAll('.user-email');
-            userEmailElements.forEach(el => {
-                el.textContent = user.email;
-            });
-
-            // Data registrazione
-            const memberSinceEl = document.getElementById('memberSince');
-            if (memberSinceEl && user.metadata.creationTime) {
-                const creationDate = new Date(user.metadata.creationTime);
-                const options = { year: 'numeric', month: 'long' };
-                memberSinceEl.textContent = creationDate.toLocaleDateString('it-IT', options);
-            }
-
-            console.log('✅ UI demo aggiornata con dati utente');
-        }
-
-        // Carica progressi utente dal sistema demo
-        async function loadUserProgress(userId) {
-            try {
-                console.log('📊 Caricamento progressi demo per userId:', userId);
-
-                // Simula caricamento dati con delay
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Dati demo randomici ma realistici
-                const demoStats = {
-                    completedWeeks: Math.floor(Math.random() * 7) + 1,
-                    totalPoints: Math.floor(Math.random() * 1000) + 200,
-                    streakDays: Math.floor(Math.random() * 30) + 5,
-                    lessonsCompleted: Math.floor(Math.random() * 25) + 10
-                };
-
-                // Aggiorna le statistiche con i dati demo
-                document.getElementById('completedWeeks').textContent = demoStats.completedWeeks;
-                document.getElementById('totalPoints').textContent = demoStats.totalPoints;
-                document.getElementById('streakDays').textContent = demoStats.streakDays;
-                document.getElementById('lessonsCompleted').textContent = demoStats.lessonsCompleted;
-
-                console.log('📈 Progressi demo caricati:', demoStats);
-
-                // Salva in localStorage per consistenza
-                localStorage.setItem('demoUserStats', JSON.stringify(demoStats));
-
-            } catch (error) {
-                console.error('❌ Errore caricamento progressi demo:', error);
-                // Mostra valori di default se caricamento fallisce
-                showDefaultStats();
-            }
-        }
-
-        // Mostra statistiche di default
-        function showDefaultStats() {
-            const defaultStats = {
-                completedWeeks: 3,
-                totalPoints: 750,
-                streakDays: 12,
-                lessonsCompleted: 18
-            };
-
-            Object.keys(defaultStats).forEach(key => {
-                const element = document.getElementById(key);
-                if (element) {
-                    element.textContent = defaultStats[key];
-                }
-            });
-        }
+    <script>
+        console.log('🏠 Dashboard caricata - Accesso libero');
 
         // Funzioni per azioni rapide
-        window.openChat = function() {
-            console.log('💬 Apertura chat demo...');
-            showDemoAlert('Chat con Andrea', 'Chat demo in arrivo! 💬\n\nNella versione completa potrai parlare direttamente con Andrea 24/7.');
-        };
+        function openChat() {
+            console.log('💬 Apertura chat...');
+            alert('Chat con Andrea in arrivo! 💬\n\nPotrai parlare direttamente con Andrea 24/7.');
+        }
 
-        window.viewProgress = function() {
-            console.log('📊 Visualizzazione progressi demo...');
-            showDemoAlert('Progressi Dettagliati', 'Visualizzazione progressi dettagliati in arrivo! 📊\n\nPotrai vedere grafici, analisi e trend del tuo percorso.');
-        };
+        function viewProgress() {
+            console.log('📊 Visualizzazione progressi...');
+            alert('Progressi Dettagliati! 📊\n\nPotrai vedere grafici, analisi e trend del tuo percorso.');
+        }
 
-        window.viewCalendar = function() {
-            console.log('📅 Apertura calendario demo...');
-            showDemoAlert('Calendario Personalizzato', 'Calendario personalizzato in arrivo! 📅\n\nPotrai pianificare obiettivi e tracciare abitudini.');
-        };
+        function viewCalendar() {
+            console.log('📅 Apertura calendario...');
+            alert('Calendario Personalizzato! 📅\n\nPotrai pianificare obiettivi e tracciare abitudini.');
+        }
 
-        window.viewResources = function() {
-            console.log('📖 Apertura risorse demo...');
-            showDemoAlert('Libreria Risorse', 'Libreria risorse in arrivo! 📖\n\nGuide, ebook, video e materiali esclusivi.');
-        };
+        function viewResources() {
+            console.log('📖 Apertura risorse...');
+            alert('Libreria Risorse! 📖\n\nGuide, ebooks, video e materiali esclusivi.');
+        }
 
-        window.viewCommunity = function() {
-            console.log('👥 Apertura community demo...');
-            showDemoAlert('Community LifestyleFitnessCoach', 'Community in arrivo! 👥\n\nConnettiti con altri membri del percorso.');
-        };
+        function viewCommunity() {
+            console.log('👥 Apertura community...');
+            alert('Community LifestyleFitnessCoach! 👥\n\nConnettiti con altri membri del percorso.');
+        }
 
-        // Alert personalizzato per demo
-        function showDemoAlert(title, message) {
-            const alertDiv = document.createElement('div');
-            alertDiv.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: white;
-                padding: 2rem;
-                border-radius: 15px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-                z-index: 10000;
-                max-width: 400px;
-                text-align: center;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            `;
+        // Animazioni statistiche random
+        function updateStats() {
+            const stats = [
+                { id: 'settimane', min: 3, max: 7 },
+                { id: 'punti', min: 600, max: 1000 },
+                { id: 'giorni', min: 10, max: 30 },
+                { id: 'lezioni', min: 15, max: 35 }
+            ];
 
-            alertDiv.innerHTML = `
-                <h3 style="color: #2c3e50; margin-bottom: 1rem; font-size: 1.3rem;">${title}</h3>
-                <p style="color: #666; line-height: 1.6; margin-bottom: 1.5rem; white-space: pre-line;">${message}</p>
-                <button onclick="this.parentElement.remove()" style="
-                    background: linear-gradient(45deg, #ff6b35, #f39c12);
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    cursor: pointer;
-                    font-weight: 600;
-                ">OK</button>
-            `;
-
-            document.body.appendChild(alertDiv);
-
-            // Auto-remove dopo 10 secondi
-            setTimeout(() => {
-                if (alertDiv.parentNode) {
-                    alertDiv.remove();
+            // Trova tutti gli elementi stat-number e aggiorna con valori casuali
+            document.querySelectorAll('.stat-number').forEach((el, index) => {
+                if (stats[index]) {
+                    const stat = stats[index];
+                    const newValue = Math.floor(Math.random() * (stat.max - stat.min + 1)) + stat.min;
+                    el.textContent = newValue;
                 }
-            }, 10000);
+            });
         }
 
-        // Auto-refresh dati ogni 5 minuti (per demo)
-        setInterval(loadUserData, 5 * 60 * 1000);
+        // Aggiorna statistiche ogni 30 secondi per simulare progressi
+        setInterval(updateStats, 30000);
 
-        // Carica statistiche salvate se disponibili
-        const savedStats = localStorage.getItem('demoUserStats');
-        if (savedStats) {
-            try {
-                const stats = JSON.parse(savedStats);
-                Object.keys(stats).forEach(key => {
-                    const element = document.getElementById(key);
-                    if (element) {
-                        element.textContent = stats[key];
-                    }
-                });
-            } catch (error) {
-                console.warn('⚠️ Errore caricamento statistiche salvate:', error);
-            }
-        }
+        // Welcome message
+        setTimeout(() => {
+            console.log('✅ Dashboard completamente caricata - Nessuna autenticazione richiesta');
+        }, 1000);
     </script>
 </body>
 </html>
