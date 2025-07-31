@@ -30,7 +30,7 @@
             flex-direction: column;
         }
 
-        /* === HEADER AVANZATO === */
+        /* === HEADER CON FOTO REALE ANDREA === */
         .chat-header {
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             color: white;
@@ -41,27 +41,43 @@
             position: relative;
         }
 
+        /* Foto Reale Andrea nell'Header */
         .andrea-avatar {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ff6b35;stop-opacity:1" /><stop offset="100%" style="stop-color:%23f39c12;stop-opacity:1" /></linearGradient></defs><circle cx="30" cy="30" r="28" fill="url(%23grad1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><text x="30" y="40" text-anchor="middle" fill="white" font-size="20" font-weight="bold">AP</text></svg>') center/cover;
-            border: 3px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            background-size: cover;
+            background-position: center;
+            border: 4px solid rgba(255,255,255,0.4);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             animation: avatarPulse 3s ease-in-out infinite;
             position: relative;
+            overflow: hidden;
+        }
+
+        .andrea-avatar.loading::before {
+            content: 'AP';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .andrea-avatar::after {
             content: '';
             position: absolute;
-            bottom: 2px;
-            right: 2px;
-            width: 16px;
-            height: 16px;
+            bottom: 3px;
+            right: 3px;
+            width: 18px;
+            height: 18px;
             background: #10b981;
             border-radius: 50%;
-            border: 2px solid white;
+            border: 3px solid white;
             animation: onlineIndicator 2s ease-in-out infinite;
         }
 
@@ -77,22 +93,32 @@
 
         .header-info h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 600;
         }
 
         .header-info p {
             margin: 0;
             opacity: 0.9;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         .coaching-style {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             background: rgba(255,255,255,0.2);
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
             margin-top: 4px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+        }
+
+        .photo-info {
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.15);
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-top: 2px;
             display: inline-block;
         }
 
@@ -100,16 +126,22 @@
             position: absolute;
             top: 20px;
             right: 80px;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
-            border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 3px solid rgba(255,255,255,0.4);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+            animation: userAvatarFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes userAvatarFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
         }
 
         .back-btn {
@@ -125,6 +157,7 @@
             font-size: 14px;
             text-decoration: none;
             transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
         }
 
         .back-btn:hover {
@@ -132,7 +165,7 @@
             transform: translateY(-1px);
         }
 
-        /* === MESSAGGI AVANZATI === */
+        /* === MESSAGGI CON FOTO REALE === */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -156,17 +189,21 @@
             flex-direction: row-reverse;
         }
 
+        /* Avatar Messaggi con Foto Reale */
         .message-avatar {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             position: relative;
             transition: all 0.3s ease;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
         }
 
         .message-avatar:hover {
@@ -176,14 +213,26 @@
         .message.user .message-avatar {
             background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             color: white;
-            border: 2px solid rgba(59,130,246,0.3);
-            box-shadow: 0 3px 12px rgba(59,130,246,0.2);
+            border: 3px solid rgba(59,130,246,0.3);
+            box-shadow: 0 4px 15px rgba(59,130,246,0.2);
         }
 
         .message.andrea .message-avatar {
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45"><defs><linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ff6b35;stop-opacity:1" /><stop offset="100%" style="stop-color:%23f39c12;stop-opacity:1" /></linearGradient></defs><circle cx="22.5" cy="22.5" r="20" fill="url(%23grad2)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><text x="22.5" y="28" text-anchor="middle" fill="white" font-size="14" font-weight="bold">AP</text></svg>') center/cover;
-            border: 2px solid rgba(255,107,53,0.3);
-            box-shadow: 0 3px 12px rgba(255,107,53,0.2);
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            border: 3px solid rgba(255,107,53,0.3);
+            box-shadow: 0 4px 15px rgba(255,107,53,0.2);
+        }
+
+        .message.andrea .message-avatar.loading::before {
+            content: 'AP';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .message-content {
@@ -269,7 +318,7 @@
             30% { transform: scale(1.2); opacity: 1; }
         }
 
-        /* === QUICK REPLIES AVANZATE === */
+        /* === QUICK REPLIES PERSONALIZZATE === */
         .quick-replies {
             padding: 16px 20px;
             background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
@@ -293,9 +342,9 @@
         .personality-indicator {
             background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             color: white;
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 12px;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
@@ -407,6 +456,7 @@
             cursor: pointer;
             font-size: 12px;
             transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
         }
 
         .chat-history-btn:hover {
@@ -468,8 +518,20 @@
 
             .user-avatar-mini {
                 right: 70px;
-                width: 35px;
-                height: 35px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+
+            .andrea-avatar {
+                width: 60px;
+                height: 60px;
+            }
+
+            .message-avatar {
+                width: 45px;
+                height: 45px;
+                font-size: 1.2rem;
             }
 
             .quick-replies-container {
@@ -484,24 +546,25 @@
 </head>
 <body>
     <div class="chat-container">
-        <!-- Header Avanzato -->
+        <!-- Header Avanzato con Foto Reale -->
         <div class="chat-header">
             <button class="chat-history-btn" onclick="toggleChatHistory()">📋 Cronologia</button>
             <div class="user-avatar-mini" id="userAvatarMini">💪</div>
             <a href="user-dashboard.html" class="back-btn">← Dashboard</a>
             
-            <div class="andrea-avatar"></div>
+            <div class="andrea-avatar loading" id="andreaAvatarHeader"></div>
             <div class="header-info">
                 <h2>Andrea Padoan</h2>
                 <p>Lifestyle Coach • <span id="coachStatus">Online ora</span></p>
                 <div class="coaching-style" id="coachingStyle">Stile: Bilanciato e olistico</div>
+                <div class="photo-info" id="photoInfo">📸 Caricamento foto...</div>
             </div>
         </div>
 
         <!-- Messages Container -->
         <div class="messages-container" id="messagesContainer">
             <div class="message andrea">
-                <div class="message-avatar"></div>
+                <div class="message-avatar loading" id="andreaAvatarMessage"></div>
                 <div class="message-content">
                     <div id="welcomeMessage">Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
 
@@ -546,12 +609,13 @@ Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.
     <!-- Notification Container -->
     <div id="notification" class="notification"></div>
 
-    <!-- Load Avatar System -->
+    <!-- Load Sistemi -->
     <script src="../api/firebase-lifestyle-integration.js" type="module"></script>
     <script src="../utils/avatar-system.js" type="module"></script>
+    <script src="../utils/andrea-photo-system.js" type="module"></script>
     
     <script type="module">
-        // Import avatar functions
+        // Import functions
         import { 
             getUserAvatar, 
             getAndreaMessage, 
@@ -559,10 +623,16 @@ Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.
         } from '../api/firebase-lifestyle-integration.js';
         
         import { getAvatarManager } from '../utils/avatar-system.js';
+        
+        import { 
+            getAndreaPhotoManager,
+            initializeAndreaPhotoSystem 
+        } from '../utils/andrea-photo-system.js';
 
         // === CONFIGURAZIONE CHAT ===
         let currentUserId = 'guest_' + Date.now();
         let userAvatar = null;
+        let photoManager = null;
         let messages = [];
         let isTyping = false;
         let chatHistory = [];
@@ -633,12 +703,17 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
         // === INIZIALIZZAZIONE ===
         document.addEventListener('DOMContentLoaded', async function() {
             await initializeChat();
-            setupEventListeners();
         });
 
         async function initializeChat() {
             try {
-                console.log('🚀 Inizializzazione chat avatar...');
+                console.log('🚀 Inizializzazione chat con foto reali...');
+                
+                // Initialize photo system
+                photoManager = await initializeAndreaPhotoSystem();
+                
+                // Setup Andrea photos
+                await setupAndreaRealPhotos();
                 
                 // Carica avatar utente
                 await loadUserAvatar();
@@ -652,11 +727,63 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
                 // Carica cronologia se esistente
                 await loadChatHistory();
                 
-                console.log('✅ Chat avatar inizializzata');
+                // Setup event listeners
+                setupEventListeners();
+                
+                console.log('✅ Chat con foto reali inizializzata');
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione chat:', error);
                 showNotification('Errore inizializzazione chat', 'error');
+            }
+        }
+
+        async function setupAndreaRealPhotos() {
+            try {
+                if (!photoManager) {
+                    console.warn('⚠️ Photo manager non disponibile');
+                    return;
+                }
+                
+                // Header avatar
+                const headerAvatar = document.getElementById('andreaAvatarHeader');
+                if (headerAvatar) {
+                    photoManager.applyPhotoToElement(headerAvatar, {
+                        context: 'coaching',
+                        size: 'medium',
+                        circular: true,
+                        animate: true
+                    });
+                    headerAvatar.classList.remove('loading');
+                }
+                
+                // Message avatar
+                const messageAvatar = document.getElementById('andreaAvatarMessage');
+                if (messageAvatar) {
+                    photoManager.applyPhotoToElement(messageAvatar, {
+                        context: 'coaching',
+                        size: 'small',
+                        circular: true,
+                        animate: true
+                    });
+                    messageAvatar.classList.remove('loading');
+                }
+                
+                // Update photo info
+                const photoInfo = photoManager.getCurrentPhotoInfo();
+                const photoInfoElement = document.getElementById('photoInfo');
+                if (photoInfoElement) {
+                    photoInfoElement.textContent = `📸 ${photoInfo.name}`;
+                }
+                
+                console.log('✅ Foto reali Andrea applicate:', photoInfo.name);
+                
+            } catch (error) {
+                console.error('❌ Errore setup foto Andrea:', error);
+                
+                // Remove loading states
+                document.getElementById('andreaAvatarHeader')?.classList.remove('loading');
+                document.getElementById('andreaAvatarMessage')?.classList.remove('loading');
             }
         }
 
@@ -766,14 +893,17 @@ Dimmi, cosa ti ha portato qui oggi?`;
             messageDiv.className = `message ${sender}`;
             
             let avatarContent = '';
+            let avatarClass = 'message-avatar';
+            
             if (sender === 'user') {
                 avatarContent = userAvatar.emoji;
             } else {
-                avatarContent = ''; // Andrea usa background image
+                avatarClass += ' loading';
+                // Andrea uses real photo - will be applied after creation
             }
             
             messageDiv.innerHTML = `
-                <div class="message-avatar">${avatarContent}</div>
+                <div class="${avatarClass}">${avatarContent}</div>
                 <div class="message-content">
                     <div>${formatMessage(text, sender)}</div>
                     <div class="message-time">${messageTime}</div>
@@ -781,6 +911,18 @@ Dimmi, cosa ti ha portato qui oggi?`;
             `;
             
             messagesContainer.appendChild(messageDiv);
+            
+            // Apply Andrea photo to new message avatar
+            if (sender === 'andrea' && photoManager) {
+                const newAvatar = messageDiv.querySelector('.message-avatar');
+                photoManager.applyPhotoToElement(newAvatar, {
+                    context: 'coaching',
+                    size: 'small',
+                    circular: true
+                });
+                newAvatar.classList.remove('loading');
+            }
+            
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             // Hide quick replies after first user message
@@ -823,7 +965,7 @@ Dimmi, cosa ti ha portato qui oggi?`;
             const randomMessage = typingMessages[Math.floor(Math.random() * typingMessages.length)];
             
             typingDiv.innerHTML = `
-                <div class="message-avatar"></div>
+                <div class="message-avatar loading"></div>
                 <div class="typing-indicator">
                     <div class="typing-text">${randomMessage}</div>
                     <div class="typing-dots">
@@ -835,6 +977,18 @@ Dimmi, cosa ti ha portato qui oggi?`;
             `;
             
             messagesContainer.appendChild(typingDiv);
+            
+            // Apply photo to typing avatar
+            if (photoManager) {
+                const typingAvatar = typingDiv.querySelector('.message-avatar');
+                photoManager.applyPhotoToElement(typingAvatar, {
+                    context: 'coaching',
+                    size: 'small',
+                    circular: true
+                });
+                typingAvatar.classList.remove('loading');
+            }
+            
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
@@ -960,7 +1114,8 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                 chatHistory.push({
                     ...message,
                     timestamp: new Date().toISOString(),
-                    avatarUsed: userAvatar?.id
+                    avatarUsed: userAvatar?.id,
+                    photoUsed: photoManager?.getCurrentPhotoInfo()?.id
                 });
                 
                 // Keep only last 100 messages
@@ -980,10 +1135,12 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                 return;
             }
             
+            const photoInfo = photoManager?.getCurrentPhotoInfo();
             const summary = `Cronologia Chat 📋
             
 Messaggi totali: ${chatHistory.length}
 Avatar utilizzato: ${userAvatar?.name || 'Non definito'}
+Foto Andrea: ${photoInfo?.name || 'Non definita'}
 Prima conversazione: ${new Date(chatHistory[0]?.timestamp).toLocaleDateString()}
 Ultima attività: ${new Date(chatHistory[chatHistory.length - 1]?.timestamp).toLocaleDateString()}`;
             
@@ -1006,7 +1163,7 @@ Ultima attività: ${new Date(chatHistory[chatHistory.length - 1]?.timestamp).toL
         window.sendMessage = sendMessage;
         window.selectQuickReply = selectQuickReply;
         
-        console.log('🎯 Chat Andrea Avatar System caricata completamente!');
+        console.log('🎯 Chat Andrea con Foto Reali caricata completamente!');
     </script>
 </body>
 </html>
