@@ -2,407 +2,412 @@
 // Protegge dashboard e moduli coaching da accessi non autorizzati
 
 import { auth } from './firebase-config.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js';
 
-// === CONFIGURAZIONE AUTH GUARD ===
-const AUTH_CONFIG = {
-    loginUrl: '/login.html',
-    registerUrl: '/register.html',
-    homeUrl: '/index.html',
-    dashboardUrl: '/user-dashboard.html',
-    allowedPublicPages: [
-        '/',
-        '/index.html',
-        '/login.html',
-        '/register.html',
-        '/forgot-password.html',
-        '/lifestyle-quiz.html'
-    ],
-    protectedPages: [
-        '/user-dashboard.html',
-        '/modules/',
-        '/dashboard.html',
-        '/lifestyle-admin-dashboard.html'
-    ]
-};
+// Variabili globali
+let currentUser = null;
+let authCheckComplete = false;
+let redirectPath = null;
 
-// === STATO GLOBALE AUTENTICAZIONE ===
-let authState = {
-    isAuthenticated: false,
-    user: null,
-    loading: true,
-    initialized: false
-};
-
-// === INIZIALIZZAZIONE AUTH GUARD ===
-export function initAuthGuard(options = {}) {
-    console.log('🛡️ Inizializzazione Auth Guard...');
+// Inizializzazione del guard
+function initAuthGuard() {
+    console.log('🛡️ Auth Guard inizializzato');
     
-    const config = { ...AUTH_CONFIG, ...options };
+    // Salva la pagina corrente per redirect post-login
+    redirectPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('redirectAfterLogin', redirectPath);
     
-    return new Promise((resolve) => {
-        // Listener Firebase Auth
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            console.log('🔄 Auth state changed:', user ? user.email : 'No user');
-            
-            authState.user = user;
-            authState.isAuthenticated = !!user;
-            authState.loading = false;
-            
-            if (!authState.initialized) {
-                authState.initialized = true;
-                resolve(authState);
-            }
-            
-            // Check current page protection
-            checkPageAccess(config);
-        });
+    // Mostra loading overlay
+    showAuthOverlay();
+    
+    // Timeout di sicurezza (10 secondi)
+    const timeout = setTimeout(() => {
+        console.log('⏰ Auth timeout raggiunto');
+        hideAuthOverlay();
+        redirectToLogin('Timeout di autenticazione');
+    }, 10000);
+    
+    // Controlla stato autenticazione
+    onAuthStateChanged(auth, (user) => {
+        clearTimeout(timeout);
         
-        // Timeout fallback per connection issues
-        setTimeout(() => {
-            if (!authState.initialized) {
-                console.warn('⚠️ Auth timeout - assumo non autenticato');
-                authState.loading = false;
-                authState.isAuthenticated = false;
-                authState.initialized = true;
-                resolve(authState);
-                checkPageAccess(config);
-            }
-        }, 5000);
-    });
-}
-
-// === CONTROLLO ACCESSO PAGINA ===
-function checkPageAccess(config) {
-    const currentPath = window.location.pathname;
-    const isProtectedPath = isPageProtected(currentPath, config);
-    
-    console.log('🔍 Checking access:', {
-        path: currentPath,
-        isProtected: isProtectedPath,
-        isAuthenticated: authState.isAuthenticated,
-        loading: authState.loading
-    });
-    
-    // Se la pagina è protetta e l'utente non è autenticato
-    if (isProtectedPath && !authState.isAuthenticated && !authState.loading) {
-        console.log('❌ Accesso negato - redirect al login');
-        redirectToLogin(config, currentPath);
-        return false;
-    }
-    
-    // Se l'utente è autenticato e sta cercando di accedere a login/register
-    if (authState.isAuthenticated && isAuthPage(currentPath)) {
-        console.log('✅ Utente già autenticato - redirect alla dashboard');
-        redirectToDashboard(config);
-        return false;
-    }
-    
-    return true;
-}
-
-// === VERIFICA SE PAGINA È PROTETTA ===
-function isPageProtected(path, config) {
-    return config.protectedPages.some(protectedPath => {
-        if (protectedPath.endsWith('/')) {
-            return path.startsWith(protectedPath);
+        if (user && user.emailVerified) {
+            console.log('✅ Utente autenticato:', user.email);
+            currentUser = user;
+            authCheckComplete = true;
+            onAuthSuccess();
+        } else if (user && !user.emailVerified) {
+            console.log('📧 Email non verificata per:', user.email);
+            redirectToEmailVerification();
+        } else {
+            console.log('❌ Utente non autenticato');
+            redirectToLogin('Accesso richiesto');
         }
-        return path === protectedPath;
+    }, (error) => {
+        clearTimeout(timeout);
+        console.error('❌ Errore controllo auth:', error);
+        hideAuthOverlay();
+        redirectToLogin('Errore di autenticazione');
     });
 }
 
-// === VERIFICA SE È PAGINA DI AUTH ===
-function isAuthPage(path) {
-    return ['/login.html', '/register.html'].includes(path);
-}
-
-// === REDIRECT FUNCTIONS ===
-function redirectToLogin(config, originalPath) {
-    // Salva la pagina originale per redirect dopo login
-    if (originalPath && originalPath !== '/') {
-        sessionStorage.setItem('auth_redirect_url', originalPath);
+// Mostra overlay di caricamento
+function showAuthOverlay() {
+    // Rimuovi overlay esistente se presente
+    const existingOverlay = document.getElementById('auth-overlay');
+    if (existingOverlay) {
+        existingOverlay.remove();
     }
     
-    // Mostra messaggio di accesso richiesto
-    showAuthRequiredMessage();
-    
-    // Redirect dopo breve delay
-    setTimeout(() => {
-        window.location.href = config.loginUrl;
-    }, 2000);
-}
-
-function redirectToDashboard(config) {
-    window.location.href = config.dashboardUrl;
-}
-
-// === REDIRECT DOPO LOGIN ===
-export function handlePostLoginRedirect() {
-    const redirectUrl = sessionStorage.getItem('auth_redirect_url');
-    
-    if (redirectUrl && redirectUrl !== '/') {
-        sessionStorage.removeItem('auth_redirect_url');
-        console.log('↩️ Redirect post-login a:', redirectUrl);
-        window.location.href = redirectUrl;
-        return true;
-    }
-    
-    return false;
-}
-
-// === LOGOUT FUNCTION ===
-export async function logout() {
-    try {
-        console.log('🚪 Logout in corso...');
-        
-        // Firebase signOut
-        await auth.signOut();
-        
-        // Clear local storage
-        localStorage.removeItem('userSession');
-        sessionStorage.clear();
-        
-        // Update auth state
-        authState.isAuthenticated = false;
-        authState.user = null;
-        
-        console.log('✅ Logout completato');
-        
-        // Redirect to home
-        window.location.href = AUTH_CONFIG.homeUrl;
-        
-    } catch (error) {
-        console.error('❌ Errore durante logout:', error);
-        // Force redirect comunque
-        window.location.href = AUTH_CONFIG.homeUrl;
-    }
-}
-
-// === UI FEEDBACK ===
-function showAuthRequiredMessage() {
-    // Crea overlay di messaggio
     const overlay = document.createElement('div');
+    overlay.id = 'auth-overlay';
     overlay.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
+        background: rgba(44, 62, 80, 0.95);
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 10000;
+        z-index: 9999;
         color: white;
-        font-family: 'Segoe UI', sans-serif;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     `;
     
     overlay.innerHTML = `
-        <div style="
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        ">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
-            <h2 style="margin-bottom: 15px; font-size: 1.5rem;">Accesso Richiesto</h2>
-            <p style="margin-bottom: 20px; opacity: 0.9; line-height: 1.5;">
-                Devi effettuare l'accesso per visualizzare questa pagina.
-            </p>
-            <div style="
-                background: rgba(255,255,255,0.2);
-                padding: 10px;
-                border-radius: 8px;
-                font-size: 0.9rem;
-            ">
-                Reindirizzamento al login in corso...
-            </div>
+        <div style="text-align: center;">
+            <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #ff6b35; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <h3 style="margin: 0 0 10px 0; font-size: 1.4rem;">Verifica accesso...</h3>
+            <p style="margin: 0; opacity: 0.8; font-size: 1rem;">Controllo delle credenziali in corso</p>
         </div>
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
     `;
     
     document.body.appendChild(overlay);
 }
 
-// === USER INFO UTILITIES ===
-export function getCurrentUser() {
-    return authState.user;
-}
-
-export function isAuthenticated() {
-    return authState.isAuthenticated;
-}
-
-export function isLoading() {
-    return authState.loading;
-}
-
-// === PAGE-SPECIFIC GUARDS ===
-export async function guardDashboardPage() {
-    console.log('🛡️ Dashboard Guard attivato');
-    
-    const authStatus = await initAuthGuard();
-    
-    if (!authStatus.isAuthenticated) {
-        return false;
-    }
-    
-    // Initialize dashboard-specific features
-    initDashboardFeatures();
-    return true;
-}
-
-export async function guardModulePage(moduleId = null) {
-    console.log('🛡️ Module Guard attivato per:', moduleId || 'hub');
-    
-    const authStatus = await initAuthGuard();
-    
-    if (!authStatus.isAuthenticated) {
-        return false;
-    }
-    
-    // Initialize module-specific features
-    initModuleFeatures(moduleId);
-    return true;
-}
-
-// === DASHBOARD FEATURES ===
-function initDashboardFeatures() {
-    console.log('📊 Inizializzazione features dashboard...');
-    
-    // Add logout button to nav if not present
-    addLogoutButton();
-    
-    // Display user info
-    displayUserInfo();
-    
-    // Initialize real-time data if needed
-    // initDashboardData();
-}
-
-// === MODULE FEATURES ===
-function initModuleFeatures(moduleId) {
-    console.log('📚 Inizializzazione features modulo:', moduleId);
-    
-    // Add logout button
-    addLogoutButton();
-    
-    // Module-specific initialization
-    if (moduleId) {
-        // Track module access
-        trackModuleAccess(moduleId);
+// Nasconde overlay di caricamento
+function hideAuthOverlay() {
+    const overlay = document.getElementById('auth-overlay');
+    if (overlay) {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 300);
     }
 }
 
-// === UI COMPONENTS ===
+// Gestione successo autenticazione
+function onAuthSuccess() {
+    hideAuthOverlay();
+    updateUserInterface();
+    setupLogoutFunctionality();
+    trackPageAccess();
+    
+    // Gestisci redirect post-login se necessario
+    handlePostLoginRedirect();
+}
+
+// Aggiorna interfaccia utente con info utente
+function updateUserInterface() {
+    if (!currentUser) return;
+    
+    // Aggiorna elementi con classe user-info
+    const userElements = document.querySelectorAll('.user-name, .username, .user-display, [data-user-name]');
+    userElements.forEach(el => {
+        el.textContent = currentUser.displayName || currentUser.email.split('@')[0];
+    });
+    
+    // Aggiorna elementi email
+    const emailElements = document.querySelectorAll('.user-email, [data-user-email]');
+    emailElements.forEach(el => {
+        el.textContent = currentUser.email;
+    });
+    
+    // Aggiorna welcome message se presente
+    const welcomeElements = document.querySelectorAll('.welcome-user');
+    welcomeElements.forEach(el => {
+        el.textContent = `Ciao ${currentUser.displayName || currentUser.email.split('@')[0]}!`;
+    });
+    
+    console.log('✅ UI aggiornata con dati utente');
+}
+
+// Setup funzionalità logout
+function setupLogoutFunctionality() {
+    const logoutButtons = document.querySelectorAll('.logout-btn, [data-logout]');
+    
+    logoutButtons.forEach(btn => {
+        btn.addEventListener('click', handleLogout);
+        btn.style.cursor = 'pointer';
+    });
+    
+    // Aggiungi logout button se non presente
+    if (logoutButtons.length === 0) {
+        addLogoutButton();
+    }
+}
+
+// Aggiungi logout button dinamicamente
 function addLogoutButton() {
-    // Check if logout button already exists
-    if (document.getElementById('logoutButton')) {
-        return;
-    }
+    const header = document.querySelector('header, .header, .dashboard-header, nav');
+    if (!header) return;
     
-    // Create logout button
     const logoutBtn = document.createElement('button');
-    logoutBtn.id = 'logoutButton';
     logoutBtn.innerHTML = '🚪 Logout';
+    logoutBtn.className = 'dynamic-logout-btn';
     logoutBtn.style.cssText = `
-        position: fixed;
+        position: absolute;
         top: 20px;
         right: 20px;
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        background: rgba(239, 68, 68, 0.9);
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-size: 0.9rem;
-        font-weight: 600;
+        padding: 8px 16px;
+        border-radius: 20px;
         cursor: pointer;
-        box-shadow: 0 3px 10px rgba(231,76,60,0.3);
-        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
         z-index: 1000;
     `;
     
-    logoutBtn.addEventListener('click', logout);
     logoutBtn.addEventListener('mouseenter', () => {
-        logoutBtn.style.transform = 'translateY(-2px)';
-        logoutBtn.style.boxShadow = '0 5px 15px rgba(231,76,60,0.4)';
+        logoutBtn.style.background = 'rgba(239, 68, 68, 1)';
+        logoutBtn.style.transform = 'translateY(-1px)';
     });
+    
     logoutBtn.addEventListener('mouseleave', () => {
+        logoutBtn.style.background = 'rgba(239, 68, 68, 0.9)';
         logoutBtn.style.transform = 'translateY(0)';
-        logoutBtn.style.boxShadow = '0 3px 10px rgba(231,76,60,0.3)';
     });
     
-    document.body.appendChild(logoutBtn);
+    logoutBtn.addEventListener('click', handleLogout);
+    
+    header.style.position = 'relative';
+    header.appendChild(logoutBtn);
 }
 
-function displayUserInfo() {
-    if (!authState.user) return;
-    
-    // Find user info containers and update them
-    const userNameElements = document.querySelectorAll('[data-user-name]');
-    const userEmailElements = document.querySelectorAll('[data-user-email]');
-    
-    userNameElements.forEach(el => {
-        el.textContent = authState.user.displayName || authState.user.email.split('@')[0];
-    });
-    
-    userEmailElements.forEach(el => {
-        el.textContent = authState.user.email;
-    });
-}
-
-// === TRACKING ===
-function trackModuleAccess(moduleId) {
-    // Track module access event
-    const eventData = {
-        event: 'module_access',
-        moduleId: moduleId,
-        userId: authState.user?.uid,
-        timestamp: new Date().toISOString()
-    };
-    
-    console.log('📊 Tracking module access:', eventData);
-    
-    // Send to analytics if available
-    if (window.gtag) {
-        window.gtag('event', 'module_access', {
-            module_id: moduleId,
-            user_id: authState.user?.uid
+// Gestione logout
+async function handleLogout() {
+    try {
+        const logoutBtns = document.querySelectorAll('.logout-btn, [data-logout], .dynamic-logout-btn');
+        
+        // Mostra loading sui bottoni
+        logoutBtns.forEach(btn => {
+            btn.innerHTML = '<div style="width: 12px; height: 12px; border: 2px solid #fff; border-top: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>';
+            btn.disabled = true;
         });
+        
+        console.log('🚪 Logout in corso...');
+        
+        // Logout da Firebase
+        await auth.signOut();
+        
+        // Cleanup locale
+        currentUser = null;
+        authCheckComplete = false;
+        
+        // Clear storage
+        sessionStorage.clear();
+        localStorage.removeItem('lifestyleCoachUser');
+        localStorage.removeItem('userProgress');
+        
+        console.log('✅ Logout completato');
+        
+        // Redirect dopo breve delay
+        setTimeout(() => {
+            window.location.href = '/login.html';
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ Errore durante logout:', error);
+        
+        // Ripristina bottoni in caso di errore
+        const logoutBtns = document.querySelectorAll('.logout-btn, [data-logout], .dynamic-logout-btn');
+        logoutBtns.forEach(btn => {
+            btn.innerHTML = '🚪 Logout';
+            btn.disabled = false;
+        });
+        
+        showErrorMessage('Errore durante il logout. Riprova.');
     }
 }
 
-// === ERROR HANDLING ===
-window.addEventListener('error', (error) => {
-    if (error.message.includes('auth')) {
-        console.error('🚨 Auth error:', error);
-        // Handle auth-related errors
+// Tracking accesso pagina
+function trackPageAccess() {
+    if (!currentUser) return;
+    
+    try {
+        const pageInfo = {
+            userId: currentUser.uid,
+            email: currentUser.email,
+            page: window.location.pathname,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+        };
+        
+        console.log('📊 Tracciando accesso pagina:', pageInfo);
+        
+        // Qui potresti integrare con Firebase Analytics
+        if (window.gtag) {
+            gtag('event', 'page_access', {
+                page_path: pageInfo.page,
+                user_id: pageInfo.userId
+            });
+        }
+        
+    } catch (error) {
+        console.warn('⚠️ Errore nel tracking:', error);
     }
-});
-
-// === DEVELOPMENT HELPERS ===
-if (window.location.hostname === 'localhost') {
-    window.authGuard = {
-        state: authState,
-        logout,
-        getCurrentUser,
-        isAuthenticated,
-        checkPageAccess: () => checkPageAccess(AUTH_CONFIG)
-    };
-    console.log('🔧 Auth Guard debug helpers available at window.authGuard');
 }
 
-// === EXPORTS ===
-export {
+// Gestione redirect post-login
+function handlePostLoginRedirect() {
+    const savedRedirect = sessionStorage.getItem('redirectAfterLogin');
+    const currentPath = window.location.pathname;
+    
+    // Se siamo nella pagina di destinazione, rimuovi il redirect salvato
+    if (savedRedirect && savedRedirect === currentPath) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        console.log('✅ Redirect completato, rimosso da sessione');
+    }
+}
+
+// Redirect al login
+function redirectToLogin(reason = '') {
+    console.log('🔄 Redirect al login:', reason);
+    
+    // Salva pagina corrente per redirect post-login
+    const currentPage = window.location.pathname + window.location.search;
+    sessionStorage.setItem('redirectAfterLogin', currentPage);
+    
+    // Mostra messaggio se fornito
+    if (reason) {
+        sessionStorage.setItem('loginMessage', reason);
+    }
+    
+    // Redirect
+    window.location.href = '/login.html';
+}
+
+// Redirect per email verification
+function redirectToEmailVerification() {
+    console.log('📧 Redirect per verifica email');
+    sessionStorage.setItem('loginMessage', 'Verifica la tua email prima di accedere');
+    window.location.href = '/login.html';
+}
+
+// Mostra messaggio di errore
+function showErrorMessage(message) {
+    // Rimuovi messaggi esistenti
+    const existingError = document.getElementById('auth-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    const errorDiv = document.createElement('div');
+    errorDiv.id = 'auth-error';
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 10000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        max-width: 300px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    `;
+    
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    
+    // Auto-remove dopo 5 secondi
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.style.opacity = '0';
+            setTimeout(() => errorDiv.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Funzione per proteggere specifiche pagine
+function guardPage(requiredRole = null) {
+    console.log('🛡️ Protezione pagina attivata');
+    
+    if (!authCheckComplete) {
+        initAuthGuard();
+        return;
+    }
+    
+    if (!currentUser) {
+        redirectToLogin('Accesso richiesto');
+        return;
+    }
+    
+    // Controllo ruolo se specificato
+    if (requiredRole) {
+        // Qui potresti aggiungere logica per controllo ruoli
+        console.log('🔐 Controllo ruolo:', requiredRole);
+    }
+    
+    console.log('✅ Accesso autorizzato');
+}
+
+// Funzione per proteggere moduli coaching
+function guardModulePage() {
+    console.log('🎯 Protezione modulo coaching');
+    guardPage();
+}
+
+// Funzione per proteggere dashboard
+function guardDashboard() {
+    console.log('📊 Protezione dashboard');
+    guardPage();
+}
+
+// Funzione per proteggere area admin
+function guardAdminPage() {
+    console.log('👨‍💼 Protezione area admin');
+    guardPage('admin');
+}
+
+// Ottieni utente corrente
+function getCurrentUser() {
+    return currentUser;
+}
+
+// Verifica se utente è autenticato
+function isAuthenticated() {
+    return authCheckComplete && currentUser !== null;
+}
+
+// Inizializzazione automatica quando il DOM è pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAuthGuard);
+} else {
+    initAuthGuard();
+}
+
+// Export delle funzioni principali (SINGOLO EXPORT)
+export { 
     initAuthGuard,
-    guardDashboardPage,
+    guardPage,
     guardModulePage,
-    logout,
+    guardDashboard,
+    guardAdminPage,
     getCurrentUser,
     isAuthenticated,
-    isLoading,
+    handleLogout,
     handlePostLoginRedirect
 };
-
-console.log('🛡️ Auth Guard System loaded and ready!');
