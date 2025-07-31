@@ -19,17 +19,18 @@
         }
 
         .chat-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
-            height: 600px;
+            height: 700px;
             display: flex;
             flex-direction: column;
         }
 
+        /* === HEADER AVANZATO === */
         .chat-header {
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             color: white;
@@ -37,28 +38,78 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            position: relative;
         }
 
-        .avatar {
-            width: 50px;
-            height: 50px;
-            background: rgba(255,255,255,0.2);
+        .andrea-avatar {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><defs><linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ff6b35;stop-opacity:1" /><stop offset="100%" style="stop-color:%23f39c12;stop-opacity:1" /></linearGradient></defs><circle cx="30" cy="30" r="28" fill="url(%23grad1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><text x="30" y="40" text-anchor="middle" fill="white" font-size="20" font-weight="bold">AP</text></svg>') center/cover;
+            border: 3px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: avatarPulse 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        .andrea-avatar::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 16px;
+            height: 16px;
+            background: #10b981;
+            border-radius: 50%;
+            border: 2px solid white;
+            animation: onlineIndicator 2s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes onlineIndicator {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .header-info h2 {
             margin: 0;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            font-weight: 600;
         }
 
         .header-info p {
             margin: 0;
             opacity: 0.9;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+        }
+
+        .coaching-style {
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        .user-avatar-mini {
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .back-btn {
@@ -78,19 +129,27 @@
 
         .back-btn:hover {
             background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
         }
 
+        /* === MESSAGGI AVANZATI === */
         .messages-container {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #f8f9fa;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
         }
 
         .message {
             display: flex;
             margin-bottom: 20px;
-            gap: 10px;
+            gap: 12px;
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        @keyframes messageSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message.user {
@@ -98,64 +157,95 @@
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .message-avatar:hover {
+            transform: scale(1.05);
         }
 
         .message.user .message-avatar {
-            background: #007bff;
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
             color: white;
+            border: 2px solid rgba(59,130,246,0.3);
+            box-shadow: 0 3px 12px rgba(59,130,246,0.2);
         }
 
         .message.andrea .message-avatar {
-            background: linear-gradient(45deg, #ff6b35, #f39c12);
-            color: white;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45"><defs><linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23ff6b35;stop-opacity:1" /><stop offset="100%" style="stop-color:%23f39c12;stop-opacity:1" /></linearGradient></defs><circle cx="22.5" cy="22.5" r="20" fill="url(%23grad2)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><text x="22.5" y="28" text-anchor="middle" fill="white" font-size="14" font-weight="bold">AP</text></svg>') center/cover;
+            border: 2px solid rgba(255,107,53,0.3);
+            box-shadow: 0 3px 12px rgba(255,107,53,0.2);
         }
 
         .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 20px;
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 18px;
             word-wrap: break-word;
             white-space: pre-wrap;
+            position: relative;
+            line-height: 1.5;
         }
 
         .message.user .message-content {
-            background: #007bff;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 3px 15px rgba(0,123,255,0.3);
         }
 
         .message.andrea .message-content {
-            background: white;
-            color: #333;
-            border: 1px solid #eee;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #2c3e50;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
         }
 
         .message-time {
             font-size: 0.75rem;
-            margin-top: 5px;
+            margin-top: 8px;
             opacity: 0.7;
+            font-weight: 500;
         }
 
+        .coaching-tip {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 4px solid #f39c12;
+            padding: 12px 16px;
+            margin-top: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        /* === TYPING INDICATOR AVANZATO === */
         .typing-indicator {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 15px 20px;
-            background: white;
-            border-radius: 20px;
-            border-bottom-left-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 70%;
+            gap: 12px;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            max-width: 75%;
+            border: 1px solid #e9ecef;
+        }
+
+        .typing-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+            font-style: italic;
         }
 
         .typing-dots {
@@ -179,16 +269,34 @@
             30% { transform: scale(1.2); opacity: 1; }
         }
 
+        /* === QUICK REPLIES AVANZATE === */
         .quick-replies {
-            padding: 15px 20px;
-            background: white;
-            border-top: 1px solid #eee;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-top: 1px solid #e9ecef;
         }
 
-        .quick-replies p {
-            font-size: 0.8rem;
-            color: #666;
-            margin-bottom: 10px;
+        .quick-replies-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .quick-replies-header p {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .personality-indicator {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
         }
 
         .quick-replies-container {
@@ -198,82 +306,152 @@
         }
 
         .quick-reply-btn {
-            background: #f1f3f4;
-            border: none;
-            padding: 8px 12px;
+            background: linear-gradient(135deg, #f1f3f4 0%, #e8eaed 100%);
+            border: 1px solid #dadce0;
+            padding: 10px 16px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 500;
+            color: #3c4043;
         }
 
         .quick-reply-btn:hover {
-            background: #e0e0e0;
+            background: linear-gradient(135deg, #e8f0fe 0%, #d2e3fc 100%);
+            border-color: #4285f4;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(66,133,244,0.2);
         }
 
+        /* === INPUT AVANZATO === */
         .input-container {
             padding: 20px;
-            background: white;
-            border-top: 1px solid #eee;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-top: 1px solid #e9ecef;
             display: flex;
-            gap: 10px;
+            gap: 12px;
             align-items: end;
         }
 
-        .message-input {
+        .input-wrapper {
             flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            padding: 12px 16px;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            border: 2px solid #e9ecef;
+            border-radius: 24px;
+            padding: 14px 20px;
             font-size: 14px;
             resize: none;
-            max-height: 100px;
-            min-height: 44px;
+            max-height: 120px;
+            min-height: 50px;
             font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
         }
 
         .message-input:focus {
             outline: none;
             border-color: #ff6b35;
-            box-shadow: 0 0 0 2px rgba(255,107,53,0.2);
+            box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+            background: #fffbf8;
+        }
+
+        .input-counter {
+            position: absolute;
+            bottom: -20px;
+            right: 8px;
+            font-size: 0.7rem;
+            color: #6c757d;
         }
 
         .send-btn {
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             color: white;
             border: none;
-            width: 44px;
-            height: 44px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            box-shadow: 0 3px 12px rgba(255,107,53,0.3);
         }
 
         .send-btn:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+            transform: scale(1.05) translateY(-1px);
+            box-shadow: 0 5px 20px rgba(255,107,53,0.4);
         }
 
         .send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none !important;
         }
 
-        .input-help {
-            text-align: center;
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 8px;
+        /* === CONVERSAZIONI SALVATE === */
+        .chat-history-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
         }
 
+        .chat-history-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* === NOTIFICHE === */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(16,185,129,0.3);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 20px rgba(239,68,68,0.3);
+        }
+
+        /* === UTILITIES === */
         .hidden {
             display: none !important;
         }
 
-        /* Responsive */
+        .pulse {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* === RESPONSIVE === */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -281,33 +459,51 @@
             
             .chat-container {
                 height: calc(100vh - 20px);
-                border-radius: 10px;
+                border-radius: 15px;
             }
             
             .message-content {
                 max-width: 85%;
+            }
+
+            .user-avatar-mini {
+                right: 70px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .quick-replies-container {
+                flex-direction: column;
+            }
+
+            .quick-reply-btn {
+                text-align: left;
             }
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <!-- Header -->
+        <!-- Header Avanzato -->
         <div class="chat-header">
-            <a href="../user-dashboard.html" class="back-btn">← Dashboard</a>
-            <div class="avatar">👨‍💼</div>
+            <button class="chat-history-btn" onclick="toggleChatHistory()">📋 Cronologia</button>
+            <div class="user-avatar-mini" id="userAvatarMini">💪</div>
+            <a href="user-dashboard.html" class="back-btn">← Dashboard</a>
+            
+            <div class="andrea-avatar"></div>
             <div class="header-info">
                 <h2>Andrea Padoan</h2>
-                <p>Lifestyle Coach • Online ora</p>
+                <p>Lifestyle Coach • <span id="coachStatus">Online ora</span></p>
+                <div class="coaching-style" id="coachingStyle">Stile: Bilanciato e olistico</div>
             </div>
         </div>
 
-        <!-- Messages -->
+        <!-- Messages Container -->
         <div class="messages-container" id="messagesContainer">
             <div class="message andrea">
-                <div class="message-avatar">👨‍💼</div>
+                <div class="message-avatar"></div>
                 <div class="message-content">
-                    <div>Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
+                    <div id="welcomeMessage">Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
 
 Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset. Dimmi, cosa ti ha portato qui oggi?</div>
                     <div class="message-time" id="firstMessageTime"></div>
@@ -315,40 +511,106 @@ Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.
             </div>
         </div>
 
-        <!-- Quick Replies -->
+        <!-- Quick Replies Personalizzate -->
         <div class="quick-replies" id="quickReplies">
-            <p>Inizia con una di queste:</p>
-            <div class="quick-replies-container">
-                <button class="quick-reply-btn" onclick="selectQuickReply('🎯 Voglio fare il test lifestyle')">🎯 Voglio fare il test lifestyle</button>
-                <button class="quick-reply-btn" onclick="selectQuickReply('💪 Come posso trovare motivazione?')">💪 Come posso trovare motivazione?</button>
-                <button class="quick-reply-btn" onclick="selectQuickReply('😴 Ho problemi di energia e stress')">😴 Ho problemi di energia e stress</button>
-                <button class="quick-reply-btn" onclick="selectQuickReply('🍎 Aiutami con l\'alimentazione')">🍎 Aiutami con l'alimentazione</button>
-                <button class="quick-reply-btn" onclick="selectQuickReply('🚀 Voglio iniziare il percorso')">🚀 Voglio iniziare il percorso</button>
+            <div class="quick-replies-header">
+                <p>Inizia con una di queste:</p>
+                <div class="personality-indicator" id="personalityIndicator">Determinato</div>
+            </div>
+            <div class="quick-replies-container" id="quickRepliesContainer">
+                <!-- Dinamico basato su avatar -->
             </div>
         </div>
 
-        <!-- Input -->
+        <!-- Input Avanzato -->
         <div class="input-container">
-            <textarea 
-                id="messageInput" 
-                class="message-input" 
-                placeholder="Scrivi il tuo messaggio..."
-                rows="1"
-            ></textarea>
+            <div class="input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Scrivi il tuo messaggio..."
+                    rows="1"
+                    maxlength="1000"
+                ></textarea>
+                <div class="input-counter" id="inputCounter">0/1000</div>
+            </div>
             <button id="sendBtn" class="send-btn" onclick="sendMessage()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22,2 15,22 11,13 2,9"></polygon>
                 </svg>
             </button>
         </div>
-        <div class="input-help">
-            Premi Invio per inviare • Shift+Invio per andare a capo
-        </div>
     </div>
 
-    <script>
-        const ANDREA_PROMPT = `Sei Andrea Padoan, Lifestyle Coach specializzato nella trasformazione del mindset e degli stili di vita.
+    <!-- Notification Container -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Load Avatar System -->
+    <script src="../api/firebase-lifestyle-integration.js" type="module"></script>
+    <script src="../utils/avatar-system.js" type="module"></script>
+    
+    <script type="module">
+        // Import avatar functions
+        import { 
+            getUserAvatar, 
+            getAndreaMessage, 
+            EXTENDED_AVATAR_DATA 
+        } from '../api/firebase-lifestyle-integration.js';
+        
+        import { getAvatarManager } from '../utils/avatar-system.js';
+
+        // === CONFIGURAZIONE CHAT ===
+        let currentUserId = 'guest_' + Date.now();
+        let userAvatar = null;
+        let messages = [];
+        let isTyping = false;
+        let chatHistory = [];
+
+        // Messaggi personalizzati per ogni avatar
+        const AVATAR_QUICK_REPLIES = {
+            'avatar_1': [ // Determinato
+                '💪 Sono pronto a cambiare la mia vita',
+                '🎯 Voglio obiettivi chiari e concreti',
+                '🏋️ Come posso trovare disciplina?',
+                '⚡ Dammi strategie pratiche'
+            ],
+            'avatar_2': [ // Motivato
+                '🚀 Voglio accelerare i miei risultati',
+                '💡 Dimmi le migliori tecniche innovative',
+                '⚡ Come posso essere più produttivo?',
+                '🌟 Aiutami a mantenere la motivazione alta'
+            ],
+            'avatar_6': [ // Zen
+                '🧘 Come posso trovare più equilibrio?',
+                '🌱 Voglio crescere con gradualità',
+                '☯️ Aiutami a gestire stress e ansia',
+                '🕯️ Insegnami tecniche di mindfulness'
+            ],
+            'avatar_9': [ // Leader
+                '👑 Voglio sviluppare leadership personale',
+                '🎯 Come posso influenzare positivamente?',
+                '📈 Strategie per il successo a lungo termine',
+                '💼 Bilanciare vita professionale e personale'
+            ]
+        };
+
+        // Stili di coaching personalizzati
+        const COACHING_STYLES = {
+            'avatar_1': 'Diretto e pratico',
+            'avatar_2': 'Dinamico e ispirante', 
+            'avatar_3': 'Rapido e coinvolgente',
+            'avatar_4': 'Incoraggiante e positivo',
+            'avatar_5': 'Sfidante e orientato ai risultati',
+            'avatar_6': 'Meditativo e graduale',
+            'avatar_7': 'Esplorativo e flessibile',
+            'avatar_8': 'Creativo e personalizzato',
+            'avatar_9': 'Autorevole e visionario',
+            'avatar_10': 'Bilanciato e olistico'
+        };
+
+        // === BASE PROMPT ANDREA ===
+        const ANDREA_BASE_PROMPT = `Sei Andrea Padoan, Lifestyle Coach specializzato nella trasformazione del mindset e degli stili di vita.
 
 ## LA TUA STORIA E MISSIONE:
 Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissuto lo stress, la mancanza di energia e la sensazione di vivere in "pilota automatico". Hai capito che il vero cambiamento non inizia dal corpo, ma dalla MENTE.
@@ -362,33 +624,123 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
 3. **Mindset e Motivazione**: Superare credenze limitanti, mentalità di crescita, auto-motivazione
 4. **Lifestyle Design**: Routine mattutine/serali, organizzazione tempo, integrazione movimento
 
-## IL TUO STILE COMUNICATIVO:
-- Autentico ed empatico
-- Professionale ma accessibile
-- Orientato all'azione
-- Motivazionale
-- Personalizzato
-
 ## FRASI CARATTERISTICHE:
 - "Il corpo si trasforma quando la mente è pronta"
 - "Non basta allenarsi e mangiare bene, serve il mindset giusto"
 - "Sono stato anche io uno come te... che premeva il pulsante OFF ogni sera"
-- "Il vero cambiamento parte dalle abitudini quotidiane"
+- "Il vero cambiamento parte dalle abitudini quotidiane"`;
 
-Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera comprensione per le sfide della persona.`;
+        // === INIZIALIZZAZIONE ===
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeChat();
+            setupEventListeners();
+        });
 
-        let messages = [];
-        let isTyping = false;
+        async function initializeChat() {
+            try {
+                console.log('🚀 Inizializzazione chat avatar...');
+                
+                // Carica avatar utente
+                await loadUserAvatar();
+                
+                // Setup UI personalizzata
+                setupPersonalizedUI();
+                
+                // Setup initial message time
+                document.getElementById('firstMessageTime').textContent = new Date().toLocaleTimeString();
+                
+                // Carica cronologia se esistente
+                await loadChatHistory();
+                
+                console.log('✅ Chat avatar inizializzata');
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione chat:', error);
+                showNotification('Errore inizializzazione chat', 'error');
+            }
+        }
 
-        // Inizializza chat
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('firstMessageTime').textContent = new Date().toLocaleTimeString();
+        async function loadUserAvatar() {
+            try {
+                const avatar = await getUserAvatar(currentUserId);
+                userAvatar = avatar && avatar.preset ? avatar.preset : EXTENDED_AVATAR_DATA['avatar_1'];
+                
+                console.log('✅ Avatar utente caricato:', userAvatar.name);
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento avatar:', error);
+                userAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
+            }
+        }
+
+        function setupPersonalizedUI() {
+            if (!userAvatar) return;
+            
+            // Update user avatar mini
+            const userAvatarMini = document.getElementById('userAvatarMini');
+            userAvatarMini.textContent = userAvatar.emoji;
+            userAvatarMini.style.background = `linear-gradient(135deg, ${userAvatar.colors.primary} 0%, ${userAvatar.colors.secondary} 100%)`;
+            
+            // Update coaching style
+            const coachingStyle = document.getElementById('coachingStyle');
+            coachingStyle.textContent = `Stile: ${COACHING_STYLES[userAvatar.id] || 'Personalizzato'}`;
+            
+            // Update personality indicator
+            const personalityIndicator = document.getElementById('personalityIndicator');
+            personalityIndicator.textContent = userAvatar.name;
+            personalityIndicator.style.background = `linear-gradient(135deg, ${userAvatar.colors.primary} 0%, ${userAvatar.colors.secondary} 100%)`;
+            
+            // Setup personalized quick replies
+            setupQuickReplies();
+            
+            // Personalize welcome message
+            personalizeWelcomeMessage();
+        }
+
+        function setupQuickReplies() {
+            const container = document.getElementById('quickRepliesContainer');
+            const replies = AVATAR_QUICK_REPLIES[userAvatar.id] || AVATAR_QUICK_REPLIES['avatar_1'];
+            
+            container.innerHTML = '';
+            replies.forEach(reply => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-reply-btn';
+                btn.textContent = reply;
+                btn.onclick = () => selectQuickReply(reply);
+                container.appendChild(btn);
+            });
+        }
+
+        function personalizeWelcomeMessage() {
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const personalizedMessage = `Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
+
+Vedo che hai scelto l'avatar "${userAvatar.name}" - perfetto! Questo mi dice che apprezzi ${userAvatar.personality.toLowerCase()}. 
+
+Adatterò il mio approccio di coaching al tuo stile: useremo un metodo ${COACHING_STYLES[userAvatar.id].toLowerCase()}.
+
+Dimmi, cosa ti ha portato qui oggi?`;
+            
+            welcomeMessage.textContent = personalizedMessage;
+        }
+
+        function setupEventListeners() {
+            const input = document.getElementById('messageInput');
             
             // Auto-resize textarea
-            const input = document.getElementById('messageInput');
             input.addEventListener('input', function() {
-                this.style.height = '44px';
-                this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+                this.style.height = '50px';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                
+                // Update character counter
+                const counter = document.getElementById('inputCounter');
+                counter.textContent = `${this.value.length}/1000`;
+                
+                if (this.value.length > 900) {
+                    counter.style.color = '#ef4444';
+                } else {
+                    counter.style.color = '#6c757d';
+                }
             });
 
             // Enter to send
@@ -398,8 +750,9 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                     sendMessage();
                 }
             });
-        });
+        }
 
+        // === GESTIONE MESSAGGI ===
         function selectQuickReply(text) {
             document.getElementById('messageInput').value = text;
             sendMessage();
@@ -412,12 +765,17 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
             
-            const avatar = sender === 'user' ? '👤' : '👨‍💼';
+            let avatarContent = '';
+            if (sender === 'user') {
+                avatarContent = userAvatar.emoji;
+            } else {
+                avatarContent = ''; // Andrea usa background image
+            }
             
             messageDiv.innerHTML = `
-                <div class="message-avatar">${avatar}</div>
+                <div class="message-avatar">${avatarContent}</div>
                 <div class="message-content">
-                    <div>${text}</div>
+                    <div>${formatMessage(text, sender)}</div>
                     <div class="message-time">${messageTime}</div>
                 </div>
             `;
@@ -426,9 +784,27 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             // Hide quick replies after first user message
-            if (sender === 'user' && messages.length === 0) {
+            if (sender === 'user' && messages.length === 1) {
                 document.getElementById('quickReplies').classList.add('hidden');
             }
+            
+            // Save to history
+            saveChatMessage({ sender, text, timestamp: messageTime });
+        }
+
+        function formatMessage(text, sender) {
+            if (sender === 'andrea') {
+                // Add coaching tips if message contains advice
+                if (text.includes('consiglio') || text.includes('suggerimento') || text.includes('ricorda')) {
+                    const parts = text.split('\n\n');
+                    if (parts.length > 1) {
+                        const mainText = parts[0];
+                        const tip = parts.slice(1).join('\n\n');
+                        return `${mainText}<div class="coaching-tip">💡 ${tip}</div>`;
+                    }
+                }
+            }
+            return text;
         }
 
         function showTypingIndicator() {
@@ -437,9 +813,19 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             typingDiv.className = 'message andrea';
             typingDiv.id = 'typingIndicator';
             
+            const typingMessages = [
+                'Andrea sta pensando...',
+                'Elaborando la risposta perfetta...',
+                'Preparando consigli personalizzati...',
+                'Analizzando la tua situazione...'
+            ];
+            
+            const randomMessage = typingMessages[Math.floor(Math.random() * typingMessages.length)];
+            
             typingDiv.innerHTML = `
-                <div class="message-avatar">👨‍💼</div>
+                <div class="message-avatar"></div>
                 <div class="typing-indicator">
+                    <div class="typing-text">${randomMessage}</div>
                     <div class="typing-dots">
                         <div class="typing-dot"></div>
                         <div class="typing-dot"></div>
@@ -459,6 +845,7 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             }
         }
 
+        // === INVIO MESSAGGI ===
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const sendBtn = document.getElementById('sendBtn');
@@ -472,7 +859,8 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             
             // Clear input and disable send
             input.value = '';
-            input.style.height = '44px';
+            input.style.height = '50px';
+            document.getElementById('inputCounter').textContent = '0/1000';
             sendBtn.disabled = true;
             isTyping = true;
             
@@ -480,6 +868,9 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             showTypingIndicator();
             
             try {
+                // Generate personalized prompt
+                const personalizedPrompt = generatePersonalizedPrompt();
+                
                 const response = await fetch("https://api.anthropic.com/v1/messages", {
                     method: "POST",
                     headers: {
@@ -487,9 +878,9 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                     },
                     body: JSON.stringify({
                         model: "claude-sonnet-4-20250514",
-                        max_tokens: 1000,
+                        max_tokens: 1200,
                         messages: [
-                            { role: "system", content: ANDREA_PROMPT },
+                            { role: "system", content: personalizedPrompt },
                             ...messages
                         ]
                     })
@@ -502,16 +893,120 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                 addMessage('andrea', andreaResponse);
                 messages.push({role: 'assistant', content: andreaResponse});
                 
+                showNotification('Messaggio ricevuto', 'success');
+                
             } catch (error) {
                 console.error('Errore nella chat:', error);
                 hideTypingIndicator();
-                addMessage('andrea', "Mi dispiace, c'è stato un problema tecnico. Riprova tra un momento. Nel frattempo, ricorda: ogni ostacolo è un'opportunità per crescere! 💪");
+                
+                const errorMessage = `Mi dispiace, c'è stato un problema tecnico. Riprova tra un momento. 
+
+Nel frattempo, ricorda: ogni ostacolo è un'opportunità per crescere! 💪
+
+Come persona ${userAvatar.personality.toLowerCase()}, sono sicuro che supererai anche questa piccola sfida.`;
+                
+                addMessage('andrea', errorMessage);
+                showNotification('Errore di connessione', 'error');
+                
             } finally {
                 isTyping = false;
                 sendBtn.disabled = false;
                 input.focus();
             }
         }
+
+        function generatePersonalizedPrompt() {
+            const avatarInfo = userAvatar ? `
+L'utente ha scelto l'avatar "${userAvatar.name}" che rappresenta una personalità ${userAvatar.personality.toLowerCase()} con caratteristiche: ${userAvatar.traits.join(', ')}.
+
+ADATTA IL TUO STILE DI COACHING:
+- Usa un approccio ${COACHING_STYLES[userAvatar.id].toLowerCase()}
+- Fai riferimenti alla sua personalità quando appropriato
+- Personalizza i consigli secondo le sue caratteristiche
+- Usa un tono che risuoni con il suo tipo di avatar
+
+ESEMPIO: Se parli con un "Guerriero", sii più diretto e orientato ai risultati. Se parli con uno "Zen", sii più meditativo e graduale.
+            ` : '';
+
+            return `${ANDREA_BASE_PROMPT}
+
+${avatarInfo}
+
+## IL TUO STILE COMUNICATIVO:
+- Autentico ed empatico
+- Professionale ma accessibile  
+- Orientato all'azione
+- Motivazionale
+- Personalizzato per l'avatar dell'utente
+
+Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera comprensione per le sfide della persona e adattandoti al suo stile di personalità.`;
+        }
+
+        // === CRONOLOGIA CHAT ===
+        async function loadChatHistory() {
+            try {
+                const saved = localStorage.getItem(`chat_${currentUserId}`);
+                if (saved) {
+                    chatHistory = JSON.parse(saved);
+                    console.log(`📋 Cronologia caricata: ${chatHistory.length} messaggi`);
+                }
+            } catch (error) {
+                console.error('❌ Errore caricamento cronologia:', error);
+            }
+        }
+
+        function saveChatMessage(message) {
+            try {
+                chatHistory.push({
+                    ...message,
+                    timestamp: new Date().toISOString(),
+                    avatarUsed: userAvatar?.id
+                });
+                
+                // Keep only last 100 messages
+                if (chatHistory.length > 100) {
+                    chatHistory = chatHistory.slice(-100);
+                }
+                
+                localStorage.setItem(`chat_${currentUserId}`, JSON.stringify(chatHistory));
+            } catch (error) {
+                console.error('❌ Errore salvataggio messaggio:', error);
+            }
+        }
+
+        window.toggleChatHistory = function() {
+            if (chatHistory.length === 0) {
+                showNotification('Nessuna cronologia disponibile', 'info');
+                return;
+            }
+            
+            const summary = `Cronologia Chat 📋
+            
+Messaggi totali: ${chatHistory.length}
+Avatar utilizzato: ${userAvatar?.name || 'Non definito'}
+Prima conversazione: ${new Date(chatHistory[0]?.timestamp).toLocaleDateString()}
+Ultima attività: ${new Date(chatHistory[chatHistory.length - 1]?.timestamp).toLocaleDateString()}`;
+            
+            alert(summary);
+        };
+
+        // === NOTIFICHE ===
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // === FUNZIONI GLOBALI ===
+        window.sendMessage = sendMessage;
+        window.selectQuickReply = selectQuickReply;
+        
+        console.log('🎯 Chat Andrea Avatar System caricata completamente!');
     </script>
 </body>
 </html>
