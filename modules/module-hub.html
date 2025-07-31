@@ -5,789 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hub Coaching - 7 Settimane LifestyleFitnessCoach</title>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-            authDomain: "tribucoach-a2254.firebaseapp.com",
-            projectId: "tribucoach-a2254",
-            storageBucket: "tribucoach-a2254.firebasestorage.app",
-            messagingSenderId: "425200296836",
-            appId: "1:425200296836:web:7835188f40f4348567ab48"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Stato progresso utente
-        let userProgress = {
-            currentWeek: 1,
-            completedWeeks: [],
-            hasStartedCoaching: false,
-            userId: null
-        };
-
-        // 🚀 INIZIALIZZAZIONE SISTEMA SEMPLIFICATO (FIX TEMPORANEO)
-        async function initializeProgressSystem() {
-            console.log('🚀 Inizializzazione sistema ModuleHub...');
-            
-            // Ottieni userId dalla URL o localStorage
-            const urlParams = new URLSearchParams(window.location.search);
-            let userId = urlParams.get('userId') || localStorage.getItem('lifestyle_user_id');
-            
-            // FIX TEMPORANEO: Crea userId se non presente
-            if (!userId) {
-                userId = generateTemporaryUserId();
-                localStorage.setItem('lifestyle_user_id', userId);
-                console.log('🆔 Creato userId temporaneo:', userId);
-            }
-
-            userProgress.userId = userId;
-            
-            // Carica dati utente e progress
-            await loadUserData(userId);
-            await loadUserProgress(userId);
-            
-            // Aggiorna UI
-            updateModuleStates();
-            updateProgressBar();
-        }
-
-        // 🆔 GENERA USER ID TEMPORANEO
-        function generateTemporaryUserId() {
-            const timestamp = Date.now();
-            const random = Math.random().toString(36).substr(2, 9);
-            return `temp_${timestamp}_${random}`;
-        }
-
-        // 📊 CARICA DATI UTENTE E MOSTRA PROFILO (FIX TEMPORANEO)
-        async function loadUserData(userId) {
-            try {
-                const collections = ['lifestyle_profiles', 'quiz_results'];
-                let userData = null;
-                
-                for (const collectionName of collections) {
-                    try {
-                        const docRef = doc(db, collectionName, userId);
-                        const docSnap = await getDoc(docRef);
-                        
-                        if (docSnap.exists()) {
-                            userData = docSnap.data();
-                            console.log(`✅ Dati utente caricati da ${collectionName}`);
-                            break;
-                        }
-                    } catch (error) {
-                        console.warn(`Collezione ${collectionName} non trovata:`, error);
-                    }
-                }
-                
-                if (userData) {
-                    displayQuizResults(userData);
-                } else {
-                    console.log('⚠️ Nessun dato utente trovato, creando profilo demo');
-                    // FIX TEMPORANEO: Crea profilo demo
-                    const demoProfile = createDemoProfile(userId);
-                    displayQuizResults(demoProfile);
-                    
-                    // Salva profilo demo su Firebase
-                    await saveDemoProfile(userId, demoProfile);
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento dati utente:', error);
-                // FIX TEMPORANEO: Mostra profilo demo anche in caso di errore
-                const demoProfile = createDemoProfile(userId);
-                displayQuizResults(demoProfile);
-            }
-        }
-
-        // 🎭 CREA PROFILO DEMO (FIX TEMPORANEO)
-        function createDemoProfile(userId) {
-            return {
-                userId: userId,
-                name: 'Utente Demo',
-                email: 'demo@example.com',
-                profileType: 'Guerriero Determinato',
-                description: 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.',
-                readinessLevel: 4,
-                commitmentLevel: 3,
-                goals: ['Migliorare benessere', 'Aumentare energia'],
-                challenges: ['Gestione tempo', 'Motivazione'],
-                scores: {
-                    benessereEmotivo: 2,
-                    saluteFisica: 3,
-                    relazioniSociali: 2,
-                    vitaProfessionale: 3
-                },
-                source: 'demo_profile',
-                timestamp: new Date()
-            };
-        }
-
-        // 💾 SALVA PROFILO DEMO
-        async function saveDemoProfile(userId, profileData) {
-            try {
-                const docRef = doc(db, 'lifestyle_profiles', userId);
-                await setDoc(docRef, {
-                    ...profileData,
-                    createdAt: serverTimestamp(),
-                    status: 'demo',
-                    source: 'temporary_access'
-                });
-                console.log('✅ Profilo demo salvato');
-            } catch (error) {
-                console.warn('⚠️ Errore salvataggio profilo demo:', error);
-            }
-        }
-
-        // 📈 CARICA PROGRESS UTENTE (MIGLIORATO)
-        async function loadUserProgress(userId) {
-            try {
-                console.log('📈 Caricando progress per utente:', userId);
-                
-                const collections = ['lifestyle_profiles', 'quiz_results'];
-                let progressData = null;
-                
-                for (const collectionName of collections) {
-                    try {
-                        const docRef = doc(db, collectionName, userId);
-                        const docSnap = await getDoc(docRef);
-                        
-                        if (docSnap.exists()) {
-                            progressData = docSnap.data();
-                            console.log(`✅ Progress caricato da ${collectionName}`);
-                            break;
-                        }
-                    } catch (error) {
-                        console.warn(`⚠️ Errore caricamento da ${collectionName}:`, error);
-                    }
-                }
-                
-                if (progressData) {
-                    userProgress = {
-                        userId: userId,
-                        currentWeek: progressData.currentWeek || 1,
-                        completedWeeks: progressData.completedWeeks || [],
-                        hasStartedCoaching: progressData.hasStartedCoaching || false,
-                        lastUpdate: progressData.lastUpdate || new Date()
-                    };
-                    
-                    console.log('✅ Progress caricato con successo:', userProgress);
-                } else {
-                    console.log('⚠️ Nessun progress trovato, inizializzazione default');
-                    userProgress = {
-                        userId: userId,
-                        currentWeek: 1,
-                        completedWeeks: [],
-                        hasStartedCoaching: false
-                    };
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento progress:', error);
-                // Inizializza default anche in caso di errore
-                userProgress = {
-                    userId: userId,
-                    currentWeek: 1,
-                    completedWeeks: [],
-                    hasStartedCoaching: false
-                };
-            }
-        }
-
-        // 🎯 AGGIORNA STATI MODULI (LOGICA SEMPLIFICATA)
-        function updateModuleStates() {
-            const modules = document.querySelectorAll('.week-module');
-            
-            modules.forEach((module, index) => {
-                const weekNumber = index + 1;
-                const isCompleted = userProgress.completedWeeks.includes(weekNumber);
-                const isAccessible = weekNumber <= userProgress.currentWeek;
-                const isCurrent = weekNumber === userProgress.currentWeek;
-                
-                // Reset classi
-                module.classList.remove('accessible', 'completed', 'current', 'locked');
-                
-                const statusEl = module.querySelector('.week-status');
-                const buttonEl = module.querySelector('.week-button');
-                
-                // Applica stato corretto
-                if (isCompleted) {
-                    module.classList.add('completed');
-                    statusEl.textContent = '✅ Completata';
-                    buttonEl.textContent = '👁️ Rivedi';
-                    buttonEl.disabled = false;
-                    buttonEl.onclick = () => reviewWeek(weekNumber);
-                } else if (isCurrent && isAccessible) {
-                    module.classList.add('current');
-                    statusEl.textContent = '🔥 Attuale';
-                    buttonEl.textContent = `🚀 Inizia Settimana ${weekNumber}`;
-                    buttonEl.disabled = false;
-                    buttonEl.onclick = () => accessWeek(weekNumber);
-                } else if (isAccessible) {
-                    module.classList.add('accessible');
-                    statusEl.textContent = '▶️ Disponibile';
-                    buttonEl.textContent = `🚀 Inizia Settimana ${weekNumber}`;
-                    buttonEl.disabled = false;
-                    buttonEl.onclick = () => accessWeek(weekNumber);
-                } else {
-                    module.classList.add('locked');
-                    statusEl.textContent = '🔒 Bloccata';
-                    buttonEl.textContent = `🔒 Completa Settimana ${weekNumber - 1}`;
-                    buttonEl.disabled = true;
-                    buttonEl.onclick = (e) => {
-                        e.preventDefault();
-                        showLockedMessage(weekNumber);
-                        return false;
-                    };
-                }
-            });
-        }
-
-        // 🚀 ACCESSO SETTIMANA
-        function accessWeek(weekNumber) {
-            console.log(`🚀 Accesso settimana ${weekNumber}`);
-            
-            // Verifica accesso
-            if (weekNumber > userProgress.currentWeek) {
-                showError(`Non puoi accedere alla settimana ${weekNumber}. Completa prima la settimana ${userProgress.currentWeek}.`);
-                return false;
-            }
-            
-            // URL settimane
-            const weekUrls = {
-                1: 'week-1.html',
-                2: 'week-2.html',
-                3: 'week-3.html',
-                4: 'week-4.html',
-                5: 'week-5.html',
-                6: 'week-6.html',
-                7: 'week-7.html'
-            };
-            
-            if (weekUrls[weekNumber]) {
-                // Tracking accesso
-                trackWeekAccess(weekNumber);
-                
-                // Redirect con userId
-                window.location.href = `${weekUrls[weekNumber]}?userId=${userProgress.userId}&week=${weekNumber}`;
-            } else {
-                showError(`Settimana ${weekNumber} non ancora disponibile.`);
-            }
-        }
-
-        // 👁️ RIVEDI SETTIMANA COMPLETATA
-        function reviewWeek(weekNumber) {
-            console.log(`👁️ Review settimana ${weekNumber}`);
-            accessWeek(weekNumber);
-        }
-
-        // ✅ COMPLETA SETTIMANA
-        window.completeWeek = async function(weekNumber) {
-            console.log(`✅ Completamento settimana ${weekNumber}`);
-            
-            try {
-                // Validazioni
-                if (weekNumber !== userProgress.currentWeek) {
-                    throw new Error(`Tentativo di completare settimana ${weekNumber} ma quella corrente è ${userProgress.currentWeek}`);
-                }
-                
-                if (userProgress.completedWeeks.includes(weekNumber)) {
-                    console.log('⚠️ Settimana già completata');
-                    return;
-                }
-                
-                // Aggiorna progress
-                userProgress.completedWeeks.push(weekNumber);
-                userProgress.currentWeek = Math.min(weekNumber + 1, 7);
-                userProgress.hasStartedCoaching = true;
-                
-                // Salva su Firebase
-                await saveProgressToFirebase();
-                
-                // Aggiorna UI
-                updateModuleStates();
-                updateProgressBar();
-                
-                // Notifica successo
-                showSuccess(`🎉 Settimana ${weekNumber} completata! ${weekNumber < 7 ? `Settimana ${weekNumber + 1} sbloccata.` : 'Percorso completato!'}`);
-                
-                // Tracking
-                trackWeekCompletion(weekNumber);
-                
-            } catch (error) {
-                console.error('❌ Errore completamento settimana:', error);
-                showError('Errore durante il completamento. Riprova.');
-            }
-        };
-
-        // 💾 SALVA PROGRESS SU FIREBASE (USANDO SETDOC)
-        async function saveProgressToFirebase() {
-            try {
-                console.log('💾 Salvando progress per utente:', userProgress.userId);
-                
-                const progressData = {
-                    userId: userProgress.userId,
-                    currentWeek: userProgress.currentWeek,
-                    completedWeeks: userProgress.completedWeeks,
-                    hasStartedCoaching: userProgress.hasStartedCoaching,
-                    lastUpdate: serverTimestamp(),
-                    source: 'module_hub',
-                    version: '1.0'
-                };
-                
-                // Prova prima lifestyle_profiles
-                try {
-                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
-                    await setDoc(docRef, progressData, { merge: true });
-                    console.log('✅ Progress salvato in lifestyle_profiles');
-                    return true;
-                } catch (error) {
-                    console.warn('⚠️ Errore lifestyle_profiles:', error);
-                }
-                
-                // Fallback: quiz_results
-                try {
-                    const docRef = doc(db, 'quiz_results', userProgress.userId);
-                    await setDoc(docRef, progressData, { merge: true });
-                    console.log('✅ Progress salvato in quiz_results');
-                    return true;
-                } catch (error) {
-                    console.warn('⚠️ Errore quiz_results:', error);
-                }
-                
-                // Ultimo tentativo: crea nuovo documento
-                try {
-                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
-                    await setDoc(docRef, {
-                        ...progressData,
-                        createdAt: serverTimestamp(),
-                        status: 'active'
-                    });
-                    console.log('✅ Progress salvato come nuovo documento');
-                    return true;
-                } catch (error) {
-                    console.error('❌ Errore creazione nuovo documento:', error);
-                    throw new Error('Impossibile salvare il progress su Firebase');
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore salvataggio Firebase:', error);
-                throw error;
-            }
-        }
-
-        // 📊 AGGIORNA PROGRESS BAR
-        function updateProgressBar() {
-            const progressPercentage = (userProgress.completedWeeks.length / 7) * 100;
-            const progressBar = document.querySelector('.progress-fill');
-            const progressText = document.querySelector('.progress-text');
-            
-            if (progressBar) {
-                progressBar.style.width = `${progressPercentage}%`;
-            }
-            
-            if (progressText) {
-                progressText.textContent = `${userProgress.completedWeeks.length}/7 settimane completate (${Math.round(progressPercentage)}%)`;
-            }
-        }
-
-        // 🔒 MESSAGGIO SETTIMANA BLOCCATA
-        function showLockedMessage(weekNumber) {
-            const requiredWeek = weekNumber - 1;
-            showError(`🔒 Settimana ${weekNumber} bloccata. Completa prima la settimana ${requiredWeek} per sbloccarla.`);
-        }
-
-        // 📊 TRACKING EVENTI
-        async function trackWeekAccess(weekNumber) {
-            console.log(`📊 Tracking accesso settimana ${weekNumber}`);
-        }
-
-        async function trackWeekCompletion(weekNumber) {
-            console.log(`📊 Tracking completamento settimana ${weekNumber}`);
-        }
-
-        // 💬 SISTEMA NOTIFICHE
-        function showSuccess(message) {
-            showNotification(message, 'success');
-        }
-
-        function showError(message) {
-            showNotification(message, 'error');
-        }
-
-        function showNotification(message, type) {
-            const existing = document.querySelector('.notification');
-            if (existing) existing.remove();
-            
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.innerHTML = message;
-            
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: bold;
-                z-index: 10000;
-                max-width: 400px;
-                animation: slideIn 0.3s ease-out;
-                ${type === 'success' ? 'background: linear-gradient(135deg, #4CAF50, #45a049);' : 'background: linear-gradient(135deg, #f44336, #d32f2f);'}
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.style.animation = 'slideOut 0.3s ease-in';
-                    setTimeout(() => notification.remove(), 300);
-                }
-            }, 5000);
-        }
-
-        // 🎨 MOSTRA RISULTATI QUIZ
-        function displayQuizResults(quizData) {
-            // Aggiorna info profilo
-            document.getElementById('userName').textContent = quizData.name || 'Utente';
-            
-            const profileType = quizData.profileType || determineProfileType(quizData);
-            const profileDescription = quizData.description || generateProfileDescription(profileType, quizData);
-            
-            document.getElementById('userQuadrant').textContent = profileDescription;
-            
-            const leadScore = calculateLeadScore(quizData);
-            const scoreEl = document.getElementById('leadScore');
-            scoreEl.textContent = `${Math.round(leadScore)}%`;
-            scoreEl.className = `lead-score ${leadScore >= 70 ? 'high' : leadScore >= 40 ? 'medium' : 'low'}`;
-            
-            // Genera analisi personalizzata
-            generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore);
-            
-            // Calcola e mostra punteggi aree benessere
-            calculateAndDisplayWellnessScores(quizData);
-        }
-
-        // 🎭 DETERMINA PROFILO DESCRITTIVO
-        function determineProfileType(quizData) {
-            const readiness = quizData.readiness_level || 3;
-            const commitment = quizData.commitment_level || 3;
-            
-            if (readiness >= 4 && commitment >= 4) return 'Atleta in Crescita';
-            if (readiness >= 4 && commitment < 4) return 'Esploratore Motivato';
-            if (readiness < 4 && commitment >= 4) return 'Guerriero Determinato';
-            return 'Guerriero Determinato'; // Default positivo
-        }
-
-        // 📝 GENERA DESCRIZIONE PROFILO
-        function generateProfileDescription(profileType, quizData) {
-            const descriptions = {
-                'Atleta in Crescita': 'Sei una persona con elevata motivazione e impegno. Hai le competenze per raggiungere grandi risultati nel tuo percorso di crescita personale.',
-                'Esploratore Motivato': 'Hai una forte motivazione al cambiamento e sei pronto a scoprire nuove strategie per migliorare il tuo benessere complessivo.',
-                'Guerriero Determinato': 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.'
-            };
-            
-            return descriptions[profileType] || descriptions['Guerriero Determinato'];
-        }
-
-        // 📊 CALCOLA LEAD SCORE
-        function calculateLeadScore(quizData) {
-            let score = 50; // Base score
-            
-            if (quizData.readiness_level) score += (quizData.readiness_level - 3) * 10;
-            if (quizData.commitment_level) score += (quizData.commitment_level - 3) * 10;
-            if (quizData.goals && quizData.goals.length > 0) score += 15;
-            if (quizData.challenges && quizData.challenges.length > 0) score += 10;
-            
-            return Math.max(0, Math.min(100, score));
-        }
-
-        // 🧠 GENERA ANALISI PERSONALIZZATA
-        function generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore) {
-            const name = quizData.name || 'Utente';
-            const score = Math.round(leadScore);
-            
-            // Situazione in sintesi
-            let summary = `<p><strong>Ciao ${name}</strong>, ho analizzato i risultati del tuo test e voglio condividere alcune riflessioni sulla tua situazione attuale.</p>`;
-            
-            summary += `<p><strong>Il tuo profilo:</strong> ${profileType}</p>`;
-            summary += `<p>${profileDescription}</p>`;
-            
-            if (score >= 70) {
-                summary += `<div class="highlight-box success">Il tuo punteggio è ${score}/100, che indica ottime potenzialità per la trasformazione!</div>`;
-            } else {
-                summary += `<div class="highlight-box warning">Il tuo punteggio è ${score}/100, che mostra alcune sfide da affrontare insieme.</div>`;
-            }
-            
-            document.getElementById('situationSummary').innerHTML = summary;
-            
-            // Aree di forza basate sul profilo
-            const strengths = getProfileStrengths(profileType);
-            document.getElementById('strengthsArea').innerHTML = '<ul>' + strengths.map(s => `<li>${s}</li>`).join('') + '</ul>';
-            
-            // Aree di miglioramento
-            const improvements = getProfileImprovements(profileType);
-            document.getElementById('improvementArea').innerHTML = '<ul>' + improvements.map(i => `<li>${i}</li>`).join('') + '</ul>';
-            
-            // Storia coaching personalizzata
-            const story = generateCoachingStory(profileType);
-            document.getElementById('coachingStory').innerHTML = story;
-        }
-
-        // 🏆 AREE DI FORZA PER PROFILO
-        function getProfileStrengths(profileType) {
-            const strengths = {
-                'Atleta in Crescita': [
-                    '🏆 Elevata motivazione e disciplina',
-                    '🎯 Capacità di mantenere l\'impegno',
-                    '📈 Orientamento ai risultati'
-                ],
-                'Esploratore Motivato': [
-                    '🚀 Grande entusiasmo per il cambiamento',
-                    '💡 Apertura a nuove strategie',
-                    '🌟 Energia positiva e proattività'
-                ],
-                'Guerriero Determinato': [
-                    '💪 Forte volontà di miglioramento',
-                    '🎯 Capacità di affrontare le sfide',
-                    '🌱 Potenziale di crescita elevato'
-                ]
-            };
-            
-            return strengths[profileType] || strengths['Guerriero Determinato'];
-        }
-
-        // ⚡ AREE DI MIGLIORAMENTO PER PROFILO
-        function getProfileImprovements(profileType) {
-            const improvements = {
-                'Atleta in Crescita': [
-                    '⚖️ Equilibrio tra impegno e riposo',
-                    '🧘 Gestione dello stress da performance',
-                    '🤝 Supporto sociale e relazionale'
-                ],
-                'Esploratore Motivato': [
-                    '🛠️ Sviluppo di strategie concrete',
-                    '📊 Monitoraggio dei progressi',
-                    '⏰ Gestione del tempo e priorità'
-                ],
-                'Guerriero Determinato': [
-                    '🧠 Sviluppo della fiducia in sé',
-                    '📈 Creazione di abitudini sostenibili',
-                    '💭 Gestione del dialogo interno'
-                ]
-            };
-            
-            return improvements[profileType] || improvements['Guerriero Determinato'];
-        }
-
-        // 💭 STORIA COACHING PERSONALIZZATA
-        function generateCoachingStory(profileType) {
-            const stories = {
-                'Atleta in Crescita': `
-                    <h3>💭 La mia storia ti suonerà familiare</h3>
-                    <p>Riconosco in te la determinazione che avevo quando ho iniziato la mia trasformazione. Sei già sulla strada giusta!</p>
-                    <div class="highlight-box info">
-                        <strong>Per persone come te:</strong> Il focus è sull'ottimizzazione e sul raggiungimento del massimo potenziale. Hai già le basi, ora possiamo puntare all'eccellenza.
-                    </div>
-                `,
-                'Esploratore Motivato': `
-                    <h3>💭 La mia storia ti suonerà familiare</h3>
-                    <p>La tua energia e voglia di scoprire nuove strategie mi ricorda quando ho iniziato a cercare il mio percorso di crescita.</p>
-                    <div class="highlight-box info">
-                        <strong>Per persone come te:</strong> Il focus è sulla scoperta di metodologie efficaci e sulla trasformazione dell'entusiasmo in risultati concreti.
-                    </div>
-                `,
-                'Guerriero Determinato': `
-                    <h3>💭 La mia storia ti suonerà familiare</h3>
-                    <p>Dopo 12 anni come manager stressato, riconosco perfettamente la tua determinazione nel voler cambiare. Sei nel posto giusto!</p>
-                    <div class="highlight-box info">
-                        <strong>Per persone come te:</strong> Il focus è sulla costruzione di fondamenta solide e sullo sviluppo graduale ma costante del benessere.
-                    </div>
-                `
-            };
-            
-            return stories[profileType] || stories['Guerriero Determinato'];
-        }
-
-        // 📊 CALCOLA E MOSTRA PUNTEGGI BENESSERE
-        function calculateAndDisplayWellnessScores(quizData) {
-            const scores = {
-                benessereEmotivo: Math.floor(Math.random() * 2) + 2, // 2-3
-                saluteFisica: Math.floor(Math.random() * 2) + 2, // 2-3
-                relazioniSociali: Math.floor(Math.random() * 2) + 2, // 2-3
-                vitaProfessionale: Math.floor(Math.random() * 2) + 3 // 3-4
-            };
-            
-            const scoresHtml = `
-                <div class="wellness-scores-section">
-                    <div class="scores-grid">
-                        <div class="score-card">
-                            <div class="score-number">${scores.benessereEmotivo}</div>
-                            <div class="score-label">Benessere Emotivo</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: ${scores.benessereEmotivo * 20}%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">${scores.saluteFisica}</div>
-                            <div class="score-label">Salute Fisica</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: ${scores.saluteFisica * 20}%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">${scores.relazioniSociali}</div>
-                            <div class="score-label">Relazioni Sociali</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: ${scores.relazioniSociali * 20}%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">${scores.vitaProfessionale}</div>
-                            <div class="score-label">Vita Professionale</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: ${scores.vitaProfessionale * 20}%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Inserisci dopo coaching story
-            const coachingStory = document.getElementById('coachingStory');
-            coachingStory.insertAdjacentHTML('afterend', scoresHtml);
-        }
-
-        // 🚀 INIZIA PERCORSO COACHING (MIGLIORATO)
-        window.startCoachingJourney = async function() {
-            console.log('🚀 Avvio percorso coaching...');
-            
-            try {
-                // Verifica che userId sia presente
-                if (!userProgress.userId) {
-                    showError('Errore: ID utente non trovato. Rifare il quiz.');
-                    return;
-                }
-                
-                // Aggiorna progress
-                userProgress.hasStartedCoaching = true;
-                userProgress.currentWeek = 1;
-                
-                // Mostra loading
-                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
-                startButtons.forEach(btn => {
-                    btn.textContent = '⏳ Salvando...';
-                    btn.disabled = true;
-                });
-                
-                // Salva su Firebase
-                await saveProgressToFirebase();
-                
-                // Aggiorna UI
-                updateModuleStates();
-                updateProgressBar();
-                
-                // Ripristina pulsanti
-                startButtons.forEach(btn => {
-                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
-                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
-                        '🚀 Inizia Subito il Tuo Miglioramento';
-                    btn.disabled = false;
-                });
-                
-                // Scroll ai moduli
-                document.querySelector('.modules-grid').scrollIntoView({ 
-                    behavior: 'smooth' 
-                });
-                
-                // Notifica successo
-                showSuccess('🎉 Percorso coaching iniziato! Ora puoi accedere alla Settimana 1.');
-                
-            } catch (error) {
-                console.error('❌ Errore avvio coaching:', error);
-                
-                // Ripristina pulsanti
-                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
-                startButtons.forEach(btn => {
-                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
-                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
-                        '🚀 Inizia Subito il Tuo Miglioramento';
-                    btn.disabled = false;
-                });
-                
-                // Mostra errore specifico
-                if (error.message.includes('offline')) {
-                    showError('Errore di connessione. Controlla la connessione internet e riprova.');
-                } else if (error.message.includes('permission')) {
-                    showError('Errore di autorizzazione. Rifare il quiz per aggiornare i permessi.');
-                } else {
-                    showError('Errore durante l\'avvio del percorso. Riprova tra qualche secondo.');
-                }
-            }
-        };
-
-        // 🔄 RIFAI QUIZ
-        // 🔄 RIFAI QUIZ (FIX TEMPORANEO)
-        window.retakeQuiz = function() {
-            if (confirm('Sei sicuro di voler rifare il test? I risultati attuali verranno sostituiti.')) {
-                // Rimuovi userId temporaneo
-                localStorage.removeItem('lifestyle_user_id');
-                // Redirect al quiz
-                window.location.href = '../lifestyle-quiz.html';
-            }
-        };
-
-        // 🎯 MESSAGGIO INFO ACCESSO TEMPORANEO
-        function showTemporaryAccessInfo() {
-            const infoMessage = `
-                <div class="temp-access-info" style="
-                    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-                    color: white;
-                    padding: 15px;
-                    border-radius: 10px;
-                    margin: 20px 0;
-                    text-align: center;
-                    font-size: 0.9rem;
-                ">
-                    <strong>ℹ️ Accesso Temporaneo Attivo</strong><br>
-                    Stai utilizzando un profilo demo. Per salvare i tuoi progressi reali, completa il quiz di valutazione.
-                </div>
-            `;
-            
-            const resultsSection = document.querySelector('.quiz-results-section');
-            if (resultsSection) {
-                resultsSection.insertAdjacentHTML('beforeend', infoMessage);
-            }
-        }
-
-        // 🎯 INIZIALIZZA AL CARICAMENTO (CON INFO TEMPORANEO)
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initializeProgressSystem();
-            
-            // Mostra info accesso temporaneo se userId è temporaneo
-            if (userProgress.userId && userProgress.userId.startsWith('temp_')) {
-                showTemporaryAccessInfo();
-            }
-        });
-
-        // Esponi funzioni globalmente
-        window.initializeProgressSystem = initializeProgressSystem;
-        window.userProgress = userProgress;
-    </script>
-
     <style>
         * {
             margin: 0;
@@ -803,9 +20,52 @@
             padding: 20px;
         }
 
+        /* Auth Loading Overlay */
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #ea580c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hide hub initially */
         .hub-container {
             max-width: 1200px;
             margin: 0 auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: none;
+        }
+
+        .hub-container.loaded {
+            opacity: 1;
+            display: block;
         }
 
         .hub-header {
@@ -831,6 +91,8 @@
 
         .header-actions {
             flex-shrink: 0;
+            display: flex;
+            gap: 10px;
         }
 
         .back-to-dashboard-btn {
@@ -854,6 +116,28 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
+        .logout-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+
         .hub-header h1 {
             color: #ea580c;
             font-size: 2.5rem;
@@ -865,6 +149,25 @@
             color: #cbd5e1;
             font-size: 1.2rem;
             opacity: 0.9;
+        }
+
+        .user-welcome {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .user-welcome h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .user-welcome p {
+            opacity: 0.9;
+            font-size: 1rem;
         }
 
         .quiz-results-section {
@@ -1410,7 +713,16 @@
     </style>
 </head>
 <body>
-    <div class="hub-container">
+    <!-- Auth Loading Overlay -->
+    <div id="authLoading" class="auth-loading">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>🛡️ Verifica Accesso...</h2>
+            <p>Controllo le tue credenziali per il coaching</p>
+        </div>
+    </div>
+
+    <div id="hubContent" class="hub-container">
         
         <div class="hub-header">
             <div class="header-content">
@@ -1422,8 +734,17 @@
                     <a href="../user-dashboard.html" class="back-to-dashboard-btn">
                         ← Torna alla Dashboard
                     </a>
+                    <button class="logout-btn" onclick="handleLogout()">
+                        🚪 Logout
+                    </button>
                 </div>
             </div>
+        </div>
+
+        <!-- User Welcome -->
+        <div class="user-welcome">
+            <h2>👋 Benvenuto, <span data-user-name>Utente</span>!</h2>
+            <p>Accesso sicuro verificato • <span data-user-email>user@example.com</span></p>
         </div>
 
         <!-- RISULTATI QUIZ E ANALISI PROFILO -->
@@ -1601,5 +922,802 @@
         </div>
 
     </div>
+
+    <!-- Firebase SDK e Sistema Coaching (ORIGINALE MANTENUTO) -->
+    <script type="module">
+        // Import Auth Guard PRIMA di tutto
+        import { guardModulePage, getCurrentUser, logout } from '../auth-guard.js';
+        
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
+            authDomain: "tribucoach-a2254.firebaseapp.com",
+            projectId: "tribucoach-a2254",
+            storageBucket: "tribucoach-a2254.firebasestorage.app",
+            messagingSenderId: "425200296836",
+            appId: "1:425200296836:web:7835188f40f4348567ab48"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Global logout function for button
+        window.handleLogout = logout;
+
+        // Stato progresso utente
+        let userProgress = {
+            currentWeek: 1,
+            completedWeeks: [],
+            hasStartedCoaching: false,
+            userId: null
+        };
+
+        // 🛡️ INIZIALIZZAZIONE CON AUTH GUARD
+        async function initializeModuleHub() {
+            console.log('🛡️ Inizializzazione Module Hub con protezione...');
+            
+            try {
+                // Apply auth guard first
+                const isAuthorized = await guardModulePage('hub');
+                
+                if (!isAuthorized) {
+                    console.log('❌ Accesso negato al module hub');
+                    return;
+                }
+
+                // Get authenticated user
+                const user = getCurrentUser();
+                if (!user) {
+                    console.error('❌ Utente non trovato dopo auth guard');
+                    return;
+                }
+
+                // Hide loading, show content
+                const loadingOverlay = document.getElementById('authLoading');
+                const hubContent = document.getElementById('hubContent');
+                
+                loadingOverlay.style.display = 'none';
+                hubContent.classList.add('loaded');
+
+                // Initialize with authenticated user
+                await initializeProgressSystem();
+                
+                console.log('✅ Module Hub inizializzato con protezione');
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione Module Hub:', error);
+                showError('Errore durante il caricamento del modulo coaching');
+            }
+        }
+
+        // 🚀 INIZIALIZZAZIONE SISTEMA SEMPLIFICATO (MANTENUTO ORIGINALE)
+        async function initializeProgressSystem() {
+            console.log('🚀 Inizializzazione sistema ModuleHub...');
+            
+            // Get authenticated user
+            const user = getCurrentUser();
+            if (!user) {
+                console.error('❌ Utente non autenticato');
+                return;
+            }
+
+            // Use authenticated user ID
+            const userId = user.uid;
+            userProgress.userId = userId;
+            
+            console.log('✅ Usando userId autenticato:', userId);
+            
+            // Carica dati utente e progress
+            await loadUserData(userId);
+            await loadUserProgress(userId);
+            
+            // Aggiorna UI
+            updateModuleStates();
+            updateProgressBar();
+        }
+
+        // 📊 CARICA DATI UTENTE E MOSTRA PROFILO (MANTENUTO ORIGINALE)
+        async function loadUserData(userId) {
+            try {
+                const collections = ['lifestyle_profiles', 'quiz_results', 'users'];
+                let userData = null;
+                
+                for (const collectionName of collections) {
+                    try {
+                        const docRef = doc(db, collectionName, userId);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            userData = docSnap.data();
+                            console.log(`✅ Dati utente caricati da ${collectionName}`);
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn(`Collezione ${collectionName} non trovata:`, error);
+                    }
+                }
+                
+                if (userData) {
+                    displayQuizResults(userData);
+                } else {
+                    console.log('⚠️ Nessun dato utente trovato, creando profilo demo');
+                    // Create profile for authenticated user
+                    const user = getCurrentUser();
+                    const demoProfile = createDemoProfile(userId, user);
+                    displayQuizResults(demoProfile);
+                    
+                    // Salva profilo demo su Firebase
+                    await saveDemoProfile(userId, demoProfile);
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento dati utente:', error);
+                // FIX TEMPORANEO: Mostra profilo demo anche in caso di errore
+                const user = getCurrentUser();
+                const demoProfile = createDemoProfile(userId, user);
+                displayQuizResults(demoProfile);
+            }
+        }
+
+        // 🎭 CREA PROFILO DEMO (AGGIORNATO CON DATI USER)
+        function createDemoProfile(userId, user) {
+            return {
+                userId: userId,
+                name: user.displayName || user.email.split('@')[0] || 'Utente',
+                email: user.email,
+                profileType: 'Guerriero Determinato',
+                description: 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.',
+                readinessLevel: 4,
+                commitmentLevel: 3,
+                goals: ['Migliorare benessere', 'Aumentare energia'],
+                challenges: ['Gestione tempo', 'Motivazione'],
+                scores: {
+                    benessereEmotivo: 2,
+                    saluteFisica: 3,
+                    relazioniSociali: 2,
+                    vitaProfessionale: 3
+                },
+                source: 'authenticated_user',
+                timestamp: new Date()
+            };
+        }
+
+        // 💾 SALVA PROFILO DEMO
+        async function saveDemoProfile(userId, profileData) {
+            try {
+                const docRef = doc(db, 'lifestyle_profiles', userId);
+                await setDoc(docRef, {
+                    ...profileData,
+                    createdAt: serverTimestamp(),
+                    status: 'active',
+                    source: 'authenticated_access'
+                });
+                console.log('✅ Profilo utente autenticato salvato');
+            } catch (error) {
+                console.warn('⚠️ Errore salvataggio profilo:', error);
+            }
+        }
+
+        // [RESTO DEL CODICE COACHING ORIGINALE MANTENUTO...]
+        // Tutte le altre funzioni rimangono identiche
+
+        // 📈 CARICA PROGRESS UTENTE (MIGLIORATO)
+        async function loadUserProgress(userId) {
+            try {
+                console.log('📈 Caricando progress per utente:', userId);
+                
+                const collections = ['lifestyle_profiles', 'quiz_results'];
+                let progressData = null;
+                
+                for (const collectionName of collections) {
+                    try {
+                        const docRef = doc(db, collectionName, userId);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            progressData = docSnap.data();
+                            console.log(`✅ Progress caricato da ${collectionName}`);
+                            break;
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ Errore caricamento da ${collectionName}:`, error);
+                    }
+                }
+                
+                if (progressData) {
+                    userProgress = {
+                        userId: userId,
+                        currentWeek: progressData.currentWeek || 1,
+                        completedWeeks: progressData.completedWeeks || [],
+                        hasStartedCoaching: progressData.hasStartedCoaching || false,
+                        lastUpdate: progressData.lastUpdate || new Date()
+                    };
+                    
+                    console.log('✅ Progress caricato con successo:', userProgress);
+                } else {
+                    console.log('⚠️ Nessun progress trovato, inizializzazione default');
+                    userProgress = {
+                        userId: userId,
+                        currentWeek: 1,
+                        completedWeeks: [],
+                        hasStartedCoaching: false
+                    };
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento progress:', error);
+                // Inizializza default anche in caso di errore
+                userProgress = {
+                    userId: userId,
+                    currentWeek: 1,
+                    completedWeeks: [],
+                    hasStartedCoaching: false
+                };
+            }
+        }
+
+        // 🎯 AGGIORNA STATI MODULI (LOGICA SEMPLIFICATA)
+        function updateModuleStates() {
+            const modules = document.querySelectorAll('.week-module');
+            
+            modules.forEach((module, index) => {
+                const weekNumber = index + 1;
+                const isCompleted = userProgress.completedWeeks.includes(weekNumber);
+                const isAccessible = weekNumber <= userProgress.currentWeek;
+                const isCurrent = weekNumber === userProgress.currentWeek;
+                
+                // Reset classi
+                module.classList.remove('accessible', 'completed', 'current', 'locked');
+                
+                const statusEl = module.querySelector('.week-status');
+                const buttonEl = module.querySelector('.week-button');
+                
+                // Applica stato corretto
+                if (isCompleted) {
+                    module.classList.add('completed');
+                    statusEl.textContent = '✅ Completata';
+                    buttonEl.textContent = '👁️ Rivedi';
+                    buttonEl.disabled = false;
+                    buttonEl.onclick = () => reviewWeek(weekNumber);
+                } else if (isCurrent && isAccessible) {
+                    module.classList.add('current');
+                    statusEl.textContent = '🔥 Attuale';
+                    buttonEl.textContent = `🚀 Inizia Settimana ${weekNumber}`;
+                    buttonEl.disabled = false;
+                    buttonEl.onclick = () => accessWeek(weekNumber);
+                } else if (isAccessible) {
+                    module.classList.add('accessible');
+                    statusEl.textContent = '▶️ Disponibile';
+                    buttonEl.textContent = `🚀 Inizia Settimana ${weekNumber}`;
+                    buttonEl.disabled = false;
+                    buttonEl.onclick = () => accessWeek(weekNumber);
+                } else {
+                    module.classList.add('locked');
+                    statusEl.textContent = '🔒 Bloccata';
+                    buttonEl.textContent = `🔒 Completa Settimana ${weekNumber - 1}`;
+                    buttonEl.disabled = true;
+                    buttonEl.onclick = (e) => {
+                        e.preventDefault();
+                        showLockedMessage(weekNumber);
+                        return false;
+                    };
+                }
+            });
+        }
+
+        // 🚀 ACCESSO SETTIMANA
+        function accessWeek(weekNumber) {
+            console.log(`🚀 Accesso settimana ${weekNumber}`);
+            
+            // Verifica accesso
+            if (weekNumber > userProgress.currentWeek) {
+                showError(`Non puoi accedere alla settimana ${weekNumber}. Completa prima la settimana ${userProgress.currentWeek}.`);
+                return false;
+            }
+            
+            // URL settimane
+            const weekUrls = {
+                1: 'week-1.html',
+                2: 'week-2.html',
+                3: 'week-3.html',
+                4: 'week-4.html',
+                5: 'week-5.html',
+                6: 'week-6.html',
+                7: 'week-7.html'
+            };
+            
+            if (weekUrls[weekNumber]) {
+                // Tracking accesso
+                trackWeekAccess(weekNumber);
+                
+                // Redirect with authenticated userId
+                window.location.href = `${weekUrls[weekNumber]}?userId=${userProgress.userId}&week=${weekNumber}`;
+            } else {
+                showError(`Settimana ${weekNumber} non ancora disponibile.`);
+            }
+        }
+
+        // 👁️ RIVEDI SETTIMANA COMPLETATA
+        function reviewWeek(weekNumber) {
+            console.log(`👁️ Review settimana ${weekNumber}`);
+            accessWeek(weekNumber);
+        }
+
+        // ✅ COMPLETA SETTIMANA
+        window.completeWeek = async function(weekNumber) {
+            console.log(`✅ Completamento settimana ${weekNumber}`);
+            
+            try {
+                // Validazioni
+                if (weekNumber !== userProgress.currentWeek) {
+                    throw new Error(`Tentativo di completare settimana ${weekNumber} ma quella corrente è ${userProgress.currentWeek}`);
+                }
+                
+                if (userProgress.completedWeeks.includes(weekNumber)) {
+                    console.log('⚠️ Settimana già completata');
+                    return;
+                }
+                
+                // Aggiorna progress
+                userProgress.completedWeeks.push(weekNumber);
+                userProgress.currentWeek = Math.min(weekNumber + 1, 7);
+                userProgress.hasStartedCoaching = true;
+                
+                // Salva su Firebase
+                await saveProgressToFirebase();
+                
+                // Aggiorna UI
+                updateModuleStates();
+                updateProgressBar();
+                
+                // Notifica successo
+                showSuccess(`🎉 Settimana ${weekNumber} completata! ${weekNumber < 7 ? `Settimana ${weekNumber + 1} sbloccata.` : 'Percorso completato!'}`);
+                
+                // Tracking
+                trackWeekCompletion(weekNumber);
+                
+            } catch (error) {
+                console.error('❌ Errore completamento settimana:', error);
+                showError('Errore durante il completamento. Riprova.');
+            }
+        };
+
+        // 💾 SALVA PROGRESS SU FIREBASE (USANDO SETDOC)
+        async function saveProgressToFirebase() {
+            try {
+                console.log('💾 Salvando progress per utente:', userProgress.userId);
+                
+                const progressData = {
+                    userId: userProgress.userId,
+                    currentWeek: userProgress.currentWeek,
+                    completedWeeks: userProgress.completedWeeks,
+                    hasStartedCoaching: userProgress.hasStartedCoaching,
+                    lastUpdate: serverTimestamp(),
+                    source: 'module_hub_protected',
+                    version: '1.0'
+                };
+                
+                // Prova prima lifestyle_profiles
+                try {
+                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
+                    await setDoc(docRef, progressData, { merge: true });
+                    console.log('✅ Progress salvato in lifestyle_profiles');
+                    return true;
+                } catch (error) {
+                    console.warn('⚠️ Errore lifestyle_profiles:', error);
+                }
+                
+                // Fallback: quiz_results
+                try {
+                    const docRef = doc(db, 'quiz_results', userProgress.userId);
+                    await setDoc(docRef, progressData, { merge: true });
+                    console.log('✅ Progress salvato in quiz_results');
+                    return true;
+                } catch (error) {
+                    console.warn('⚠️ Errore quiz_results:', error);
+                }
+                
+                // Ultimo tentativo: crea nuovo documento
+                try {
+                    const docRef = doc(db, 'lifestyle_profiles', userProgress.userId);
+                    await setDoc(docRef, {
+                        ...progressData,
+                        createdAt: serverTimestamp(),
+                        status: 'active'
+                    });
+                    console.log('✅ Progress salvato come nuovo documento');
+                    return true;
+                } catch (error) {
+                    console.error('❌ Errore creazione nuovo documento:', error);
+                    throw new Error('Impossibile salvare il progress su Firebase');
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore salvataggio Firebase:', error);
+                throw error;
+            }
+        }
+
+        // 📊 AGGIORNA PROGRESS BAR
+        function updateProgressBar() {
+            const progressPercentage = (userProgress.completedWeeks.length / 7) * 100;
+            const progressBar = document.querySelector('.progress-fill');
+            const progressText = document.querySelector('.progress-text');
+            
+            if (progressBar) {
+                progressBar.style.width = `${progressPercentage}%`;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${userProgress.completedWeeks.length}/7 settimane completate (${Math.round(progressPercentage)}%)`;
+            }
+        }
+
+        // 🔒 MESSAGGIO SETTIMANA BLOCCATA
+        function showLockedMessage(weekNumber) {
+            const requiredWeek = weekNumber - 1;
+            showError(`🔒 Settimana ${weekNumber} bloccata. Completa prima la settimana ${requiredWeek} per sbloccarla.`);
+        }
+
+        // 📊 TRACKING EVENTI
+        async function trackWeekAccess(weekNumber) {
+            console.log(`📊 Tracking accesso settimana ${weekNumber}`);
+        }
+
+        async function trackWeekCompletion(weekNumber) {
+            console.log(`📊 Tracking completamento settimana ${weekNumber}`);
+        }
+
+        // 💬 SISTEMA NOTIFICHE
+        function showSuccess(message) {
+            showNotification(message, 'success');
+        }
+
+        function showError(message) {
+            showNotification(message, 'error');
+        }
+
+        function showNotification(message, type) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = message;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 400px;
+                animation: slideIn 0.3s ease-out;
+                ${type === 'success' ? 'background: linear-gradient(135deg, #4CAF50, #45a049);' : 'background: linear-gradient(135deg, #f44336, #d32f2f);'}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease-in';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // [RESTO DELLE FUNZIONI COACHING ORIGINALI MANTENUTE...]
+        
+        // 🎨 MOSTRA RISULTATI QUIZ
+        function displayQuizResults(quizData) {
+            // Aggiorna info profilo
+            document.getElementById('userName').textContent = quizData.name || 'Utente';
+            
+            const profileType = quizData.profileType || determineProfileType(quizData);
+            const profileDescription = quizData.description || generateProfileDescription(profileType, quizData);
+            
+            document.getElementById('userQuadrant').textContent = profileDescription;
+            
+            const leadScore = calculateLeadScore(quizData);
+            const scoreEl = document.getElementById('leadScore');
+            scoreEl.textContent = `${Math.round(leadScore)}%`;
+            scoreEl.className = `lead-score ${leadScore >= 70 ? 'high' : leadScore >= 40 ? 'medium' : 'low'}`;
+            
+            // Genera analisi personalizzata
+            generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore);
+            
+            // Calcola e mostra punteggi aree benessere
+            calculateAndDisplayWellnessScores(quizData);
+        }
+
+        // 🎭 DETERMINA PROFILO DESCRITTIVO
+        function determineProfileType(quizData) {
+            const readiness = quizData.readiness_level || 3;
+            const commitment = quizData.commitment_level || 3;
+            
+            if (readiness >= 4 && commitment >= 4) return 'Atleta in Crescita';
+            if (readiness >= 4 && commitment < 4) return 'Esploratore Motivato';
+            if (readiness < 4 && commitment >= 4) return 'Guerriero Determinato';
+            return 'Guerriero Determinato'; // Default positivo
+        }
+
+        // 📝 GENERA DESCRIZIONE PROFILO
+        function generateProfileDescription(profileType, quizData) {
+            const descriptions = {
+                'Atleta in Crescita': 'Sei una persona con elevata motivazione e impegno. Hai le competenze per raggiungere grandi risultati nel tuo percorso di crescita personale.',
+                'Esploratore Motivato': 'Hai una forte motivazione al cambiamento e sei pronto a scoprire nuove strategie per migliorare il tuo benessere complessivo.',
+                'Guerriero Determinato': 'Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.'
+            };
+            
+            return descriptions[profileType] || descriptions['Guerriero Determinato'];
+        }
+
+        // 📊 CALCOLA LEAD SCORE
+        function calculateLeadScore(quizData) {
+            let score = 50; // Base score
+            
+            if (quizData.readiness_level) score += (quizData.readiness_level - 3) * 10;
+            if (quizData.commitment_level) score += (quizData.commitment_level - 3) * 10;
+            if (quizData.goals && quizData.goals.length > 0) score += 15;
+            if (quizData.challenges && quizData.challenges.length > 0) score += 10;
+            
+            return Math.max(0, Math.min(100, score));
+        }
+
+        // 🧠 GENERA ANALISI PERSONALIZZATA
+        function generatePersonalizedAnalysis(quizData, profileType, profileDescription, leadScore) {
+            const name = quizData.name || 'Utente';
+            const score = Math.round(leadScore);
+            
+            // Situazione in sintesi
+            let summary = `<p><strong>Ciao ${name}</strong>, ho analizzato i risultati del tuo test e voglio condividere alcune riflessioni sulla tua situazione attuale.</p>`;
+            
+            summary += `<p><strong>Il tuo profilo:</strong> ${profileType}</p>`;
+            summary += `<p>${profileDescription}</p>`;
+            
+            if (score >= 70) {
+                summary += `<div class="highlight-box success">Il tuo punteggio è ${score}/100, che indica ottime potenzialità per la trasformazione!</div>`;
+            } else {
+                summary += `<div class="highlight-box warning">Il tuo punteggio è ${score}/100, che mostra alcune sfide da affrontare insieme.</div>`;
+            }
+            
+            document.getElementById('situationSummary').innerHTML = summary;
+            
+            // Aree di forza basate sul profilo
+            const strengths = getProfileStrengths(profileType);
+            document.getElementById('strengthsArea').innerHTML = '<ul>' + strengths.map(s => `<li>${s}</li>`).join('') + '</ul>';
+            
+            // Aree di miglioramento
+            const improvements = getProfileImprovements(profileType);
+            document.getElementById('improvementArea').innerHTML = '<ul>' + improvements.map(i => `<li>${i}</li>`).join('') + '</ul>';
+            
+            // Storia coaching personalizzata
+            const story = generateCoachingStory(profileType);
+            document.getElementById('coachingStory').innerHTML = story;
+        }
+
+        // 🏆 AREE DI FORZA PER PROFILO
+        function getProfileStrengths(profileType) {
+            const strengths = {
+                'Atleta in Crescita': [
+                    '🏆 Elevata motivazione e disciplina',
+                    '🎯 Capacità di mantenere l\'impegno',
+                    '📈 Orientamento ai risultati'
+                ],
+                'Esploratore Motivato': [
+                    '🚀 Grande entusiasmo per il cambiamento',
+                    '💡 Apertura a nuove strategie',
+                    '🌟 Energia positiva e proattività'
+                ],
+                'Guerriero Determinato': [
+                    '💪 Forte volontà di miglioramento',
+                    '🎯 Capacità di affrontare le sfide',
+                    '🌱 Potenziale di crescita elevato'
+                ]
+            };
+            
+            return strengths[profileType] || strengths['Guerriero Determinato'];
+        }
+
+        // ⚡ AREE DI MIGLIORAMENTO PER PROFILO
+        function getProfileImprovements(profileType) {
+            const improvements = {
+                'Atleta in Crescita': [
+                    '⚖️ Equilibrio tra impegno e riposo',
+                    '🧘 Gestione dello stress da performance',
+                    '🤝 Supporto sociale e relazionale'
+                ],
+                'Esploratore Motivato': [
+                    '🛠️ Sviluppo di strategie concrete',
+                    '📊 Monitoraggio dei progressi',
+                    '⏰ Gestione del tempo e priorità'
+                ],
+                'Guerriero Determinato': [
+                    '🧠 Sviluppo della fiducia in sé',
+                    '📈 Creazione di abitudini sostenibili',
+                    '💭 Gestione del dialogo interno'
+                ]
+            };
+            
+            return improvements[profileType] || improvements['Guerriero Determinato'];
+        }
+
+        // 💭 STORIA COACHING PERSONALIZZATA
+        function generateCoachingStory(profileType) {
+            const stories = {
+                'Atleta in Crescita': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>Riconosco in te la determinazione che avevo quando ho iniziato la mia trasformazione. Sei già sulla strada giusta!</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sull'ottimizzazione e sul raggiungimento del massimo potenziale. Hai già le basi, ora possiamo puntare all'eccellenza.
+                    </div>
+                `,
+                'Esploratore Motivato': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>La tua energia e voglia di scoprire nuove strategie mi ricorda quando ho iniziato a cercare il mio percorso di crescita.</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sulla scoperta di metodologie efficaci e sulla trasformazione dell'entusiasmo in risultati concreti.
+                    </div>
+                `,
+                'Guerriero Determinato': `
+                    <h3>💭 La mia storia ti suonerà familiare</h3>
+                    <p>Dopo 12 anni come manager stressato, riconosco perfettamente la tua determinazione nel voler cambiare. Sei nel posto giusto!</p>
+                    <div class="highlight-box info">
+                        <strong>Per persone come te:</strong> Il focus è sulla costruzione di fondamenta solide e sullo sviluppo graduale ma costante del benessere.
+                    </div>
+                `
+            };
+            
+            return stories[profileType] || stories['Guerriero Determinato'];
+        }
+
+        // 📊 CALCOLA E MOSTRA PUNTEGGI BENESSERE
+        function calculateAndDisplayWellnessScores(quizData) {
+            const scores = {
+                benessereEmotivo: Math.floor(Math.random() * 2) + 2, // 2-3
+                saluteFisica: Math.floor(Math.random() * 2) + 2, // 2-3
+                relazioniSociali: Math.floor(Math.random() * 2) + 2, // 2-3
+                vitaProfessionale: Math.floor(Math.random() * 2) + 3 // 3-4
+            };
+            
+            const scoresHtml = `
+                <div class="wellness-scores-section">
+                    <div class="scores-grid">
+                        <div class="score-card">
+                            <div class="score-number">${scores.benessereEmotivo}</div>
+                            <div class="score-label">Benessere Emotivo</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${scores.benessereEmotivo * 20}%"></div>
+                            </div>
+                            <div class="score-action">Puoi migliorare!</div>
+                        </div>
+                        
+                        <div class="score-card">
+                            <div class="score-number">${scores.saluteFisica}</div>
+                            <div class="score-label">Salute Fisica</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${scores.saluteFisica * 20}%"></div>
+                            </div>
+                            <div class="score-action">Puoi migliorare!</div>
+                        </div>
+                        
+                        <div class="score-card">
+                            <div class="score-number">${scores.relazioniSociali}</div>
+                            <div class="score-label">Relazioni Sociali</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${scores.relazioniSociali * 20}%"></div>
+                            </div>
+                            <div class="score-action">Puoi migliorare!</div>
+                        </div>
+                        
+                        <div class="score-card">
+                            <div class="score-number">${scores.vitaProfessionale}</div>
+                            <div class="score-label">Vita Professionale</div>
+                            <div class="score-bar">
+                                <div class="score-fill" style="width: ${scores.vitaProfessionale * 20}%"></div>
+                            </div>
+                            <div class="score-action">Puoi migliorare!</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Inserisci dopo coaching story
+            const coachingStory = document.getElementById('coachingStory');
+            coachingStory.insertAdjacentHTML('afterend', scoresHtml);
+        }
+
+        // 🚀 INIZIA PERCORSO COACHING (MIGLIORATO)
+        window.startCoachingJourney = async function() {
+            console.log('🚀 Avvio percorso coaching...');
+            
+            try {
+                // Verifica che userId sia presente
+                if (!userProgress.userId) {
+                    showError('Errore: ID utente non trovato. Effettua nuovamente il login.');
+                    return;
+                }
+                
+                // Aggiorna progress
+                userProgress.hasStartedCoaching = true;
+                userProgress.currentWeek = 1;
+                
+                // Mostra loading
+                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
+                startButtons.forEach(btn => {
+                    btn.textContent = '⏳ Salvando...';
+                    btn.disabled = true;
+                });
+                
+                // Salva su Firebase
+                await saveProgressToFirebase();
+                
+                // Aggiorna UI
+                updateModuleStates();
+                updateProgressBar();
+                
+                // Ripristina pulsanti
+                startButtons.forEach(btn => {
+                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
+                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
+                        '🚀 Inizia Subito il Tuo Miglioramento';
+                    btn.disabled = false;
+                });
+                
+                // Scroll ai moduli
+                document.querySelector('.modules-grid').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+                
+                // Notifica successo
+                showSuccess('🎉 Percorso coaching iniziato! Ora puoi accedere alla Settimana 1.');
+                
+            } catch (error) {
+                console.error('❌ Errore avvio coaching:', error);
+                
+                // Ripristina pulsanti
+                const startButtons = document.querySelectorAll('.action-btn.start-btn, .final-cta-btn');
+                startButtons.forEach(btn => {
+                    btn.textContent = btn.classList.contains('final-cta-btn') ? 
+                        '✨ Inizia il Tuo Percorso di Trasformazione' : 
+                        '🚀 Inizia Subito il Tuo Miglioramento';
+                    btn.disabled = false;
+                });
+                
+                // Mostra errore specifico
+                if (error.message.includes('offline')) {
+                    showError('Errore di connessione. Controlla la connessione internet e riprova.');
+                } else if (error.message.includes('permission')) {
+                    showError('Errore di autorizzazione. Effettua nuovamente il login.');
+                } else {
+                    showError('Errore durante l\'avvio del percorso. Riprova tra qualche secondo.');
+                }
+            }
+        };
+
+        // 🔄 RIFAI QUIZ
+        window.retakeQuiz = function() {
+            if (confirm('Sei sicuro di voler rifare il test? I risultati attuali verranranno sostituiti.')) {
+                // Redirect al quiz
+                window.location.href = '../lifestyle-quiz.html';
+            }
+        };
+
+        // 🎯 INIZIALIZZA AL CARICAMENTO CON AUTH GUARD
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initializeModuleHub();
+        });
+
+        // Esponi funzioni globalmente per compatibilità
+        window.initializeProgressSystem = initializeProgressSystem;
+        window.userProgress = userProgress;
+    </script>
 </body>
 </html>
