@@ -1,5 +1,5 @@
 // firebase-lifestyle-integration.js - Sistema completo per Lifestyle Coaching
-// Integrazione con Firebase esistente di TribuCoach
+// Integrazione con Firebase esistente di TribuCoach + SISTEMA AVATAR
 
 import { db } from './firebase.js';
 import {
@@ -13,7 +13,8 @@ import {
     orderBy,
     limit,
     onSnapshot,
-    serverTimestamp
+    serverTimestamp,
+    getDocs
 } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 // === CONFIGURAZIONE LIFESTYLE ===
@@ -21,10 +22,281 @@ const LIFESTYLE_COLLECTIONS = {
     profiles: 'lifestyle_profiles',
     progress: 'lifestyle_progress',
     goals: 'lifestyle_goals',
-    sessions: 'coaching_sessions'
+    sessions: 'coaching_sessions',
+    avatars: 'user_avatars' // 🎯 NUOVO: Collection avatar utenti
 };
 
-// === SALVATAGGIO PROFILO LIFESTYLE ===
+// === 🎨 SISTEMA AVATAR - NUOVE FUNZIONI ===
+
+// Avatar predefiniti per utenti
+const AVATAR_PRESETS = [
+    { id: 'avatar_1', name: 'Determinato', emoji: '💪', colors: { primary: '#3b82f6', secondary: '#1e40af' } },
+    { id: 'avatar_2', name: 'Motivato', emoji: '🚀', colors: { primary: '#10b981', secondary: '#059669' } },
+    { id: 'avatar_3', name: 'Energico', emoji: '⚡', colors: { primary: '#f59e0b', secondary: '#d97706' } },
+    { id: 'avatar_4', name: 'Positivo', emoji: '🌟', colors: { primary: '#8b5cf6', secondary: '#7c3aed' } },
+    { id: 'avatar_5', name: 'Guerriero', emoji: '🏆', colors: { primary: '#ef4444', secondary: '#dc2626' } },
+    { id: 'avatar_6', name: 'Zen', emoji: '🧘', colors: { primary: '#06b6d4', secondary: '#0891b2' } },
+    { id: 'avatar_7', name: 'Esploratore', emoji: '🗺️', colors: { primary: '#84cc16', secondary: '#65a30d' } },
+    { id: 'avatar_8', name: 'Creativo', emoji: '🎨', colors: { primary: '#ec4899', secondary: '#db2777' } },
+    { id: 'avatar_9', name: 'Leader', emoji: '👑', colors: { primary: '#f97316', secondary: '#ea580c' } },
+    { id: 'avatar_10', name: 'Equilibrato', emoji: '⚖️', colors: { primary: '#6366f1', secondary: '#4f46e5' } }
+];
+
+// Messaggi dinamici di Andrea basati sui progressi
+const ANDREA_MESSAGES = {
+    welcome: {
+        title: "Benvenuto nel tuo percorso!",
+        message: "Ciao! Sono Andrea, il tuo coach personale. Insieme trasformeremo la tua vita in 7 settimane straordinarie!",
+        icon: "👋"
+    },
+    week_1_2: {
+        title: "Ottimo inizio!",
+        message: "Stai costruendo basi solide! Le prime settimane sono fondamentali. Continua così, i risultati arriveranno!",
+        icon: "🌱"
+    },
+    week_3_4: {
+        title: "Momento di crescita!",
+        message: "Fantástico progresso! Stai entrando nella fase più trasformativa. La tua determinazione mi impressiona!",
+        icon: "🚀"
+    },
+    week_5_6: {
+        title: "Sei in volo!",
+        message: "Incredibile! Stai davvero trasformando la tua vita. I cambiamenti sono evidenti, continua su questa strada!",
+        icon: "⭐"
+    },
+    week_7: {
+        title: "Quasi alla meta!",
+        message: "Sei arrivato all'ultima settimana! I risultati parlano da soli. Pronto per il grande finale?",
+        icon: "🏆"
+    },
+    completed: {
+        title: "Congratulazioni!",
+        message: "Hai completato il percorso! Ora sei una versione migliore di te stesso. Continua a crescere!",
+        icon: "🎉"
+    },
+    low_activity: {
+        title: "Ti aspetto!",
+        message: "Non ti vedo da un po'... Ricorda che ogni piccolo passo conta. Sono qui quando sei pronto a riprendere!",
+        icon: "💙"
+    },
+    high_engagement: {
+        title: "Sei un campione!",
+        message: "Il tuo impegno è straordinario! Con questa dedizione raggiungerai qualsiasi obiettivo. Fiero di te!",
+        icon: "🔥"
+    }
+};
+
+// === SALVATAGGIO AVATAR UTENTE ===
+export async function saveUserAvatar(userId, avatarData) {
+    try {
+        console.log('🎨 Salvataggio avatar utente...', { userId, avatarData });
+        
+        const avatarDoc = {
+            userId: userId,
+            avatarId: avatarData.avatarId,
+            customizations: avatarData.customizations || {},
+            timestamp: serverTimestamp(),
+            lastUpdated: serverTimestamp()
+        };
+        
+        // Cerca avatar esistente per l'utente
+        const q = query(
+            collection(db, LIFESTYLE_COLLECTIONS.avatars),
+            where('userId', '==', userId),
+            limit(1)
+        );
+        
+        const existingAvatar = await getDocs(q);
+        
+        if (!existingAvatar.empty) {
+            // Aggiorna avatar esistente
+            const docRef = existingAvatar.docs[0].ref;
+            await updateDoc(docRef, {
+                ...avatarDoc,
+                id: existingAvatar.docs[0].id
+            });
+            
+            console.log('✅ Avatar utente aggiornato');
+            return existingAvatar.docs[0].id;
+        } else {
+            // Crea nuovo avatar
+            const docRef = await addDoc(collection(db, LIFESTYLE_COLLECTIONS.avatars), avatarDoc);
+            console.log('✅ Nuovo avatar utente creato:', docRef.id);
+            return docRef.id;
+        }
+        
+    } catch (error) {
+        console.error('❌ Errore salvataggio avatar:', error);
+        throw error;
+    }
+}
+
+// === RECUPERO AVATAR UTENTE ===
+export async function getUserAvatar(userId) {
+    try {
+        console.log('🔍 Recupero avatar per utente:', userId);
+        
+        const q = query(
+            collection(db, LIFESTYLE_COLLECTIONS.avatars),
+            where('userId', '==', userId),
+            orderBy('lastUpdated', 'desc'),
+            limit(1)
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            console.log('⚠️ Nessun avatar trovato - ritorno default');
+            return getDefaultAvatar();
+        }
+        
+        const doc = snapshot.docs[0];
+        const avatarData = {
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate() || new Date()
+        };
+        
+        // Arricchisci con dati del preset
+        const preset = AVATAR_PRESETS.find(p => p.id === avatarData.avatarId);
+        if (preset) {
+            avatarData.preset = preset;
+        }
+        
+        console.log('✅ Avatar recuperato:', avatarData.id);
+        return avatarData;
+        
+    } catch (error) {
+        console.error('❌ Errore recupero avatar:', error);
+        return getDefaultAvatar();
+    }
+}
+
+// === AVATAR DEFAULT ===
+function getDefaultAvatar() {
+    return {
+        id: 'default',
+        userId: 'guest',
+        avatarId: 'avatar_1',
+        preset: AVATAR_PRESETS[0],
+        customizations: {},
+        isDefault: true
+    };
+}
+
+// === GENERA MESSAGGIO ANDREA DINAMICO ===
+export async function getAndreaMessage(userId) {
+    try {
+        console.log('💬 Generazione messaggio Andrea per:', userId);
+        
+        // Recupera profilo e progressi utente
+        const profile = await getLifestyleProfile(userId);
+        const progress = await getLifestyleProgress(userId);
+        
+        let messageKey = 'welcome';
+        
+        if (profile && progress.length > 0) {
+            const lastActivity = progress[0]?.timestamp || new Date();
+            const daysSinceActivity = Math.floor((new Date() - lastActivity) / (1000 * 60 * 60 * 24));
+            
+            // Determina tipo messaggio basato sui progressi
+            const completedWeeks = progress.filter(p => p.type === 'week_completed').length;
+            const totalActivities = progress.length;
+            
+            if (daysSinceActivity > 7) {
+                messageKey = 'low_activity';
+            } else if (totalActivities > 20) {
+                messageKey = 'high_engagement';
+            } else if (completedWeeks >= 7) {
+                messageKey = 'completed';
+            } else if (completedWeeks >= 6) {
+                messageKey = 'week_7';
+            } else if (completedWeeks >= 4) {
+                messageKey = 'week_5_6';
+            } else if (completedWeeks >= 2) {
+                messageKey = 'week_3_4';
+            } else if (completedWeeks >= 1) {
+                messageKey = 'week_1_2';
+            }
+        }
+        
+        const message = ANDREA_MESSAGES[messageKey] || ANDREA_MESSAGES.welcome;
+        
+        console.log('✅ Messaggio Andrea generato:', messageKey);
+        return {
+            ...message,
+            messageType: messageKey,
+            personalizedFor: userId,
+            timestamp: new Date()
+        };
+        
+    } catch (error) {
+        console.error('❌ Errore generazione messaggio Andrea:', error);
+        return ANDREA_MESSAGES.welcome;
+    }
+}
+
+// === LISTA AVATAR DISPONIBILI ===
+export function getAvailableAvatars() {
+    return AVATAR_PRESETS.map(avatar => ({
+        ...avatar,
+        preview: generateAvatarPreview(avatar)
+    }));
+}
+
+// === GENERA PREVIEW AVATAR ===
+function generateAvatarPreview(avatar) {
+    return {
+        emoji: avatar.emoji,
+        name: avatar.name,
+        primaryColor: avatar.colors.primary,
+        secondaryColor: avatar.colors.secondary,
+        style: `background: linear-gradient(135deg, ${avatar.colors.primary} 0%, ${avatar.colors.secondary} 100%)`
+    };
+}
+
+// === STATISTICHE AVATAR ===
+export async function getAvatarStats() {
+    try {
+        const snapshot = await getDocs(collection(db, LIFESTYLE_COLLECTIONS.avatars));
+        
+        const stats = {
+            totalUsers: snapshot.size,
+            avatarDistribution: {},
+            recentChanges: 0
+        };
+        
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            
+            // Conta distribuzione avatar
+            if (data.avatarId) {
+                stats.avatarDistribution[data.avatarId] = 
+                    (stats.avatarDistribution[data.avatarId] || 0) + 1;
+            }
+            
+            // Conta cambiamenti recenti
+            if (data.lastUpdated && data.lastUpdated.toDate() > oneWeekAgo) {
+                stats.recentChanges++;
+            }
+        });
+        
+        // Trova avatar più popolare
+        stats.mostPopular = Object.entries(stats.avatarDistribution)
+            .sort(([,a], [,b]) => b - a)[0]?.[0] || 'avatar_1';
+        
+        return stats;
+        
+    } catch (error) {
+        console.error('❌ Errore statistiche avatar:', error);
+        return { totalUsers: 0, avatarDistribution: {}, recentChanges: 0 };
+    }
+}
+
+// === SALVATAGGIO PROFILO LIFESTYLE (AGGIORNATO CON AVATAR) ===
 export async function saveLifestyleProfile(profileData) {
     try {
         console.log('💾 Salvataggio profilo lifestyle...', profileData);
@@ -44,12 +316,22 @@ export async function saveLifestyleProfile(profileData) {
             leadScore: calculateLifestyleLeadScore(profileData),
             
             // Estrai insights
-            insights: extractProfileInsights(profileData)
+            insights: extractProfileInsights(profileData),
+            
+            // 🎨 NUOVO: Avatar di default per nuovo utente
+            hasCustomAvatar: false,
+            defaultAvatar: 'avatar_1'
         };
         
         const docRef = await addDoc(collection(db, LIFESTYLE_COLLECTIONS.profiles), extendedProfile);
         
         console.log('✅ Profilo lifestyle salvato con ID:', docRef.id);
+        
+        // 🎨 NUOVO: Crea avatar di default per nuovo utente
+        await saveUserAvatar(extendedProfile.userId, {
+            avatarId: 'avatar_1',
+            customizations: {}
+        });
         
         // Tracking dell'evento
         await trackLifestyleEvent('profile_created', {
@@ -475,7 +757,8 @@ export async function getLifestyleDashboardData() {
             completedGoals: 0,
             averageReadiness: 0,
             quadrantDistribution: {},
-            recentActivity: []
+            recentActivity: [],
+            avatarStats: await getAvatarStats() // 🎨 NUOVO: Statistiche avatar
         };
         
         // Conta profili totali
@@ -533,9 +816,11 @@ export async function getLifestyleDashboardData() {
     }
 }
 
-// === EXPORTS ===
+// === 🎨 EXPORTS AGGIORNATI CON SISTEMA AVATAR ===
 export {
     LIFESTYLE_COLLECTIONS,
+    AVATAR_PRESETS,
+    ANDREA_MESSAGES,
     saveLifestyleProfile,
     getLifestyleProfile,
     saveLifestyleProgress,
@@ -544,7 +829,13 @@ export {
     updateLifestyleGoal,
     setupLifestyleListener,
     integrateWithExistingSystem,
-    getLifestyleDashboardData
+    getLifestyleDashboardData,
+    // 🎨 NUOVE FUNZIONI AVATAR
+    saveUserAvatar,
+    getUserAvatar,
+    getAndreaMessage,
+    getAvailableAvatars,
+    getAvatarStats
 };
 
-console.log('🎯 Firebase Lifestyle Integration caricato - Pronto per uso!');
+console.log('🎯 Firebase Lifestyle Integration + Avatar System caricato - Pronto per uso!');
