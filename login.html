@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accedi - LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-text h1 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .welcome-text p {
+            color: #7f8c8d;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .login-form {
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+
+        .form-input:valid {
+            border-color: #27ae60;
+        }
+
+        .password-group {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .password-toggle:hover {
+            color: #ff6b35;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .forgot-password a {
+            color: #ff6b35;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e9ecef;
+        }
+
+        .divider span {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .register-section {
+            text-align: center;
+            padding: 20px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .register-section p {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .register-btn {
+            background: transparent;
+            color: #3498db;
+            border: 2px solid #3498db;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .register-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .back-home {
+            text-align: center;
+        }
+
+        .back-home a {
+            color: #7f8c8d;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .back-home a:hover {
+            color: #ff6b35;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #e53e3e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 4px solid #e53e3e;
+            display: none;
+        }
+
+        .success-message {
+            background: #f0fff4;
+            color: #38a169;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-left: 4px solid #38a169;
+            display: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .welcome-text h1 {
+                font-size: 1.6rem;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Demo User Info */
+        .demo-info {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .demo-info h4 {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .demo-credentials {
+            font-family: monospace;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo">LifestyleFitnessCoach</div>
+            <div class="subtitle">Il tuo percorso di trasformazione</div>
+        </div>
+
+        <!-- Welcome Text -->
+        <div class="welcome-text">
+            <h1>🏠 Bentornato!</h1>
+            <p>Accedi al tuo account per continuare il percorso di coaching personalizzato</p>
+        </div>
+
+        <!-- Demo Info -->
+        <div class="demo-info">
+            <h4>🚀 Accesso Demo</h4>
+            <p>Sistema in fase di sviluppo</p>
+            <div class="demo-credentials">
+                <strong>Email:</strong> demo@tribucoach.com<br>
+                <strong>Password:</strong> demo123
+            </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="login-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email"
+                    class="form-input" 
+                    placeholder="La tua email"
+                    required
+                    value="demo@tribucoach.com"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-group">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        class="form-input" 
+                        placeholder="La tua password"
+                        required
+                        value="demo123"
+                    >
+                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                        👁️
+                    </button>
+                </div>
+                <div class="forgot-password">
+                    <a href="forgot-password.html">Hai dimenticato la password?</a>
+                </div>
+            </div>
+
+            <button type="submit" id="loginButton" class="login-btn">
+                <div class="loading-spinner" id="loadingSpinner"></div>
+                Accedi al Tuo Account
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider">
+            <span>oppure</span>
+        </div>
+
+        <!-- Register Section -->
+        <div class="register-section">
+            <p>Non hai ancora un account?</p>
+            <a href="register.html" class="register-btn">Registrati Gratis</a>
+        </div>
+
+        <!-- Back Home -->
+        <div class="back-home">
+            <a href="index.html">← Torna alla Homepage</a>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase Auth
+        import { auth } from './firebase-config.js';
+        import { 
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            setPersistence,
+            browserSessionPersistence
+        } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        // Elements
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('✅ Utente già loggato:', user.email);
+                showSuccess('Accesso effettuato! Reindirizzamento...');
+                setTimeout(() => {
+                    window.location.href = 'user-dashboard.html';
+                }, 1500);
+            }
+        });
+
+        // Login Form Handler
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Validation
+            if (!email || !password) {
+                showError('Inserisci email e password');
+                return;
+            }
+
+            // Show loading
+            setLoading(true);
+            hideMessages();
+
+            try {
+                // Set session persistence
+                await setPersistence(auth, browserSessionPersistence);
+                
+                // Sign in user
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                console.log('✅ Login successful:', user.email);
+                
+                // Save user session
+                localStorage.setItem('userSession', JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    loginTime: new Date().toISOString()
+                }));
+
+                // Show success and redirect
+                showSuccess('🎉 Accesso effettuato con successo!');
+                
+                setTimeout(() => {
+                    window.location.href = 'user-dashboard.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                
+                let errorMsg = 'Errore durante l\'accesso';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMsg = 'Account non trovato. Registrati prima di accedere.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMsg = 'Password non corretta.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMsg = 'Email non valida.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMsg = 'Troppi tentativi. Riprova più tardi.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMsg = 'Errore di connessione. Verifica la tua connessione internet.';
+                        break;
+                    default:
+                        errorMsg = `Errore: ${error.message}`;
+                }
+                
+                showError(errorMsg);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Utility Functions
+        function setLoading(loading) {
+            loginButton.disabled = loading;
+            loadingSpinner.style.display = loading ? 'inline-block' : 'none';
+            loginButton.style.opacity = loading ? '0.7' : '1';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+
+        // Demo Login Button
+        window.demoLogin = function() {
+            document.getElementById('email').value = 'demo@tribucoach.com';
+            document.getElementById('password').value = 'demo123';
+            loginForm.dispatchEvent(new Event('submit'));
+        }
+
+        // Initialize
+        console.log('🔐 Login page loaded');
+    </script>
+
+    <script>
+        // Toggle Password Visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+            }
+        }
+    </script>
+</body>
+</html>
