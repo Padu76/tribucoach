@@ -574,7 +574,7 @@ class AvatarManager {
             eyeShape: 'normal',
             eyeColor: '#8B4513',
             noseShape: 'medium',
-            mouthExpression: 'neutral',
+            mouthExpression: 'smile',
             accessories: {
                 glasses: 'none',
                 facialHair: 'none',
@@ -1039,11 +1039,79 @@ class AvatarUIBuilder {
             const svg = this.avatarManager.generateAvatarSVG();
             if (svg) {
                 preview.innerHTML = svg;
+            } else {
+                // Fallback realistic avatar
+                preview.innerHTML = this.generateFallbackRealisticAvatar();
             }
         } else {
-            // Placeholder for photo mode
-            preview.innerHTML = '<div class="photo-placeholder">📸<br>Carica una foto</div>';
+            // Force realistic mode
+            this.avatarManager.setMode('realistic');
+            const svg = this.avatarManager.generateAvatarSVG();
+            if (svg) {
+                preview.innerHTML = svg;
+            } else {
+                preview.innerHTML = this.generateFallbackRealisticAvatar();
+            }
         }
+    }
+    
+    generateFallbackRealisticAvatar() {
+        return `
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="fallbackFaceGradient" cx="0.3" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#FFD1C4"/>
+                        <stop offset="60%" stop-color="#FDBCB4"/>
+                        <stop offset="100%" stop-color="#F1A894"/>
+                    </radialGradient>
+                    <linearGradient id="fallbackHairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#5D4037"/>
+                        <stop offset="50%" stop-color="#3E2723"/>
+                        <stop offset="100%" stop-color="#2C1B18"/>
+                    </linearGradient>
+                </defs>
+                
+                <!-- Sfondo -->
+                <circle cx="100" cy="100" r="90" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1"/>
+                
+                <!-- Collo -->
+                <ellipse cx="100" cy="175" rx="22" ry="18" fill="url(#fallbackFaceGradient)"/>
+                
+                <!-- Viso -->
+                <ellipse cx="100" cy="110" rx="42" ry="52" fill="url(#fallbackFaceGradient)" stroke="#E8A484" stroke-width="0.5"/>
+                
+                <!-- Capelli -->
+                <path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#fallbackHairGradient)" stroke="#1A0E0A" stroke-width="0.5"/>
+                
+                <!-- Sopracciglia -->
+                <path d="M78 95 Q85 92 92 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <path d="M108 95 Q115 92 122 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
+                
+                <!-- Occhi -->
+                <ellipse cx="85" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
+                <ellipse cx="115" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
+                <circle cx="85" cy="105" r="4" fill="#8B4513"/>
+                <circle cx="115" cy="105" r="4" fill="#8B4513"/>
+                <circle cx="85" cy="105" r="2" fill="#5D4037"/>
+                <circle cx="115" cy="105" r="2" fill="#5D4037"/>
+                <circle cx="86" cy="103" r="1.5" fill="white"/>
+                <circle cx="116" cy="103" r="1.5" fill="white"/>
+                
+                <!-- Ciglia -->
+                <path d="M77 100 Q85 98 93 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+                <path d="M107 100 Q115 98 123 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+                
+                <!-- Naso -->
+                <ellipse cx="100" cy="115" rx="3.5" ry="5" fill="#E8A484" opacity="0.6"/>
+                <path d="M97 116 L103 116" stroke="#D89A7A" stroke-width="1" opacity="0.7"/>
+                <ellipse cx="98" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
+                <ellipse cx="102" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
+                
+                <!-- Bocca -->
+                <path d="M92 130 Q100 138 108 130" stroke="#FF6B9D" stroke-width="4" fill="none" stroke-linecap="round"/>
+                <path d="M94 131 Q100 136 106 131" stroke="#FFB6C1" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+        `;
     }
     
     updateControls() {
@@ -1173,7 +1241,11 @@ class RealisticAvatarSystem {
         // Load existing avatar
         avatarManager.loadAvatar();
         
+        // Force generate realistic avatar immediately
+        avatarManager.setMode('realistic');
+        
         console.log('✅ Sistema Avatar Realistico inizializzato per utente:', userId);
+        console.log('🎨 Avatar realistico generato:', avatarManager.currentAvatar);
         return avatarManager;
     }
     
