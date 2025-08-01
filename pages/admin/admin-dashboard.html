@@ -318,7 +318,7 @@
     <!-- JavaScript Modulare -->
     <script type="module">
         // Import tutti i moduli
-        import { initializeFirebaseAdmin } from './js/firebase-admin.js';
+        import { initializeFirebaseAdmin, loadAllFirebaseData } from './js/firebase-admin.js';
         import { initializeDashboardCore } from './js/dashboard-core.js';
         import { initializeUserManagement } from './js/user-management.js';
 
@@ -327,11 +327,11 @@
             console.log('🚀 Inizializzazione Admin Dashboard...');
             
             try {
-                // STEP 1: Inizializza Firebase e carica dati
+                // STEP 1: Inizializza Firebase
                 console.log('🔥 Step 1: Inizializzazione Firebase...');
                 initializeFirebaseAdmin();
                 
-                // STEP 2: Aspetta 2 secondi per Firebase, poi inizializza Core
+                // STEP 2: Aspetta Firebase, poi inizializza Core
                 setTimeout(() => {
                     console.log('⚡ Step 2: Inizializzazione Dashboard Core...');
                     initializeDashboardCore();
@@ -340,11 +340,25 @@
                     console.log('👥 Step 3: Inizializzazione User Management...');
                     initializeUserManagement();
                     
+                    // STEP 4: Forza caricamento dati (BACKUP)
+                    setTimeout(() => {
+                        console.log('🔄 Step 4: Caricamento dati automatico...');
+                        loadAllFirebaseData();
+                    }, 3000);
+                    
                     console.log('✅ Tutti i moduli inizializzati!');
-                }, 2000);
+                }, 1000);
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione:', error);
+                
+                // Fallback: forza caricamento dopo 5 secondi
+                setTimeout(() => {
+                    console.log('🔄 Fallback: Forzatura caricamento dati...');
+                    if (window.firebaseAdmin && window.firebaseAdmin.loadAllFirebaseData) {
+                        window.firebaseAdmin.loadAllFirebaseData();
+                    }
+                }, 5000);
             }
             
             // Update time every 5 seconds
@@ -361,6 +375,18 @@
                     timeElement.textContent = timeString;
                 }
             }, 5000);
+        });
+
+        // Manual trigger per refresh button
+        window.addEventListener('load', () => {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    if (window.firebaseAdmin && window.firebaseAdmin.loadAllFirebaseData) {
+                        window.firebaseAdmin.loadAllFirebaseData();
+                    }
+                });
+            }
         });
 
         // Close modals on escape
