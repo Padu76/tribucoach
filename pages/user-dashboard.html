@@ -245,6 +245,13 @@
             margin-bottom: 1rem;
         }
 
+        .avatar-personality {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
         .customize-btn {
             background: linear-gradient(45deg, #3b82f6, #1e40af);
             color: white;
@@ -286,7 +293,7 @@
             background: white;
             border-radius: 20px;
             padding: 2rem;
-            max-width: 600px;
+            max-width: 800px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -327,7 +334,7 @@
 
         .avatar-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -348,6 +355,7 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             position: relative;
             overflow: hidden;
+            padding: 1rem;
         }
 
         .avatar-option:hover {
@@ -361,10 +369,23 @@
             transform: scale(1.1);
         }
 
+        .avatar-option .emoji {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
         .avatar-option .name {
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-            font-weight: 500;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .avatar-option .personality {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            font-weight: normal;
+            text-align: center;
+            line-height: 1.2;
         }
 
         .modal-actions {
@@ -703,6 +724,29 @@
             to { transform: translateX(0); opacity: 1; }
         }
 
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .dashboard-container {
@@ -743,7 +787,7 @@
             }
 
             .avatar-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .modal-content {
@@ -785,13 +829,14 @@
 
             <!-- Avatar Utente -->
             <div class="user-avatar-card">
-                <div class="user-avatar-display" id="userAvatarDisplay" onclick="openAvatarCreator()">
+                <div class="user-avatar-display" id="userAvatarDisplay">
                     💪
                 </div>
                 <div class="user-info">
                     <h3 id="userName">Il Tuo Avatar</h3>
                     <p class="avatar-name" id="avatarName">Determinato</p>
-                    <button class="customize-btn" onclick="openAvatarCreator()">
+                    <p class="avatar-personality" id="avatarPersonality">Forte e deciso</p>
+                    <button class="customize-btn" id="customizeBtn">
                         🎨 Personalizza Avatar
                     </button>
                 </div>
@@ -896,7 +941,7 @@
     <!-- 🎨 AVATAR CREATOR MODAL -->
     <div class="avatar-modal" id="avatarModal">
         <div class="modal-content">
-            <button class="close-modal" onclick="closeAvatarCreator()">×</button>
+            <button class="close-modal" id="closeModalBtn">×</button>
             <div class="modal-header">
                 <h2>🎨 Personalizza il Tuo Avatar</h2>
                 <p>Scegli l'avatar che ti rappresenta meglio nel tuo percorso di crescita</p>
@@ -907,26 +952,26 @@
             </div>
 
             <div class="modal-actions">
-                <button class="modal-btn btn-save" onclick="saveAvatar()">✅ Salva Avatar</button>
-                <button class="modal-btn btn-cancel" onclick="closeAvatarCreator()">❌ Annulla</button>
+                <button class="modal-btn btn-save" id="saveAvatarBtn">✅ Salva Avatar</button>
+                <button class="modal-btn btn-cancel" id="cancelAvatarBtn">❌ Annulla</button>
             </div>
         </div>
     </div>
 
     <!-- Load Sistemi -->
-    <script src="../api/firebase-lifestyle-integration.js" type="module"></script>
+    <script src="../utils/avatar-system.js" type="module"></script>
     <script src="../utils/andrea-photo-system.js" type="module"></script>
     <script src="../api/auth-guard.js"></script>
     
     <script type="module">
-        // Import Firebase & Avatar functions
+        // Import Avatar System
         import { 
-            getUserAvatar, 
-            saveUserAvatar, 
-            getAndreaMessage, 
-            getAvailableAvatars,
-            AVATAR_PRESETS 
-        } from '../api/firebase-lifestyle-integration.js';
+            initializeAvatarSystem,
+            getAvatarManager,
+            EXTENDED_AVATAR_DATA,
+            createAvatarDisplay,
+            animateAvatarTransition
+        } from '../utils/avatar-system.js';
 
         // Import Photo System
         import { 
@@ -934,22 +979,27 @@
             initializeAndreaPhotoSystem 
         } from '../utils/andrea-photo-system.js';
 
-        console.log('🏠 Dashboard con Sistema Foto caricata - Inizializzazione...');
+        console.log('🏠 Dashboard con Sistema Avatar completo caricata - Inizializzazione...');
 
         let currentUserId = 'guest_' + Date.now();
         let selectedAvatarId = 'avatar_1';
-        let availableAvatars = [];
+        let avatarManager = null;
         let photoManager = null;
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             await initializeDashboard();
             checkUserRole();
+            setupEventListeners();
         });
 
         async function initializeDashboard() {
             try {
                 console.log('🚀 Inizializzazione dashboard completa...');
+                
+                // Initialize avatar system
+                await initializeAvatarSystem(currentUserId);
+                avatarManager = getAvatarManager();
                 
                 // Initialize photo system
                 photoManager = await initializeAndreaPhotoSystem();
@@ -957,15 +1007,8 @@
                 // Setup Andrea photo with real images
                 await setupAndreaRealPhoto();
                 
-                // Load available avatars
-                availableAvatars = getAvailableAvatars();
-                console.log('✅ Avatar disponibili caricati:', availableAvatars.length);
-                
                 // Load user avatar
                 await loadUserAvatar();
-                
-                // Load Andrea message
-                await loadAndreaMessage();
                 
                 console.log('✅ Dashboard completa inizializzata');
                 
@@ -1011,31 +1054,41 @@
 
         async function loadUserAvatar() {
             try {
-                const userAvatar = await getUserAvatar(currentUserId);
+                if (!avatarManager) {
+                    console.warn('⚠️ Avatar manager non disponibile');
+                    return;
+                }
+
+                // Get current avatar
+                const currentAvatar = avatarManager.getCurrentAvatar();
                 
-                if (userAvatar && userAvatar.preset) {
-                    displayUserAvatar(userAvatar.preset);
+                if (currentAvatar) {
+                    displayUserAvatar(currentAvatar);
+                    selectedAvatarId = currentAvatar.id;
                 } else {
                     // Use default avatar
-                    const defaultAvatar = availableAvatars[0];
+                    const defaultAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
                     displayUserAvatar(defaultAvatar);
                 }
                 
             } catch (error) {
                 console.error('❌ Errore caricamento avatar utente:', error);
                 // Show default
-                displayUserAvatar(availableAvatars[0]);
+                const defaultAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
+                displayUserAvatar(defaultAvatar);
             }
         }
 
         function displayUserAvatar(avatar) {
             const avatarDisplay = document.getElementById('userAvatarDisplay');
             const avatarName = document.getElementById('avatarName');
+            const avatarPersonality = document.getElementById('avatarPersonality');
             
             if (avatar) {
                 avatarDisplay.textContent = avatar.emoji;
-                avatarDisplay.style.background = avatar.preview.style;
+                avatarDisplay.style.background = `linear-gradient(135deg, ${avatar.colors.primary} 0%, ${avatar.colors.secondary} 100%)`;
                 avatarName.textContent = avatar.name;
+                avatarPersonality.textContent = avatar.personality;
                 
                 selectedAvatarId = avatar.id;
                 
@@ -1043,35 +1096,56 @@
             }
         }
 
-        async function loadAndreaMessage() {
-            try {
-                const message = await getAndreaMessage(currentUserId);
-                
-                const messageContainer = document.getElementById('andreaMessage');
-                messageContainer.innerHTML = `
-                    <div class="message-icon">${message.icon}</div>
-                    <div class="message-title">${message.title}</div>
-                    <div class="message-text">${message.message}</div>
-                `;
-                
-                console.log('✅ Messaggio Andrea caricato:', message.messageType);
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento messaggio Andrea:', error);
+        function setupEventListeners() {
+            // Customize button
+            const customizeBtn = document.getElementById('customizeBtn');
+            if (customizeBtn) {
+                customizeBtn.addEventListener('click', openAvatarCreator);
+            }
+
+            // Avatar display click
+            const avatarDisplay = document.getElementById('userAvatarDisplay');
+            if (avatarDisplay) {
+                avatarDisplay.addEventListener('click', openAvatarCreator);
+            }
+
+            // Modal buttons
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+            const cancelAvatarBtn = document.getElementById('cancelAvatarBtn');
+
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeAvatarCreator);
+            if (saveAvatarBtn) saveAvatarBtn.addEventListener('click', saveAvatar);
+            if (cancelAvatarBtn) cancelAvatarBtn.addEventListener('click', closeAvatarCreator);
+
+            // Modal backdrop click
+            const avatarModal = document.getElementById('avatarModal');
+            if (avatarModal) {
+                avatarModal.addEventListener('click', (e) => {
+                    if (e.target === avatarModal) {
+                        closeAvatarCreator();
+                    }
+                });
             }
         }
 
         // Avatar Creator Functions
-        window.openAvatarCreator = function() {
+        function openAvatarCreator() {
             const modal = document.getElementById('avatarModal');
             const avatarGrid = document.getElementById('avatarGrid');
             
-            // Generate avatar options
+            if (!avatarGrid || !modal) {
+                console.error('❌ Elementi modal non trovati');
+                return;
+            }
+            
+            // Generate avatar options from EXTENDED_AVATAR_DATA
             avatarGrid.innerHTML = '';
-            availableAvatars.forEach(avatar => {
+            
+            Object.values(EXTENDED_AVATAR_DATA).forEach(avatar => {
                 const option = document.createElement('div');
                 option.className = 'avatar-option';
-                option.style.background = avatar.preview.style;
+                option.style.background = `linear-gradient(135deg, ${avatar.colors.primary} 0%, ${avatar.colors.secondary} 100%)`;
                 option.dataset.avatarId = avatar.id;
                 
                 if (avatar.id === selectedAvatarId) {
@@ -1079,22 +1153,25 @@
                 }
                 
                 option.innerHTML = `
-                    ${avatar.emoji}
+                    <div class="emoji">${avatar.emoji}</div>
                     <div class="name">${avatar.name}</div>
+                    <div class="personality">${avatar.personality}</div>
                 `;
                 
-                option.onclick = () => selectAvatar(avatar.id);
+                option.addEventListener('click', () => selectAvatar(avatar.id));
                 avatarGrid.appendChild(option);
             });
             
             modal.classList.add('active');
             console.log('🎨 Avatar creator aperto');
-        };
+        }
 
-        window.closeAvatarCreator = function() {
+        function closeAvatarCreator() {
             const modal = document.getElementById('avatarModal');
-            modal.classList.remove('active');
-        };
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
 
         function selectAvatar(avatarId) {
             // Update selection
@@ -1106,21 +1183,29 @@
             if (selectedOption) {
                 selectedOption.classList.add('selected');
                 selectedAvatarId = avatarId;
+                console.log('🎯 Avatar selezionato:', avatarId);
             }
         }
 
-        window.saveAvatar = async function() {
+        async function saveAvatar() {
             try {
                 console.log('💾 Salvataggio avatar...', selectedAvatarId);
                 
-                await saveUserAvatar(currentUserId, {
-                    avatarId: selectedAvatarId,
-                    customizations: {}
-                });
+                if (!avatarManager) {
+                    throw new Error('Avatar manager non disponibile');
+                }
+
+                // Save avatar using avatar system
+                await avatarManager.saveUserAvatar(selectedAvatarId, {});
                 
                 // Update display
-                const selectedAvatar = availableAvatars.find(a => a.id === selectedAvatarId);
+                const selectedAvatar = EXTENDED_AVATAR_DATA[selectedAvatarId];
                 if (selectedAvatar) {
+                    // Animate transition
+                    const avatarDisplay = document.getElementById('userAvatarDisplay');
+                    await animateAvatarTransition(avatarDisplay, selectedAvatar);
+                    
+                    // Update all info
                     displayUserAvatar(selectedAvatar);
                 }
                 
@@ -1135,22 +1220,11 @@
                 console.error('❌ Errore salvataggio avatar:', error);
                 showNotification('❌ Errore salvataggio avatar', 'error');
             }
-        };
+        }
 
         function showNotification(message, type = 'info') {
-            // Simple notification - could be enhanced
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#10b981' : '#ef4444'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                z-index: 10000;
-                animation: slideIn 0.3s ease;
-            `;
+            notification.className = `notification ${type}`;
             notification.textContent = message;
             
             document.body.appendChild(notification);
@@ -1283,7 +1357,7 @@
         setInterval(updateStats, 30000);
 
         setTimeout(() => {
-            console.log('✅ Dashboard con foto reali Andrea completamente caricata');
+            console.log('✅ Dashboard con avatar system completamente caricata');
         }, 1000);
     </script>
 </body>
