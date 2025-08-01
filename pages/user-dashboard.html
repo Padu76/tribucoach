@@ -205,7 +205,7 @@
             font-size: 0.95rem;
         }
 
-        /* Avatar Utente */
+        /* Avatar Utente - NUOVO SISTEMA SVG */
         .user-avatar-card {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
@@ -227,6 +227,7 @@
             background: linear-gradient(45deg, #3b82f6, #1e40af);
         }
 
+        /* 🆕 SVG Avatar Display */
         .user-avatar-display {
             width: 120px;
             height: 120px;
@@ -235,18 +236,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 3.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            background: white;
             border: 4px solid rgba(255,255,255,0.4);
             box-shadow: 0 12px 35px rgba(0,0,0,0.3);
             transition: all 0.4s ease;
             cursor: pointer;
+            overflow: hidden;
         }
 
         .user-avatar-display:hover {
             transform: scale(1.05) rotate(-2deg);
             box-shadow: 0 20px 50px rgba(0,0,0,0.4);
             border-color: rgba(255,255,255,0.6);
+        }
+
+        .user-avatar-display svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
         }
 
         .user-info h3 {
@@ -287,7 +294,7 @@
             box-shadow: 0 8px 25px rgba(59,130,246,0.4);
         }
 
-        /* Avatar Creator Modal */
+        /* 🎨 SVG Avatar Creator Modal - NUOVO DESIGN */
         .avatar-modal {
             display: none;
             position: fixed;
@@ -295,8 +302,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -307,14 +314,15 @@
         }
 
         .modal-content {
-            background: white;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
             border-radius: 20px;
             padding: 2rem;
-            max-width: 800px;
-            width: 90%;
-            max-height: 80vh;
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
             overflow-y: auto;
             position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .modal-header {
@@ -323,13 +331,13 @@
         }
 
         .modal-header h2 {
-            color: #2c3e50;
+            color: white;
             font-size: 1.8rem;
             margin-bottom: 0.5rem;
         }
 
         .modal-header p {
-            color: #666;
+            color: rgba(255,255,255,0.7);
         }
 
         .close-modal {
@@ -343,78 +351,142 @@
             padding: 0.5rem;
             border-radius: 50%;
             transition: all 0.2s;
+            color: rgba(255,255,255,0.7);
         }
 
         .close-modal:hover {
-            background: rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
 
-        .avatar-grid {
+        /* Avatar Builder Grid */
+        .avatar-builder-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 1rem;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
             margin-bottom: 2rem;
         }
 
-        .avatar-option {
-            aspect-ratio: 1;
+        .avatar-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
             border-radius: 15px;
-            border: 3px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-group h4 {
+            color: white;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 0.5rem;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .option-btn.active {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            border-color: #ea580c;
+            box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4);
+        }
+
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.5rem;
+        }
+
+        .color-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+
+        .color-btn.active {
+            border-color: #ea580c;
+            border-width: 4px;
+            box-shadow: 0 0 0 2px white;
+        }
+
+        .avatar-preview-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: white;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
+        }
+
+        .avatar-preview {
+            width: 250px;
+            height: 250px;
+            background: white;
+            border-radius: 20px;
             padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 1rem;
         }
 
-        .avatar-option:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        .avatar-preview svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
         }
 
-        .avatar-option.selected {
-            border-color: #ff6b35;
-            box-shadow: 0 0 20px rgba(255,107,53,0.4);
-            transform: scale(1.1);
-        }
-
-        .avatar-option .emoji {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .avatar-option .name {
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-            font-weight: 600;
-        }
-
-        .avatar-option .personality {
-            font-size: 0.7rem;
-            opacity: 0.8;
-            font-weight: normal;
+        .avatar-info-preview {
             text-align: center;
-            line-height: 1.2;
+            color: white;
+        }
+
+        .avatar-info-preview h4 {
+            margin-bottom: 0.5rem;
+            color: #ea580c;
         }
 
         .modal-actions {
             display: flex;
             gap: 1rem;
             justify-content: center;
+            margin-top: 2rem;
         }
 
         .modal-btn {
-            padding: 12px 24px;
+            padding: 14px 24px;
             border: none;
-            border-radius: 25px;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
@@ -427,17 +499,28 @@
         }
 
         .btn-save:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(16,185,129,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.4);
         }
 
         .btn-cancel {
-            background: #e5e7eb;
-            color: #374151;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
         .btn-cancel:hover {
-            background: #d1d5db;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-random {
+            background: linear-gradient(45deg, #7c3aed, #a855f7);
+            color: white;
+        }
+
+        .btn-random:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
         }
 
         .user-welcome {
@@ -1055,14 +1138,6 @@
                 width: fit-content;
             }
 
-            .avatar-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .modal-content {
-                padding: 1.5rem;
-            }
-
             .admin-login-content {
                 padding: 2rem;
                 margin: 1rem;
@@ -1070,6 +1145,20 @@
 
             .admin-login-actions {
                 flex-direction: column;
+            }
+
+            .avatar-builder-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .avatar-preview {
+                width: 200px;
+                height: 200px;
+            }
+
+            .control-options {
+                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
             }
         }
     </style>
@@ -1105,15 +1194,46 @@
                 </div>
             </div>
 
-            <!-- Avatar Utente -->
+            <!-- Avatar Utente SVG -->
             <div class="user-avatar-card">
                 <div class="user-avatar-display" id="userAvatarDisplay">
-                    💪
+                    <svg viewBox="0 0 200 200" id="userAvatarSvg">
+                        <!-- Background Circle -->
+                        <circle cx="100" cy="100" r="95" fill="#f0f9ff" stroke="#e0e7ff" stroke-width="2"/>
+                        
+                        <!-- Face -->
+                        <ellipse id="face" cx="100" cy="110" rx="50" ry="55" fill="#fdbcbc"/>
+                        
+                        <!-- Hair -->
+                        <path id="hair" d="M50 80 Q100 50 150 80 Q150 90 140 100 Q100 70 60 100 Q50 90 50 80" fill="#8B4513"/>
+                        
+                        <!-- Eyes -->
+                        <ellipse id="leftEye" cx="85" cy="100" rx="8" ry="6" fill="white"/>
+                        <circle cx="85" cy="100" r="4" fill="#8B4513" id="leftPupil"/>
+                        <ellipse id="rightEye" cx="115" cy="100" rx="8" ry="6" fill="white"/>
+                        <circle cx="115" cy="100" r="4" fill="#8B4513" id="rightPupil"/>
+                        
+                        <!-- Nose -->
+                        <ellipse cx="100" cy="115" rx="3" ry="2" fill="#f8a5a5"/>
+                        
+                        <!-- Mouth -->
+                        <path id="mouth" d="M90 130 Q100 140 110 130" stroke="#d97706" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        
+                        <!-- Glasses (hidden by default) -->
+                        <g id="glasses" style="display: none;">
+                            <circle cx="85" cy="100" r="15" fill="none" stroke="#333" stroke-width="2"/>
+                            <circle cx="115" cy="100" r="15" fill="none" stroke="#333" stroke-width="2"/>
+                            <line x1="100" y1="100" x2="100" y2="100" stroke="#333" stroke-width="2"/>
+                        </g>
+                        
+                        <!-- Beard (hidden by default) -->
+                        <path id="beard" d="M75 135 Q100 150 125 135 Q125 145 100 150 Q75 145 75 135" fill="#8B4513" style="display: none;"/>
+                    </svg>
                 </div>
                 <div class="user-info">
                     <h3 id="userName">Il Tuo Avatar</h3>
-                    <p class="avatar-name" id="avatarName">Determinato</p>
-                    <p class="avatar-personality" id="avatarPersonality">Forte e deciso</p>
+                    <p class="avatar-name" id="avatarName">Personalizzato</p>
+                    <p class="avatar-personality" id="avatarPersonality">Pronto per il cambiamento</p>
                     <button class="customize-btn" id="customizeBtn">
                         🎨 Personalizza Avatar
                     </button>
@@ -1216,21 +1336,148 @@
         </div>
     </div>
 
-    <!-- 🎨 AVATAR CREATOR MODAL -->
+    <!-- 🎨 SVG AVATAR CREATOR MODAL -->
     <div class="avatar-modal" id="avatarModal">
         <div class="modal-content">
             <button class="close-modal" id="closeModalBtn">×</button>
             <div class="modal-header">
                 <h2>🎨 Personalizza il Tuo Avatar</h2>
-                <p>Scegli l'avatar che ti rappresenta meglio nel tuo percorso di crescita</p>
+                <p>Crea un avatar che riflette la tua personalità nel percorso di coaching</p>
             </div>
             
-            <div class="avatar-grid" id="avatarGrid">
-                <!-- Avatar dinamici generati da JavaScript -->
+            <div class="avatar-builder-grid">
+                <div class="avatar-controls">
+                    <!-- Genere -->
+                    <div class="control-group">
+                        <h4>👤 Genere</h4>
+                        <div class="control-options">
+                            <button class="option-btn active" data-option="gender" data-value="male">👨 Uomo</button>
+                            <button class="option-btn" data-option="gender" data-value="female">👩 Donna</button>
+                            <button class="option-btn" data-option="gender" data-value="neutral">🧑 Neutro</button>
+                        </div>
+                    </div>
+
+                    <!-- Forma Viso -->
+                    <div class="control-group">
+                        <h4>🎭 Forma Viso</h4>
+                        <div class="control-options">
+                            <button class="option-btn active" data-option="faceShape" data-value="oval">Ovale</button>
+                            <button class="option-btn" data-option="faceShape" data-value="round">Rotondo</button>
+                            <button class="option-btn" data-option="faceShape" data-value="square">Quadrato</button>
+                            <button class="option-btn" data-option="faceShape" data-value="heart">Cuore</button>
+                        </div>
+                    </div>
+
+                    <!-- Capelli -->
+                    <div class="control-group">
+                        <h4>💇 Stile Capelli</h4>
+                        <div class="control-options">
+                            <button class="option-btn active" data-option="hairStyle" data-value="short">Corti</button>
+                            <button class="option-btn" data-option="hairStyle" data-value="medium">Medi</button>
+                            <button class="option-btn" data-option="hairStyle" data-value="long">Lunghi</button>
+                            <button class="option-btn" data-option="hairStyle" data-value="curly">Ricci</button>
+                            <button class="option-btn" data-option="hairStyle" data-value="bald">Calvo</button>
+                        </div>
+                    </div>
+
+                    <!-- Colore Capelli -->
+                    <div class="control-group">
+                        <h4>🎨 Colore Capelli</h4>
+                        <div class="color-options">
+                            <button class="color-btn active" data-option="hairColor" data-value="#8B4513" style="background: #8B4513"></button>
+                            <button class="color-btn" data-option="hairColor" data-value="#2F1B14" style="background: #2F1B14"></button>
+                            <button class="color-btn" data-option="hairColor" data-value="#FFD700" style="background: #FFD700"></button>
+                            <button class="color-btn" data-option="hairColor" data-value="#DC143C" style="background: #DC143C"></button>
+                            <button class="color-btn" data-option="hairColor" data-value="#708090" style="background: #708090"></button>
+                            <button class="color-btn" data-option="hairColor" data-value="#800080" style="background: #800080"></button>
+                        </div>
+                    </div>
+
+                    <!-- Occhi -->
+                    <div class="control-group">
+                        <h4>👀 Colore Occhi</h4>
+                        <div class="color-options">
+                            <button class="color-btn active" data-option="eyeColor" data-value="#8B4513" style="background: #8B4513"></button>
+                            <button class="color-btn" data-option="eyeColor" data-value="#4169E1" style="background: #4169E1"></button>
+                            <button class="color-btn" data-option="eyeColor" data-value="#228B22" style="background: #228B22"></button>
+                            <button class="color-btn" data-option="eyeColor" data-value="#708090" style="background: #708090"></button>
+                            <button class="color-btn" data-option="eyeColor" data-value="#2F4F4F" style="background: #2F4F4F"></button>
+                            <button class="color-btn" data-option="eyeColor" data-value="#800080" style="background: #800080"></button>
+                        </div>
+                    </div>
+
+                    <!-- Accessori -->
+                    <div class="control-group">
+                        <h4>👓 Accessori</h4>
+                        <div class="control-options">
+                            <button class="option-btn active" data-option="glasses" data-value="none">Nessuno</button>
+                            <button class="option-btn" data-option="glasses" data-value="regular">Occhiali</button>
+                            <button class="option-btn" data-option="glasses" data-value="sunglasses">Da Sole</button>
+                            <button class="option-btn" data-option="glasses" data-value="beard">Barba</button>
+                        </div>
+                    </div>
+
+                    <!-- Mood -->
+                    <div class="control-group">
+                        <h4>😊 Espressione</h4>
+                        <div class="control-options">
+                            <button class="option-btn active" data-option="mood" data-value="happy">😊 Felice</button>
+                            <button class="option-btn" data-option="mood" data-value="focused">🎯 Concentrato</button>
+                            <button class="option-btn" data-option="mood" data-value="calm">😌 Calmo</button>
+                            <button class="option-btn" data-option="mood" data-value="determined">💪 Determinato</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="avatar-preview-container">
+                    <div class="avatar-preview">
+                        <svg viewBox="0 0 200 200" id="avatarPreviewSvg">
+                            <!-- Background Circle -->
+                            <circle cx="100" cy="100" r="95" fill="#f0f9ff" stroke="#e0e7ff" stroke-width="2"/>
+                            
+                            <!-- Face -->
+                            <ellipse id="previewFace" cx="100" cy="110" rx="50" ry="55" fill="#fdbcbc"/>
+                            
+                            <!-- Hair -->
+                            <path id="previewHair" d="M50 80 Q100 50 150 80 Q150 90 140 100 Q100 70 60 100 Q50 90 50 80" fill="#8B4513"/>
+                            
+                            <!-- Eyes -->
+                            <ellipse id="previewLeftEye" cx="85" cy="100" rx="8" ry="6" fill="white"/>
+                            <circle cx="85" cy="100" r="4" fill="#8B4513" id="previewLeftPupil"/>
+                            <ellipse id="previewRightEye" cx="115" cy="100" rx="8" ry="6" fill="white"/>
+                            <circle cx="115" cy="100" r="4" fill="#8B4513" id="previewRightPupil"/>
+                            
+                            <!-- Nose -->
+                            <ellipse cx="100" cy="115" rx="3" ry="2" fill="#f8a5a5"/>
+                            
+                            <!-- Mouth -->
+                            <path id="previewMouth" d="M90 130 Q100 140 110 130" stroke="#d97706" stroke-width="3" fill="none" stroke-linecap="round"/>
+                            
+                            <!-- Glasses (hidden by default) -->
+                            <g id="previewGlasses" style="display: none;">
+                                <circle cx="85" cy="100" r="15" fill="none" stroke="#333" stroke-width="2"/>
+                                <circle cx="115" cy="100" r="15" fill="none" stroke="#333" stroke-width="2"/>
+                                <line x1="100" y1="100" x2="100" y2="100" stroke="#333" stroke-width="2"/>
+                            </g>
+                            
+                            <!-- Beard (hidden by default) -->
+                            <path id="previewBeard" d="M75 135 Q100 150 125 135 Q125 145 100 150 Q75 145 75 135" fill="#8B4513" style="display: none;"/>
+                        </svg>
+                    </div>
+
+                    <div class="avatar-info-preview">
+                        <h4>Il Tuo Avatar Coaching</h4>
+                        <div class="mood-indicator">
+                            <span id="moodEmoji">😊</span>
+                            <span id="moodText">Pronto per il cambiamento!</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="modal-actions">
-                <button class="modal-btn btn-save" id="saveAvatarBtn">✅ Salva Avatar</button>
+                <button class="modal-btn btn-save" id="saveAvatarBtn">💾 Salva Avatar</button>
+                <button class="modal-btn btn-random" id="randomAvatarBtn">🎲 Randomizza</button>
                 <button class="modal-btn btn-cancel" id="cancelAvatarBtn">❌ Annulla</button>
             </div>
         </div>
@@ -1287,40 +1534,72 @@
         </div>
     </div>
 
-    <!-- Load Sistemi -->
-    <script src="../utils/avatar-system.js" type="module"></script>
-    <script src="../utils/andrea-photo-system.js" type="module"></script>
+    <!-- JavaScript with SVG Avatar System -->
     <script src="../api/auth-guard.js"></script>
     
     <script type="module">
-        // Import Avatar System
-        import { 
-            initializeAvatarSystem,
-            getAvatarManager,
-            EXTENDED_AVATAR_DATA,
-            createAvatarDisplay,
-            animateAvatarTransition
-        } from '../utils/avatar-system.js';
-
-        // Import Photo System
-        import { 
-            getAndreaPhotoManager,
-            initializeAndreaPhotoSystem 
-        } from '../utils/andrea-photo-system.js';
-
-        console.log('🏠 Dashboard con Sistema Avatar completo caricata - Inizializzazione...');
+        console.log('🏠 Dashboard con Sistema Avatar SVG completo caricata - Inizializzazione...');
 
         let currentUserId = 'guest_' + Date.now();
-        let selectedAvatarId = 'avatar_1';
-        let avatarManager = null;
-        let photoManager = null;
+
+        // Avatar configuration object
+        const avatarConfig = {
+            gender: 'male',
+            faceShape: 'oval',
+            hairStyle: 'short',
+            hairColor: '#8B4513',
+            eyeColor: '#8B4513',
+            glasses: 'none',
+            mood: 'happy',
+            skinTone: '#fdbcbc'
+        };
+
+        // Face shapes data
+        const faceShapes = {
+            oval: { rx: 50, ry: 55 },
+            round: { rx: 55, ry: 55 },
+            square: { rx: 45, ry: 50 },
+            heart: { rx: 50, ry: 52 }
+        };
+
+        // Hair styles data
+        const hairStyles = {
+            short: "M50 80 Q100 50 150 80 Q150 90 140 100 Q100 70 60 100 Q50 90 50 80",
+            medium: "M45 75 Q100 45 155 75 Q155 95 145 110 Q100 65 55 110 Q45 95 45 75",
+            long: "M40 70 Q100 35 160 70 Q160 100 150 120 Q100 60 50 120 Q40 100 40 70",
+            curly: "M50 85 Q70 50 100 70 Q130 50 150 85 Q140 95 130 100 Q110 85 100 90 Q90 85 70 100 Q60 95 50 85",
+            bald: "M60 90 Q100 75 140 90"
+        };
+
+        // Mood expressions
+        const moodExpressions = {
+            happy: { 
+                mouth: "M90 130 Q100 140 110 130",
+                emoji: "😊",
+                text: "Pronto per il cambiamento!"
+            },
+            focused: { 
+                mouth: "M90 135 Q100 135 110 135",
+                emoji: "🎯",
+                text: "Concentrato sui miei obiettivi!"
+            },
+            calm: { 
+                mouth: "M90 132 Q100 138 110 132",
+                emoji: "😌",
+                text: "In perfetto equilibrio!"
+            },
+            determined: { 
+                mouth: "M88 135 Q100 132 112 135",
+                emoji: "💪",
+                text: "Determinato a riuscire!"
+            }
+        };
 
         // 🚨 TRIPLE-CLICK ADMIN ACCESS SYSTEM
         let clickCount = 0;
         let clickTimer = null;
         const TRIPLE_CLICK_THRESHOLD = 3;
-        const CLICK_TIMEOUT = 800; // 800ms per rilevare il triple-click
-        const ADMIN_TIMEOUT = 30000; // 30 secondi prima di nascondere
+        const CLICK_TIMEOUT = 800;
 
         // 🔐 ADMIN LOGIN SYSTEM
         const ADMIN_CREDENTIALS = {
@@ -1336,29 +1615,241 @@
             setupEventListeners();
             setupTripleClickAccess();
             setupAdminLogin();
+            setupAvatarSystem();
         });
 
         async function initializeDashboard() {
             try {
-                console.log('🚀 Inizializzazione dashboard completa...');
+                console.log('🚀 Inizializzazione dashboard con avatar SVG...');
                 
-                // Initialize avatar system
-                await initializeAvatarSystem(currentUserId);
-                avatarManager = getAvatarManager();
+                // Setup Andrea photo simulation
+                await setupAndreaPhoto();
                 
-                // Initialize photo system
-                photoManager = await initializeAndreaPhotoSystem();
-                
-                // Setup Andrea photo with real images
-                await setupAndreaRealPhoto();
-                
-                // Load user avatar
-                await loadUserAvatar();
+                // Load user avatar from localStorage if exists
+                loadSavedAvatar();
                 
                 console.log('✅ Dashboard completa inizializzata');
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione dashboard:', error);
+            }
+        }
+
+        // 🎨 SVG AVATAR SYSTEM FUNCTIONS
+        function setupAvatarSystem() {
+            // Add click listeners to all option buttons
+            document.querySelectorAll('.option-btn, .color-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    handleOptionClick(this);
+                });
+            });
+
+            // Random button
+            const randomBtn = document.getElementById('randomAvatarBtn');
+            if (randomBtn) {
+                randomBtn.addEventListener('click', randomizeAvatar);
+            }
+
+            // Initial avatar render
+            updateAvatarPreview();
+            updateMainAvatar();
+        }
+
+        function handleOptionClick(button) {
+            const option = button.dataset.option;
+            const value = button.dataset.value;
+            
+            // Remove active class from siblings
+            const siblings = button.parentElement.querySelectorAll('.option-btn, .color-btn');
+            siblings.forEach(sibling => sibling.classList.remove('active'));
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            // Update avatar config
+            avatarConfig[option] = value;
+            
+            // Update avatar display
+            updateAvatarPreview();
+            
+            console.log('🎨 Avatar aggiornato:', option, '=', value);
+        }
+
+        function updateAvatarPreview() {
+            updateAvatarSVG('avatarPreviewSvg', 'preview');
+        }
+
+        function updateMainAvatar() {
+            updateAvatarSVG('userAvatarSvg', 'main');
+        }
+
+        function updateAvatarSVG(svgId, prefix = '') {
+            const svg = document.getElementById(svgId);
+            if (!svg) return;
+
+            const faceId = prefix ? `${prefix}Face` : 'face';
+            const hairId = prefix ? `${prefix}Hair` : 'hair';
+            const leftPupilId = prefix ? `${prefix}LeftPupil` : 'leftPupil';
+            const rightPupilId = prefix ? `${prefix}RightPupil` : 'rightPupil';
+            const glassesId = prefix ? `${prefix}Glasses` : 'glasses';
+            const beardId = prefix ? `${prefix}Beard` : 'beard';
+            const mouthId = prefix ? `${prefix}Mouth` : 'mouth';
+
+            // Update face shape
+            const face = document.getElementById(faceId);
+            if (face) {
+                const shape = faceShapes[avatarConfig.faceShape];
+                face.setAttribute('rx', shape.rx);
+                face.setAttribute('ry', shape.ry);
+            }
+            
+            // Update hair
+            const hair = document.getElementById(hairId);
+            if (hair) {
+                if (avatarConfig.hairStyle === 'bald') {
+                    hair.style.display = 'none';
+                } else {
+                    hair.style.display = 'block';
+                    hair.setAttribute('d', hairStyles[avatarConfig.hairStyle]);
+                    hair.setAttribute('fill', avatarConfig.hairColor);
+                }
+            }
+            
+            // Update eye color
+            const leftPupil = document.getElementById(leftPupilId);
+            const rightPupil = document.getElementById(rightPupilId);
+            if (leftPupil) leftPupil.setAttribute('fill', avatarConfig.eyeColor);
+            if (rightPupil) rightPupil.setAttribute('fill', avatarConfig.eyeColor);
+            
+            // Update glasses/accessories
+            const glasses = document.getElementById(glassesId);
+            const beard = document.getElementById(beardId);
+            
+            // Hide all accessories first
+            if (glasses) glasses.style.display = 'none';
+            if (beard) beard.style.display = 'none';
+            
+            if (avatarConfig.glasses === 'regular' || avatarConfig.glasses === 'sunglasses') {
+                if (glasses) {
+                    glasses.style.display = 'block';
+                    const lensColor = avatarConfig.glasses === 'sunglasses' ? 'rgba(0,0,0,0.3)' : 'none';
+                    glasses.querySelectorAll('circle').forEach(circle => {
+                        circle.setAttribute('fill', lensColor);
+                    });
+                }
+            } else if (avatarConfig.glasses === 'beard') {
+                if (beard) {
+                    beard.style.display = 'block';
+                    beard.setAttribute('fill', avatarConfig.hairColor);
+                }
+            }
+            
+            // Update mood expression
+            const mood = moodExpressions[avatarConfig.mood];
+            const mouth = document.getElementById(mouthId);
+            if (mouth) {
+                mouth.setAttribute('d', mood.mouth);
+            }
+
+            // Update mood text (only for preview)
+            if (prefix === 'preview') {
+                const moodEmoji = document.getElementById('moodEmoji');
+                const moodText = document.getElementById('moodText');
+                if (moodEmoji) moodEmoji.textContent = mood.emoji;
+                if (moodText) moodText.textContent = mood.text;
+            }
+            
+            // Gender-specific adjustments
+            if (avatarConfig.gender === 'female') {
+                // Slightly smaller face, longer eyelashes
+                if (face) {
+                    const currentRy = parseInt(face.getAttribute('ry'));
+                    face.setAttribute('ry', currentRy - 2);
+                }
+            }
+        }
+
+        function randomizeAvatar() {
+            console.log('🎲 Randomizzazione avatar...');
+            
+            // Random selections
+            const genders = ['male', 'female', 'neutral'];
+            const faceShapeKeys = Object.keys(faceShapes);
+            const hairStyleKeys = Object.keys(hairStyles);
+            const hairColors = ['#8B4513', '#2F1B14', '#FFD700', '#DC143C', '#708090', '#800080'];
+            const eyeColors = ['#8B4513', '#4169E1', '#228B22', '#708090', '#2F4F4F', '#800080'];
+            const glassesOptions = ['none', 'regular', 'sunglasses', 'beard'];
+            const moodKeys = Object.keys(moodExpressions);
+            
+            // Apply random values
+            avatarConfig.gender = genders[Math.floor(Math.random() * genders.length)];
+            avatarConfig.faceShape = faceShapeKeys[Math.floor(Math.random() * faceShapeKeys.length)];
+            avatarConfig.hairStyle = hairStyleKeys[Math.floor(Math.random() * hairStyleKeys.length)];
+            avatarConfig.hairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
+            avatarConfig.eyeColor = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+            avatarConfig.glasses = glassesOptions[Math.floor(Math.random() * glassesOptions.length)];
+            avatarConfig.mood = moodKeys[Math.floor(Math.random() * moodKeys.length)];
+            
+            // Update UI to reflect random choices
+            updateUIFromConfig();
+            
+            // Update avatar
+            updateAvatarPreview();
+            
+            showNotification('🎲 Avatar randomizzato!', 'success');
+        }
+
+        function updateUIFromConfig() {
+            // Update all buttons to match current config
+            Object.entries(avatarConfig).forEach(([option, value]) => {
+                const button = document.querySelector(`[data-option="${option}"][data-value="${value}"]`);
+                if (button) {
+                    // Remove active from siblings
+                    const siblings = button.parentElement.querySelectorAll('.option-btn, .color-btn');
+                    siblings.forEach(sibling => sibling.classList.remove('active'));
+                    
+                    // Add active to correct button
+                    button.classList.add('active');
+                }
+            });
+        }
+
+        function saveAvatar() {
+            console.log('💾 Salvataggio avatar...', avatarConfig);
+            
+            // Save to localStorage
+            localStorage.setItem('userAvatarConfig', JSON.stringify(avatarConfig));
+            
+            // Update main avatar
+            updateMainAvatar();
+            
+            // Update avatar info
+            const mood = moodExpressions[avatarConfig.mood];
+            document.getElementById('avatarName').textContent = 'Avatar Personalizzato';
+            document.getElementById('avatarPersonality').textContent = mood.text;
+            
+            closeAvatarCreator();
+            showNotification('💾 Avatar salvato con successo!', 'success');
+        }
+
+        function loadSavedAvatar() {
+            try {
+                const savedConfig = localStorage.getItem('userAvatarConfig');
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    Object.assign(avatarConfig, config);
+                    
+                    updateMainAvatar();
+                    
+                    // Update avatar info
+                    const mood = moodExpressions[avatarConfig.mood];
+                    document.getElementById('avatarName').textContent = 'Avatar Personalizzato';
+                    document.getElementById('avatarPersonality').textContent = mood.text;
+                    
+                    console.log('✅ Avatar salvato caricato');
+                }
+            } catch (error) {
+                console.error('❌ Errore caricamento avatar salvato:', error);
             }
         }
 
@@ -1423,7 +1914,6 @@
         // 🔐 ADMIN LOGIN SYSTEM
         function setupAdminLogin() {
             const adminLoginForm = document.getElementById('adminLoginForm');
-            const adminLoginBtn = document.getElementById('adminLoginBtn');
             const adminCancelLogin = document.getElementById('adminCancelLogin');
             const adminCloseLogin = document.getElementById('adminCloseLogin');
             const adminDashboardLink = document.getElementById('adminDashboardLink');
@@ -1461,7 +1951,6 @@
                 if (sessionData) {
                     const session = JSON.parse(sessionData);
                     
-                    // Check if session is still valid (no expiration for persistent login)
                     if (session.username === ADMIN_CREDENTIALS.username && session.timestamp) {
                         console.log('✅ Sessione admin valida trovata');
                         return true;
@@ -1584,42 +2073,32 @@
             showNotification('🚀 Caricamento Dashboard Admin...', 'success');
             
             setTimeout(() => {
-                window.location.href = 'https://tribucoach.vercel.app/pages/admin/admin-dashboard.html';
+                window.location.href = 'admin/admin-dashboard.html';
             }, 500);
         }
 
-        // Global function to logout admin (will be called from admin dashboard)
-        window.logoutAdmin = function() {
-            localStorage.removeItem(ADMIN_SESSION_KEY);
-            console.log('👋 Admin logout effettuato');
-            showNotification('👋 Logout Admin Effettuato', 'success');
-        };
-
-        async function setupAndreaRealPhoto() {
+        async function setupAndreaPhoto() {
             try {
                 const andreaPhoto = document.getElementById('andreaPhoto');
-                const photoIndicator = document.getElementById('photoIndicator');
                 
-                if (photoManager && andreaPhoto) {
-                    // Apply real photo with professional context
-                    photoManager.applyPhotoToElement(andreaPhoto, {
-                        context: 'professional',
-                        size: 'medium',
-                        circular: true,
-                        animate: true
-                    });
-                    
-                    // Update photo indicator
-                    const photoInfo = photoManager.getCurrentPhotoInfo();
-                    photoIndicator.textContent = `📸 ${photoInfo.name}`;
-                    
-                    // Remove loading class
+                // Simulate photo loading
+                const photos = [
+                    '../assets/images/andrea/andrea-beach.jpg',
+                    '../assets/images/andrea/andrea-city.jpg',
+                    '../assets/images/andrea/andrea-outdoor.jpg'
+                ];
+                
+                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                
+                setTimeout(() => {
+                    andreaPhoto.style.backgroundImage = `url(${randomPhoto})`;
                     andreaPhoto.classList.remove('loading');
                     
-                    console.log('✅ Foto reale Andrea applicata:', photoInfo.name);
-                } else {
-                    console.warn('⚠️ Photo manager non disponibile');
-                }
+                    // Update indicator
+                    const indicator = document.getElementById('photoIndicator');
+                    const photoName = randomPhoto.split('/').pop().split('.')[0];
+                    indicator.textContent = `📸 ${photoName.replace('andrea-', '').replace('-', ' ')}`;
+                }, 1000);
                 
             } catch (error) {
                 console.error('❌ Errore setup foto Andrea:', error);
@@ -1627,50 +2106,6 @@
                 // Fallback
                 const andreaPhoto = document.getElementById('andreaPhoto');
                 andreaPhoto.classList.remove('loading');
-            }
-        }
-
-        async function loadUserAvatar() {
-            try {
-                if (!avatarManager) {
-                    console.warn('⚠️ Avatar manager non disponibile');
-                    return;
-                }
-
-                // Get current avatar
-                const currentAvatar = avatarManager.getCurrentAvatar();
-                
-                if (currentAvatar) {
-                    displayUserAvatar(currentAvatar);
-                    selectedAvatarId = currentAvatar.id;
-                } else {
-                    // Use default avatar
-                    const defaultAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
-                    displayUserAvatar(defaultAvatar);
-                }
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento avatar utente:', error);
-                // Show default
-                const defaultAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
-                displayUserAvatar(defaultAvatar);
-            }
-        }
-
-        function displayUserAvatar(avatar) {
-            const avatarDisplay = document.getElementById('userAvatarDisplay');
-            const avatarName = document.getElementById('avatarName');
-            const avatarPersonality = document.getElementById('avatarPersonality');
-            
-            if (avatar) {
-                avatarDisplay.textContent = avatar.emoji;
-                avatarDisplay.style.background = `linear-gradient(135deg, ${avatar.colors.primary} 0%, ${avatar.colors.secondary} 100%)`;
-                avatarName.textContent = avatar.name;
-                avatarPersonality.textContent = avatar.personality;
-                
-                selectedAvatarId = avatar.id;
-                
-                console.log('✅ Avatar utente visualizzato:', avatar.name);
             }
         }
 
@@ -1710,35 +2145,17 @@
         // Avatar Creator Functions
         function openAvatarCreator() {
             const modal = document.getElementById('avatarModal');
-            const avatarGrid = document.getElementById('avatarGrid');
             
-            if (!avatarGrid || !modal) {
-                console.error('❌ Elementi modal non trovati');
+            if (!modal) {
+                console.error('❌ Modal avatar non trovato');
                 return;
             }
             
-            // Generate avatar options from EXTENDED_AVATAR_DATA
-            avatarGrid.innerHTML = '';
+            // Update UI to match current config
+            updateUIFromConfig();
             
-            Object.values(EXTENDED_AVATAR_DATA).forEach(avatar => {
-                const option = document.createElement('div');
-                option.className = 'avatar-option';
-                option.style.background = `linear-gradient(135deg, ${avatar.colors.primary} 0%, ${avatar.colors.secondary} 100%)`;
-                option.dataset.avatarId = avatar.id;
-                
-                if (avatar.id === selectedAvatarId) {
-                    option.classList.add('selected');
-                }
-                
-                option.innerHTML = `
-                    <div class="emoji">${avatar.emoji}</div>
-                    <div class="name">${avatar.name}</div>
-                    <div class="personality">${avatar.personality}</div>
-                `;
-                
-                option.addEventListener('click', () => selectAvatar(avatar.id));
-                avatarGrid.appendChild(option);
-            });
+            // Update preview
+            updateAvatarPreview();
             
             modal.classList.add('active');
             console.log('🎨 Avatar creator aperto');
@@ -1748,55 +2165,6 @@
             const modal = document.getElementById('avatarModal');
             if (modal) {
                 modal.classList.remove('active');
-            }
-        }
-
-        function selectAvatar(avatarId) {
-            // Update selection
-            document.querySelectorAll('.avatar-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            const selectedOption = document.querySelector(`[data-avatar-id="${avatarId}"]`);
-            if (selectedOption) {
-                selectedOption.classList.add('selected');
-                selectedAvatarId = avatarId;
-                console.log('🎯 Avatar selezionato:', avatarId);
-            }
-        }
-
-        async function saveAvatar() {
-            try {
-                console.log('💾 Salvataggio avatar...', selectedAvatarId);
-                
-                if (!avatarManager) {
-                    throw new Error('Avatar manager non disponibile');
-                }
-
-                // Save avatar using avatar system
-                await avatarManager.saveUserAvatar(selectedAvatarId, {});
-                
-                // Update display
-                const selectedAvatar = EXTENDED_AVATAR_DATA[selectedAvatarId];
-                if (selectedAvatar) {
-                    // Animate transition
-                    const avatarDisplay = document.getElementById('userAvatarDisplay');
-                    await animateAvatarTransition(avatarDisplay, selectedAvatar);
-                    
-                    // Update all info
-                    displayUserAvatar(selectedAvatar);
-                }
-                
-                closeAvatarCreator();
-                
-                // Show success message
-                showNotification('✅ Avatar salvato con successo!', 'success');
-                
-                console.log('✅ Avatar salvato');
-                
-            } catch (error) {
-                console.error('❌ Errore salvataggio avatar:', error);
-                showNotification('❌ Errore salvataggio avatar', 'error');
             }
         }
 
@@ -1921,9 +2289,6 @@
 
         setInterval(updateStats, 30000);
 
-        setTimeout(() => {
-            console.log('✅ Dashboard con avatar system e login admin protetto completamente caricata');
-        }, 1000);
     </script>
 </body>
 </html>
