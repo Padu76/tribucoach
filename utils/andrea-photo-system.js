@@ -1,5 +1,5 @@
-// andrea-photo-system.js - Sistema Foto Reali Andrea con Path Dinamici
-// Gestione dinamica delle foto del coach con ottimizzazione e fallback
+// andrea-photo-system.js - Sistema Foto Reali Andrea - SOLO JPG
+// Versione semplificata che usa solo file JPG per massima compatibilità
 
 // === 🔧 RILEVAMENTO PATH DINAMICO ===
 function getBasePath() {
@@ -20,7 +20,7 @@ function getBasePath() {
     }
 }
 
-// === 📸 CONFIGURAZIONE FOTO ANDREA CON PATH DINAMICI ===
+// === 📸 CONFIGURAZIONE FOTO ANDREA - SOLO JPG ===
 function getAndreaPhotosConfig() {
     const basePath = getBasePath();
     
@@ -31,9 +31,6 @@ function getAndreaPhotosConfig() {
             id: 'outdoor_green',
             name: 'Andrea Outdoor',
             description: 'Foto naturale all\'aperto con maglietta verde',
-            // Base64 minimo per fallback immediato
-            base64: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ1IiBmaWxsPSJ1cmwoI2dyYWQxKSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMykiIHN0cm9rZS13aWR0aD0iMyIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjZiMzU7c3RvcC1vcGFjaXR5OjEiIC8+CjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2YzOWMxMjtzdG9wLW9wYWNpdHk6MSIgLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8dGV4dCB4PSI1MCIgeT0iNjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iYm9sZCI+QVA8L3RleHQ+Cjwvc3ZnPgo=',
-            webp: `${basePath}andrea-outdoor.webp`,
             jpg: `${basePath}andrea-outdoor.jpg`,
             contexts: ['casual', 'motivational', 'outdoor', 'natural']
         },
@@ -41,8 +38,6 @@ function getAndreaPhotosConfig() {
             id: 'beach_professional',
             name: 'Andrea Professional',
             description: 'Foto professionale al mare con maglietta nera',
-            base64: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ1IiBmaWxsPSJ1cmwoI2dyYWQxKSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMykiIHN0cm9rZS13aWR0aD0iMyIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjZiMzU7c3RvcC1vcGFjaXR5OjEiIC8+CjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2YzOWMxMjtzdG9wLW9wYWNpdHk6MSIgLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8dGV4dCB4PSI1MCIgeT0iNjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iYm9sZCI+QVA8L3RleHQ+Cjwvc3ZnPgo=',
-            webp: `${basePath}andrea-beach.webp`,
             jpg: `${basePath}andrea-beach.jpg`,
             contexts: ['professional', 'coaching', 'welcoming', 'confident']
         },
@@ -50,15 +45,13 @@ function getAndreaPhotosConfig() {
             id: 'city_leader',
             name: 'Andrea Leader',
             description: 'Foto determinata in città con braccia incrociate',
-            base64: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ1IiBmaWxsPSJ1cmwoI2dyYWQxKSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMykiIHN0cm9rZS13aWR0aD0iMyIvPgo8ZGVmcz4KPGxpbmVhckdyYWRpZW50IGlkPSJncmFkMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNmZjZiMzU7c3RvcC1vcGFjaXR5OjEiIC8+CjxzdG9wIG9mZnNldD0iMTAwJSIgc3R5bGU9InN0b3AtY29sb3I6I2YzOWMxMjtzdG9wLW9wYWNpdHk6MSIgLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8dGV4dCB4PSI1MCIgeT0iNjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjI0IiBmb250LXdlaWdodD0iYm9sZCI+QVA8L3RleHQ+Cjwvc3ZnPgo=',
-            webp: `${basePath}andrea-city.webp`,
             jpg: `${basePath}andrea-city.jpg`,
             contexts: ['leadership', 'determination', 'authority', 'focused']
         }
     };
 }
 
-// === 🎲 SISTEMA ROTAZIONE CON DEBUG AVANZATO ===
+// === 🎲 SISTEMA ROTAZIONE SEMPLIFICATO ===
 class AndreaPhotoManager {
     constructor() {
         this.currentPhoto = null;
@@ -68,7 +61,7 @@ class AndreaPhotoManager {
         this.debugMode = true;
         this.ANDREA_PHOTOS = getAndreaPhotosConfig();
         
-        this.log('📸 AndreaPhotoManager inizializzato');
+        this.log('📸 AndreaPhotoManager inizializzato - SOLO JPG');
         this.log('📁 Base path:', getBasePath());
         this.log('🖼️ Foto configurate:', Object.keys(this.ANDREA_PHOTOS));
     }
@@ -82,7 +75,7 @@ class AndreaPhotoManager {
     // Inizializza il sistema foto
     initialize() {
         try {
-            this.log('🚀 Avvio inizializzazione...');
+            this.log('🚀 Avvio inizializzazione SOLO JPG...');
             
             // Aggiorna configurazione foto con path correnti
             this.ANDREA_PHOTOS = getAndreaPhotosConfig();
@@ -90,14 +83,14 @@ class AndreaPhotoManager {
             // Seleziona foto per questa sessione
             this.selectSessionPhoto();
             
-            // Precarica tutte le foto
+            // Precarica tutte le foto JPG
             this.preloadPhotos();
             
-            // Test connettività immagini
+            // Test connettività immagini JPG
             this.testImageConnectivity();
             
             this.isInitialized = true;
-            this.log('✅ Sistema foto Andrea inizializzato');
+            this.log('✅ Sistema foto Andrea inizializzato - SOLO JPG');
             
             return true;
         } catch (error) {
@@ -106,37 +99,20 @@ class AndreaPhotoManager {
         }
     }
 
-    // Test connettività immagini
+    // Test connettività immagini - SOLO JPG
     async testImageConnectivity() {
-        this.log('🔍 Test connettività immagini...');
+        this.log('🔍 Test connettività immagini JPG...');
         
         for (const [key, photo] of Object.entries(this.ANDREA_PHOTOS)) {
-            // Test JPG
-            if (photo.jpg) {
-                try {
-                    const response = await fetch(photo.jpg, { method: 'HEAD' });
-                    if (response.ok) {
-                        this.log(`✅ ${photo.name} JPG - OK`);
-                    } else {
-                        this.log(`❌ ${photo.name} JPG - ${response.status}`);
-                    }
-                } catch (error) {
-                    this.log(`❌ ${photo.name} JPG - Network Error:`, error.message);
+            try {
+                const response = await fetch(photo.jpg, { method: 'HEAD' });
+                if (response.ok) {
+                    this.log(`✅ ${photo.name} JPG - OK`);
+                } else {
+                    this.log(`❌ ${photo.name} JPG - ${response.status}`);
                 }
-            }
-            
-            // Test WebP
-            if (photo.webp && this.supportsWebP()) {
-                try {
-                    const response = await fetch(photo.webp, { method: 'HEAD' });
-                    if (response.ok) {
-                        this.log(`✅ ${photo.name} WebP - OK`);
-                    } else {
-                        this.log(`❌ ${photo.name} WebP - ${response.status}`);
-                    }
-                } catch (error) {
-                    this.log(`❌ ${photo.name} WebP - Network Error:`, error.message);
-                }
+            } catch (error) {
+                this.log(`❌ ${photo.name} JPG - Network Error:`, error.message);
             }
         }
     }
@@ -171,29 +147,12 @@ class AndreaPhotoManager {
         return this.currentPhoto || this.ANDREA_PHOTOS.photo2; // Default alla foto beach
     }
 
-    // Ottieni URL foto ottimizzato con fallback intelligente
-    getPhotoUrl(size = 'medium', format = 'auto') {
+    // Ottieni URL foto - SEMPRE JPG
+    getPhotoUrl() {
         const photo = this.getCurrentPhoto();
+        const photoUrl = photo.jpg;
         
-        // Logica formato automatico
-        if (format === 'auto') {
-            format = this.supportsWebP() ? 'webp' : 'jpg';
-        }
-        
-        let photoUrl;
-        
-        // Prova prima il formato preferito
-        if (format === 'webp' && photo.webp) {
-            photoUrl = photo.webp;
-        } else if (format === 'jpg' && photo.jpg) {
-            photoUrl = photo.jpg;
-        } else {
-            // Fallback a base64
-            photoUrl = photo.base64;
-            this.log(`🔄 Usando fallback base64 per: ${photo.name}`);
-        }
-        
-        this.log(`📸 URL foto selezionato: ${photoUrl}`);
+        this.log(`📸 URL foto JPG selezionato: ${photoUrl}`);
         return photoUrl;
     }
 
@@ -213,7 +172,7 @@ class AndreaPhotoManager {
         return this.getCurrentPhoto();
     }
 
-    // Applica foto a elemento DOM con retry automatico
+    // Applica foto a elemento DOM - SEMPLIFICATO
     async applyPhotoToElement(element, options = {}) {
         if (!element) {
             this.log('❌ Elemento non valido per applicazione foto');
@@ -221,25 +180,22 @@ class AndreaPhotoManager {
         }
         
         const {
-            size = 'medium',
-            format = 'auto',
             context = null,
-            fallback = true,
             circular = true,
-            animate = true,
-            retries = 2
+            animate = true
         } = options;
         
         try {
             const photo = context ? this.getPhotoForContext(context) : this.getCurrentPhoto();
+            const photoUrl = photo.jpg; // SEMPRE JPG
             
-            this.log(`🎨 Applicando foto ${photo.name} a elemento:`, element);
+            this.log(`🎨 Applicando foto ${photo.name} (JPG) a elemento:`, element);
             
-            // Prova caricamento con retry
-            const success = await this.loadPhotoWithRetry(element, photo, { size, format, fallback, retries });
+            // Applica foto direttamente
+            const success = await this.loadPhotoUrl(element, photoUrl);
             
-            // Styling opzionale
             if (success) {
+                // Styling opzionale
                 if (circular) {
                     element.style.borderRadius = '50%';
                 }
@@ -251,11 +207,13 @@ class AndreaPhotoManager {
                 // Rimuovi classe loading se presente
                 element.classList.remove('loading');
                 
-                this.log(`✅ Foto applicata con successo: ${photo.name}`);
+                this.log(`✅ Foto JPG applicata con successo: ${photo.name}`);
                 return true;
+            } else {
+                // Fallback a SVG se JPG fallisce
+                this.handlePhotoError(element, photo);
+                return false;
             }
-            
-            return false;
             
         } catch (error) {
             console.error('❌ Errore applicazione foto:', error);
@@ -263,50 +221,7 @@ class AndreaPhotoManager {
         }
     }
 
-    // Caricamento foto con retry automatico
-    async loadPhotoWithRetry(element, photo, options = {}) {
-        const { size, format, fallback, retries } = options;
-        let attempts = 0;
-        const maxAttempts = retries + 1;
-        
-        while (attempts < maxAttempts) {
-            try {
-                attempts++;
-                this.log(`🔄 Tentativo ${attempts}/${maxAttempts} per ${photo.name}`);
-                
-                let photoUrl;
-                
-                if (attempts === 1) {
-                    // Primo tentativo: formato preferito
-                    photoUrl = this.getPhotoUrl(size, format);
-                } else if (attempts === 2 && format === 'webp') {
-                    // Secondo tentativo: JPG se prima era WebP
-                    photoUrl = photo.jpg || photo.base64;
-                } else {
-                    // Ultimo tentativo: base64
-                    photoUrl = photo.base64;
-                }
-                
-                // Prova caricamento
-                const success = await this.loadPhotoUrl(element, photoUrl);
-                
-                if (success) {
-                    this.log(`✅ Caricamento riuscito al tentativo ${attempts}`);
-                    return true;
-                }
-                
-            } catch (error) {
-                this.log(`❌ Tentativo ${attempts} fallito:`, error.message);
-            }
-        }
-        
-        // Tutti i tentativi falliti
-        this.log(`❌ Tutti i tentativi falliti per ${photo.name}`);
-        this.handlePhotoError(element, photo);
-        return false;
-    }
-
-    // Carica URL specifico
+    // Carica URL JPG specifico
     loadPhotoUrl(element, photoUrl) {
         return new Promise((resolve) => {
             if (element.tagName === 'IMG') {
@@ -319,6 +234,7 @@ class AndreaPhotoManager {
                 };
                 
                 tempImg.onerror = () => {
+                    this.log(`❌ Errore caricamento JPG: ${photoUrl}`);
                     resolve(false);
                 };
                 
@@ -331,15 +247,15 @@ class AndreaPhotoManager {
                 element.style.backgroundPosition = 'center';
                 element.style.backgroundRepeat = 'no-repeat';
                 
-                // Non possiamo testare il caricamento del background, assumiamo successo
+                // Assume successo per background images
                 resolve(true);
             }
         });
     }
 
-    // Gestione errori caricamento foto avanzata
+    // Gestione errori caricamento foto - SVG fallback
     handlePhotoError(element, photo) {
-        this.log(`⚠️ Gestione errore per: ${photo.name}`);
+        this.log(`⚠️ Gestione errore per: ${photo.name} - Usando SVG fallback`);
         
         // Incrementa tentativi
         this.loadAttempts[photo.id] = (this.loadAttempts[photo.id] || 0) + 1;
@@ -379,42 +295,16 @@ class AndreaPhotoManager {
         return svg;
     }
 
-    // Precarica tutte le foto con feedback
+    // Precarica tutte le foto JPG
     preloadPhotos() {
-        this.log('🔄 Avvio precaricamento foto...');
+        this.log('🔄 Avvio precaricamento foto JPG...');
         
         Object.values(this.ANDREA_PHOTOS).forEach(photo => {
-            // Precarica JPG
-            if (photo.jpg) {
-                const img = new Image();
-                img.onload = () => this.log(`✅ Precaricato: ${photo.name} (JPG)`);
-                img.onerror = () => this.log(`❌ Errore precaricamento: ${photo.name} (JPG)`);
-                img.src = photo.jpg;
-            }
-            
-            // Precarica WebP se supportato
-            if (photo.webp && this.supportsWebP()) {
-                const img = new Image();
-                img.onload = () => this.log(`✅ Precaricato: ${photo.name} (WebP)`);
-                img.onerror = () => this.log(`❌ Errore precaricamento: ${photo.name} (WebP)`);
-                img.src = photo.webp;
-            }
+            const img = new Image();
+            img.onload = () => this.log(`✅ Precaricato: ${photo.name} (JPG)`);
+            img.onerror = () => this.log(`❌ Errore precaricamento: ${photo.name} (JPG)`);
+            img.src = photo.jpg;
         });
-    }
-
-    // Controlla supporto WebP
-    supportsWebP() {
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1;
-            canvas.height = 1;
-            const supported = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
-            this.log(`🔍 Supporto WebP: ${supported ? 'SÌ' : 'NO'}`);
-            return supported;
-        } catch (error) {
-            this.log(`❌ Errore test WebP:`, error);
-            return false;
-        }
     }
 
     // Ottieni info foto corrente
@@ -426,11 +316,7 @@ class AndreaPhotoManager {
             description: photo.description,
             contexts: photo.contexts,
             isSessionPhoto: photo.id === this.sessionPhoto?.id,
-            urls: {
-                webp: photo.webp,
-                jpg: photo.jpg,
-                base64: photo.base64.length > 100 ? photo.base64.substring(0, 100) + '...' : photo.base64
-            }
+            url: photo.jpg
         };
     }
 
@@ -446,23 +332,23 @@ class AndreaPhotoManager {
         return false;
     }
 
-    // Ottieni statistiche sistema complete
+    // Ottieni statistiche sistema
     getPhotoStats() {
         return {
             totalPhotos: Object.keys(this.ANDREA_PHOTOS).length,
             currentPhoto: this.getCurrentPhotoInfo(),
             loadAttempts: { ...this.loadAttempts },
-            webpSupported: this.supportsWebP(),
             isInitialized: this.isInitialized,
             basePath: getBasePath(),
             debugMode: this.debugMode,
-            availablePhotos: Object.keys(this.ANDREA_PHOTOS)
+            availablePhotos: Object.keys(this.ANDREA_PHOTOS),
+            format: 'JPG_ONLY'
         };
     }
 
     // Debug info completo
     debugInfo() {
-        console.group('📸 Andrea Photo System Debug');
+        console.group('📸 Andrea Photo System Debug - JPG ONLY');
         console.log('Config:', this.getPhotoStats());
         console.log('Current Path:', window.location.pathname);
         console.log('Base Path:', getBasePath());
@@ -477,15 +363,14 @@ class AndreaPhotoManager {
 async function applyAndreaPhotosToPage() {
     const photoManager = getAndreaPhotoManager();
     
-    console.log('🎨 Applicando foto Andrea a tutti gli elementi...');
+    console.log('🎨 Applicando foto Andrea JPG a tutti gli elementi...');
     
     // Dashboard avatar
     const dashboardAvatar = document.getElementById('andreaPhoto');
     if (dashboardAvatar) {
         console.log('📱 Trovato dashboard avatar');
         await photoManager.applyPhotoToElement(dashboardAvatar, {
-            context: 'professional',
-            size: 'medium'
+            context: 'professional'
         });
     }
     
@@ -494,8 +379,7 @@ async function applyAndreaPhotosToPage() {
     if (chatAvatar) {
         console.log('💬 Trovato chat avatar');
         await photoManager.applyPhotoToElement(chatAvatar, {
-            context: 'coaching',
-            size: 'small'
+            context: 'coaching'
         });
     }
     
@@ -505,8 +389,7 @@ async function applyAndreaPhotosToPage() {
         console.log(`💬 Trovati ${messageAvatars.length} message avatar`);
         for (const avatar of messageAvatars) {
             await photoManager.applyPhotoToElement(avatar, {
-                context: 'coaching',
-                size: 'small'
+                context: 'coaching'
             });
         }
     }
@@ -517,20 +400,19 @@ async function applyAndreaPhotosToPage() {
         console.log(`📸 Trovati ${andreaPhotos.length} elementi .andrea-photo`);
         for (const photo of andreaPhotos) {
             await photoManager.applyPhotoToElement(photo, {
-                context: 'professional',
-                size: 'medium'
+                context: 'professional'
             });
         }
     }
     
-    console.log('✅ Foto Andrea applicate a tutti gli elementi trovati');
+    console.log('✅ Foto Andrea JPG applicate a tutti gli elementi trovati');
 }
 
 // Setup automatico quando DOM è pronto
 function setupAndreaPhotos() {
     const photoManager = getAndreaPhotoManager();
     
-    console.log('🚀 Setup sistema foto Andrea...');
+    console.log('🚀 Setup sistema foto Andrea - SOLO JPG...');
     
     if (!photoManager.isInitialized) {
         photoManager.initialize();
@@ -556,8 +438,7 @@ function setupAndreaPhotos() {
                         
                         console.log('🔍 Nuovo elemento Andrea rilevato:', node);
                         photoManager.applyPhotoToElement(node, {
-                            context: 'coaching',
-                            size: 'medium'
+                            context: 'coaching'
                         });
                     }
                 }
@@ -577,7 +458,7 @@ function setupAndreaPhotos() {
 function injectPhotoStyles() {
     const style = document.createElement('style');
     style.textContent = `
-        /* Andrea Photo System Styles */
+        /* Andrea Photo System Styles - JPG ONLY */
         .andrea-photo {
             background-size: cover !important;
             background-position: center !important;
@@ -612,23 +493,7 @@ function injectPhotoStyles() {
             position: relative;
         }
         
-        .andrea-photo-error::after {
-            content: '📸';
-            position: absolute;
-            bottom: 2px;
-            right: 2px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-        }
-        
-        /* Loading animation migliorata */
+        /* Loading animation migliorata per dashboard */
         #andreaPhoto.loading {
             background: linear-gradient(45deg, #ff6b35, #f39c12) !important;
             animation: photoLoading 1.5s ease-in-out infinite;
@@ -648,7 +513,7 @@ function injectPhotoStyles() {
     `;
     
     document.head.appendChild(style);
-    console.log('🎨 Stili foto Andrea iniettati');
+    console.log('🎨 Stili foto Andrea JPG iniettati');
 }
 
 // === 🌐 ISTANZA GLOBALE ===
@@ -664,7 +529,7 @@ function getAndreaPhotoManager() {
 
 // Inizializza sistema foto automaticamente
 function initializeAndreaPhotoSystem() {
-    console.log('📸 Inizializzazione sistema foto Andrea...');
+    console.log('📸 Inizializzazione sistema foto Andrea - SOLO JPG...');
     
     // Inject styles
     injectPhotoStyles();
@@ -711,4 +576,4 @@ if (typeof window !== 'undefined') {
     }
 }
 
-console.log('📸 Sistema Foto Andrea caricato - Path dinamici attivi!');
+console.log('📸 Sistema Foto Andrea caricato - SOLO JPG attivo!');
