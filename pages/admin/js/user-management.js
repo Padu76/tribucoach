@@ -294,7 +294,7 @@ function generateUserModalContent(user) {
                         📧 Invia Email
                     </button>
                     ${!user.hasStartedCoaching ? `
-                        <button class="action-btn secondary large" onclick="window.userManagement.markCoachingStarted('${user.id}')">
+                        <button class="action-btn secondary large" onclick="window.userManagement.markCoachingStartedSingle('${user.id}')">
                             🚀 Segna Coaching Iniziato
                         </button>
                     ` : ''}
@@ -452,9 +452,9 @@ export async function saveUserNotes(userId, showFeedback = true) {
 }
 
 /**
- * Segna coaching come iniziato
+ * Segna coaching come iniziato per singolo utente
  */
-export async function markCoachingStarted(userId) {
+export async function markCoachingStartedSingle(userId) {
     if (!confirm('Segnare questo utente come "Coaching Iniziato"?')) {
         return;
     }
@@ -967,7 +967,7 @@ window.userManagement = {
     initializeUserManagement,
     showUserDetails,
     saveUserNotes,
-    markCoachingStarted,
+    markCoachingStartedSingle,
     addUserTag,
     openWhatsApp,
     showQuizData,
