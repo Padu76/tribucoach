@@ -945,8 +945,8 @@
                 if (typeof window.RealisticAvatarSystem !== 'undefined') {
                     console.log('🎨 Inizializzazione Sistema Avatar Realistico...');
                     
-                    // Initialize the avatar manager
-                    avatarManager = await window.RealisticAvatarSystem.initializeRealisticAvatarSystem(currentUserId);
+                    // Initialize the avatar manager with NEW API
+                    avatarManager = window.RealisticAvatarSystem.init(currentUserId);
                     
                     if (avatarManager) {
                         console.log('✅ Sistema Avatar Realistico attivo');
@@ -999,16 +999,13 @@
                     // Force realistic mode
                     avatarManager.setMode('realistic');
                     
-                    const avatarSVG = avatarManager.generateAvatarSVG();
-                    console.log('🎨 Avatar SVG generato:', avatarSVG ? 'SUCCESS' : 'FAILED');
+                    // Get avatar HTML using NEW API
+                    const avatarHTML = avatarManager.getDisplayHTML();
+                    console.log('🎨 Avatar HTML generato:', avatarHTML ? 'SUCCESS' : 'FAILED');
                     
-                    if (avatarSVG) {
-                        avatarDisplay.innerHTML = avatarSVG;
+                    if (avatarHTML) {
+                        avatarDisplay.innerHTML = avatarHTML;
                         console.log('✅ Avatar realistico mostrato');
-                    } else if (avatarManager.currentMode === 'photo' && avatarManager.photoFile) {
-                        // Show photo
-                        avatarDisplay.innerHTML = `<img src="${avatarManager.photoFile}" alt="Avatar Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-                        console.log('✅ Avatar foto mostrato');
                     } else {
                         // Generate fallback realistic avatar
                         console.log('⚠️ Generazione fallback avatar realistico');
@@ -1017,7 +1014,7 @@
                     
                     // Update mode indicator - check if element exists
                     if (modeIndicator) {
-                        if (avatarManager.currentMode === 'photo') {
+                        if (avatarManager.mode === 'photo') {
                             modeIndicator.textContent = '📷';
                         } else {
                             modeIndicator.textContent = '👤';
@@ -1102,7 +1099,7 @@
                 const avatarPersonality = document.getElementById('avatarPersonality');
                 
                 if (avatarName) {
-                    if (avatarManager.currentMode === 'photo') {
+                    if (avatarManager.mode === 'photo') {
                         avatarName.textContent = 'Avatar Foto Personale';
                     } else {
                         avatarName.textContent = 'Avatar Realistico';
@@ -1235,9 +1232,11 @@
             modal.appendChild(container);
             document.body.appendChild(modal);
             
-            // Initialize the UI Builder
+            // Initialize the UI Builder using NEW API
             if (window.RealisticAvatarSystem) {
-                avatarUIBuilder = window.RealisticAvatarSystem.createAvatarUI('avatarBuilderContent', avatarManager);
+                avatarUIBuilder = window.RealisticAvatarSystem.createUI('avatarBuilderContent', avatarManager);
+                // Store reference globally for actions
+                window.avatarUI = avatarUIBuilder;
             }
             
             // Close on backdrop click
