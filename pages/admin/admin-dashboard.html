@@ -316,14 +316,36 @@
     </div>
 
     <!-- JavaScript Modulare -->
-    <script type="module" src="js/firebase-admin.js"></script>
-    <script type="module" src="js/dashboard-core.js"></script>  
-    <script type="module" src="js/user-management.js"></script>
+    <script type="module">
+        // Import tutti i moduli
+        import { initializeFirebaseAdmin } from './js/firebase-admin.js';
+        import { initializeDashboardCore } from './js/dashboard-core.js';
+        import { initializeUserManagement } from './js/user-management.js';
 
-    <script>
-        // Global initialization
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Admin Dashboard Modulare inizializzata');
+        // Inizializzazione completa
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Inizializzazione Admin Dashboard...');
+            
+            try {
+                // STEP 1: Inizializza Firebase e carica dati
+                console.log('🔥 Step 1: Inizializzazione Firebase...');
+                initializeFirebaseAdmin();
+                
+                // STEP 2: Aspetta 2 secondi per Firebase, poi inizializza Core
+                setTimeout(() => {
+                    console.log('⚡ Step 2: Inizializzazione Dashboard Core...');
+                    initializeDashboardCore();
+                    
+                    // STEP 3: Inizializza User Management
+                    console.log('👥 Step 3: Inizializzazione User Management...');
+                    initializeUserManagement();
+                    
+                    console.log('✅ Tutti i moduli inizializzati!');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+            }
             
             // Update time every 5 seconds
             setInterval(() => {
@@ -356,7 +378,7 @@
             }
         });
 
-        console.log('🎯 Admin Dashboard HTML caricato - Files modulari in arrivo...');
+        console.log('🎯 Admin Dashboard HTML caricato - Inizializzazione moduli...');
     </script>
 </body>
 </html>
