@@ -554,6 +554,7 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.3);
+            cursor: pointer;
         }
 
         .admin-dashboard-link:hover {
@@ -576,6 +577,183 @@
         @keyframes linkGlow {
             0%, 100% { box-shadow: 0 0 15px rgba(124, 45, 18, 0.3); }
             50% { box-shadow: 0 0 25px rgba(124, 45, 18, 0.6); }
+        }
+
+        /* 🔐 ADMIN LOGIN MODAL */
+        .admin-login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-login-modal.active {
+            display: flex;
+        }
+
+        .admin-login-content {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 90%;
+            position: relative;
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .admin-login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-login-header .admin-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #dc2626;
+        }
+
+        .admin-login-header h2 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .admin-login-header p {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.95rem;
+        }
+
+        .admin-login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .admin-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .admin-form-label {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .admin-form-input {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .admin-form-input:focus {
+            outline: none;
+            border-color: #dc2626;
+            background: rgba(255,255,255,0.15);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .admin-form-input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+
+        .admin-login-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .admin-login-btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-btn-login {
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            color: white;
+        }
+
+        .admin-btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
+        }
+
+        .admin-btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .admin-btn-cancel {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .admin-btn-cancel:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .admin-login-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: none;
+        }
+
+        .admin-login-error.show {
+            display: block;
+            animation: errorShake 0.5s ease-in-out;
+        }
+
+        @keyframes errorShake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .admin-close-login {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .admin-close-login:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
         }
 
         /* Triple-click feedback */
@@ -829,6 +1007,10 @@
             background: #ef4444;
         }
 
+        .notification.success {
+            background: #10b981;
+        }
+
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -879,6 +1061,15 @@
 
             .modal-content {
                 padding: 1.5rem;
+            }
+
+            .admin-login-content {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .admin-login-actions {
+                flex-direction: column;
             }
         }
     </style>
@@ -946,11 +1137,11 @@
                 <h3 class="admin-title">Pannello Amministrazione</h3>
             </div>
             <p class="admin-description">
-                🎯 Accesso speciale alla dashboard di amministrazione per controllo completo del sistema coaching.
+                🎯 Accesso protetto alla dashboard di amministrazione per controllo completo del sistema coaching.
             </p>
-            <a href="https://tribucoach.vercel.app/pages/admin/admin-dashboard.html" class="admin-dashboard-link" id="adminDashboardLink">
+            <div class="admin-dashboard-link" id="adminDashboardLink">
                 👑 Accedi alla Dashboard Admin
-            </a>
+            </div>
         </div>
 
         <!-- Main Dashboard Grid -->
@@ -1045,6 +1236,57 @@
         </div>
     </div>
 
+    <!-- 🔐 ADMIN LOGIN MODAL -->
+    <div class="admin-login-modal" id="adminLoginModal">
+        <div class="admin-login-content">
+            <button class="admin-close-login" id="adminCloseLogin">×</button>
+            <div class="admin-login-header">
+                <span class="admin-icon">🔐</span>
+                <h2>Accesso Amministratore</h2>
+                <p>Inserisci le credenziali per accedere al pannello admin</p>
+            </div>
+            
+            <form class="admin-login-form" id="adminLoginForm">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="adminUsername">Username</label>
+                    <input 
+                        type="text" 
+                        id="adminUsername" 
+                        class="admin-form-input" 
+                        placeholder="Inserisci username admin"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="adminPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="adminPassword" 
+                        class="admin-form-input" 
+                        placeholder="Inserisci password admin"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+                
+                <div class="admin-login-error" id="adminLoginError">
+                    Credenziali non valide. Riprova.
+                </div>
+                
+                <div class="admin-login-actions">
+                    <button type="submit" class="admin-login-btn admin-btn-login" id="adminLoginBtn">
+                        🔓 Accedi
+                    </button>
+                    <button type="button" class="admin-login-btn admin-btn-cancel" id="adminCancelLogin">
+                        ❌ Annulla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Load Sistemi -->
     <script src="../utils/avatar-system.js" type="module"></script>
     <script src="../utils/andrea-photo-system.js" type="module"></script>
@@ -1078,7 +1320,14 @@
         let clickTimer = null;
         const TRIPLE_CLICK_THRESHOLD = 3;
         const CLICK_TIMEOUT = 800; // 800ms per rilevare il triple-click
-        const ADMIN_TIMEOUT = 10000; // 10 secondi prima di nascondere
+        const ADMIN_TIMEOUT = 30000; // 30 secondi prima di nascondere
+
+        // 🔐 ADMIN LOGIN SYSTEM
+        const ADMIN_CREDENTIALS = {
+            username: 'admin',
+            password: 'tribucoach2024'
+        };
+        const ADMIN_SESSION_KEY = 'admin_session_tribucoach';
 
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async function() {
@@ -1086,6 +1335,7 @@
             checkUserRole();
             setupEventListeners();
             setupTripleClickAccess();
+            setupAdminLogin();
         });
 
         async function initializeDashboard() {
@@ -1147,63 +1397,203 @@
         }
 
         function activateHiddenAdminAccess() {
-            console.log('🚨 TRIPLE-CLICK RILEVATO - Attivazione accesso admin nascosto!');
+            console.log('🚨 TRIPLE-CLICK RILEVATO - Verifica accesso admin...');
             
             // Visual feedback immediate
             const andreaPhoto = document.getElementById('andreaPhoto');
             andreaPhoto.classList.add('triple-click-active');
             
-            // Show feedback popup
-            showTripleClickFeedback();
+            // Check if admin is already logged in
+            const isAdminLoggedIn = checkAdminSession();
             
-            // Show admin controls with special styling
-            const adminControls = document.getElementById('adminControls');
-            const adminBadge = document.getElementById('adminBadge');
-            const adminDashboardLink = document.getElementById('adminDashboardLink');
-            
-            adminControls.classList.add('visible', 'hidden-access');
-            adminBadge.classList.add('hidden-access');
-            adminBadge.textContent = '🔓 ACCESSO SBLOCCATO';
-            adminDashboardLink.classList.add('hidden-access');
+            if (isAdminLoggedIn) {
+                // Direct access to admin dashboard
+                redirectToAdminDashboard();
+            } else {
+                // Show login modal
+                showAdminLoginModal();
+            }
             
             // Remove photo animation after a bit
             setTimeout(() => {
                 andreaPhoto.classList.remove('triple-click-active');
             }, 1000);
-            
-            // Auto-hide after timeout
-            setTimeout(() => {
-                hideHiddenAdminAccess();
-            }, ADMIN_TIMEOUT);
-            
-            // Show success notification
-            showNotification('🚨 Accesso Admin Sbloccato!', 'success');
         }
 
-        function showTripleClickFeedback() {
-            const feedback = document.createElement('div');
-            feedback.className = 'triple-click-feedback';
-            feedback.innerHTML = '🚨 ACCESSO ADMIN ATTIVATO';
-            
-            document.body.appendChild(feedback);
-            
-            setTimeout(() => {
-                feedback.remove();
-            }, 2000);
-        }
-
-        function hideHiddenAdminAccess() {
-            const adminControls = document.getElementById('adminControls');
-            const adminBadge = document.getElementById('adminBadge');
+        // 🔐 ADMIN LOGIN SYSTEM
+        function setupAdminLogin() {
+            const adminLoginForm = document.getElementById('adminLoginForm');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const adminCancelLogin = document.getElementById('adminCancelLogin');
+            const adminCloseLogin = document.getElementById('adminCloseLogin');
             const adminDashboardLink = document.getElementById('adminDashboardLink');
-            
-            adminControls.classList.remove('visible', 'hidden-access');
-            adminBadge.classList.remove('hidden-access');
-            adminBadge.textContent = '👑 ADMIN';
-            adminDashboardLink.classList.remove('hidden-access');
-            
-            console.log('🔒 Accesso admin nascosto - timeout raggiunto');
+
+            if (adminLoginForm) {
+                adminLoginForm.addEventListener('submit', handleAdminLogin);
+            }
+
+            if (adminCancelLogin) {
+                adminCancelLogin.addEventListener('click', hideAdminLoginModal);
+            }
+
+            if (adminCloseLogin) {
+                adminCloseLogin.addEventListener('click', hideAdminLoginModal);
+            }
+
+            if (adminDashboardLink) {
+                adminDashboardLink.addEventListener('click', handleAdminDashboardClick);
+            }
+
+            // Close modal on backdrop click
+            const adminLoginModal = document.getElementById('adminLoginModal');
+            if (adminLoginModal) {
+                adminLoginModal.addEventListener('click', (e) => {
+                    if (e.target === adminLoginModal) {
+                        hideAdminLoginModal();
+                    }
+                });
+            }
         }
+
+        function checkAdminSession() {
+            try {
+                const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+                if (sessionData) {
+                    const session = JSON.parse(sessionData);
+                    
+                    // Check if session is still valid (no expiration for persistent login)
+                    if (session.username === ADMIN_CREDENTIALS.username && session.timestamp) {
+                        console.log('✅ Sessione admin valida trovata');
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Errore verifica sessione admin:', error);
+                localStorage.removeItem(ADMIN_SESSION_KEY);
+            }
+            
+            return false;
+        }
+
+        function showAdminLoginModal() {
+            const modal = document.getElementById('adminLoginModal');
+            const usernameInput = document.getElementById('adminUsername');
+            const passwordInput = document.getElementById('adminPassword');
+            const errorDiv = document.getElementById('adminLoginError');
+            
+            // Reset form
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            if (errorDiv) errorDiv.classList.remove('show');
+            
+            // Show modal
+            if (modal) {
+                modal.classList.add('active');
+                if (usernameInput) usernameInput.focus();
+            }
+            
+            console.log('🔐 Modal login admin mostrato');
+        }
+
+        function hideAdminLoginModal() {
+            const modal = document.getElementById('adminLoginModal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            
+            const usernameInput = document.getElementById('adminUsername');
+            const passwordInput = document.getElementById('adminPassword');
+            const loginBtn = document.getElementById('adminLoginBtn');
+            const errorDiv = document.getElementById('adminLoginError');
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            // Disable button during login
+            loginBtn.disabled = true;
+            loginBtn.textContent = '🔄 Verifica...';
+            
+            // Hide previous errors
+            errorDiv.classList.remove('show');
+            
+            // Simulate login delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Check credentials
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                // Login successful
+                console.log('✅ Login admin riuscito');
+                
+                // Save session
+                const sessionData = {
+                    username: username,
+                    timestamp: Date.now(),
+                    loginTime: new Date().toISOString()
+                };
+                
+                localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
+                
+                // Hide modal
+                hideAdminLoginModal();
+                
+                // Show success notification
+                showNotification('🎉 Accesso Admin Riuscito!', 'success');
+                
+                // Redirect to admin dashboard
+                setTimeout(() => {
+                    redirectToAdminDashboard();
+                }, 1000);
+                
+            } else {
+                // Login failed
+                console.log('❌ Login admin fallito');
+                
+                errorDiv.classList.add('show');
+                
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔓 Accedi';
+                
+                // Clear password field
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                // Show error notification
+                showNotification('❌ Credenziali non valide', 'error');
+            }
+        }
+
+        function handleAdminDashboardClick() {
+            const isAdminLoggedIn = checkAdminSession();
+            
+            if (isAdminLoggedIn) {
+                redirectToAdminDashboard();
+            } else {
+                showAdminLoginModal();
+            }
+        }
+
+        function redirectToAdminDashboard() {
+            console.log('🚀 Reindirizzamento admin dashboard...');
+            
+            // Show loading feedback
+            showNotification('🚀 Caricamento Dashboard Admin...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'https://tribucoach.vercel.app/pages/admin/admin-dashboard.html';
+            }, 500);
+        }
+
+        // Global function to logout admin (will be called from admin dashboard)
+        window.logoutAdmin = function() {
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+            console.log('👋 Admin logout effettuato');
+            showNotification('👋 Logout Admin Effettuato', 'success');
+        };
 
         async function setupAndreaRealPhoto() {
             try {
@@ -1532,7 +1922,7 @@
         setInterval(updateStats, 30000);
 
         setTimeout(() => {
-            console.log('✅ Dashboard con avatar system e accesso admin nascosto completamente caricata');
+            console.log('✅ Dashboard con avatar system e login admin protetto completamente caricata');
         }, 1000);
     </script>
 </body>
