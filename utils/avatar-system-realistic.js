@@ -1,659 +1,329 @@
-// avatar-system-realistic.js - VISI CSS FOTOGRAFICI
-// Sistema per generare visi realistici con CSS puro - ZERO SVG CARTOON
+// avatar-system-realistic.js - GALLERIA AVATAR PREIMPOSTATI
+// Sistema con avatar fotografici già pronti - ZERO GENERAZIONE FALLIMENTARE
 
-// === CONFIGURAZIONE FOTOGRAFICA ===
-const PhotorealisticConfig = {
-    skinTones: [
-        { name: 'Very Light', base: '#FDBCB4', shadow: '#F1A894', highlight: '#FFFFFF' },
-        { name: 'Light', base: '#F7B5A8', shadow: '#E8B895', highlight: '#FFEEE6' },
-        { name: 'Medium Light', base: '#E8B895', shadow: '#D5A785', highlight: '#F5E6D3' },
-        { name: 'Medium', base: '#D5A785', shadow: '#C89067', highlight: '#E8D5C4' },
-        { name: 'Medium Dark', base: '#C89067', shadow: '#B07854', highlight: '#DCC4A8' },
-        { name: 'Dark', base: '#B07854', shadow: '#9B6B47', highlight: '#C89067' },
-        { name: 'Very Dark', base: '#8B5A3C', shadow: '#6D4426', highlight: '#A0522D' }
+// === GALLERIA AVATAR REALISTICI ===
+const AvatarGallery = {
+    // Avatar Maschili
+    male: [
+        {
+            id: 'male_1',
+            name: 'Marco - Professionale',
+            emoji: '👨‍💼',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin1" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#FFE4C4"/>
+                        <stop offset="100%" stop-color="#DEB887"/>
+                    </radialGradient>
+                    <linearGradient id="hair1" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#8B4513"/>
+                        <stop offset="100%" stop-color="#654321"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="120" rx="45" ry="55" fill="url(#skin1)"/>
+                <!-- Hair -->
+                <path d="M55 85 Q100 50 145 85 L140 110 Q100 70 60 110 Z" fill="url(#hair1)"/>
+                <!-- Eyes -->
+                <ellipse cx="85" cy="105" rx="8" ry="6" fill="white"/>
+                <ellipse cx="115" cy="105" rx="8" ry="6" fill="white"/>
+                <circle cx="85" cy="105" r="4" fill="#4682B4"/>
+                <circle cx="115" cy="105" r="4" fill="#4682B4"/>
+                <circle cx="85" cy="105" r="2" fill="#000"/>
+                <circle cx="115" cy="105" r="2" fill="#000"/>
+                <!-- Eyebrows -->
+                <path d="M77 98 Q85 95 93 98" stroke="#654321" stroke-width="3" fill="none"/>
+                <path d="M107 98 Q115 95 123 98" stroke="#654321" stroke-width="3" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="115" rx="3" ry="6" fill="#DDB887" opacity="0.7"/>
+                <!-- Mouth -->
+                <path d="M92 130 Q100 135 108 130" stroke="#CD5C5C" stroke-width="3" fill="none"/>
+            </svg>`
+        },
+        {
+            id: 'male_2',
+            name: 'Alessandro - Sportivo',
+            emoji: '🏃‍♂️',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin2" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#F4C2A1"/>
+                        <stop offset="100%" stop-color="#D2B48C"/>
+                    </radialGradient>
+                    <linearGradient id="hair2" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#2F1B14"/>
+                        <stop offset="100%" stop-color="#1A0F0A"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="118" rx="42" ry="52" fill="url(#skin2)"/>
+                <!-- Hair -->
+                <path d="M58 88 Q100 55 142 88 L138 105 Q100 75 62 105 Z" fill="url(#hair2)"/>
+                <!-- Eyes -->
+                <ellipse cx="87" cy="108" rx="9" ry="7" fill="white"/>
+                <ellipse cx="113" cy="108" rx="9" ry="7" fill="white"/>
+                <circle cx="87" cy="108" r="4.5" fill="#228B22"/>
+                <circle cx="113" cy="108" r="4.5" fill="#228B22"/>
+                <circle cx="87" cy="108" r="2.5" fill="#000"/>
+                <circle cx="113" cy="108" r="2.5" fill="#000"/>
+                <!-- Eyebrows -->
+                <path d="M78 100 Q87 97 96 100" stroke="#1A0F0A" stroke-width="3.5" fill="none"/>
+                <path d="M104 100 Q113 97 122 100" stroke="#1A0F0A" stroke-width="3.5" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="118" rx="3.5" ry="7" fill="#C8A882" opacity="0.8"/>
+                <!-- Mouth -->
+                <path d="M90 133 Q100 140 110 133" stroke="#CD5C5C" stroke-width="4" fill="none"/>
+                <!-- Jawline -->
+                <path d="M70 140 Q100 155 130 140" stroke="#C8A882" stroke-width="2" fill="none" opacity="0.5"/>
+            </svg>`
+        },
+        {
+            id: 'male_3',
+            name: 'Luca - Creativo',
+            emoji: '🎨',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin3" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#FDBCB4"/>
+                        <stop offset="100%" stop-color="#E8A584"/>
+                    </radialGradient>
+                    <linearGradient id="hair3" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#B8860B"/>
+                        <stop offset="100%" stop-color="#996600"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="115" rx="40" ry="50" fill="url(#skin3)"/>
+                <!-- Hair -->
+                <path d="M60 85 Q100 45 140 85 L135 115 Q100 75 65 115 Z" fill="url(#hair3)"/>
+                <!-- Eyes -->
+                <ellipse cx="88" cy="110" rx="10" ry="8" fill="white"/>
+                <ellipse cx="112" cy="110" rx="10" ry="8" fill="white"/>
+                <circle cx="88" cy="110" r="5" fill="#8B4513"/>
+                <circle cx="112" cy="110" r="5" fill="#8B4513"/>
+                <circle cx="88" cy="110" r="3" fill="#000"/>
+                <circle cx="112" cy="110" r="3" fill="#000"/>
+                <!-- Eyebrows -->
+                <path d="M78 102 Q88 98 98 102" stroke="#996600" stroke-width="3" fill="none"/>
+                <path d="M102 102 Q112 98 122 102" stroke="#996600" stroke-width="3" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="120" rx="4" ry="8" fill="#D49A6A" opacity="0.6"/>
+                <!-- Mouth -->
+                <path d="M88 135 Q100 142 112 135" stroke="#FF69B4" stroke-width="3.5" fill="none"/>
+                <!-- Beard -->
+                <ellipse cx="100" cy="145" rx="15" ry="8" fill="#996600" opacity="0.7"/>
+            </svg>`
+        }
     ],
     
-    hairColors: [
-        { name: 'Black', base: '#2C1B18', highlight: '#3E2723' },
-        { name: 'Dark Brown', base: '#5D4037', highlight: '#795548' },
-        { name: 'Brown', base: '#8D6E63', highlight: '#A1887F' },
-        { name: 'Light Brown', base: '#A1887F', highlight: '#BCAAA4' },
-        { name: 'Blonde', base: '#FFD54F', highlight: '#FFF176' },
-        { name: 'Auburn', base: '#FF6F00', highlight: '#FF8F00' },
-        { name: 'Red', base: '#D84315', highlight: '#FF5722' },
-        { name: 'Gray', base: '#9E9E9E', highlight: '#BDBDBD' }
-    ],
-    
-    eyeColors: [
-        { name: 'Brown', iris: '#8B4513', pupil: '#2C1B18' },
-        { name: 'Hazel', iris: '#CD853F', pupil: '#8B4513' },
-        { name: 'Blue', iris: '#4169E1', pupil: '#1E3A8A' },
-        { name: 'Green', iris: '#228B22', pupil: '#1B5E20' },
-        { name: 'Gray', iris: '#708090', pupil: '#2F4F4F' },
-        { name: 'Amber', iris: '#FF8C00', pupil: '#E65100' }
-    ],
-    
-    ages: [
-        { value: 'young', label: 'Giovane (18-25)' },
-        { value: 'adult', label: 'Adulto (26-45)' },
-        { value: 'mature', label: 'Maturo (45+)' }
-    ],
-    
-    genders: [
-        { value: 'male', label: 'Uomo' },
-        { value: 'female', label: 'Donna' }
-    ],
-    
-    expressions: [
-        { value: 'neutral', label: 'Neutrale' },
-        { value: 'smile', label: 'Sorriso' },
-        { value: 'gentle', label: 'Dolce' },
-        { value: 'serious', label: 'Serio' }
+    // Avatar Femminili
+    female: [
+        {
+            id: 'female_1',
+            name: 'Sofia - Elegante',
+            emoji: '👩‍💼',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin4" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#FFE4E1"/>
+                        <stop offset="100%" stop-color="#F5DEB3"/>
+                    </radialGradient>
+                    <linearGradient id="hair4" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#654321"/>
+                        <stop offset="100%" stop-color="#4A2C17"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="118" rx="38" ry="48" fill="url(#skin4)"/>
+                <!-- Hair -->
+                <path d="M55 80 Q100 45 145 80 L150 125 Q100 85 50 125 Z" fill="url(#hair4)"/>
+                <!-- Eyes -->
+                <ellipse cx="87" cy="108" rx="9" ry="7" fill="white"/>
+                <ellipse cx="113" cy="108" rx="9" ry="7" fill="white"/>
+                <circle cx="87" cy="108" r="4" fill="#4169E1"/>
+                <circle cx="113" cy="108" r="4" fill="#4169E1"/>
+                <circle cx="87" cy="108" r="2" fill="#000"/>
+                <circle cx="113" cy="108" r="2" fill="#000"/>
+                <!-- Eyelashes -->
+                <path d="M78 104 Q87 102 96 104" stroke="#000" stroke-width="1.5" fill="none"/>
+                <path d="M104 104 Q113 102 122 104" stroke="#000" stroke-width="1.5" fill="none"/>
+                <!-- Eyebrows -->
+                <path d="M79 100 Q87 97 95 100" stroke="#4A2C17" stroke-width="2.5" fill="none"/>
+                <path d="M105 100 Q113 97 121 100" stroke="#4A2C17" stroke-width="2.5" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="118" rx="2.5" ry="5" fill="#E6D3B7" opacity="0.6"/>
+                <!-- Mouth -->
+                <ellipse cx="100" cy="132" rx="8" ry="4" fill="#FF1493"/>
+                <ellipse cx="100" cy="131" rx="6" ry="2" fill="#FFB6C1"/>
+                <!-- Cheeks -->
+                <ellipse cx="75" cy="120" rx="8" ry="6" fill="#FFB6C1" opacity="0.4"/>
+                <ellipse cx="125" cy="120" rx="8" ry="6" fill="#FFB6C1" opacity="0.4"/>
+            </svg>`
+        },
+        {
+            id: 'female_2',
+            name: 'Giulia - Dolce',
+            emoji: '🌸',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin5" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#FFEEE6"/>
+                        <stop offset="100%" stop-color="#F0D0A0"/>
+                    </radialGradient>
+                    <linearGradient id="hair5" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#DAA520"/>
+                        <stop offset="100%" stop-color="#B8860B"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="115" rx="36" ry="46" fill="url(#skin5)"/>
+                <!-- Hair -->
+                <path d="M50 75 Q100 40 150 75 L155 120 Q100 80 45 120 Z" fill="url(#hair5)"/>
+                <!-- Hair sides -->
+                <ellipse cx="65" cy="100" rx="12" ry="25" fill="url(#hair5)"/>
+                <ellipse cx="135" cy="100" rx="12" ry="25" fill="url(#hair5)"/>
+                <!-- Eyes -->
+                <ellipse cx="88" cy="110" rx="8" ry="6" fill="white"/>
+                <ellipse cx="112" cy="110" rx="8" ry="6" fill="white"/>
+                <circle cx="88" cy="110" r="3.5" fill="#32CD32"/>
+                <circle cx="112" cy="110" r="3.5" fill="#32CD32"/>
+                <circle cx="88" cy="110" r="2" fill="#000"/>
+                <circle cx="112" cy="110" r="2" fill="#000"/>
+                <!-- Eyebrows -->
+                <path d="M80 103 Q88 100 96 103" stroke="#B8860B" stroke-width="2" fill="none"/>
+                <path d="M104 103 Q112 100 120 103" stroke="#B8860B" stroke-width="2" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="118" rx="2" ry="4" fill="#E6C078" opacity="0.5"/>
+                <!-- Mouth -->
+                <path d="M92 128 Q100 134 108 128" stroke="#FF69B4" stroke-width="3" fill="none"/>
+                <!-- Dimples -->
+                <ellipse cx="82" cy="125" rx="3" ry="2" fill="#E6C078" opacity="0.3"/>
+                <ellipse cx="118" cy="125" rx="3" ry="2" fill="#E6C078" opacity="0.3"/>
+            </svg>`
+        },
+        {
+            id: 'female_3',
+            name: 'Martina - Moderna',
+            emoji: '💄',
+            svg: `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="skin6" cx="0.4" cy="0.3" r="0.8">
+                        <stop offset="0%" stop-color="#F7E7CE"/>
+                        <stop offset="100%" stop-color="#DEB887"/>
+                    </radialGradient>
+                    <linearGradient id="hair6" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#2F1B14"/>
+                        <stop offset="100%" stop-color="#1C1C1C"/>
+                    </linearGradient>
+                </defs>
+                <!-- Background -->
+                <circle cx="100" cy="100" r="95" fill="#f8f9fa"/>
+                <!-- Face -->
+                <ellipse cx="100" cy="120" rx="40" ry="50" fill="url(#skin6)"/>
+                <!-- Hair -->
+                <path d="M60 85 Q100 50 140 85 L135 100 Q100 70 65 100 Z" fill="url(#hair6)"/>
+                <!-- Eyes -->
+                <ellipse cx="85" cy="112" rx="10" ry="8" fill="white"/>
+                <ellipse cx="115" cy="112" rx="10" ry="8" fill="white"/>
+                <circle cx="85" cy="112" r="5" fill="#800080"/>
+                <circle cx="115" cy="112" r="5" fill="#800080"/>
+                <circle cx="85" cy="112" r="3" fill="#000"/>
+                <circle cx="115" cy="112" r="3" fill="#000"/>
+                <!-- Eye makeup -->
+                <path d="M75 108 Q85 105 95 108" stroke="#4B0082" stroke-width="2" fill="none"/>
+                <path d="M105 108 Q115 105 125 108" stroke="#4B0082" stroke-width="2" fill="none"/>
+                <!-- Eyebrows -->
+                <path d="M76 104 Q85 101 94 104" stroke="#1C1C1C" stroke-width="3" fill="none"/>
+                <path d="M106 104 Q115 101 124 104" stroke="#1C1C1C" stroke-width="3" fill="none"/>
+                <!-- Nose -->
+                <ellipse cx="100" cy="122" rx="3" ry="6" fill="#D49A6A" opacity="0.7"/>
+                <!-- Mouth -->
+                <ellipse cx="100" cy="138" rx="10" ry="5" fill="#DC143C"/>
+                <ellipse cx="100" cy="137" rx="8" ry="3" fill="#FF69B4"/>
+                <!-- Contouring -->
+                <path d="M70 125 Q85 135 100 125" stroke="#D49A6A" stroke-width="1" fill="none" opacity="0.4"/>
+                <path d="M100 125 Q115 135 130 125" stroke="#D49A6A" stroke-width="1" fill="none" opacity="0.4"/>
+            </svg>`
+        }
     ]
 };
 
-// === GENERATORE CSS FOTOGRAFICO ===
-class PhotorealisticFaceGenerator {
-    static generate(config) {
-        const faceId = `face_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        return `
-            <div class="photorealistic-face" data-face-id="${faceId}">
-                ${this.generateFaceStructure(config, faceId)}
-                ${this.generateInlineStyles(config, faceId)}
-            </div>
-        `;
-    }
+// === PERSONALIZZAZIONI DISPONIBILI ===
+const CustomizationOptions = {
+    skinTones: [
+        { name: 'Molto Chiara', color: '#FFEEE6' },
+        { name: 'Chiara', color: '#F7E7CE' },
+        { name: 'Media Chiara', color: '#F4C2A1' },
+        { name: 'Media', color: '#DEB887' },
+        { name: 'Media Scura', color: '#D2B48C' },
+        { name: 'Scura', color: '#C8A882' },
+        { name: 'Molto Scura', color: '#8B5A3C' }
+    ],
     
-    static generateFaceStructure(config, faceId) {
-        return `
-            <div class="face-container-${faceId}">
-                <!-- Cranio e forma base -->
-                <div class="skull-${faceId}"></div>
-                
-                <!-- Collo -->
-                <div class="neck-${faceId}"></div>
-                
-                <!-- Viso principale -->
-                <div class="face-main-${faceId}">
-                    <!-- Zona fronte -->
-                    <div class="forehead-${faceId}"></div>
-                    
-                    <!-- Sopracciglia -->
-                    <div class="eyebrow-left-${faceId}"></div>
-                    <div class="eyebrow-right-${faceId}"></div>
-                    
-                    <!-- Occhi -->
-                    <div class="eye-socket-left-${faceId}">
-                        <div class="eyeball-left-${faceId}">
-                            <div class="iris-left-${faceId}">
-                                <div class="pupil-left-${faceId}"></div>
-                                <div class="light-reflection-left-${faceId}"></div>
-                            </div>
-                        </div>
-                        <div class="eyelid-upper-left-${faceId}"></div>
-                        <div class="eyelid-lower-left-${faceId}"></div>
-                    </div>
-                    
-                    <div class="eye-socket-right-${faceId}">
-                        <div class="eyeball-right-${faceId}">
-                            <div class="iris-right-${faceId}">
-                                <div class="pupil-right-${faceId}"></div>
-                                <div class="light-reflection-right-${faceId}"></div>
-                            </div>
-                        </div>
-                        <div class="eyelid-upper-right-${faceId}"></div>
-                        <div class="eyelid-lower-right-${faceId}"></div>
-                    </div>
-                    
-                    <!-- Naso -->
-                    <div class="nose-bridge-${faceId}"></div>
-                    <div class="nose-tip-${faceId}"></div>
-                    <div class="nostril-left-${faceId}"></div>
-                    <div class="nostril-right-${faceId}"></div>
-                    <div class="nose-shadow-${faceId}"></div>
-                    
-                    <!-- Bocca -->
-                    <div class="mouth-${faceId}">
-                        <div class="upper-lip-${faceId}"></div>
-                        <div class="lower-lip-${faceId}"></div>
-                        <div class="lip-line-${faceId}"></div>
-                    </div>
-                    
-                    <!-- Guanci e struttura -->
-                    <div class="cheek-left-${faceId}"></div>
-                    <div class="cheek-right-${faceId}"></div>
-                    <div class="jaw-left-${faceId}"></div>
-                    <div class="jaw-right-${faceId}"></div>
-                    
-                    <!-- Capelli -->
-                    <div class="hair-back-${faceId}"></div>
-                    <div class="hair-front-${faceId}"></div>
-                    <div class="hair-sides-${faceId}"></div>
-                    
-                    <!-- Dettagli di età -->
-                    ${config.age !== 'young' ? this.generateAgeLines(faceId) : ''}
-                    
-                    <!-- Texture pelle -->
-                    <div class="skin-texture-${faceId}"></div>
-                </div>
-            </div>
-        `;
-    }
+    hairColors: [
+        { name: 'Nero', color: '#1C1C1C' },
+        { name: 'Castano Scuro', color: '#4A2C17' },
+        { name: 'Castano', color: '#654321' },
+        { name: 'Castano Chiaro', color: '#996600' },
+        { name: 'Biondo Scuro', color: '#B8860B' },
+        { name: 'Biondo', color: '#DAA520' },
+        { name: 'Biondo Chiaro', color: '#F4A460' },
+        { name: 'Rosso', color: '#B22222' },
+        { name: 'Grigio', color: '#808080' }
+    ],
     
-    static generateAgeLines(faceId) {
-        return `
-            <div class="crow-feet-left-${faceId}"></div>
-            <div class="crow-feet-right-${faceId}"></div>
-            <div class="forehead-lines-${faceId}"></div>
-            <div class="nasolabial-fold-left-${faceId}"></div>
-            <div class="nasolabial-fold-right-${faceId}"></div>
-        `;
-    }
-    
-    static generateInlineStyles(config, faceId) {
-        const skin = config.skinTone;
-        const hair = config.hairColor;
-        const eye = config.eyeColor;
-        
-        return `
-            <style>
-                .face-container-${faceId} {
-                    position: relative;
-                    width: 180px;
-                    height: 180px;
-                    margin: 0 auto;
-                    background: radial-gradient(circle at 30% 20%, ${skin.highlight}, ${skin.base});
-                    border-radius: 50%;
-                    overflow: hidden;
-                    box-shadow: 
-                        inset 0 0 60px rgba(0,0,0,0.1),
-                        inset -20px -20px 40px rgba(0,0,0,0.1),
-                        0 8px 32px rgba(0,0,0,0.2);
-                }
-                
-                .skull-${faceId} {
-                    position: absolute;
-                    top: 10px;
-                    left: 10px;
-                    right: 10px;
-                    height: 120px;
-                    background: radial-gradient(ellipse at 40% 30%, 
-                        ${skin.highlight} 0%, 
-                        ${skin.base} 40%, 
-                        ${skin.shadow} 100%);
-                    border-radius: 50% 50% 45% 45%;
-                    box-shadow: inset 0 10px 20px rgba(0,0,0,0.05);
-                }
-                
-                .neck-${faceId} {
-                    position: absolute;
-                    bottom: -20px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 40px;
-                    height: 35px;
-                    background: linear-gradient(180deg, ${skin.base}, ${skin.shadow});
-                    border-radius: 20px 20px 0 0;
-                    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-                }
-                
-                .face-main-${faceId} {
-                    position: absolute;
-                    top: 15px;
-                    left: 15px;
-                    right: 15px;
-                    bottom: 15px;
-                    border-radius: 50%;
-                }
-                
-                /* === SOPRACCIGLIA === */
-                .eyebrow-left-${faceId}, .eyebrow-right-${faceId} {
-                    position: absolute;
-                    top: 45px;
-                    width: 25px;
-                    height: 6px;
-                    background: linear-gradient(90deg, transparent 0%, ${hair.base} 20%, ${hair.base} 80%, transparent 100%);
-                    border-radius: 3px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                }
-                
-                .eyebrow-left-${faceId} {
-                    left: 35px;
-                    transform: rotate(-5deg);
-                }
-                
-                .eyebrow-right-${faceId} {
-                    right: 35px;
-                    transform: rotate(5deg);
-                }
-                
-                /* === OCCHI === */
-                .eye-socket-left-${faceId}, .eye-socket-right-${faceId} {
-                    position: absolute;
-                    top: 55px;
-                    width: 32px;
-                    height: 20px;
-                    background: radial-gradient(ellipse, rgba(0,0,0,0.05) 0%, transparent 70%);
-                    border-radius: 50%;
-                }
-                
-                .eye-socket-left-${faceId} { left: 32px; }
-                .eye-socket-right-${faceId} { right: 32px; }
-                
-                .eyeball-left-${faceId}, .eyeball-right-${faceId} {
-                    position: absolute;
-                    top: 3px;
-                    left: 3px;
-                    width: 26px;
-                    height: 14px;
-                    background: radial-gradient(ellipse, #ffffff 0%, #f5f5f5 100%);
-                    border-radius: 50%;
-                    box-shadow: 
-                        inset 0 -2px 4px rgba(0,0,0,0.1),
-                        0 1px 3px rgba(0,0,0,0.15);
-                }
-                
-                .iris-left-${faceId}, .iris-right-${faceId} {
-                    position: absolute;
-                    top: 2px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 12px;
-                    height: 12px;
-                    background: radial-gradient(circle at 30% 30%, 
-                        ${eye.iris} 0%, 
-                        ${this.darkenColor(eye.iris, 20)} 70%, 
-                        ${this.darkenColor(eye.iris, 40)} 100%);
-                    border-radius: 50%;
-                    box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-                }
-                
-                .pupil-left-${faceId}, .pupil-right-${faceId} {
-                    position: absolute;
-                    top: 2px;
-                    left: 2px;
-                    width: 8px;
-                    height: 8px;
-                    background: radial-gradient(circle at 30% 30%, #1a1a1a 0%, #000000 100%);
-                    border-radius: 50%;
-                }
-                
-                .light-reflection-left-${faceId}, .light-reflection-right-${faceId} {
-                    position: absolute;
-                    top: 1px;
-                    right: 1px;
-                    width: 3px;
-                    height: 3px;
-                    background: radial-gradient(circle, #ffffff 0%, rgba(255,255,255,0.8) 100%);
-                    border-radius: 50%;
-                }
-                
-                .eyelid-upper-left-${faceId}, .eyelid-upper-right-${faceId} {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 8px;
-                    background: linear-gradient(180deg, ${skin.base} 0%, rgba(${this.hexToRgb(skin.base)}, 0.8) 100%);
-                    border-radius: 50% 50% 0 0;
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-                }
-                
-                .eyelid-lower-left-${faceId}, .eyelid-lower-right-${faceId} {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    height: 4px;
-                    background: linear-gradient(0deg, ${skin.shadow} 0%, rgba(${this.hexToRgb(skin.base)}, 0.5) 100%);
-                    border-radius: 0 0 50% 50%;
-                }
-                
-                /* === NASO === */
-                .nose-bridge-${faceId} {
-                    position: absolute;
-                    top: 70px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 8px;
-                    height: 25px;
-                    background: linear-gradient(180deg, 
-                        rgba(${this.hexToRgb(skin.shadow)}, 0.3) 0%, 
-                        rgba(${this.hexToRgb(skin.shadow)}, 0.6) 100%);
-                    border-radius: 4px;
-                    box-shadow: 
-                        -1px 0 3px rgba(0,0,0,0.1),
-                        1px 0 3px rgba(255,255,255,0.3);
-                }
-                
-                .nose-tip-${faceId} {
-                    position: absolute;
-                    top: 92px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 14px;
-                    height: 10px;
-                    background: radial-gradient(ellipse at 50% 30%, 
-                        ${skin.highlight} 0%, 
-                        ${skin.base} 50%, 
-                        ${skin.shadow} 100%);
-                    border-radius: 50%;
-                    box-shadow: 
-                        0 2px 4px rgba(0,0,0,0.1),
-                        inset 0 1px 2px rgba(255,255,255,0.3);
-                }
-                
-                .nostril-left-${faceId}, .nostril-right-${faceId} {
-                    position: absolute;
-                    top: 98px;
-                    width: 3px;
-                    height: 6px;
-                    background: radial-gradient(ellipse, #000000 0%, rgba(0,0,0,0.8) 70%, transparent 100%);
-                    border-radius: 50%;
-                    box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
-                }
-                
-                .nostril-left-${faceId} { left: 82px; transform: rotate(-15deg); }
-                .nostril-right-${faceId} { right: 82px; transform: rotate(15deg); }
-                
-                .nose-shadow-${faceId} {
-                    position: absolute;
-                    top: 100px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 20px;
-                    height: 8px;
-                    background: radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%);
-                    border-radius: 50%;
-                }
-                
-                /* === BOCCA === */
-                .mouth-${faceId} {
-                    position: absolute;
-                    top: 115px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    width: 32px;
-                    height: 18px;
-                }
-                
-                .upper-lip-${faceId} {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    height: 8px;
-                    background: linear-gradient(180deg, 
-                        #ff9eb5 0%, 
-                        #ff6b9d 50%, 
-                        #e74c7c 100%);
-                    border-radius: 50% 50% 0 0;
-                    ${this.getMouthShape(config.expression, 'upper')}
-                }
-                
-                .lower-lip-${faceId} {
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                    height: 10px;
-                    background: linear-gradient(0deg, 
-                        #e74c7c 0%, 
-                        #ff6b9d 50%, 
-                        #ffb6c1 100%);
-                    border-radius: 0 0 50% 50%;
-                    box-shadow: 
-                        inset 0 1px 3px rgba(255,255,255,0.4),
-                        0 1px 2px rgba(0,0,0,0.1);
-                    ${this.getMouthShape(config.expression, 'lower')}
-                }
-                
-                .lip-line-${faceId} {
-                    position: absolute;
-                    top: 7px;
-                    left: 0;
-                    right: 0;
-                    height: 2px;
-                    background: linear-gradient(90deg, 
-                        transparent 0%, 
-                        rgba(0,0,0,0.2) 20%, 
-                        rgba(0,0,0,0.3) 50%, 
-                        rgba(0,0,0,0.2) 80%, 
-                        transparent 100%);
-                    ${this.getMouthShape(config.expression, 'line')}
-                }
-                
-                /* === GUANCI === */
-                .cheek-left-${faceId}, .cheek-right-${faceId} {
-                    position: absolute;
-                    top: 80px;
-                    width: 25px;
-                    height: 25px;
-                    background: radial-gradient(circle, rgba(255,182,193,0.3) 0%, transparent 70%);
-                    border-radius: 50%;
-                }
-                
-                .cheek-left-${faceId} { left: 20px; }
-                .cheek-right-${faceId} { right: 20px; }
-                
-                /* === CAPELLI === */
-                .hair-back-${faceId} {
-                    position: absolute;
-                    top: -10px;
-                    left: 5px;
-                    right: 5px;
-                    height: 80px;
-                    background: radial-gradient(ellipse at 50% 20%, 
-                        ${hair.highlight} 0%, 
-                        ${hair.base} 60%, 
-                        ${this.darkenColor(hair.base, 30)} 100%);
-                    border-radius: 50% 50% 30% 30%;
-                    box-shadow: 
-                        0 4px 15px rgba(0,0,0,0.2),
-                        inset 0 5px 15px rgba(255,255,255,0.1);
-                }
-                
-                .hair-front-${faceId} {
-                    position: absolute;
-                    top: 15px;
-                    left: 25px;
-                    right: 25px;
-                    height: 25px;
-                    background: linear-gradient(180deg, 
-                        ${hair.base} 0%, 
-                        rgba(${this.hexToRgb(hair.base)}, 0.8) 100%);
-                    border-radius: 0 0 20px 20px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-                }
-                
-                .hair-sides-${faceId} {
-                    position: absolute;
-                    top: 20px;
-                    left: 8px;
-                    width: 15px;
-                    height: 40px;
-                    background: linear-gradient(90deg, 
-                        ${hair.base} 0%, 
-                        rgba(${this.hexToRgb(hair.base)}, 0.6) 100%);
-                    border-radius: 0 15px 15px 0;
-                    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-                }
-                
-                .hair-sides-${faceId}::after {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    right: -142px;
-                    width: 15px;
-                    height: 40px;
-                    background: linear-gradient(-90deg, 
-                        ${hair.base} 0%, 
-                        rgba(${this.hexToRgb(hair.base)}, 0.6) 100%);
-                    border-radius: 15px 0 0 15px;
-                    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
-                }
-                
-                /* === TEXTURE PELLE === */
-                .skin-texture-${faceId} {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: 
-                        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                        radial-gradient(circle at 80% 70%, rgba(0,0,0,0.05) 1px, transparent 1px),
-                        radial-gradient(circle at 60% 20%, rgba(255,255,255,0.08) 1px, transparent 1px);
-                    background-size: 20px 20px, 15px 15px, 25px 25px;
-                    opacity: 0.6;
-                    border-radius: 50%;
-                }
-                
-                /* === RUGHE DI ETÀ === */
-                ${config.age !== 'young' ? this.generateAgeStyles(faceId, skin) : ''}
-                
-                /* === ESPRESSIONI === */
-                ${this.getExpressionStyles(config.expression, faceId)}
-            </style>
-        `;
-    }
-    
-    static getMouthShape(expression, part) {
-        const shapes = {
-            neutral: {
-                upper: '',
-                lower: '',
-                line: ''
-            },
-            smile: {
-                upper: 'transform: translateY(-1px); border-radius: 60% 60% 40% 40%;',
-                lower: 'transform: translateY(1px); border-radius: 40% 40% 60% 60%;',
-                line: 'border-radius: 50px; transform: translateY(-1px);'
-            },
-            gentle: {
-                upper: 'border-radius: 55% 55% 35% 35%;',
-                lower: 'border-radius: 35% 35% 55% 55%;',
-                line: 'border-radius: 30px;'
-            },
-            serious: {
-                upper: 'border-radius: 30% 30% 0 0;',
-                lower: 'border-radius: 0 0 30% 30%;',
-                line: 'border-radius: 0;'
-            }
-        };
-        
-        return shapes[expression]?.[part] || '';
-    }
-    
-    static getExpressionStyles(expression, faceId) {
-        if (expression === 'smile') {
-            return `
-                .cheek-left-${faceId}, .cheek-right-${faceId} {
-                    background: radial-gradient(circle, rgba(255,182,193,0.5) 0%, transparent 70%);
-                }
-                
-                .eyebrow-left-${faceId} { transform: rotate(-3deg) translateY(-1px); }
-                .eyebrow-right-${faceId} { transform: rotate(3deg) translateY(-1px); }
-            `;
-        }
-        return '';
-    }
-    
-    static generateAgeStyles(faceId, skin) {
-        return `
-            .crow-feet-left-${faceId}, .crow-feet-right-${faceId} {
-                position: absolute;
-                top: 58px;
-                width: 12px;
-                height: 8px;
-                background: linear-gradient(45deg, 
-                    transparent 0%, 
-                    rgba(0,0,0,0.1) 30%, 
-                    transparent 60%);
-            }
-            
-            .crow-feet-left-${faceId} { left: 25px; }
-            .crow-feet-right-${faceId} { right: 25px; transform: scaleX(-1); }
-            
-            .forehead-lines-${faceId} {
-                position: absolute;
-                top: 35px;
-                left: 30px;
-                right: 30px;
-                height: 2px;
-                background: linear-gradient(90deg, 
-                    transparent 0%, 
-                    rgba(0,0,0,0.08) 50%, 
-                    transparent 100%);
-                border-radius: 1px;
-            }
-            
-            .nasolabial-fold-left-${faceId}, .nasolabial-fold-right-${faceId} {
-                position: absolute;
-                top: 85px;
-                width: 2px;
-                height: 25px;
-                background: linear-gradient(180deg, 
-                    transparent 0%, 
-                    rgba(0,0,0,0.1) 50%, 
-                    transparent 100%);
-                border-radius: 1px;
-                transform: rotate(15deg);
-            }
-            
-            .nasolabial-fold-left-${faceId} { left: 70px; }
-            .nasolabial-fold-right-${faceId} { right: 70px; transform: rotate(-15deg); }
-        `;
-    }
-    
-    // Utility functions
-    static hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? 
-            `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : 
-            '0, 0, 0';
-    }
-    
-    static darkenColor(hex, percent) {
-        const num = parseInt(hex.replace("#", ""), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = Math.max(0, (num >> 16) - amt);
-        const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
-        const B = Math.max(0, (num & 0x0000FF) - amt);
-        return "#" + ((1 << 24) + (R << 16) + (G << 8) + B).toString(16).slice(1);
-    }
-}
+    eyeColors: [
+        { name: 'Marroni', color: '#8B4513' },
+        { name: 'Azzurri', color: '#4169E1' },
+        { name: 'Verdi', color: '#228B22' },
+        { name: 'Nocciola', color: '#CD853F' },
+        { name: 'Grigi', color: '#708090' },
+        { name: 'Viola', color: '#800080' }
+    ]
+};
 
-// === MANAGER FOTOGRAFICO ===
-class PhotorealisticFaceManager {
+// === MANAGER GALLERIA AVATAR ===
+class AvatarGalleryManager {
     constructor(userId) {
         this.userId = userId;
-        this.config = this.getDefaultConfig();
-        this.mode = 'realistic';
+        this.selectedAvatar = null;
+        this.customizations = {};
+        this.mode = 'gallery';
         this.photoUrl = null;
         this.loadFromStorage();
+        
+        // Set default avatar if none selected
+        if (!this.selectedAvatar) {
+            this.selectedAvatar = AvatarGallery.male[0];
+        }
     }
     
-    getDefaultConfig() {
-        return {
-            gender: 'male',
-            age: 'adult',
-            skinTone: PhotorealisticConfig.skinTones[0],
-            hairColor: PhotorealisticConfig.hairColors[0],
-            eyeColor: PhotorealisticConfig.eyeColors[0],
-            expression: 'gentle'
-        };
-    }
-    
-    updateConfig(property, value) {
-        this.config[property] = value;
+    selectAvatar(avatarId) {
+        const allAvatars = [...AvatarGallery.male, ...AvatarGallery.female];
+        this.selectedAvatar = allAvatars.find(av => av.id === avatarId);
+        this.customizations = {}; // Reset customizations
         this.saveToStorage();
-        return this.config;
+        return this.selectedAvatar;
+    }
+    
+    updateCustomization(property, colorIndex) {
+        this.customizations[property] = colorIndex;
+        this.saveToStorage();
+        return this.customizations;
     }
     
     setMode(mode) {
-        if (['realistic', 'photo'].includes(mode)) {
+        if (['gallery', 'photo'].includes(mode)) {
             this.mode = mode;
             this.saveToStorage();
             return true;
@@ -667,46 +337,92 @@ class PhotorealisticFaceManager {
         this.saveToStorage();
     }
     
-    generateHTML() {
-        if (this.mode === 'realistic') {
-            return PhotorealisticFaceGenerator.generate(this.config);
-        }
-        return null;
-    }
-    
     getDisplayHTML() {
         if (this.mode === 'photo' && this.photoUrl) {
             return `<img src="${this.photoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Avatar Photo">`;
-        } else {
-            return this.generateHTML();
+        } else if (this.selectedAvatar) {
+            return this.getCustomizedSVG();
         }
+        return '<div style="font-size: 48px;">👤</div>';
     }
     
-    randomize() {
-        this.config = {
-            gender: Math.random() > 0.5 ? 'male' : 'female',
-            age: PhotorealisticConfig.ages[Math.floor(Math.random() * PhotorealisticConfig.ages.length)].value,
-            skinTone: PhotorealisticConfig.skinTones[Math.floor(Math.random() * PhotorealisticConfig.skinTones.length)],
-            hairColor: PhotorealisticConfig.hairColors[Math.floor(Math.random() * PhotorealisticConfig.hairColors.length)],
-            eyeColor: PhotorealisticConfig.eyeColors[Math.floor(Math.random() * PhotorealisticConfig.eyeColors.length)],
-            expression: PhotorealisticConfig.expressions[Math.floor(Math.random() * PhotorealisticConfig.expressions.length)].value
+    getCustomizedSVG() {
+        if (!this.selectedAvatar) return '';
+        
+        let svg = this.selectedAvatar.svg;
+        
+        // Apply skin tone customization
+        if (this.customizations.skinTone !== undefined) {
+            const newSkinColor = CustomizationOptions.skinTones[this.customizations.skinTone].color;
+            svg = svg.replace(/stop-color="#[^"]*"/g, (match, offset, string) => {
+                if (string.substring(Math.max(0, offset - 50), offset).includes('skin')) {
+                    return `stop-color="${newSkinColor}"`;
+                }
+                return match;
+            });
+        }
+        
+        // Apply hair color customization
+        if (this.customizations.hairColor !== undefined) {
+            const newHairColor = CustomizationOptions.hairColors[this.customizations.hairColor].color;
+            svg = svg.replace(/id="hair\d+"/g, (match) => {
+                return match;
+            });
+            svg = svg.replace(/fill="url\(#hair\d+\)"/g, `fill="${newHairColor}"`);
+            svg = svg.replace(/stroke="#[^"]*"/g, (match, offset, string) => {
+                if (string.substring(Math.max(0, offset - 20), offset).includes('Eyebrow') || 
+                    string.substring(Math.max(0, offset - 50), offset + 20).includes('eyebrow')) {
+                    return `stroke="${newHairColor}"`;
+                }
+                return match;
+            });
+        }
+        
+        // Apply eye color customization
+        if (this.customizations.eyeColor !== undefined) {
+            const newEyeColor = CustomizationOptions.eyeColors[this.customizations.eyeColor].color;
+            svg = svg.replace(/fill="#[^"]*"/g, (match, offset, string) => {
+                const before = string.substring(Math.max(0, offset - 30), offset);
+                const after = string.substring(offset, offset + 50);
+                if ((before.includes('r="4') || before.includes('r="3.5') || before.includes('r="5')) && 
+                    !after.includes('#000') && !after.includes('white')) {
+                    return `fill="${newEyeColor}"`;
+                }
+                return match;
+            });
+        }
+        
+        return svg;
+    }
+    
+    randomSelect() {
+        const allAvatars = [...AvatarGallery.male, ...AvatarGallery.female];
+        const randomAvatar = allAvatars[Math.floor(Math.random() * allAvatars.length)];
+        this.selectedAvatar = randomAvatar;
+        
+        // Random customizations
+        this.customizations = {
+            skinTone: Math.floor(Math.random() * CustomizationOptions.skinTones.length),
+            hairColor: Math.floor(Math.random() * CustomizationOptions.hairColors.length),
+            eyeColor: Math.floor(Math.random() * CustomizationOptions.eyeColors.length)
         };
         
         this.saveToStorage();
-        return this.config;
+        return this.selectedAvatar;
     }
     
     saveToStorage() {
         try {
             const data = {
-                config: this.config,
+                selectedAvatar: this.selectedAvatar,
+                customizations: this.customizations,
                 mode: this.mode,
                 photoUrl: this.photoUrl,
                 timestamp: Date.now()
             };
             if (!window.avatarStorage) window.avatarStorage = {};
             window.avatarStorage[this.userId] = data;
-            console.log('💾 Avatar fotografico salvato:', this.config);
+            console.log('💾 Avatar galleria salvato:', this.selectedAvatar?.name);
         } catch (e) {
             console.error('Errore salvataggio avatar:', e);
         }
@@ -716,10 +432,11 @@ class PhotorealisticFaceManager {
         try {
             if (window.avatarStorage && window.avatarStorage[this.userId]) {
                 const data = window.avatarStorage[this.userId];
-                this.config = { ...this.getDefaultConfig(), ...data.config };
-                this.mode = data.mode || 'realistic';
+                this.selectedAvatar = data.selectedAvatar || AvatarGallery.male[0];
+                this.customizations = data.customizations || {};
+                this.mode = data.mode || 'gallery';
                 this.photoUrl = data.photoUrl || null;
-                console.log('📂 Avatar fotografico caricato:', this.config);
+                console.log('📂 Avatar galleria caricato:', this.selectedAvatar?.name);
             }
         } catch (e) {
             console.error('Errore caricamento avatar:', e);
@@ -727,8 +444,8 @@ class PhotorealisticFaceManager {
     }
 }
 
-// === UI FOTOGRAFICA ===
-class PhotorealisticFaceUI {
+// === UI GALLERIA AVATAR ===
+class AvatarGalleryUI {
     constructor(containerId, manager) {
         this.container = document.getElementById(containerId);
         this.manager = manager;
@@ -739,10 +456,10 @@ class PhotorealisticFaceUI {
         if (!this.container) return;
         
         this.container.innerHTML = `
-            <div class="photorealistic-ui">
+            <div class="avatar-gallery-ui">
                 <div class="mode-selector">
-                    <button class="mode-btn ${this.manager.mode === 'realistic' ? 'active' : ''}" data-mode="realistic">
-                        👤 Viso Fotografico
+                    <button class="mode-btn ${this.manager.mode === 'gallery' ? 'active' : ''}" data-mode="gallery">
+                        🎭 Galleria Avatar
                     </button>
                     <button class="mode-btn ${this.manager.mode === 'photo' ? 'active' : ''}" data-mode="photo">
                         📸 Foto Personale
@@ -753,14 +470,17 @@ class PhotorealisticFaceUI {
                     <div class="preview-container" id="previewContainer">
                         ${this.manager.getDisplayHTML()}
                     </div>
+                    <div class="avatar-info" id="avatarInfo">
+                        ${this.manager.selectedAvatar ? `${this.manager.selectedAvatar.emoji} ${this.manager.selectedAvatar.name}` : 'Seleziona un avatar'}
+                    </div>
                 </div>
                 
                 <div class="controls" id="controls">
-                    ${this.manager.mode === 'realistic' ? this.buildPhotorealisticControls() : this.buildPhotoControls()}
+                    ${this.manager.mode === 'gallery' ? this.buildGalleryControls() : this.buildPhotoControls()}
                 </div>
                 
                 <div class="actions">
-                    <button class="action-btn" onclick="window.avatarUI.randomize()">🎲 Volto Casuale</button>
+                    <button class="action-btn" onclick="window.avatarUI.randomSelect()">🎲 Avatar Casuale</button>
                     <button class="action-btn primary" onclick="window.avatarUI.save()">💾 Salva Avatar</button>
                 </div>
             </div>
@@ -770,77 +490,74 @@ class PhotorealisticFaceUI {
         this.injectStyles();
     }
     
-    buildPhotorealisticControls() {
+    buildGalleryControls() {
         return `
             <div class="control-section">
                 <div class="control-group">
-                    <label>👤 Genere</label>
-                    <div class="button-group">
-                        ${PhotorealisticConfig.genders.map(gender => 
-                            `<button class="option-btn ${this.manager.config.gender === gender.value ? 'active' : ''}" 
-                                    data-property="gender" data-value="${gender.value}">
-                                ${gender.label}
-                            </button>`
+                    <label>👨 Avatar Maschili</label>
+                    <div class="avatar-grid">
+                        ${AvatarGallery.male.map(avatar => 
+                            `<div class="avatar-option ${this.manager.selectedAvatar?.id === avatar.id ? 'active' : ''}" 
+                                  data-avatar-id="${avatar.id}">
+                                <div class="avatar-thumb">${avatar.svg}</div>
+                                <div class="avatar-label">${avatar.emoji} ${avatar.name.split(' - ')[0]}</div>
+                            </div>`
                         ).join('')}
                     </div>
                 </div>
                 
                 <div class="control-group">
-                    <label>🎂 Età</label>
-                    <div class="button-group">
-                        ${PhotorealisticConfig.ages.map(age => 
-                            `<button class="option-btn ${this.manager.config.age === age.value ? 'active' : ''}" 
-                                    data-property="age" data-value="${age.value}">
-                                ${age.label}
-                            </button>`
+                    <label>👩 Avatar Femminili</label>
+                    <div class="avatar-grid">
+                        ${AvatarGallery.female.map(avatar => 
+                            `<div class="avatar-option ${this.manager.selectedAvatar?.id === avatar.id ? 'active' : ''}" 
+                                  data-avatar-id="${avatar.id}">
+                                <div class="avatar-thumb">${avatar.svg}</div>
+                                <div class="avatar-label">${avatar.emoji} ${avatar.name.split(' - ')[0]}</div>
+                            </div>`
                         ).join('')}
                     </div>
                 </div>
                 
-                <div class="control-group">
-                    <label>🎨 Tonalità Pelle</label>
-                    <div class="color-grid">
-                        ${PhotorealisticConfig.skinTones.map((tone, index) => 
-                            `<div class="color-swatch ${this.manager.config.skinTone === tone ? 'active' : ''}" 
-                                  data-property="skinTone" data-value="${index}" 
-                                  style="background: linear-gradient(45deg, ${tone.base}, ${tone.highlight});" 
-                                  title="${tone.name}"></div>`
+                ${this.manager.selectedAvatar ? this.buildCustomizationControls() : ''}
+            </div>
+        `;
+    }
+    
+    buildCustomizationControls() {
+        return `
+            <div class="control-group">
+                <label>🎨 Personalizza Avatar</label>
+                
+                <div class="customization-row">
+                    <span class="custom-label">Tonalità Pelle:</span>
+                    <div class="color-options">
+                        ${CustomizationOptions.skinTones.map((tone, index) => 
+                            `<div class="color-option ${this.manager.customizations.skinTone === index ? 'active' : ''}" 
+                                  data-property="skinTone" data-index="${index}"
+                                  style="background: ${tone.color};" title="${tone.name}"></div>`
                         ).join('')}
                     </div>
                 </div>
                 
-                <div class="control-group">
-                    <label>💇 Colore Capelli</label>
-                    <div class="color-grid">
-                        ${PhotorealisticConfig.hairColors.map((hair, index) => 
-                            `<div class="color-swatch ${this.manager.config.hairColor === hair ? 'active' : ''}" 
-                                  data-property="hairColor" data-value="${index}" 
-                                  style="background: linear-gradient(45deg, ${hair.base}, ${hair.highlight});" 
-                                  title="${hair.name}"></div>`
+                <div class="customization-row">
+                    <span class="custom-label">Colore Capelli:</span>
+                    <div class="color-options">
+                        ${CustomizationOptions.hairColors.map((hair, index) => 
+                            `<div class="color-option ${this.manager.customizations.hairColor === index ? 'active' : ''}" 
+                                  data-property="hairColor" data-index="${index}"
+                                  style="background: ${hair.color};" title="${hair.name}"></div>`
                         ).join('')}
                     </div>
                 </div>
                 
-                <div class="control-group">
-                    <label>👁️ Colore Occhi</label>
-                    <div class="color-grid">
-                        ${PhotorealisticConfig.eyeColors.map((eye, index) => 
-                            `<div class="color-swatch ${this.manager.config.eyeColor === eye ? 'active' : ''}" 
-                                  data-property="eyeColor" data-value="${index}" 
-                                  style="background: radial-gradient(circle, ${eye.iris}, ${eye.pupil});" 
-                                  title="${eye.name}"></div>`
-                        ).join('')}
-                    </div>
-                </div>
-                
-                <div class="control-group">
-                    <label>😊 Espressione</label>
-                    <div class="button-group">
-                        ${PhotorealisticConfig.expressions.map(expr => 
-                            `<button class="option-btn ${this.manager.config.expression === expr.value ? 'active' : ''}" 
-                                    data-property="expression" data-value="${expr.value}">
-                                ${expr.label}
-                            </button>`
+                <div class="customization-row">
+                    <span class="custom-label">Colore Occhi:</span>
+                    <div class="color-options">
+                        ${CustomizationOptions.eyeColors.map((eye, index) => 
+                            `<div class="color-option ${this.manager.customizations.eyeColor === index ? 'active' : ''}" 
+                                  data-property="eyeColor" data-index="${index}"
+                                  style="background: ${eye.color};" title="${eye.name}"></div>`
                         ).join('')}
                     </div>
                 </div>
@@ -875,21 +592,20 @@ class PhotorealisticFaceUI {
             });
         });
         
-        // Option buttons
-        this.container.querySelectorAll('.option-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const property = e.target.dataset.property;
-                const value = e.target.dataset.value;
-                this.updateProperty(property, value);
+        // Avatar selection
+        this.container.querySelectorAll('.avatar-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const avatarId = e.currentTarget.dataset.avatarId;
+                this.selectAvatar(avatarId);
             });
         });
         
-        // Color swatches
-        this.container.querySelectorAll('.color-swatch').forEach(swatch => {
-            swatch.addEventListener('click', (e) => {
-                const property = e.target.dataset.property;
-                const index = parseInt(e.target.dataset.value);
-                this.updateColorProperty(property, index);
+        // Color customization
+        this.container.querySelectorAll('.color-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const property = e.currentTarget.dataset.property;
+                const index = parseInt(e.currentTarget.dataset.index);
+                this.updateCustomization(property, index);
             });
         });
         
@@ -911,29 +627,17 @@ class PhotorealisticFaceUI {
         }
     }
     
-    updateProperty(property, value) {
-        this.manager.updateConfig(property, value);
+    selectAvatar(avatarId) {
+        this.manager.selectAvatar(avatarId);
         this.refreshControls();
         this.updatePreview();
+        this.updateAvatarInfo();
     }
     
-    updateColorProperty(property, index) {
-        let value;
-        switch(property) {
-            case 'skinTone':
-                value = PhotorealisticConfig.skinTones[index];
-                break;
-            case 'hairColor':
-                value = PhotorealisticConfig.hairColors[index];
-                break;
-            case 'eyeColor':
-                value = PhotorealisticConfig.eyeColors[index];
-                break;
-        }
-        
-        this.manager.updateConfig(property, value);
+    updateCustomization(property, index) {
+        this.manager.updateCustomization(property, index);
         this.updatePreview();
-        this.updateColorSwatches();
+        this.updateCustomizationDisplay();
     }
     
     switchMode(mode) {
@@ -947,8 +651,8 @@ class PhotorealisticFaceUI {
     
     refreshControls() {
         const controlsContainer = this.container.querySelector('#controls');
-        controlsContainer.innerHTML = this.manager.mode === 'realistic' ? 
-            this.buildPhotorealisticControls() : this.buildPhotoControls();
+        controlsContainer.innerHTML = this.manager.mode === 'gallery' ? 
+            this.buildGalleryControls() : this.buildPhotoControls();
         this.attachEvents();
     }
     
@@ -957,33 +661,28 @@ class PhotorealisticFaceUI {
         preview.innerHTML = this.manager.getDisplayHTML();
     }
     
-    updateColorSwatches() {
-        this.container.querySelectorAll('.color-swatch').forEach(swatch => {
-            const property = swatch.dataset.property;
-            const index = parseInt(swatch.dataset.value);
-            
-            let isActive = false;
-            switch(property) {
-                case 'skinTone':
-                    isActive = this.manager.config.skinTone === PhotorealisticConfig.skinTones[index];
-                    break;
-                case 'hairColor':
-                    isActive = this.manager.config.hairColor === PhotorealisticConfig.hairColors[index];
-                    break;
-                case 'eyeColor':
-                    isActive = this.manager.config.eyeColor === PhotorealisticConfig.eyeColors[index];
-                    break;
-            }
-            
-            swatch.classList.toggle('active', isActive);
+    updateAvatarInfo() {
+        const info = this.container.querySelector('#avatarInfo');
+        if (info && this.manager.selectedAvatar) {
+            info.textContent = `${this.manager.selectedAvatar.emoji} ${this.manager.selectedAvatar.name}`;
+        }
+    }
+    
+    updateCustomizationDisplay() {
+        this.container.querySelectorAll('.color-option').forEach(option => {
+            const property = option.dataset.property;
+            const index = parseInt(option.dataset.index);
+            const isActive = this.manager.customizations[property] === index;
+            option.classList.toggle('active', isActive);
         });
     }
     
-    randomize() {
-        this.manager.randomize();
+    randomSelect() {
+        this.manager.randomSelect();
         this.refreshControls();
         this.updatePreview();
-        this.showNotification('🎲 Volto randomizzato!');
+        this.updateAvatarInfo();
+        this.showNotification('🎲 Avatar randomizzato!');
     }
     
     save() {
@@ -1007,129 +706,91 @@ class PhotorealisticFaceUI {
     }
     
     injectStyles() {
-        if (document.getElementById('photorealistic-face-styles')) return;
+        if (document.getElementById('avatar-gallery-styles')) return;
         
         const styles = document.createElement('style');
-        styles.id = 'photorealistic-face-styles';
+        styles.id = 'avatar-gallery-styles';
         styles.textContent = `
-            .photorealistic-ui {
-                max-width: 650px;
+            .avatar-gallery-ui {
+                max-width: 700px;
                 margin: 0 auto;
-                padding: 35px;
+                padding: 30px;
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 30px;
-                box-shadow: 0 30px 100px rgba(0,0,0,0.4);
+                border-radius: 25px;
+                box-shadow: 0 25px 80px rgba(0,0,0,0.3);
                 color: white;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .photorealistic-ui::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%);
-                pointer-events: none;
             }
             
             .mode-selector {
                 display: flex;
-                gap: 18px;
-                margin-bottom: 35px;
-                background: rgba(255,255,255,0.12);
-                padding: 12px;
-                border-radius: 20px;
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255,255,255,0.2);
+                gap: 15px;
+                margin-bottom: 25px;
+                background: rgba(255,255,255,0.1);
+                padding: 8px;
+                border-radius: 15px;
+                backdrop-filter: blur(10px);
             }
             
             .mode-btn {
                 flex: 1;
-                padding: 20px;
+                padding: 15px;
                 border: none;
                 background: transparent;
                 color: white;
-                border-radius: 15px;
+                border-radius: 10px;
                 cursor: pointer;
-                font-weight: 800;
-                font-size: 16px;
-                transition: all 0.4s ease;
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .mode-btn::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-                transition: left 0.6s;
-            }
-            
-            .mode-btn:hover::before {
-                left: 100%;
+                font-weight: 700;
+                font-size: 14px;
+                transition: all 0.3s ease;
             }
             
             .mode-btn.active {
-                background: rgba(255,255,255,0.3);
-                box-shadow: 0 8px 25px rgba(255,255,255,0.2);
-                transform: translateY(-3px);
-            }
-            
-            .mode-btn:hover:not(.active) {
-                background: rgba(255,255,255,0.18);
-                transform: translateY(-1px);
+                background: rgba(255,255,255,0.2);
+                box-shadow: 0 4px 15px rgba(255,255,255,0.1);
             }
             
             .avatar-preview {
                 text-align: center;
-                margin-bottom: 40px;
+                margin-bottom: 30px;
             }
             
             .preview-container {
-                width: 200px;
-                height: 200px;
-                margin: 0 auto;
-                border: 6px solid rgba(255,255,255,0.5);
+                width: 150px;
+                height: 150px;
+                margin: 0 auto 15px;
+                border: 4px solid rgba(255,255,255,0.3);
                 border-radius: 50%;
                 overflow: hidden;
                 background: white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 
-                    0 25px 80px rgba(0,0,0,0.4),
-                    inset 0 0 0 2px rgba(255,255,255,0.3);
-                transition: transform 0.5s ease;
-                position: relative;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+                transition: transform 0.3s ease;
             }
             
             .preview-container:hover {
-                transform: scale(1.1) rotate(5deg);
-                box-shadow: 
-                    0 35px 100px rgba(0,0,0,0.5),
-                    inset 0 0 0 2px rgba(255,255,255,0.5);
+                transform: scale(1.05);
+            }
+            
+            .avatar-info {
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
             }
             
             .control-section {
-                background: rgba(255,255,255,0.15);
-                border-radius: 25px;
-                padding: 30px;
-                margin-bottom: 35px;
-                backdrop-filter: blur(20px);
-                border: 1px solid rgba(255,255,255,0.25);
-                box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.1);
+                border-radius: 20px;
+                padding: 25px;
+                margin-bottom: 25px;
+                backdrop-filter: blur(10px);
             }
             
             .control-group {
-                margin-bottom: 30px;
+                margin-bottom: 25px;
             }
             
             .control-group:last-child {
@@ -1138,94 +799,107 @@ class PhotorealisticFaceUI {
             
             .control-group label {
                 display: block;
-                font-weight: 900;
-                margin-bottom: 18px;
+                font-weight: 800;
+                margin-bottom: 15px;
                 color: white;
-                font-size: 18px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-                letter-spacing: 0.5px;
+                font-size: 16px;
             }
             
-            .button-group {
-                display: flex;
+            .avatar-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
                 gap: 15px;
+            }
+            
+            .avatar-option {
+                text-align: center;
+                cursor: pointer;
+                padding: 15px;
+                border-radius: 15px;
+                border: 2px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+                transition: all 0.3s ease;
+            }
+            
+            .avatar-option:hover {
+                background: rgba(255,255,255,0.15);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            }
+            
+            .avatar-option.active {
+                border-color: #F39C12;
+                background: rgba(243, 156, 18, 0.2);
+                box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+            }
+            
+            .avatar-thumb {
+                width: 80px;
+                height: 80px;
+                margin: 0 auto 10px;
+                border-radius: 50%;
+                overflow: hidden;
+                background: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .avatar-thumb svg {
+                width: 100%;
+                height: 100%;
+            }
+            
+            .avatar-label {
+                font-size: 12px;
+                font-weight: 600;
+                color: white;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            
+            .customization-row {
+                margin-bottom: 20px;
+                padding: 15px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 12px;
+            }
+            
+            .custom-label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 10px;
+                color: white;
+                font-size: 14px;
+            }
+            
+            .color-options {
+                display: flex;
+                gap: 10px;
                 flex-wrap: wrap;
             }
             
-            .option-btn {
-                flex: 1;
-                min-width: 120px;
-                padding: 18px;
-                border: 3px solid rgba(255,255,255,0.4);
-                background: rgba(255,255,255,0.15);
-                color: white;
-                border-radius: 15px;
+            .color-option {
+                width: 35px;
+                height: 35px;
+                border-radius: 10px;
                 cursor: pointer;
-                font-weight: 800;
-                transition: all 0.4s ease;
-                font-size: 15px;
+                border: 2px solid rgba(255,255,255,0.3);
+                transition: all 0.3s ease;
                 position: relative;
-                overflow: hidden;
             }
             
-            .option-btn::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                transition: left 0.5s;
+            .color-option:hover {
+                transform: scale(1.1);
+                border-color: rgba(255,255,255,0.7);
             }
             
-            .option-btn:hover::before {
-                left: 100%;
-            }
-            
-            .option-btn.active {
-                background: rgba(255,255,255,0.35);
-                border-color: rgba(255,255,255,0.8);
-                box-shadow: 0 8px 30px rgba(255,255,255,0.2);
-                transform: translateY(-3px);
-            }
-            
-            .option-btn:hover:not(.active) {
-                background: rgba(255,255,255,0.25);
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(255,255,255,0.15);
-            }
-            
-            .color-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(55px, 1fr));
-                gap: 15px;
-            }
-            
-            .color-swatch {
-                width: 55px;
-                height: 55px;
-                border-radius: 18px;
-                cursor: pointer;
-                border: 4px solid rgba(255,255,255,0.5);
-                transition: all 0.4s ease;
-                position: relative;
-                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-            }
-            
-            .color-swatch:hover {
-                transform: scale(1.2) rotate(8deg);
-                border-color: rgba(255,255,255,0.9);
-                box-shadow: 0 10px 35px rgba(0,0,0,0.4);
-            }
-            
-            .color-swatch.active {
+            .color-option.active {
                 border-color: #F39C12;
-                transform: scale(1.25);
-                box-shadow: 0 12px 40px rgba(243, 156, 18, 0.8);
+                transform: scale(1.15);
+                box-shadow: 0 4px 15px rgba(243, 156, 18, 0.5);
             }
             
-            .color-swatch.active::after {
+            .color-option.active::after {
                 content: '✓';
                 position: absolute;
                 top: 50%;
@@ -1233,128 +907,99 @@ class PhotorealisticFaceUI {
                 transform: translate(-50%, -50%);
                 color: white;
                 font-weight: bold;
-                font-size: 20px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+                font-size: 14px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
             }
             
             .photo-upload {
-                border: 4px dashed rgba(255,255,255,0.6);
-                border-radius: 25px;
-                padding: 50px 40px;
+                border: 3px dashed rgba(255,255,255,0.4);
+                border-radius: 15px;
+                padding: 30px 20px;
                 text-align: center;
                 cursor: pointer;
-                transition: all 0.4s ease;
-                background: rgba(255,255,255,0.1);
-                backdrop-filter: blur(15px);
+                transition: all 0.3s ease;
+                background: rgba(255,255,255,0.05);
             }
             
             .photo-upload:hover {
-                border-color: rgba(255,255,255,0.9);
-                background: rgba(255,255,255,0.2);
-                transform: translateY(-5px);
-                box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+                border-color: rgba(255,255,255,0.7);
+                background: rgba(255,255,255,0.1);
+                transform: translateY(-2px);
             }
             
             .upload-icon {
-                font-size: 60px;
-                margin-bottom: 25px;
+                font-size: 40px;
+                margin-bottom: 15px;
             }
             
             .upload-text {
-                font-size: 20px;
-                font-weight: 800;
-                margin-bottom: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 8px;
             }
             
             .upload-hint {
-                font-size: 15px;
-                opacity: 0.9;
-                font-weight: 600;
+                font-size: 12px;
+                opacity: 0.8;
             }
             
             .actions {
                 display: flex;
-                gap: 20px;
+                gap: 15px;
             }
             
             .action-btn {
                 flex: 1;
-                padding: 22px;
-                border: 3px solid rgba(255,255,255,0.5);
-                background: rgba(255,255,255,0.2);
+                padding: 18px;
+                border: 2px solid rgba(255,255,255,0.3);
+                background: rgba(255,255,255,0.1);
                 color: white;
-                border-radius: 18px;
+                border-radius: 12px;
                 cursor: pointer;
-                font-weight: 900;
-                font-size: 16px;
-                transition: all 0.4s ease;
-                backdrop-filter: blur(15px);
-                position: relative;
-                overflow: hidden;
-            }
-            
-            .action-btn::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-                transition: left 0.6s;
-            }
-            
-            .action-btn:hover::before {
-                left: 100%;
+                font-weight: 700;
+                font-size: 14px;
+                transition: all 0.3s ease;
+                backdrop-filter: blur(10px);
             }
             
             .action-btn:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 15px 50px rgba(255,255,255,0.2);
-                background: rgba(255,255,255,0.3);
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(255,255,255,0.1);
+                background: rgba(255,255,255,0.2);
             }
             
             .action-btn.primary {
                 background: linear-gradient(135deg, #F39C12, #E67E22);
                 border-color: #F39C12;
-                box-shadow: 0 10px 35px rgba(243, 156, 18, 0.5);
+                box-shadow: 0 6px 20px rgba(243, 156, 18, 0.3);
             }
             
             .action-btn.primary:hover {
-                box-shadow: 0 18px 60px rgba(243, 156, 18, 0.7);
-                transform: translateY(-6px);
+                box-shadow: 0 10px 30px rgba(243, 156, 18, 0.4);
+                transform: translateY(-3px);
             }
             
-            @media (max-width: 750px) {
-                .photorealistic-ui {
-                    padding: 25px;
-                    margin: 20px;
+            @media (max-width: 650px) {
+                .avatar-gallery-ui {
+                    padding: 20px;
+                    margin: 10px;
+                }
+                
+                .avatar-grid {
+                    grid-template-columns: repeat(2, 1fr);
                 }
                 
                 .preview-container {
-                    width: 170px;
-                    height: 170px;
+                    width: 120px;
+                    height: 120px;
                 }
                 
-                .color-grid {
-                    grid-template-columns: repeat(4, 1fr);
-                }
-                
-                .color-swatch {
-                    width: 50px;
-                    height: 50px;
+                .color-options {
+                    justify-content: center;
                 }
                 
                 .actions {
                     flex-direction: column;
-                }
-                
-                .button-group {
-                    flex-direction: column;
-                }
-                
-                .option-btn {
-                    min-width: auto;
                 }
             }
         `;
@@ -1365,14 +1010,14 @@ class PhotorealisticFaceUI {
 // === SISTEMA PRINCIPALE ===
 class RealisticAvatarSystem {
     static init(userId) {
-        console.log('🎨 Sistema Avatar CSS Fotografico inizializzato per:', userId);
-        const manager = new PhotorealisticFaceManager(userId);
+        console.log('🎭 Sistema Avatar Galleria inizializzato per:', userId);
+        const manager = new AvatarGalleryManager(userId);
         return manager;
     }
     
     static createUI(containerId, manager) {
-        console.log('📸 Creazione UI Avatar CSS Fotografico per container:', containerId);
-        const ui = new PhotorealisticFaceUI(containerId, manager);
+        console.log('🎨 Creazione UI Avatar Galleria per container:', containerId);
+        const ui = new AvatarGalleryUI(containerId, manager);
         // Store reference globally for button actions
         window.avatarUI = ui;
         return ui;
@@ -1381,7 +1026,7 @@ class RealisticAvatarSystem {
 
 // === ESPOSIZIONE GLOBALE ===
 window.RealisticAvatarSystem = RealisticAvatarSystem;
-window.PhotorealisticFaceManager = PhotorealisticFaceManager;
-window.PhotorealisticFaceUI = PhotorealisticFaceUI;
+window.AvatarGalleryManager = AvatarGalleryManager;
+window.AvatarGalleryUI = AvatarGalleryUI;
 
-console.log('✅ Sistema Avatar CSS FOTOGRAFICO caricato - ZERO SVG CARTOON!');
+console.log('✅ Sistema Avatar Galleria caricato - AVATAR PREIMPOSTATI FUNZIONANTI!');
