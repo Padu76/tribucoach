@@ -49,6 +49,24 @@
             gap: 2rem;
         }
 
+        .ai-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+            animation: aiPulse 3s infinite;
+        }
+
+        @keyframes aiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .timer-display {
             background: rgba(255,255,255,0.2);
             padding: 0.5rem 1rem;
@@ -157,6 +175,26 @@
             font-size: 1.3rem;
             color: #ea580c;
             margin-bottom: 2rem;
+        }
+
+        .personalization-banner {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .personalization-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .personalization-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
         .journey-recap {
@@ -971,6 +1009,9 @@
         <div class="header-content">
             <div class="logo">🚀 Settimana 4 - Piano di Azione</div>
             <div class="session-info">
+                <div class="ai-badge">
+                    🤖 AI Personalizzato Attivo
+                </div>
                 <div class="timer-display">
                     ⏱️ <span id="sessionTimer">40:00</span>
                 </div>
@@ -999,8 +1040,13 @@
 
         <!-- Welcome Section -->
         <section class="welcome-section fade-in" id="welcomeSection">
-            <h1 class="welcome-title">Benvenuto nella Settimana 4! 🚀</h1>
-            <p class="welcome-subtitle">Piano di Azione - Da obiettivo SMART a sistema che funziona</p>
+            <div class="personalization-banner" id="personalizationBanner">
+                <div class="personalization-title">🎯 Coaching Personalizzato Attivo</div>
+                <div class="personalization-subtitle">Il tuo piano d'azione sarà calibrato sul tuo profilo specifico</div>
+            </div>
+            
+            <h1 class="welcome-title" id="welcomeTitle">Benvenuto nella Settimana 4! 🚀</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">Piano di Azione - Da obiettivo SMART a sistema che funziona</p>
             
             <div class="journey-recap">
                 <h3 class="recap-title">🌟 Il Tuo Incredibile Percorso</h3>
@@ -1339,7 +1385,7 @@
             
             <div class="chat-status">
                 <div class="status-dot"></div>
-                <span>Andrea è pronto per ottimizzare il tuo sistema e renderlo inattaccabile</span>
+                <span id="chatStatusText">Andrea è pronto per ottimizzare il tuo sistema e renderlo inattaccabile</span>
             </div>
             
             <div class="chat-container" id="chatContainer">
@@ -1386,6 +1432,10 @@
         </section>
     </main>
 
+    <!-- Load AI System -->
+    <script src="utils/integrated-ai-system.js"></script>
+    <script src="utils/modules-integration.js"></script>
+
     <script>
         // Session variables
         let sessionStartTime = Date.now();
@@ -1402,6 +1452,10 @@
         let sessionExtended = false;
         let autoSaveInterval;
         let coachingInsights = [];
+        
+        // AI System Integration
+        let aiSystem = null;
+        let moduleIntegrator = null;
 
         // Initialize session
         document.addEventListener('DOMContentLoaded', function() {
@@ -1410,7 +1464,92 @@
             loadPreviousWeeks();
             loadSavedSession();
             startAutoSave();
+            
+            // Initialize AI System for Week 4
+            initializeAIIntegration();
         });
+
+        async function initializeAIIntegration() {
+            try {
+                console.log('🤖 Initializing AI System for Week 4...');
+                
+                // Wait for AI system to be available
+                if (typeof window.ModuleAutoLoader !== 'undefined') {
+                    moduleIntegrator = await window.ModuleAutoLoader.loadForCurrentPage();
+                    
+                    if (moduleIntegrator) {
+                        aiSystem = moduleIntegrator.aiSystem;
+                        console.log('✅ AI System integrated successfully for Week 4');
+                        
+                        // Update personalization banner
+                        updatePersonalizationBanner();
+                        
+                        // Update welcome messages
+                        updateWelcomePersonalization();
+                        
+                        // Update chat placeholder
+                        updateChatPersonalization();
+                    }
+                } else {
+                    console.log('⚠️ AI System not available, using fallback');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing AI integration:', error);
+            }
+        }
+
+        function updatePersonalizationBanner() {
+            if (!userProfile) return;
+            
+            const banner = document.getElementById('personalizationBanner');
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            
+            if (profileConfig) {
+                banner.innerHTML = `
+                    <div class="personalization-title">🎯 Coaching Personalizzato per "${profileConfig.name}"</div>
+                    <div class="personalization-subtitle">Il tuo piano d'azione sarà ${profileConfig.communication_style.toLowerCase()}</div>
+                `;
+            }
+        }
+
+        function updateWelcomePersonalization() {
+            if (!userProfile) return;
+            
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+            
+            if (userProfile.name) {
+                welcomeTitle.textContent = `Benvenuto/a ${userProfile.name} nella Settimana 4! 🚀`;
+            }
+            
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            if (profileConfig) {
+                welcomeSubtitle.textContent = `Piano di Azione Personalizzato per ${profileConfig.name}`;
+            }
+        }
+
+        function updateChatPersonalization() {
+            if (!userProfile) return;
+            
+            const chatInput = document.getElementById('chatInput');
+            const statusText = document.getElementById('chatStatusText');
+            
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            if (profileConfig) {
+                // Personalized placeholders for each profile
+                const placeholders = {
+                    stressato_esaurito: "Prenditi tutto il tempo che serve per rispondere, non c'è fretta...",
+                    procrastinatore_bloccato: "Dimmi quello che ti viene in mente, anche se non è perfetto...",
+                    perfezionista_insoddisfatto: "Non serve la risposta perfetta, dimmi quello che senti...",
+                    dispersivo_confuso: "Concentrati su UN pensiero e condividilo con me...",
+                    motivato_inconsistente: "Condividi con me quello che provi in questo momento...",
+                    equilibrato_ottimizzatore: "Dimmi come vedi la situazione dal tuo punto di vista..."
+                };
+                
+                chatInput.placeholder = placeholders[userProfile.profileType] || "Condividi le tue riflessioni con Andrea...";
+                statusText.textContent = `Andrea è pronto per ottimizzare il tuo sistema con approccio ${profileConfig.communication_style.toLowerCase()}`;
+            }
+        }
 
         function startSessionTimer() {
             timerInterval = setInterval(() => {
@@ -1488,6 +1627,8 @@
             
             if (week1Data && week1Data.phase1Data) {
                 content += `<p><strong>Settimana 1:</strong> Hai identificato "${week1Data.phase1Data.dreamGoal || 'la tua trasformazione'}" come sogno principale</p>`;
+            } else {
+                content += `<p><strong>Settimana 1:</strong> Hai mappato la tua vita e identificato i tuoi sogni autentici</p>`;
             }
             
             if (week2Data && week2Data.testResults) {
@@ -1503,17 +1644,21 @@
                         return valueLabels[week2Data.testResults.topValues[0][0]];
                     })() : 'valori autentici';
                 content += `<p><strong>Settimana 2:</strong> Hai scoperto che ${topValue} è il tuo valore principale</p>`;
+            } else {
+                content += `<p><strong>Settimana 2:</strong> Hai scoperto i tuoi valori profondi e cosa ti motiva veramente</p>`;
             }
             
             if (week3Data && week3Data.smartGoalData) {
                 const areaLabels = {
                     health: 'salute fisica',
-                    mental: 'benessere mentale',
+                    mental: 'benessere mentale', 
                     relationship: 'relazioni',
                     career: 'carriera e crescita'
                 };
                 const areaLabel = areaLabels[week3Data.smartGoalData.area] || 'area prioritaria';
                 content += `<p><strong>Settimana 3:</strong> Hai trasformato il sogno in obiettivo SMART per la tua ${areaLabel}</p>`;
+            } else {
+                content += `<p><strong>Settimana 3:</strong> Hai trasformato un sogno in un obiettivo SMART concreto</p>`;
             }
             
             content += `<p style="margin-top: 1rem; font-style: italic; color: #16a34a;">
@@ -1921,6 +2066,16 @@
         }
 
         function generatePowerfulActionQuestion() {
+            // Use AI System if available, otherwise fallback
+            if (aiSystem) {
+                return generateAIFirstQuestion();
+            } else {
+                return generateFallbackFirstQuestion();
+            }
+        }
+
+        function generateAIFirstQuestion() {
+            // Build context for personalized first question
             let question = `Wow! Hai appena costruito un sistema incredibilmente potente. `;
             
             // Reference their specific system
@@ -1954,12 +2109,47 @@
                 question += `E tutto questo è guidato dal tuo valore principale: ${topValue}. `;
             }
             
+            // Personalize based on profile
+            if (userProfile?.profileType && window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType]) {
+                const profileConfig = window.LIFESTYLE_PROFILES_CONFIG[userProfile.profileType];
+                
+                // Different questions based on profile
+                const profileQuestions = {
+                    stressato_esaurito: "Quando questa abitudine diventerà automatica, come cambierà il tuo rapporto con lo stress? Non sarai più 'qualcuno che è sempre stressato' ma 'qualcuno che HA strumenti per gestire tutto con calma'.",
+                    
+                    procrastinatore_bloccato: "Quando questa abitudine diventerà automatica, come cambierà la tua identità? Non sarai più 'qualcuno che rimanda' ma 'qualcuno che AGISCE naturalmente'.",
+                    
+                    perfezionista_insoddisfatto: "Quando questa abitudine diventerà automatica, come cambierà il tuo rapporto con il progresso? Non sarai più 'qualcuno che cerca la perfezione' ma 'qualcuno che COMPLETA le cose'.",
+                    
+                    dispersivo_confuso: "Quando questa abitudine diventerà automatica, come cambierà la tua chiarezza mentale? Non sarai più 'qualcuno che si perde' ma 'qualcuno che HA FOCUS'.",
+                    
+                    motivato_inconsistente: "Quando questa abitudine diventerà automatica, come cambierà la tua consistenza? Non sarai più 'qualcuno con alti e bassi' ma 'qualcuno che È COSTANTE'.",
+                    
+                    equilibrato_ottimizzatore: "Quando questa abitudine diventerà automatica, come ottimizzerà ogni altra area della tua vita? Non sarai più 'qualcuno che cerca l'eccellenza' ma 'qualcuno che VIVE l'eccellenza'."
+                };
+                
+                question += `\n\n${profileQuestions[userProfile.profileType] || profileQuestions.motivato_inconsistente}`;
+            }
+            
+            // Powerful coaching question
+            question += `\n\nDimmi: quando questa abitudine sarà parte di chi sei, quale sarà la tua nuova identità? 🌟`;
+            
+            return question;
+        }
+
+        function generateFallbackFirstQuestion() {
+            let question = `Wow! Hai appena costruito un sistema incredibilmente potente. `;
+            
+            // Reference their specific system
+            if (actionPlanData.trigger && actionPlanData.routine) {
+                question += `Vedo che hai scelto "${actionPlanData.trigger.signal}" come trigger per "${actionPlanData.routine.action}". `;
+                question += `Questa combinazione mi dice che hai capito il vero segreto del cambiamento: rendere automatico ciò che è importante. `;
+            }
+            
             // Powerful coaching question
             question += `\n\nOra voglio farti la domanda che distingue chi realizza i propri obiettivi da chi continua a sognarli: 
             
 **Quando questa abitudine diventerà automatica - e diventerà automatica se segui il sistema - come cambierà la tua identità? Non solo cosa farai, ma chi diventerai come persona?**
-
-Per esempio, non sarai più "una persona che vuole essere in forma" ma "una persona che SI ALLENA naturalmente". Non sarai più "qualcuno che vorrebbe essere organizzato" ma "qualcuno che HA SISTEMI che funzionano".
 
 Dimmi: quando questa abitudine sarà parte di chi sei, quale sarà la tua nuova identità? 🌟`;
             
@@ -2035,6 +2225,25 @@ Dimmi: quando questa abitudine sarà parte di chi sei, quale sarà la tua nuova 
         }
 
         async function getActionCoachingResponse(userMessage) {
+            // Use AI System if available
+            if (aiSystem) {
+                try {
+                    const response = await aiSystem.sendMessage(userMessage);
+                    if (response.success) {
+                        return response.response;
+                    } else {
+                        throw new Error(response.error || 'AI response failed');
+                    }
+                } catch (error) {
+                    console.error('❌ AI System error:', error);
+                    return generateFallbackResponse(userMessage);
+                }
+            } else {
+                return generateFallbackResponse(userMessage);
+            }
+        }
+
+        function generateFallbackResponse(userMessage) {
             // Build comprehensive context for action coaching
             const coachingContext = {
                 systemData: systemData,
@@ -2069,9 +2278,7 @@ Dimmi: quando questa abitudine sarà parte di chi sei, quale sarà la tua nuova 
                 
                 `Sento una chiarezza incredibile in quello che condividi. Questa nuova versione di te che descrivi, come interagirà diversamente con le sfide quotidiane? Quando arriverà un momento difficile, cosa farà questa persona che tu "vecchio" non avresti fatto?`,
                 
-                `Le tue parole mi mostrano che hai compreso il segreto: non cambiamo comportamenti, cambiamo identità. E i comportamenti seguono naturalmente. Ora, pensando ai primi 21 giorni del tuo sistema: quale sarà il momento in cui ti renderai conto "ecco, questa sono io ora"?`,
-                
-                `Quello che descrivi è pura alchimia personale. Ma voglio assicurarmi che il tuo sistema sia inattaccabile. Dimmi: quando arriverà il primo giorno "storto" - e arriverà - quale aspetto della tua nuova identità ti farà dire "lo faccio comunque"?`
+                `Le tue parole mi mostrano che hai compreso il segreto: non cambiamo comportamenti, cambiamo identità. E i comportamenti seguono naturalmente. Ora, pensando ai primi 21 giorni del tuo sistema: quale sarà il momento in cui ti renderai conto "ecco, questa sono io ora"?`
             ];
             
             // Personalize based on their action system
@@ -2092,27 +2299,8 @@ Dimmi: come ti immagini il momento in cui realizzerai che questa abitudine è di
                 
                 `Sento una determinazione forte, e questo è fantastico. Ma lascia che ti faccia una domanda scomoda: se dovessi progettare il modo perfetto per sabotare il tuo stesso sistema, cosa faresti? Qual è il tuo "tallone d'Achille" motivazionale?`,
                 
-                `Le tue riflessioni mostrano una maturità incredibile nel comprendere il cambiamento. Ora, pensando ai tuoi pattern del passato: qual è stata la cosa che ti ha fatto abbandonare abitudini positive in precedenza? Come il tuo sistema attuale neutralizza quella specifica debolezza?`,
-                
-                `Quello che stai costruendo è solido, ma voglio renderlo inattaccabile. Se dovessi scommettere, quale sarà il primo "ma" che la tua mente ti presenterà? "Ma oggi sono stanco", "Ma oggi non ho tempo", "Ma oggi è diverso"... Quale sarà il TUO "ma" specifico?`
+                `Le tue riflessioni mostrano una maturità incredibile nel comprendere il cambiamento. Ora, pensando ai tuoi pattern del passato: qual è stata la cosa che ti ha fatto abbandonare abitudini positive in precedenza? Come il tuo sistema attuale neutralizza quella specifica debolezza?`
             ];
-            
-            // Deep questions based on their specific system
-            if (context.systemData.emergencyPlan) {
-                return `Le tue riflessioni mi mostrano qualcuno che ha imparato dai propri errori. Vedo che hai già pensato a un piano di emergenza: "${context.systemData.emergencyPlan}". Questo mi dice che sai che i giorni perfetti non esistono.
-
-Ma voglio spingermi oltre: qual è la differenza tra "piano di emergenza" e "scusa camuffata"? Come farai a riconoscere quando stai usando il piano di emergenza legittimamente vs quando stai solo cercando una via di fuga?
-
-E soprattutto: cosa farai il giorno DOPO aver usato il piano di emergenza per assicurarti di tornare sulla strada principale?`;
-            }
-            
-            if (context.actionPlanData.reward) {
-                return `Quando parli della tua ricompensa - "${context.actionPlanData.reward.celebration}" - vedo che hai capito l'importanza del rinforzo positivo. Ma qui c'è una trappola sottile: cosa succede quando la ricompensa esterna non basterà più?
-
-La vera sfida arriverà quando dovrai passare dalla motivazione estrinseca a quella intrinseca. Quando fare l'azione dovrà essere rewarding di per sé, non per quello che ottieni dopo.
-
-Dimmi: cosa c'è di intrinsecamente gratificante nell'azione stessa che stai costruendo? Cosa ti farà sentire bene DURANTE, non solo dopo?`;
-            }
             
             return responses[Math.floor(Math.random() * responses.length)];
         }
@@ -2123,19 +2311,8 @@ Dimmi: cosa c'è di intrinsecamente gratificante nell'azione stessa che stai cos
                 
                 `Le nostre conversazioni mi stanno mostrando un sistema che ha potenziale per cambiare radicalmente la tua vita. Ma ora la domanda strategica: come userai il successo di questa abitudine per costruire la prossima? Qual è l'effetto domino che vuoi creare?`,
                 
-                `Sento che abbiamo creato qualcosa di solido e sostenibile. Ora l'ottimizzazione finale: se dovessi insegnare questo sistema a qualcuno che ami, qual è la parte più importante che enfatizzeresti? Qual è il "segreto nel segreto"?`,
-                
                 `Tutto quello che abbiamo esplorato si sta trasformando in un blueprint personale per il successo. Ultima domanda per sigillare tutto: tra un anno, quando questa abitudine sarà così naturale che nemmeno ci pensi più, quale sarà il regalo più grande che ti avrà fatto?`
             ];
-            
-            // Optimization based on their timeline
-            if (context.actionPlanData.timeline) {
-                return `Tutto quello che abbiamo costruito insieme sta prendendo forma in un sistema completo. Guardando la tua timeline di 12 settimane, vedo una progressione intelligente. Ma voglio aggiungere un elemento che distingue chi ha successo a lungo termine: la flessibilità strategica.
-
-Il tuo piano è il tuo GPS, ma cosa succede quando la strada è bloccata? Come adatterai il sistema se la vita ti lancia una palla curva - un viaggio improvviso, un periodo di stress, un cambiamento di routine?
-
-Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come evolveresti ogni fase della tua timeline se le circostanze cambiassero? Quale è il "core" non negoziabile e cosa invece può essere adattato?`;
-            }
             
             return responses[Math.floor(Math.random() * responses.length)];
         }
@@ -2308,7 +2485,21 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
         }
 
         function downloadCompletePlan() {
-            const planContent = `
+            const planContent = generateCompleteDownloadContent();
+            
+            const blob = new Blob([planContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Sistema_Successo_Completo_${userProfile?.name || 'Utente'}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('📄 Piano completo scaricato! Il tuo sistema di successo è pronto!', 'success');
+        }
+
+        function generateCompleteDownloadContent() {
+            return `
                 PIANO DI AZIONE COMPLETO - SETTIMANA 4
                 SISTEMA PER IL SUCCESSO AUTOMATICO
                 
@@ -2319,47 +2510,6 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 
                 🎉 CONGRATULAZIONI! Hai completato il percorso più trasformativo che esista:
                 da sogno vago a sistema concreto e automatico in 4 settimane!
-                
-                === IL TUO PERCORSO COMPLETO ===
-                
-                ${week1Data && week1Data.phase1Data ? 
-                `SETTIMANA 1 - MAPPATURA E SOGNI
-                Sogno principale: "${week1Data.phase1Data.dreamGoal || 'Trasformazione identificata'}"
-                Area prioritaria scoperta: ${week1Data.phase1Data.priorityArea || 'Definita'}` : 
-                'SETTIMANA 1 - Mappatura della situazione e identificazione sogni completata'}
-                
-                ${week2Data && week2Data.testResults ? 
-                (() => {
-                    const valueLabels = {
-                        family: 'Famiglia e Relazioni',
-                        career: 'Successo Professionale',
-                        health: 'Salute e Benessere',
-                        growth: 'Crescita Personale',
-                        freedom: 'Libertà e Indipendenza'
-                    };
-                    const topValue = week2Data.testResults.topValues?.[0]?.[0];
-                    return `SETTIMANA 2 - VALORI E CONSAPEVOLEZZA
-                Valore principale: ${valueLabels[topValue] || 'Identificato'}
-                Punti di forza scoperti: ${week2Data.testResults.strengths?.join(', ') || 'Definiti'}`;
-                })() : 
-                'SETTIMANA 2 - Consapevolezza valori e auto-discovery completata'}
-                
-                ${week3Data && week3Data.smartGoalData ? 
-                (() => {
-                    const areaLabels = {
-                        health: 'Salute Fisica',
-                        mental: 'Benessere Mentale',
-                        relationship: 'Relazioni',
-                        career: 'Carriera e Crescita'
-                    };
-                    return `SETTIMANA 3 - OBIETTIVO SMART
-                Area focus: ${areaLabels[week3Data.smartGoalData.area] || 'Definita'}
-                Obiettivo SMART: "${week3Data.smartGoalData.specific?.substring(0, 100) + '...' || 'Obiettivo specifico definito'}"`;
-                })() : 
-                'SETTIMANA 3 - Obiettivo SMART creato e validato'}
-                
-                SETTIMANA 4 - SISTEMA DI AZIONE (OGGI!)
-                Sistema completo di abitudini automatiche creato ✅
                 
                 === IL TUO SISTEMA DI SUCCESSO AUTOMATICO ===
                 
@@ -2383,7 +2533,7 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 📅 SETTIMANE 1-2 - IMPIANTO (Costruire la Base):
                 ${actionPlanData.timeline?.weeks1_2 || 'Piano di impianto personalizzato definito durante la sessione'}
                 
-                💪 SETTIMANE 3-4 - RINFORZO (Consolidare l\'Abitudine):
+                💪 SETTIMANE 3-4 - RINFORZO (Consolidare l'Abitudine):
                 ${actionPlanData.timeline?.weeks3_4 || 'Piano di rinforzo personalizzato definito durante la sessione'}
                 
                 🚀 SETTIMANE 5-8 - ESPANSIONE (Sviluppare la Potenza):
@@ -2396,7 +2546,6 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 
                 📊 CONTROLLO GIORNALIERO:
                 Cosa misuri: ${actionPlanData.measurement?.daily || 'Metrica giornaliera definita'}
-                Come: Segna ✅ ogni giorno completato
                 
                 🔍 REVISIONE SETTIMANALE (Ogni Domenica):
                 ${actionPlanData.measurement?.weekly || 'Sistema di revisione settimanale definito'}
@@ -2407,61 +2556,10 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 🤝 ACCOUNTABILITY E SUPPORTO:
                 ${actionPlanData.measurement?.accountability || 'Sistema di supporto definito'}
                 
-                === PIANO DI EMERGENZA (Quando Tutto Va Storto) ===
+                === PIANO DI EMERGENZA ===
                 
                 🛡️ IL TUO MINIMO NON NEGOZIABILE:
                 ${actionPlanData.emergencyPlan || 'Piano di emergenza personalizzato definito'}
-                
-                REGOLA D'ORO:
-                • 1 giorno saltato = Normale, riparti domani
-                • 2 giorni di fila = Attenzione, analizza cosa è successo
-                • 3 giorni di fila = STOP. Riparti immediatamente con il piano di emergenza
-                
-                === INSIGHTS DAL TUO COACHING PERSONALIZZATO ===
-                
-                Durante le nostre conversazioni hai mostrato:
-                ${coachingInsights.length > 0 ? coachingInsights.map(insight => `• ${insight}`).join('\n                ') : '• Profonda comprensione del processo di cambiamento\n                • Consapevolezza delle sfide e opportunità\n                • Commitment autentico verso la trasformazione'}
-                
-                === DOMANDE POTENTI PER MANTENERTI IN CARREGGIATA ===
-                
-                GIORNALIERE (Ogni mattina):
-                • Chi sto diventando oggi attraverso le mie azioni?
-                • La mia routine di oggi è un voto per la persona che voglio essere?
-                • Come posso onorare il mio impegno verso me stesso oggi?
-                
-                SETTIMANALI (Ogni domenica):
-                • Questa settimana, come sono cresciuto verso la mia nuova identità?
-                • Cosa ha funzionato meglio? Cosa posso ottimizzare?
-                • Come posso celebrare i progressi fatti?
-                
-                MENSILI (Ogni primo del mese):
-                • Il mio sistema sta ancora servendo i miei obiettivi più grandi?
-                • Come posso evolvere il sistema per la prossima fase?
-                • Quali nuove abitudini positive posso aggiungere al sistema?
-                
-                === LA SCIENZA DIETRO IL TUO SUCCESSO ===
-                
-                Il tuo sistema è basato su ricerche scientifiche comprovate:
-                
-                🧠 NEUROPLASTICITÀ: Ogni ripetizione della tua routine crea nuovi percorsi neurali
-                📈 COMPOUND EFFECT: Piccole azioni quotidiane = risultati straordinari nel tempo
-                🔄 HABIT LOOP: Trigger → Routine → Reward crea automatismo
-                ⏰ 66 GIORNI: Il tempo medio per rendere automatica un'abitudine
-                💪 IDENTITY-BASED HABITS: Cambi chi sei, non solo quello che fai
-                
-                === IL TUO CERTIFICATO DI TRASFORMAZIONE ===
-                
-                🏆 ${userProfile?.name || 'NOME'} HA COMPLETATO CON SUCCESSO:
-                
-                ✅ Programma Lifestyle 4 Settimane - Da Sogno a Sistema
-                ✅ Mappatura completa della situazione di partenza
-                ✅ Identificazione valori autentici e motivazioni profonde
-                ✅ Creazione obiettivo SMART personalizzato
-                ✅ Costruzione sistema di abitudini automatiche
-                ✅ Piano d'azione concreto per i prossimi 90 giorni
-                
-                Data completamento: ${new Date().toLocaleDateString('it-IT')}
-                Coach: Andrea Padoan
                 
                 === I TUOI PROSSIMI PASSI ===
                 
@@ -2472,70 +2570,18 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 4. Celebra immediatamente con il tuo reward
                 5. Segna ✅ sul calendario
                 
-                QUESTA SETTIMANA:
-                • Segui il sistema ogni giorno
-                • Non preoccuparti della perfezione, punta alla consistenza
-                • Aggiusta se necessario, ma non abbandonare
+                🎯 RICORDA SEMPRE:
+                "Non stai solo cambiando quello che fai, stai cambiando chi sei"
+                "Ogni azione è un voto per la persona che stai diventando"
                 
-                QUESTO MESE:
-                • Lascia che l'abitudine si radichi
-                • Nota i cambiamenti nell'identità
-                • Celebra i progressi intermedi
-                
-                === MESSAGGI FINALI DAL TUO COACH ===
-                
-                ${userProfile?.name || 'Amico/a'}, quello che hai creato in queste 4 settimane non è solo un piano, 
-                è una trasformazione completa del modo in cui approcci il cambiamento.
-                
-                Hai imparato il segreto che distingue chi realizza i propri sogni da chi li lascia 
-                nei cassetti: SISTEMI che rendono il successo inevitabile.
-                
-                Il tuo sogno della Settimana 1 ora è un sistema concreto.
-                I tuoi valori della Settimana 2 ora guidano azioni quotidiane.
-                Il tuo obiettivo SMART della Settimana 3 ora è supportato da abitudini automatiche.
-                Il tuo sistema della Settimana 4 ora renderà inevitabile la tua trasformazione.
-                
-                === RICORDA SEMPRE ===
-                
-                🎯 "Non stai solo cambiando quello che fai, stai cambiando chi sei"
-                🔄 "Ogni azione è un voto per la persona che stai diventando"
-                💪 "Il successo non è un evento, è un sistema"
-                🌟 "La tua nuova identità è già qui, sta solo aspettando che tu la viva"
-                
-                Il tuo sistema è pronto.
-                Tu sei pronto.
-                Il mondo ha bisogno della versione migliore di te.
-                
-                Vai e rendila realtà!
+                Il tuo sistema è pronto. Tu sei pronto. Vai e rendila realtà!
                 
                 Con orgoglio e fiducia totale nel tuo successo,
                 Andrea 🚀
                 
-                P.S. Rileggi questo piano ogni lunedì per i primi 30 giorni. 
-                Diventerà il tuo GPS verso la trasformazione.
-                
-                P.P.S. Quando tra 3 mesi realizzerai che la tua abitudine è diventata automatica, 
-                ricordati di questo momento. Ricordati che tutto è iniziato con una decisione: 
-                scegliere di diventare la persona che merita i risultati che desideri.
-                
                 ---
-                
-                🎯 Per supporto continuo: www.andreapadoan.com
-                📧 Per condividere il tuo successo: successo@andreapadoan.com
-                
-                QUESTO PIANO È IL TUO BLUEPRINT PER IL SUCCESSO.
-                CONSERVALO. SEGUILO. VIVILO.
+                Sistema AI v2.0 Personalizzato - Generato per ${userProfile?.profileType ? window.LIFESTYLE_PROFILES_CONFIG[userProfile.profileType]?.name : 'il tuo profilo'} 
             `;
-            
-            const blob = new Blob([planContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Sistema_Successo_Completo_${userProfile?.name || 'Utente'}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showMessage('📄 Piano completo scaricato! Il tuo sistema di successo è pronto!', 'success');
         }
 
         function downloadQuickStart() {
@@ -2570,6 +2616,9 @@ Non sto parlando di abbandonare il sistema, ma di renderlo anti-fragile. Come ev
                 🏆 MANTRA: "Ogni azione è un voto per chi sto diventando"
                 
                 INIZIA DOMANI MATTINA! 🚀
+                
+                ---
+                Personalizzato per ${userProfile?.profileType ? window.LIFESTYLE_PROFILES_CONFIG[userProfile.profileType]?.name : 'il tuo profilo'} con Sistema AI v2.0
             `;
             
             const blob = new Blob([quickStartContent], { type: 'text/plain' });
