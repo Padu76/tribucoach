@@ -807,18 +807,10 @@
             <div class="user-avatar-card">
                 <div class="user-avatar-display" id="userAvatarDisplay">
                     <!-- Avatar will be rendered here by Realistic Avatar System -->
-                    <svg viewBox="0 0 200 200" id="userAvatarSvg">
-                        <!-- Default avatar SVG -->
-                        <circle cx="100" cy="100" r="95" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
-                        <ellipse cx="100" cy="110" rx="50" ry="55" fill="#fdbcbc"/>
-                        <path d="M50 80 Q100 50 150 80 Q150 90 140 100 Q100 70 60 100 Q50 90 50 80" fill="#8B4513"/>
-                        <ellipse cx="85" cy="100" rx="8" ry="6" fill="white"/>
-                        <circle cx="85" cy="100" r="4" fill="#8B4513"/>
-                        <ellipse cx="115" cy="100" rx="8" ry="6" fill="white"/>
-                        <circle cx="115" cy="100" r="4" fill="#8B4513"/>
-                        <ellipse cx="100" cy="115" rx="3" ry="2" fill="#f8a5a5"/>
-                        <path d="M90 130 Q100 140 110 130" stroke="#d97706" stroke-width="3" fill="none" stroke-linecap="round"/>
-                    </svg>
+                    <div class="loading-avatar">
+                        <div style="font-size: 48px;">⏳</div>
+                        <div style="font-size: 14px; margin-top: 10px;">Caricamento avatar...</div>
+                    </div>
                     
                     <!-- Mode indicator -->
                     <div class="avatar-mode-indicator" id="avatarModeIndicator">👤</div>
@@ -959,8 +951,17 @@
                     if (avatarManager) {
                         console.log('✅ Sistema Avatar Realistico attivo');
                         
-                        // Update avatar display
-                        updateAvatarDisplay();
+                        // FORCE immediate avatar display update
+                        setTimeout(() => {
+                            updateAvatarDisplay();
+                            console.log('🎨 Avatar display forzato');
+                        }, 100);
+                        
+                        // Force another update after 500ms to be sure
+                        setTimeout(() => {
+                            updateAvatarDisplay();
+                            console.log('🎨 Avatar display confermato');
+                        }, 500);
                         
                     } else {
                         console.warn('⚠️ Sistema Avatar Realistico non disponibile, fallback al sistema base');
@@ -983,24 +984,39 @@
         }
 
         function updateAvatarDisplay() {
-            if (!avatarManager) return;
+            if (!avatarManager) {
+                console.log('❌ Avatar manager non disponibile');
+                return;
+            }
             
             try {
                 const avatarDisplay = document.getElementById('userAvatarDisplay');
                 const modeIndicator = document.getElementById('avatarModeIndicator');
                 
+                console.log('🎨 Aggiornamento avatar display...');
+                
                 if (avatarDisplay) {
+                    // Force realistic mode
+                    avatarManager.setMode('realistic');
+                    
                     const avatarSVG = avatarManager.generateAvatarSVG();
+                    console.log('🎨 Avatar SVG generato:', avatarSVG ? 'SUCCESS' : 'FAILED');
+                    
                     if (avatarSVG) {
                         avatarDisplay.innerHTML = avatarSVG;
+                        console.log('✅ Avatar realistico mostrato');
                     } else if (avatarManager.currentMode === 'photo' && avatarManager.photoFile) {
                         // Show photo
                         avatarDisplay.innerHTML = `<img src="${avatarManager.photoFile}" alt="Avatar Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+                        console.log('✅ Avatar foto mostrato');
+                    } else {
+                        // Generate fallback realistic avatar
+                        console.log('⚠️ Generazione fallback avatar realistico');
+                        avatarDisplay.innerHTML = generateFallbackRealisticAvatar();
                     }
                     
                     // Update mode indicator - check if element exists
                     if (modeIndicator) {
-                        const currentAvatar = avatarManager.currentAvatar;
                         if (avatarManager.currentMode === 'photo') {
                             modeIndicator.textContent = '📷';
                         } else {
@@ -1010,11 +1026,72 @@
                     
                     // Update avatar info
                     updateAvatarInfo();
+                } else {
+                    console.error('❌ Elemento userAvatarDisplay non trovato');
                 }
                 
             } catch (error) {
                 console.error('❌ Errore aggiornamento avatar display:', error);
             }
+        }
+        
+        function generateFallbackRealisticAvatar() {
+            return `
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="fallbackFaceGradient" cx="0.3" cy="0.3" r="0.8">
+                            <stop offset="0%" stop-color="#FFD1C4"/>
+                            <stop offset="60%" stop-color="#FDBCB4"/>
+                            <stop offset="100%" stop-color="#F1A894"/>
+                        </radialGradient>
+                        <linearGradient id="fallbackHairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#5D4037"/>
+                            <stop offset="50%" stop-color="#3E2723"/>
+                            <stop offset="100%" stop-color="#2C1B18"/>
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Sfondo -->
+                    <circle cx="100" cy="100" r="90" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1"/>
+                    
+                    <!-- Collo -->
+                    <ellipse cx="100" cy="175" rx="22" ry="18" fill="url(#fallbackFaceGradient)"/>
+                    
+                    <!-- Viso -->
+                    <ellipse cx="100" cy="110" rx="42" ry="52" fill="url(#fallbackFaceGradient)" stroke="#E8A484" stroke-width="0.5"/>
+                    
+                    <!-- Capelli -->
+                    <path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#fallbackHairGradient)" stroke="#1A0E0A" stroke-width="0.5"/>
+                    
+                    <!-- Sopracciglia -->
+                    <path d="M78 95 Q85 92 92 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <path d="M108 95 Q115 92 122 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    
+                    <!-- Occhi -->
+                    <ellipse cx="85" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
+                    <ellipse cx="115" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
+                    <circle cx="85" cy="105" r="4" fill="#8B4513"/>
+                    <circle cx="115" cy="105" r="4" fill="#8B4513"/>
+                    <circle cx="85" cy="105" r="2" fill="#5D4037"/>
+                    <circle cx="115" cy="105" r="2" fill="#5D4037"/>
+                    <circle cx="86" cy="103" r="1.5" fill="white"/>
+                    <circle cx="116" cy="103" r="1.5" fill="white"/>
+                    
+                    <!-- Ciglia -->
+                    <path d="M77 100 Q85 98 93 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+                    <path d="M107 100 Q115 98 123 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+                    
+                    <!-- Naso -->
+                    <ellipse cx="100" cy="115" rx="3.5" ry="5" fill="#E8A484" opacity="0.6"/>
+                    <path d="M97 116 L103 116" stroke="#D89A7A" stroke-width="1" opacity="0.7"/>
+                    <ellipse cx="98" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
+                    <ellipse cx="102" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
+                    
+                    <!-- Bocca -->
+                    <path d="M92 130 Q100 138 108 130" stroke="#FF6B9D" stroke-width="4" fill="none" stroke-linecap="round"/>
+                    <path d="M94 131 Q100 136 106 131" stroke="#FFB6C1" stroke-width="2" fill="none" stroke-linecap="round"/>
+                </svg>
+            `;
         }
 
         function updateAvatarInfo() {
