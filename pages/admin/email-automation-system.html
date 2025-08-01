@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automation System - LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 50%, #f0fdf4 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            border-radius: 24px;
+            padding: 48px 32px;
+            text-align: center;
+            color: white;
+            margin-bottom: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            margin-bottom: 24px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-panel h2 {
+            color: #1e293b;
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+        }
+
+        .profile-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .profile-btn {
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .profile-btn:hover {
+            border-color: #ea580c;
+            background: #fff7ed;
+        }
+
+        .profile-btn.active {
+            border-color: #ea580c;
+            background: #fff7ed;
+            color: #ea580c;
+        }
+
+        .profile-btn .emoji {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .profile-btn .name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .email-sequence {
+            display: grid;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .email-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #ea580c;
+        }
+
+        .email-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .email-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .email-timing {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .email-preview {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .email-subject {
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .email-body {
+            color: #64748b;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        .email-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ea580c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #c2410c;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .admin-dashboard {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #fff7ed 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border-left: 4px solid #ea580c;
+        }
+
+        .metric-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ea580c;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .template-editor {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .variables-panel {
+            background: #fff7ed;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .variables-title {
+            font-weight: 600;
+            color: #ea580c;
+            margin-bottom: 8px;
+        }
+
+        .variable-tag {
+            display: inline-block;
+            background: #fed7aa;
+            color: #c2410c;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin: 2px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .header {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .profile-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email Automation System</h1>
+            <p>Sistema completo di email marketing per LifestyleFitnessCoach</p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Profili</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Template</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Sequenze</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Personalizzato</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h2>🎯 Seleziona Profilo Utente</h2>
+            <div class="profile-selector">
+                <div class="profile-btn active" data-profile="stressato_esaurito">
+                    <div class="emoji">😰</div>
+                    <div class="name">Stressato Esaurito</div>
+                </div>
+                <div class="profile-btn" data-profile="procrastinatore_bloccato">
+                    <div class="emoji">⏳</div>
+                    <div class="name">Procrastinatore Bloccato</div>
+                </div>
+                <div class="profile-btn" data-profile="perfezionista_insoddisfatto">
+                    <div class="emoji">🎯</div>
+                    <div class="name">Perfezionista Insoddisfatto</div>
+                </div>
+                <div class="profile-btn" data-profile="dispersivo_confuso">
+                    <div class="emoji">🤯</div>
+                    <div class="name">Dispersivo Confuso</div>
+                </div>
+                <div class="profile-btn" data-profile="motivato_inconsistente">
+                    <div class="emoji">🎢</div>
+                    <div class="name">Motivato Inconsistente</div>
+                </div>
+                <div class="profile-btn" data-profile="equilibrato_ottimizzatore">
+                    <div class="emoji">⚡</div>
+                    <div class="name">Equilibrato Ottimizzatore</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="email-sequences">
+            <!-- Email sequences will be populated here -->
+        </div>
+
+        <div class="admin-dashboard">
+            <h2>📊 Dashboard Analytics</h2>
+            <div class="dashboard-grid">
+                <div class="metric-card">
+                    <div class="metric-number" id="total-sent">1,247</div>
+                    <div class="metric-label">Email Inviate</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="open-rate">42.3%</div>
+                    <div class="metric-label">Tasso Apertura</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="click-rate">18.7%</div>
+                    <div class="metric-label">Tasso Click</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-number" id="conversion-rate">8.2%</div>
+                    <div class="metric-label">Conversioni</div>
+                </div>
+            </div>
+
+            <div class="template-editor">
+                <div class="editor-header">
+                    <h3>✏️ Editor Template Email</h3>
+                    <button class="btn btn-primary" onclick="saveTemplate()">Salva Template</button>
+                </div>
+
+                <div class="variables-panel">
+                    <div class="variables-title">🏷️ Variabili Disponibili:</div>
+                    <span class="variable-tag">{{nome}}</span>
+                    <span class="variable-tag">{{profilo}}</span>
+                    <span class="variable-tag">{{emoji}}</span>
+                    <span class="variable-tag">{{sfide}}</span>
+                    <span class="variable-tag">{{punti_forza}}</span>
+                    <span class="variable-tag">{{dashboard_url}}</span>
+                    <span class="variable-tag">{{whatsapp}}</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Oggetto Email:</label>
+                    <input type="text" class="form-input" id="email-subject" placeholder="Inserisci oggetto email...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Corpo Email (HTML):</label>
+                    <textarea class="form-textarea" id="email-body" placeholder="Inserisci contenuto email..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="previewEmail()">👁️ Anteprima</button>
+                    <button class="btn btn-primary" onclick="sendTestEmail()">📧 Test Email</button>
+                    <button class="btn btn-primary" onclick="exportTemplates()">💾 Esporta Tutti</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // EMAIL TEMPLATES SYSTEM
+        const EMAIL_TEMPLATES = {
+            stressato_esaurito: {
+                profile: {
+                    emoji: '😰',
+                    name: 'Stressato Esaurito',
+                    tone: 'comprensivo, rassicurante, orientato al recupero',
+                    approach: 'recupero graduale e gestione dello stress'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, il tuo percorso di recupero inizia ora 💪',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%); padding: 30px; border-radius: 15px; color: white; text-align: center;">
+                                    <h1 style="margin: 0; font-size: 24px;">{{emoji}} Ciao {{nome}}!</h1>
+                                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Andrea qui - Il tuo Lifestyle Coach personale</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+                                        <strong>Ho appena visto il tuo profilo</strong> e voglio dirti una cosa importante: <span style="color: #ea580c; font-weight: bold;">non sei solo in questa situazione.</span>
+                                    </p>
+                                    
+                                    <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                                        <p style="margin: 0; color: #92400e; font-weight: 600;">
+                                            💡 La verità: quello che stai vivendo non è una debolezza, è il segnale che hai dato tutto quello che avevi.
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>La mia promessa per te:</strong><br>
+                                        Non ti chiederò di fare di più. Ti insegnerò a <em>stare meglio</em> con quello che fai. 
+                                        Inizieremo con piccoli cambiamenti che ti daranno energia invece di toglierla.
+                                    </p>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Nei prossimi giorni riceverai:</strong><br>
+                                        📧 Tecniche immediate di gestione dello stress<br>
+                                        🔋 Come ricaricare le tue energie naturalmente<br>
+                                        🛡️ Strategie per proteggere il tuo benessere
+                                    </p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="{{dashboard_url}}" style="background: #ea580c; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                            🚀 Accedi alla Tua Dashboard
+                                        </a>
+                                    </div>
+                                    
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                                        <strong>P.S.</strong> Se hai domande urgenti, scrivimi direttamente su 
+                                        <a href="{{whatsapp}}" style="color: #ea580c;">WhatsApp</a>. 
+                                        Sono qui per supportarti in questo percorso di recupero.
+                                    </p>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    Il tuo benessere è la priorità assoluta
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, 3 tecniche immediate per il tuo stress 🌱',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: #f0fdf4; padding: 25px; border-radius: 15px; border: 2px solid #16a34a;">
+                                    <h1 style="color: #16a34a; margin: 0 0 10px 0; font-size: 22px;">🌱 Ciao {{nome}}, come stai?</h1>
+                                    <p style="color: #15803d; margin: 0;">Sono passati 2 giorni dal nostro primo contatto...</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        Ti avevo promesso delle <strong>tecniche immediate</strong> per gestire lo stress. 
+                                        Eccole qui - non sono teorie, ma strategie che uso personalmente ogni giorno.
+                                    </p>
+                                    
+                                    <div style="background: #fff7ed; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #ea580c; margin: 0 0 15px 0;">💨 Tecnica #1: Respiro 4-7-8</h3>
+                                        <p style="color: #9a3412; margin: 0; line-height: 1.6;">
+                                            Inspira per 4 secondi → Trattieni per 7 → Espira per 8<br>
+                                            <em>Ripeti 4 volte quando senti tensione salire</em>
+                                        </p>
+                                    </div>
+                                    
+                                    <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #0369a1; margin: 0 0 15px 0;">🛑 Tecnica #2: STOP Method</h3>
+                                        <p style="color: #0c4a6e; margin: 0; line-height: 1.6;">
+                                            <strong>S</strong>top - fermati<br>
+                                            <strong>T</strong>ake a breath - respira<br>
+                                            <strong>O</strong>bserve - osserva la situazione<br>
+                                            <strong>P</strong>roceed - procedi con calma
+                                        </p>
+                                    </div>
+                                    
+                                    <div style="background: #faf5ff; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #7c3aed; margin: 0 0 15px 0;">⚡ Tecnica #3: Micro-Pause</h3>
+                                        <p style="color: #5b21b6; margin: 0; line-height: 1.6;">
+                                            Ogni ora, fai una pausa di 2 minuti.<br>
+                                            <em>Alza lo sguardo, stiracchiati, respira. Basta questo.</em>
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Il mio consiglio:</strong> Non provare tutte e 3 insieme. 
+                                        Scegline una e usala per 3 giorni. Poi aggiungine un'altra.
+                                    </p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="{{dashboard_url}}" style="background: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                            📊 Traccia i Tuoi Progressi
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    Ricorda: piccoli passi, grandi risultati 🌱
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, sei pronto per il passo successivo? 🚀',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #dc2626 0%, #ea580c 100%); padding: 25px; border-radius: 15px; color: white;">
+                                    <h1 style="margin: 0 0 10px 0; font-size: 22px;">🔥 {{nome}}, momento della verità</h1>
+                                    <p style="margin: 0; opacity: 0.9;">5 giorni fa abbiamo iniziato questo percorso insieme...</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Ti faccio una domanda diretta:</strong><br>
+                                        Hai provato le tecniche che ti ho mandato? Anche solo una?
+                                    </p>
+                                    
+                                    <div style="background: #fef2f2; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #dc2626;">
+                                        <p style="color: #991b1b; margin: 0; font-weight: 600;">
+                                            ⚠️ Se la risposta è "no", fermati qui. Leggi fino in fondo.
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        Vedo questo pattern ogni giorno: persone stressate che vogliono cambiare, 
+                                        ma non riescono a fare il primo passo. Non ti sto giudicando - 
+                                        <strong>ti sto offrendo una soluzione.</strong>
+                                    </p>
+                                    
+                                    <div style="background: #f0fdf4; padding: 25px; border-radius: 10px; margin: 25px 0;">
+                                        <h3 style="color: #16a34a; margin: 0 0 15px 0;">💎 Ecco cosa posso fare per te:</h3>
+                                        <ul style="color: #15803d; line-height: 1.8; padding-left: 20px;">
+                                            <li><strong>Percorso strutturato</strong> di 7 settimane per il recupero</li>
+                                            <li><strong>Supporto personale</strong> via WhatsApp quando ne hai bisogno</li>
+                                            <li><strong>Tecniche testate</strong> per gestire stress e burnout</li>
+                                            <li><strong>Sistema step-by-step</strong> che non richiede forza di volontà</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>La verità brutale:</strong> Da solo, continuerai a procrastinare. 
+                                        Con il mio supporto strutturato, in 7 settimane avrai ripreso il controllo della tua energia.
+                                    </p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0; padding: 20px; background: #fffbeb; border-radius: 10px;">
+                                        <p style="color: #92400e; margin: 0 0 15px 0; font-weight: bold;">
+                                            🎯 Offerta limitata per te:
+                                        </p>
+                                        <p style="color: #92400e; margin: 0 0 20px 0; font-size: 18px;">
+                                            <strike>€497</strike> → <strong style="color: #dc2626;">€297</strong><br>
+                                            <small>(Solo per i primi 10 posti)</small>
+                                        </p>
+                                        <a href="{{whatsapp}}" style="background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
+                                            💬 PRENOTA ORA SU WHATSAPP
+                                        </a>
+                                    </div>
+                                    
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; text-align: center;">
+                                        <strong>P.S.</strong> Se non sei pronto, va bene. Ma ricorda: 
+                                        il stress non aspetta. Ogni giorno che passa è un giorno in più di energia sprecata.
+                                    </p>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    Il cambiamento inizia con una decisione 🔥
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+            
+            procrastinatore_bloccato: {
+                profile: {
+                    emoji: '⏳',
+                    name: 'Procrastinatore Bloccato',
+                    tone: 'motivazionale, orientato all\'azione, pratico',
+                    approach: 'sblocco mentale e azione guidata'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, basta rimandare. È ora di agire! ⚡',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #7c3aed 0%, #ea580c 100%); padding: 30px; border-radius: 15px; color: white; text-align: center;">
+                                    <h1 style="margin: 0; font-size: 24px;">⏳ {{nome}}, ti riconosco!</h1>
+                                    <p style="margin: 10px 0 0 0; opacity: 0.9;">Andrea qui - Il tuo coach anti-procrastinazione</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+                                        <strong>So esattamente cosa provi:</strong> hai mille idee brillanti, sai cosa dovresti fare, 
+                                        ma quando è il momento di agire... qualcosa ti blocca.
+                                    </p>
+                                    
+                                    <div style="background: #f0f9ff; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #2563eb;">
+                                        <p style="margin: 0; color: #1e40af; font-weight: 600;">
+                                            💡 La verità: Non è pigrizia. È un meccanismo di protezione della tua mente. E si può spezzare.
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Il mio approccio con te:</strong><br>
+                                        Dimentica i grandi gesti eroici. Ti insegnerò la tecnica dei <em>"micro-passi"</em> - 
+                                        azioni così piccole che è impossibile non farle.
+                                    </p>
+                                    
+                                    <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #92400e; margin: 0 0 10px 0;">🎯 LA TUA PRIMA MISSIONE (2 MINUTI):</h3>
+                                        <p style="color: #92400e; margin: 0; line-height: 1.6;">
+                                            1. Prendi un foglio di carta<br>
+                                            2. Scrivi UNA cosa che hai rimandato oggi<br>
+                                            3. Spezzala in 3 micro-passi<br>
+                                            4. Fai il primo passo ORA (anche se sono 30 secondi)
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Nei prossimi giorni ti mostrerò:</strong><br>
+                                        ⚡ Come trasformare la procrastinazione in momentum<br>
+                                        🎯 La regola dei 2 minuti che cambia tutto<br>
+                                        🔥 Sistema di accountability personale
+                                    </p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="{{dashboard_url}}" style="background: #7c3aed; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                            🚀 ACCEDI E INIZIA SUBITO
+                                        </a>
+                                    </div>
+                                    
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                                        <strong>P.S.</strong> Il mondo ha bisogno di quello che hai da offrire. 
+                                        Smetti di trattenerti. <a href="{{whatsapp}}" style="color: #ea580c;">Scrivimi su WhatsApp</a> 
+                                        se hai bisogno di una spinta extra.
+                                    </p>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    L'azione batte la perfezione, sempre ⚡
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, la regola dei 2 minuti che cambia tutto 🔥',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: #fbbf24; padding: 25px; border-radius: 15px; color: #92400e;">
+                                    <h1 style="margin: 0 0 10px 0; font-size: 22px;">🔥 {{nome}}, hai fatto quella prima missione?</h1>
+                                    <p style="margin: 0;">Se sì, BRAVO! Se no... ancora più importante quello che ti sto per dire.</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        Ti voglio insegnare <strong>LA REGOLA</strong> che ha trasformato migliaia di procrastinatori 
+                                        in macchine d'azione:
+                                    </p>
+                                    
+                                    <div style="background: #dc2626; padding: 25px; border-radius: 10px; margin: 25px 0; color: white; text-align: center;">
+                                        <h2 style="margin: 0 0 15px 0; font-size: 24px;">⚡ LA REGOLA DEI 2 MINUTI</h2>
+                                        <p style="margin: 0; font-size: 18px; font-weight: bold;">
+                                            Se una cosa richiede meno di 2 minuti → FALLA SUBITO
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        Sembra troppo semplice? <strong>È proprio questo il punto.</strong> 
+                                        La procrastinazione si nutre di complessità. La semplicità la uccide.
+                                    </p>
+                                    
+                                    <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #16a34a; margin: 0 0 15px 0;">✅ Esempi pratici di "2 minuti":</h3>
+                                        <ul style="color: #15803d; line-height: 1.8; padding-left: 20px;">
+                                            <li>Rispondere a quell'email importante</li>
+                                            <li>Mettere i piatti in lavastoviglie</li>
+                                            <li>Prenotare quell'appuntamento</li>
+                                            <li>Scrivere quella nota importante</li>
+                                            <li>Fare quella telefonata veloce</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <h3 style="color: #92400e; margin: 0 0 15px 0;">🎯 LA TUA SFIDA PER OGGI:</h3>
+                                        <p style="color: #92400e; margin: 0; line-height: 1.6; font-weight: bold;">
+                                            Applica la regola dei 2 minuti a 5 cose che hai rimandato. 
+                                            Non pensare, non pianificare. FALLE e basta.
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>Cosa succederà:</strong> Ogni piccola azione completata rilascerà 
+                                        dopamina nel tuo cervello. Creerai momentum. L'azione genererà altra azione.
+                                    </p>
+                                    
+                                    <div style="text-align: center; margin: 30px 0;">
+                                        <a href="{{dashboard_url}}" style="background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                                            📊 TRACCIA LE TUE AZIONI
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    L'azione è l'antidoto alla procrastinazione 🔥
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, è ora di smettere di auto-sabotarti 💥',
+                        body: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <div style="background: linear-gradient(135deg, #dc2626 0%, #7c3aed 100%); padding: 25px; border-radius: 15px; color: white;">
+                                    <h1 style="margin: 0 0 10px 0; font-size: 22px;">💥 {{nome}}, momento della verità brutale</h1>
+                                    <p style="margin: 0; opacity: 0.9;">5 giorni fa ti ho dato strumenti potenti...</p>
+                                </div>
+                                
+                                <div style="padding: 30px 0;">
+                                    <p style="color: #374151; line-height: 1.6; font-size: 16px;">
+                                        <strong>Domanda diretta:</strong> Quante delle tecniche che ti ho insegnato hai applicato? 
+                                        E soprattutto, quante volte ti sei fermato a metà strada?
+                                    </p>
+                                    
+                                    <div style="background: #fef2f2; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #dc2626;">
+                                        <p style="color: #991b1b; margin: 0; font-weight: 600;">
+                                            🛑 STOP all'auto-sabotaggio. È ora di affrontare la realtà.
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        Vedo il pattern: hai buone intenzioni, inizi con entusiasmo, 
+                                        poi qualcosa ti distrae e torni alle vecchie abitudini. 
+                                        <strong>È normale, ma non deve essere permanente.</strong>
+                                    </p>
+                                    
+                                    <div style="background: #7c3aed; padding: 25px; border-radius: 10px; margin: 25px 0; color: white;">
+                                        <h3 style="margin: 0 0 15px 0;">🎯 Ecco cosa risolveremo insieme:</h3>
+                                        <ul style="line-height: 1.8; padding-left: 20px; margin: 0;">
+                                            <li><strong>Sistema anti-procrastinazione</strong> che funziona anche nei giorni "no"</li>
+                                            <li><strong>Accountability structure</strong> che ti mantiene in movimento</li>
+                                            <li><strong>Micro-habit system</strong> che costruisce momentum automatico</li>
+                                            <li><strong>Mental triggers</strong> per trasformare resistenza in azione</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <p style="color: #374151; line-height: 1.6;">
+                                        <strong>La differenza tra successo e fallimento?</strong><br>
+                                        Non è la motivazione (quella va e viene). È avere un sistema che funziona 
+                                        anche quando non hai voglia.
+                                    </p>
+                                    
+                                    <div style="background: #fbbf24; padding: 20px; border-radius: 10px; margin: 25px 0; text-align: center;">
+                                        <p style="color: #92400e; margin: 0 0 10px 0; font-weight: bold;">
+                                            ⚡ OFFERTA AZIONE IMMEDIATA:
+                                        </p>
+                                        <p style="color: #92400e; margin: 0 0 15px 0; font-size: 18px;">
+                                            Percorso completo 7 settimane<br>
+                                            <strike>€497</strike> → <strong style="color: #dc2626;">€297</strong>
+                                        </p>
+                                        <p style="color: #92400e; margin: 0 0 20px 0; font-size: 14px;">
+                                            <em>Solo se prenoti ENTRO 48 ORE</em>
+                                        </p>
+                                        <a href="{{whatsapp}}" style="background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
+                                            💬 BASTA PROCRASTINARE - PRENOTA ORA
+                                        </a>
+                                    </div>
+                                    
+                                    <div style="background: #f3f4f6; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                                        <p style="color: #374151; margin: 0; line-height: 1.6; text-align: center; font-style: italic;">
+                                            <strong>"Andrea, ho finalmente smesso di rimandare. In 7 settimane ho completato 
+                                            più progetti di quanti ne avessi fatti negli ultimi 2 anni."</strong><br>
+                                            <small>- Marco, Manager IT</small>
+                                        </p>
+                                    </div>
+                                    
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; text-align: center;">
+                                        <strong>P.S.</strong> Se non prenoti ora, tra una settimana starai ancora 
+                                        procrastinando. Il momento perfetto non esiste. Questo è il tuo momento.
+                                    </p>
+                                </div>
+                                
+                                <div style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+                                    Andrea Padoan - Lifestyle Coach<br>
+                                    Il tuo potenziale ti sta aspettando 💥
+                                </div>
+                            </div>
+                        `
+                    }
+                ]
+            },
+            
+            // Add other profiles here...
+            perfezionista_insoddisfatto: {
+                profile: {
+                    emoji: '🎯',
+                    name: 'Perfezionista Insoddisfatto',
+                    tone: 'paziente, orientato al progresso, anti-perfezionismo',
+                    approach: 'accettazione e progress over perfection'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, è ora di liberarti dalla prigione della perfezione 🎯',
+                        body: `[Email content for perfezionista welcome]`
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, "fatto è meglio che perfetto" (ecco perché) ✨',
+                        body: `[Email content for perfezionista nurturing]`
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, smetti di sabotare i tuoi successi 🏆',
+                        body: `[Email content for perfezionista conversion]`
+                    }
+                ]
+            },
+            
+            dispersivo_confuso: {
+                profile: {
+                    emoji: '🤯',
+                    name: 'Dispersivo Confuso',
+                    tone: 'chiaro, strutturato, orientato al focus',
+                    approach: 'chiarezza, focus e prioritizzazione'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, dal caos alla chiarezza in 3 passi 🧭',
+                        body: `[Email content for dispersivo welcome]`
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, la matrice che ti salverà dal sovraccarico 📊',
+                        body: `[Email content for dispersivo nurturing]`
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, basta vivere nella confusione 🎯',
+                        body: `[Email content for dispersivo conversion]`
+                    }
+                ]
+            },
+            
+            motivato_inconsistente: {
+                profile: {
+                    emoji: '🎢',
+                    name: 'Motivato Inconsistente',
+                    tone: 'energico, orientato ai sistemi, motivazionale',
+                    approach: 'sistemi e routine per la consistenza'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, trasformiamo le tue ondate in oceano costante 🌊',
+                        body: `[Email content for motivato welcome]`
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, il segreto della costanza (non è la motivazione) ⚡',
+                        body: `[Email content for motivato nurturing]`
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, smetti con il "tutto o niente" 🎯',
+                        body: `[Email content for motivato conversion]`
+                    }
+                ]
+            },
+            
+            equilibrato_ottimizzatore: {
+                profile: {
+                    emoji: '⚡',
+                    name: 'Equilibrato Ottimizzatore',
+                    tone: 'sofisticato, orientato alla performance, consulenziale',
+                    approach: 'fine-tuning e crescita avanzata'
+                },
+                emails: [
+                    {
+                        id: 'welcome',
+                        timing: 'Immediata',
+                        subject: '{{nome}}, dal buono all\'eccellente: il tuo next level ⚡',
+                        body: `[Email content for equilibrato welcome]`
+                    },
+                    {
+                        id: 'nurturing',
+                        timing: '+2 giorni',
+                        subject: '{{nome}}, marginal gains: l\'1% che cambia tutto 📈',
+                        body: `[Email content for equilibrato nurturing]`
+                    },
+                    {
+                        id: 'conversion',
+                        timing: '+5 giorni',
+                        subject: '{{nome}}, è ora di raggiungere il tuo potenziale massimo 🚀',
+                        body: `[Email content for equilibrato conversion]`
+                    }
+                ]
+            }
+        };
+
+        // VARIABLES FOR EMAIL PERSONALIZATION
+        const EMAIL_VARIABLES = {
+            nome: 'Mario',
+            profilo: 'Stressato Esaurito',
+            emoji: '😰',
+            sfide: 'gestione dello stress, burnout, mancanza di energia',
+            punti_forza: 'resistenza, dedizione, capacità di sacrificio',
+            dashboard_url: 'https://tribucoach.vercel.app/pages/user-dashboard.html',
+            whatsapp: 'https://wa.me/393123456789?text=Ciao%20Andrea,%20sono%20interessato%20al%20percorso%20coaching'
+        };
+
+        // CURRENT STATE
+        let currentProfile = 'stressato_esaurito';
+        let selectedEmailId = null;
+
+        // INITIALIZE
+        document.addEventListener('DOMContentLoaded', function() {
+            setupProfileSelector();
+            renderEmailSequence();
+            updateAnalytics();
+        });
+
+        function setupProfileSelector() {
+            const profileBtns = document.querySelectorAll('.profile-btn');
+            profileBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    profileBtns.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    // Update current profile
+                    currentProfile = this.dataset.profile;
+                    // Re-render email sequence
+                    renderEmailSequence();
+                });
+            });
+        }
+
+        function renderEmailSequence() {
+            const container = document.getElementById('email-sequences');
+            const profileData = EMAIL_TEMPLATES[currentProfile];
+            
+            if (!profileData) {
+                container.innerHTML = '<p>Profilo non trovato</p>';
+                return;
+            }
+
+            let html = `
+                <div style="background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);">
+                    <h2 style="color: #1e293b; margin-bottom: 16px;">
+                        ${profileData.profile.emoji} Sequenza Email: ${profileData.profile.name}
+                    </h2>
+                    <p style="color: #64748b; margin-bottom: 8px;"><strong>Tone:</strong> ${profileData.profile.tone}</p>
+                    <p style="color: #64748b; margin-bottom: 24px;"><strong>Approccio:</strong> ${profileData.profile.approach}</p>
+                </div>
+                
+                <div class="email-sequence">
+            `;
+
+            profileData.emails.forEach((email, index) => {
+                html += `
+                    <div class="email-card">
+                        <div class="email-header" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="email-title">
+                                📧 Email ${index + 1}: ${email.id.charAt(0).toUpperCase() + email.id.slice(1)}
+                            </div>
+                            <div class="email-timing">${email.timing}</div>
+                        </div>
+                        
+                        <div class="email-preview">
+                            <div class="email-subject">
+                                <strong>Oggetto:</strong> ${replaceVariables(email.subject)}
+                            </div>
+                            <div class="email-body">
+                                <strong>Anteprima:</strong> ${email.body.substring(0, 200).replace(/<[^>]*>/g, '')}...
+                            </div>
+                        </div>
+                        
+                        <div class="email-actions">
+                            <button class="btn btn-secondary" onclick="previewFullEmail('${currentProfile}', '${email.id}')">
+                                👁️ Anteprima Completa
+                            </button>
+                            <button class="btn btn-secondary" onclick="editEmail('${currentProfile}', '${email.id}')">
+                                ✏️ Modifica
+                            </button>
+                            <button class="btn btn-primary" onclick="sendTestEmail('${currentProfile}', '${email.id}')">
+                                📧 Test Email
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function replaceVariables(text) {
+            let result = text;
+            Object.keys(EMAIL_VARIABLES).forEach(key => {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                result = result.replace(regex, EMAIL_VARIABLES[key]);
+            });
+            return result;
+        }
+
+        function previewFullEmail(profileKey, emailId) {
+            const email = EMAIL_TEMPLATES[profileKey].emails.find(e => e.id === emailId);
+            if (!email) return;
+
+            const subject = replaceVariables(email.subject);
+            const body = replaceVariables(email.body);
+
+            // Open preview in new window
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Anteprima Email: ${subject}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+                        .email-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                        .subject { background: #1e293b; color: white; padding: 15px; border-radius: 8px 8px 0 0; margin: -20px -20px 20px -20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="email-container">
+                        <div class="subject">
+                            <h2 style="margin: 0;">📧 ${subject}</h2>
+                        </div>
+                        ${body}
+                    </div>
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+        }
+
+        function editEmail(profileKey, emailId) {
+            const email = EMAIL_TEMPLATES[profileKey].emails.find(e => e.id === emailId);
+            if (!email) return;
+
+            // Populate editor
+            document.getElementById('email-subject').value = email.subject;
+            document.getElementById('email-body').value = email.body;
+            selectedEmailId = { profileKey, emailId };
+
+            // Scroll to editor
+            document.querySelector('.template-editor').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function saveTemplate() {
+            if (!selectedEmailId) {
+                alert('Seleziona prima un email da modificare');
+                return;
+            }
+
+            const subject = document.getElementById('email-subject').value;
+            const body = document.getElementById('email-body').value;
+
+            // Update template
+            const email = EMAIL_TEMPLATES[selectedEmailId.profileKey].emails.find(e => e.id === selectedEmailId.emailId);
+            if (email) {
+                email.subject = subject;
+                email.body = body;
+                alert('Template salvato con successo!');
+                renderEmailSequence();
+            }
+        }
+
+        function sendTestEmail(profileKey, emailId) {
+            const email = EMAIL_TEMPLATES[profileKey].emails.find(e => e.id === emailId);
+            if (!email) return;
+
+            // Simulate EmailJS integration
+            const testData = {
+                to_email: 'test@example.com',
+                subject: replaceVariables(email.subject),
+                html_body: replaceVariables(email.body),
+                profile: profileKey,
+                timing: email.timing
+            };
+
+            console.log('📧 Sending test email:', testData);
+            
+            // Here you would integrate with EmailJS
+            // emailjs.send('service_id', 'template_id', testData)
+
+            alert(`Test email inviata per ${EMAIL_TEMPLATES[profileKey].profile.name}!\nControlla la console per i dettagli.`);
+        }
+
+        function previewEmail() {
+            const subject = document.getElementById('email-subject').value;
+            const body = document.getElementById('email-body').value;
+
+            if (!subject || !body) {
+                alert('Inserisci oggetto e corpo email');
+                return;
+            }
+
+            const processedSubject = replaceVariables(subject);
+            const processedBody = replaceVariables(body);
+
+            previewFullEmail({ subject: processedSubject, body: processedBody });
+        }
+
+        function exportTemplates() {
+            const dataStr = JSON.stringify(EMAIL_TEMPLATES, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'email_templates_lifestyle_coaching.json';
+            link.click();
+            
+            alert('Template esportati con successo!');
+        }
+
+        function updateAnalytics() {
+            // Simulate real analytics
+            const metrics = {
+                totalSent: 1247 + Math.floor(Math.random() * 100),
+                openRate: 42.3 + (Math.random() * 10 - 5),
+                clickRate: 18.7 + (Math.random() * 5 - 2.5),
+                conversionRate: 8.2 + (Math.random() * 3 - 1.5)
+            };
+
+            document.getElementById('total-sent').textContent = metrics.totalSent.toLocaleString();
+            document.getElementById('open-rate').textContent = metrics.openRate.toFixed(1) + '%';
+            document.getElementById('click-rate').textContent = metrics.clickRate.toFixed(1) + '%';
+            document.getElementById('conversion-rate').textContent = metrics.conversionRate.toFixed(1) + '%';
+        }
+
+        // EMAILJS INTEGRATION FUNCTIONS
+        function initializeEmailJS() {
+            // Initialize EmailJS with your public key
+            // emailjs.init("your_public_key");
+            console.log('EmailJS initialized');
+        }
+
+        function setupAutomationTriggers() {
+            // This would be called when a user completes the quiz
+            // and you want to trigger the email sequence
+            console.log('Automation triggers setup');
+        }
+
+        // AUTO-UPDATE ANALYTICS EVERY 30 SECONDS
+        setInterval(updateAnalytics, 30000);
+        
+        // INITIALIZE EMAILJS ON PAGE LOAD
+        initializeEmailJS();
+    </script>
+</body>
+</html>
