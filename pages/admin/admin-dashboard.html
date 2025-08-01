@@ -5,1349 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - LifestyleFitnessCoach</title>
     
+    <!-- CSS Esterno -->
+    <link rel="stylesheet" href="css/admin-styles.css">
+    
     <!-- Firebase SDK v9 -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, getDocs, query, orderBy, where, onSnapshot, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-        // 🔥 CONFIGURAZIONE FIREBASE REALE - TribuCoach
-        const firebaseConfig = {
-            apiKey: "AIzaSyDSsQEPii_Eb99cWGs7eqozgTtIqbtO2rs",
-            authDomain: "tribucoach-a2254.firebaseapp.com",
-            projectId: "tribucoach-a2254",
-            storageBucket: "tribucoach-a2254.firebasestorage.app",
-            messagingSenderId: "425200296836",
-            appId: "1:425200296836:web:7835188f40f4348567ab48"
-        };
-
-        // Inizializza Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        console.log('🔥 Firebase connesso a:', firebaseConfig.projectId);
-
-        // Variabili globali
-        let allUsers = [];
-        let allSessions = [];
-        let allAIConversations = [];
-        let filteredUsers = [];
-        let currentUser = null;
-
-        // 🔄 CARICA DATI FIREBASE + LOGICA BUSINESS
-        async function loadDashboardData() {
-            try {
-                console.log('🔄 Caricamento dati LifestyleFitnessCoach...');
-                updateConnectionStatus('🔄 Caricamento dati...', '#ff9800');
-
-                // 1. Carica utenti da quiz_results
-                try {
-                    const quizSnapshot = await getDocs(query(
-                        collection(db, 'quiz_results'), 
-                        orderBy('timestamp', 'desc')
-                    ));
-                    allUsers = [];
-                    
-                    quizSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        
-                        // Determina quadrante e livello coscienza
-                        const quadrant = determineQuadrant(data);
-                        const consciousnessLevel = determineConsciousnessLevel(data);
-                        
-                        allUsers.push({
-                            id: doc.id,
-                            name: data.name || 'Nome non fornito',
-                            email: data.email || 'Email non fornita',
-                            phone: data.phone || data.whatsapp || data.telefono || null,
-                            registrationDate: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            lastActivity: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            
-                            // Status coaching
-                            currentWeek: data.currentWeek || 1,
-                            completedWeeks: data.completedWeeks || [],
-                            totalSessions: data.totalSessions || 0,
-                            hasStartedCoaching: data.hasStartedCoaching || false,
-                            
-                            // Profilo personalizzazione
-                            profileQuadrant: quadrant,
-                            consciousnessLevel: consciousnessLevel,
-                            
-                            // Dati quiz completi
-                            leadScore: calculateLeadScore(data),
-                            quizData: data,
-                            source: 'quiz',
-                            
-                            // Metadati
-                            profileType: data.profile_type || data.profile || getProfileName(quadrant),
-                            goals: data.goals || [],
-                            challenges: data.challenges || data.obstacles || [],
-                            
-                            // Dati aggiuntivi
-                            age: data.age || null,
-                            city: data.city || data.citta || null,
-                            experience: data.experience || data.esperienza || null,
-                            activityLevel: data.activity_level || data.livello_attivita || null,
-                            readinessLevel: data.readiness_level || data.livello_motivazione || null,
-                            commitmentLevel: data.commitment_level || data.livello_impegno || null,
-                            
-                            // Note coaching
-                            notes: data.notes || ''
-                        });
-                    });
-                    
-                    console.log('✅ Utenti caricati:', allUsers.length);
-                } catch (error) {
-                    console.error('❌ Errore caricamento quiz_results:', error);
-                    allUsers = [];
-                }
-
-                // 2. Carica sessioni coaching
-                try {
-                    const sessionsSnapshot = await getDocs(collection(db, 'coaching_sessions'));
-                    allSessions = [];
-                    
-                    sessionsSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        allSessions.push({
-                            id: doc.id,
-                            ...data,
-                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            duration: data.duration || 0,
-                            weekNumber: data.weekNumber || 1,
-                            questionsAnswered: data.questionsAnswered || 0,
-                            aiResponsesGenerated: data.aiResponsesGenerated || 0
-                        });
-                    });
-                    
-                    console.log('✅ Sessioni coaching:', allSessions.length);
-                } catch (error) {
-                    console.warn('⚠️ Collezione coaching_sessions non trovata');
-                    allSessions = [];
-                }
-
-                // 3. Carica conversazioni AI
-                try {
-                    const aiSnapshot = await getDocs(collection(db, 'ai_conversations'));
-                    allAIConversations = [];
-                    
-                    aiSnapshot.forEach(doc => {
-                        const data = doc.data();
-                        allAIConversations.push({
-                            id: doc.id,
-                            ...data,
-                            timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
-                            messages: data.messages || [],
-                            insights: data.insights || []
-                        });
-                    });
-                    
-                    console.log('✅ Conversazioni AI:', allAIConversations.length);
-                } catch (error) {
-                    console.warn('⚠️ Collezione ai_conversations non trovata');
-                    allAIConversations = [];
-                }
-
-                // Aggiorna dashboard
-                filteredUsers = [...allUsers];
-                updateDashboard();
-                updateConnectionStatus('✅ Dashboard aggiornata - Dati reali', '#4CAF50');
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento Firebase:', error);
-                updateConnectionStatus('❌ Errore Firebase', '#f44336');
-            }
-        }
-
-        // 🧠 DETERMINA QUADRANTE DA DATI QUIZ
-        function determineQuadrant(quizData) {
-            let competenceScore = 0;
-            let motivationScore = 0;
-            
-            // Competenza tecnica
-            if (quizData.experience) {
-                if (quizData.experience.includes('avanzato') || quizData.experience.includes('Avanzato')) competenceScore += 2;
-                else if (quizData.experience.includes('intermedio') || quizData.experience.includes('Intermedio')) competenceScore += 1;
-            }
-            
-            if (quizData.activity_level) {
-                if (quizData.activity_level.includes('Molto attivo')) competenceScore += 2;
-                else if (quizData.activity_level.includes('Moderatamente')) competenceScore += 1;
-            }
-            
-            // Motivazione emotiva
-            if (quizData.goals && Array.isArray(quizData.goals)) {
-                motivationScore += Math.min(quizData.goals.length, 2);
-            }
-            
-            if (quizData.readiness_level && quizData.readiness_level >= 4) motivationScore += 1;
-            if (quizData.commitment_level && quizData.commitment_level >= 4) motivationScore += 1;
-            
-            // Determina quadrante
-            if (competenceScore >= 2 && motivationScore >= 2) return 'Q1';
-            else if (competenceScore < 2 && motivationScore >= 2) return 'Q2';
-            else if (competenceScore >= 2 && motivationScore < 2) return 'Q3';
-            else return 'Q4';
-        }
-        
-        // 🧠 DETERMINA LIVELLO COSCIENZA
-        function determineConsciousnessLevel(quizData) {
-            let level = 'Opportunista';
-            
-            if (quizData.goals && Array.isArray(quizData.goals)) {
-                const goals = quizData.goals.join(' ').toLowerCase();
-                
-                if (goals.includes('comunità') || goals.includes('aiutare') || goals.includes('sociale')) {
-                    level = 'Pluralista';
-                } else if (goals.includes('successo') || goals.includes('performance') || goals.includes('competizione')) {
-                    level = 'Achiever';
-                } else if (goals.includes('salute') || goals.includes('stabilità') || goals.includes('routine')) {
-                    level = 'Conformista';
-                }
-            }
-            
-            return level;
-        }
-        
-        // 🧮 CALCOLA LEAD SCORE
-        function calculateLeadScore(quizData) {
-            if (quizData.lead_score) return quizData.lead_score;
-            
-            let score = 0;
-            
-            if (quizData.experience) {
-                if (quizData.experience.includes('Avanzato')) score += 20;
-                else if (quizData.experience.includes('Intermedio')) score += 15;
-                else if (quizData.experience.includes('Principiante')) score += 10;
-            }
-            
-            if (quizData.goals && Array.isArray(quizData.goals)) {
-                score += Math.min(quizData.goals.length * 5, 25);
-            }
-            
-            if (quizData.readiness_level) score += quizData.readiness_level * 4;
-            if (quizData.commitment_level) score += quizData.commitment_level * 3;
-            
-            if (quizData.email) score += 10;
-            if (quizData.name) score += 5;
-            if (quizData.phone || quizData.whatsapp) score += 5;
-            
-            return Math.min(score, 100);
-        }
-
-        // 📊 AGGIORNA DASHBOARD
-        function updateDashboard() {
-            calculateKPIs();
-            renderUsersTable();
-            updateLastUpdateTime();
-        }
-
-        // 📈 CALCOLA KPI
-        function calculateKPIs() {
-            const totalUsers = allUsers.length;
-            const activeUsers = allUsers.filter(user => {
-                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                return daysSinceActivity <= 7;
-            }).length;
-
-            const completedWeek1 = allUsers.filter(user => 
-                user.completedWeeks && user.completedWeeks.includes(1)
-            ).length;
-            
-            const conversionRate = totalUsers > 0 ? Math.round((completedWeek1 / totalUsers) * 100) : 0;
-
-            // Calcola completion rate medio
-            let totalCompletions = 0;
-            let totalPossible = 0;
-            
-            allUsers.forEach(user => {
-                for (let week = 1; week <= 7; week++) {
-                    totalPossible++;
-                    if (user.completedWeeks && user.completedWeeks.includes(week)) {
-                        totalCompletions++;
-                    }
-                }
-            });
-
-            const completionRate = totalPossible > 0 ? 
-                Math.round((totalCompletions / totalPossible) * 100) : 0;
-
-            // Calcola revenue potential
-            let potentialRevenue = 0;
-            allUsers.forEach(user => {
-                if (user.completedWeeks) {
-                    for (let week = 2; week <= 7; week++) {
-                        if (user.completedWeeks.includes(week)) {
-                            potentialRevenue += 50;
-                        }
-                    }
-                }
-            });
-
-            // Sessioni oggi
-            const today = new Date().toISOString().split('T')[0];
-            const todaySessions = allSessions.filter(session => 
-                session.timestamp.toISOString().split('T')[0] === today
-            ).length;
-
-            // Update UI
-            document.getElementById('totalUsers').textContent = totalUsers;
-            document.getElementById('activeUsers').textContent = activeUsers;
-            document.getElementById('conversionRate').textContent = conversionRate + '%';
-            document.getElementById('completionRate').textContent = completionRate + '%';
-            document.getElementById('potentialRevenue').textContent = '€' + potentialRevenue;
-            document.getElementById('todaySessions').textContent = todaySessions;
-
-            // Update changes
-            document.getElementById('usersChange').textContent = `+${Math.round(totalUsers * 0.15)} questa settimana`;
-            document.getElementById('activeChange').textContent = `${activeUsers}/${totalUsers} attivi`;
-        }
-
-        // 👥 RENDER USERS TABLE
-        function renderUsersTable() {
-            const tbody = document.getElementById('usersTableBody');
-            const noUsersMessage = document.getElementById('noUsersMessage');
-            
-            if (filteredUsers.length === 0) {
-                tbody.innerHTML = '';
-                noUsersMessage.style.display = 'block';
-                document.querySelector('.users-table').style.display = 'none';
-                return;
-            }
-
-            noUsersMessage.style.display = 'none';
-            document.querySelector('.users-table').style.display = 'table';
-
-            tbody.innerHTML = filteredUsers.map(user => {
-                const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
-                const progressPercentage = Math.round((completedWeeks / 7) * 100);
-                
-                const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
-                
-                const lastActivityFormatted = formatDate(user.lastActivity);
-                const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                
-                let activityStatus = 'active';
-                if (daysSinceActivity > 30) activityStatus = 'inactive';
-                else if (daysSinceActivity > 7) activityStatus = 'partial';
-
-                // Session status
-                let sessionStatus = 'not-started';
-                if (user.hasStartedCoaching && completedWeeks > 0) sessionStatus = 'completed';
-                else if (user.hasStartedCoaching) sessionStatus = 'partial';
-
-                return `
-                    <tr onclick="openUserModal('${user.id}')">
-                        <td>
-                            <div class="user-info">
-                                <div class="user-avatar">${initials}</div>
-                                <div class="user-details">
-                                    <div class="user-name">${user.name}</div>
-                                    <div class="user-email">${user.email}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="role-badge role-user">user</span>
-                        </td>
-                        <td>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${progressPercentage}%"></div>
-                            </div>
-                            <div class="progress-text">${completedWeeks}/7 settimane</div>
-                        </td>
-                        <td>
-                            <span class="status-badge status-${sessionStatus}">
-                                ${sessionStatus === 'completed' ? '✅ Completa' : 
-                                  sessionStatus === 'partial' ? '⏳ Parziale' : '⭕ Non iniziata'}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="last-activity">${lastActivityFormatted}</div>
-                            <div class="status-badge status-${activityStatus}" style="font-size: 0.7rem; margin-top: 0.25rem;">
-                                ${daysSinceActivity === 0 ? 'Oggi' : 
-                                  daysSinceActivity === 1 ? 'Ieri' : 
-                                  daysSinceActivity + ' giorni fa'}
-                            </div>
-                        </td>
-                        <td>
-                            <button class="action-btn" onclick="event.stopPropagation(); openUserModal('${user.id}')">
-                                👁️ Dettagli
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            // Update counters
-            document.getElementById('visibleUsers').textContent = filteredUsers.length;
-            document.getElementById('totalUsersCount').textContent = allUsers.length;
-        }
-
-        // 🔍 APRI MODAL UTENTE
-        window.openUserModal = function(userId) {
-            currentUser = allUsers.find(user => user.id === userId);
-            if (!currentUser) return;
-
-            document.getElementById('modalUserName').textContent = currentUser.name;
-            
-            // General info
-            const generalInfo = document.getElementById('userGeneralInfo');
-            generalInfo.innerHTML = `
-                <p><strong>Email:</strong> ${currentUser.email}</p>
-                <p><strong>Telefono:</strong> ${currentUser.phone || 'Non fornito'}</p>
-                <p><strong>Registrazione:</strong> ${formatDate(currentUser.registrationDate)}</p>
-                <p><strong>Profilo:</strong> ${currentUser.profileType}</p>
-                <p><strong>Lead Score:</strong> ${Math.round(currentUser.leadScore)}%</p>
-                <p><strong>Quadrante:</strong> ${getProfileIcon(currentUser.profileQuadrant)} ${currentUser.profileQuadrant}</p>
-            `;
-
-            // Stats
-            const completedWeeks = currentUser.completedWeeks ? currentUser.completedWeeks.length : 0;
-            const totalTime = currentUser.totalSessions * 45; // Stima
-
-            const userStats = document.getElementById('userStats');
-            userStats.innerHTML = `
-                <p><strong>Settimane Completate:</strong> ${completedWeeks}/7</p>
-                <p><strong>Settimana Corrente:</strong> ${currentUser.currentWeek}</p>
-                <p><strong>Sessioni Totali:</strong> ${currentUser.totalSessions}</p>
-                <p><strong>Tempo Stimato:</strong> ${totalTime} minuti</p>
-                <p><strong>Ultima Attività:</strong> ${formatDate(currentUser.lastActivity)}</p>
-                <p><strong>Coaching Iniziato:</strong> ${currentUser.hasStartedCoaching ? '✅ Sì' : '❌ No'}</p>
-            `;
-
-            // Week progress
-            const weekProgress = document.getElementById('weekProgress');
-            weekProgress.innerHTML = '';
-            
-            for (let week = 1; week <= 7; week++) {
-                const isCompleted = currentUser.completedWeeks && currentUser.completedWeeks.includes(week);
-                const isCurrent = currentUser.currentWeek == week;
-                const weekItem = document.createElement('div');
-                
-                let status = 'not-started';
-                if (isCompleted) status = 'completed';
-                else if (isCurrent) status = 'partial';
-                
-                weekItem.className = `week-item ${status}`;
-                weekItem.innerHTML = `
-                    <div><strong>W${week}</strong></div>
-                    <div style="font-size: 0.7rem; margin-top: 0.25rem;">
-                        ${isCompleted ? '✅' : isCurrent ? '⏳' : '⭕'}
-                    </div>
-                `;
-                weekProgress.appendChild(weekItem);
-            }
-
-            // Profile info con dati quiz
-            const userProfile = document.getElementById('userProfile');
-            userProfile.innerHTML = `
-                <p><strong>Esperienza:</strong> ${currentUser.experience || 'Non specificata'}</p>
-                <p><strong>Livello Attività:</strong> ${currentUser.activityLevel || 'Non specificato'}</p>
-                <p><strong>Motivazione:</strong> ${currentUser.readinessLevel || 'N/A'}/5</p>
-                <p><strong>Impegno:</strong> ${currentUser.commitmentLevel || 'N/A'}/5</p>
-                <p><strong>Età:</strong> ${currentUser.age || 'Non fornita'}</p>
-                <p><strong>Città:</strong> ${currentUser.city || 'Non fornita'}</p>
-            `;
-
-            // Load notes
-            document.getElementById('userNotes').value = currentUser.notes || '';
-
-            // Show modal
-            document.getElementById('userModal').classList.add('active');
-        };
-
-        // 💾 SALVA NOTE UTENTE
-        window.saveUserNotes = function() {
-            if (!currentUser) return;
-
-            const notes = document.getElementById('userNotes').value;
-            currentUser.notes = notes;
-
-            console.log('💾 Note salvate per', currentUser.name);
-            
-            const btn = document.querySelector('.save-notes-btn');
-            const originalText = btn.textContent;
-            btn.textContent = '✅ Salvato!';
-            btn.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
-            
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = 'linear-gradient(135deg, #ea580c 0%, #f97316 100%)';
-            }, 2000);
-        };
-
-        // 📊 EXPORT USERS CSV
-        window.exportUsers = function() {
-            const csvContent = generateCSV(filteredUsers);
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            
-            if (link.download !== undefined) {
-                const url = URL.createObjectURL(blob);
-                link.setAttribute('href', url);
-                link.setAttribute('download', `utenti_coaching_${new Date().toISOString().split('T')[0]}.csv`);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        };
-
-        // 📄 GENERA CSV
-        function generateCSV(users) {
-            const headers = [
-                'Nome', 'Email', 'Telefono', 'Registrazione', 'Ultima Attività',
-                'Lead Score', 'Quadrante', 'Livello Coscienza', 'Settimane Completate', 
-                'Coaching Iniziato', 'Note'
-            ];
-
-            const rows = users.map(user => {
-                const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
-                
-                return [
-                    user.name,
-                    user.email,
-                    user.phone || '',
-                    formatDate(user.registrationDate),
-                    formatDate(user.lastActivity),
-                    Math.round(user.leadScore),
-                    user.profileQuadrant,
-                    user.consciousnessLevel,
-                    completedWeeks,
-                    user.hasStartedCoaching ? 'Sì' : 'No',
-                    user.notes || ''
-                ];
-            });
-
-            return [headers, ...rows]
-                .map(row => row.map(cell => `"${cell}"`).join(','))
-                .join('\n');
-        }
-
-        // 📱 CONTATTO WHATSAPP
-        window.openWhatsApp = function(phone) {
-            const cleanPhone = phone.replace(/\D/g, '');
-            const message = encodeURIComponent('Ciao! Ti contatto per il percorso LifestyleFitnessCoach.');
-            window.open(`https://wa.me/${cleanPhone}?text=${message}`, '_blank');
-        };
-
-        // 🔄 APPLICA FILTRI
-        window.applyFilters = function() {
-            const roleFilter = document.getElementById('roleFilter').value;
-            const progressFilter = document.getElementById('progressFilter').value;
-            const activityFilter = document.getElementById('activityFilter').value;
-            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
-
-            filteredUsers = allUsers.filter(user => {
-                // Progress filter
-                if (progressFilter) {
-                    const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
-                    
-                    if (progressFilter === 'not-started' && (completedWeeks > 0 || user.hasStartedCoaching)) return false;
-                    if (progressFilter === 'in-progress' && (!user.hasStartedCoaching || completedWeeks === 7)) return false;
-                    if (progressFilter === 'completed' && completedWeeks < 7) return false;
-                }
-
-                // Activity filter
-                if (activityFilter) {
-                    const daysSinceActivity = daysBetween(new Date(user.lastActivity), new Date());
-                    
-                    if (activityFilter === 'today' && daysSinceActivity !== 0) return false;
-                    if (activityFilter === 'week' && daysSinceActivity > 7) return false;
-                    if (activityFilter === 'month' && daysSinceActivity > 30) return false;
-                    if (activityFilter === 'inactive' && daysSinceActivity <= 30) return false;
-                }
-
-                // Search filter  
-                if (searchFilter && 
-                    !user.name.toLowerCase().includes(searchFilter) && 
-                    !user.email.toLowerCase().includes(searchFilter)) {
-                    return false;
-                }
-
-                return true;
-            });
-
-            renderUsersTable();
-        };
-
-        // 🔄 REFRESH DASHBOARD
-        window.refreshDashboard = function() {
-            console.log('🔄 Refresh dashboard...');
-            
-            const btn = document.querySelector('.refresh-btn');
-            btn.textContent = '🔄 Aggiornando...';
-            btn.disabled = true;
-            
-            setTimeout(() => {
-                loadDashboardData();
-                btn.textContent = '🔄 Aggiorna';
-                btn.disabled = false;
-            }, 1000);
-        };
-
-        // 🔒 CHIUDI MODAL
-        window.closeUserModal = function() {
-            document.getElementById('userModal').classList.remove('active');
-            currentUser = null;
-        };
-
-        // 🛠️ UTILITY FUNCTIONS
-        function getProfileIcon(quadrant) {
-            const icons = {
-                'Q1': '🏆', // Competente e Motivato
-                'Q2': '💪', // Forte ma Inesperto  
-                'Q3': '🎯', // Esperto ma Demotivato
-                'Q4': '🌱'  // Principiante Totale
-            };
-            return icons[quadrant] || '👤';
-        }
-
-        function getProfileName(quadrant) {
-            const names = {
-                'Q1': 'Atleta in Crescita',
-                'Q2': 'Esploratore Motivato', 
-                'Q3': 'Esperto Demotivato',
-                'Q4': 'Guerriero Determinato'
-            };
-            return names[quadrant] || 'Profilo Indefinito';
-        }
-
-        function formatDate(date) {
-            return new Date(date).toLocaleDateString('it-IT', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric'
-            });
-        }
-
-        function daysBetween(date1, date2) {
-            const oneDay = 24 * 60 * 60 * 1000;
-            return Math.round(Math.abs((date1 - date2) / oneDay));
-        }
-
-        function updateConnectionStatus(message, color) {
-            const statusEl = document.querySelector('.connection-status');
-            if (statusEl) {
-                statusEl.textContent = message;
-                statusEl.style.background = color;
-            }
-        }
-
-        function updateLastUpdateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('it-IT', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            
-            const timeElement = document.getElementById('lastUpdate');
-            if (timeElement) {
-                timeElement.textContent = timeString;
-            }
-        }
-
-        // 🚀 INIZIALIZZAZIONE
-        window.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Admin Dashboard Fusion inizializzata');
-            loadDashboardData();
-            
-            // Auto-refresh ogni 60 secondi
-            setInterval(() => {
-                if (document.hidden) return; // Solo se tab attiva
-                loadDashboardData();
-            }, 60000);
-            
-            // Aggiorna ora ogni 5 secondi
-            setInterval(updateLastUpdateTime, 5000);
-        });
-
-        // Esponi funzioni globalmente
-        window.loadDashboardData = loadDashboardData;
-    </script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
-            color: #f8fafc;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .connection-status {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 8px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.8rem;
-            z-index: 1000;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            margin-top: 40px;
-        }
-
-        /* HEADER */
-        .dashboard-header {
-            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(234, 88, 12, 0.3);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-title {
-            font-size: 2rem;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 0.5rem;
-        }
-
-        .header-subtitle {
-            color: rgba(255,255,255,0.9);
-            font-size: 1rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .admin-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 600;
-            backdrop-filter: blur(10px);
-        }
-
-        .refresh-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
-        /* KPI CARDS */  
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .kpi-card {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border: 1px solid #475569;
-            transition: all 0.3s ease;
-        }
-
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-        }
-
-        .kpi-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .kpi-title {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        .kpi-icon {
-            font-size: 1.5rem;
-            opacity: 0.8;
-        }
-
-        .kpi-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ea580c;
-            margin-bottom: 0.5rem;
-        }
-
-        .kpi-change {
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            color: #22c55e;
-        }
-
-        /* FILTERS */
-        .filters-section {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #475569;
-        }
-
-        .filters-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #ea580c;
-        }
-
-        .filters-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .filter-label {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .filter-select, .filter-input {
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #f8fafc;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        .filter-select:focus, .filter-input:focus {
-            outline: none;
-            border-color: #ea580c;
-        }
-
-        /* USERS TABLE */
-        .users-section {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid #475569;
-        }
-
-        .users-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .users-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #ea580c;
-        }
-
-        .users-count {
-            color: #94a3b8;
-            font-size: 0.9rem;
-        }
-
-        .export-btn {
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-        }
-
-        .users-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #0f172a;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .users-table th {
-            background: #1e293b;
-            padding: 1rem;
-            text-align: left;
-            font-weight: 600;
-            color: #ea580c;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #475569;
-        }
-
-        .users-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #334155;
-            font-size: 0.9rem;
-        }
-
-        .users-table tbody tr:hover {
-            background: #1e293b;
-            cursor: pointer;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ea580c, #f97316);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-weight: 600;
-            color: #f8fafc;
-        }
-
-        .user-email {
-            color: #94a3b8;
-            font-size: 0.8rem;
-        }
-
-        .role-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .role-user {
-            background: rgba(59, 130, 246, 0.2);
-            color: #93c5fd;
-        }
-
-        .progress-bar {
-            width: 100px;
-            height: 8px;
-            background: #334155;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ea580c, #f97316);
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 0.25rem;
-        }
-
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: rgba(34, 197, 94, 0.2);
-            color: #86efac;
-        }
-
-        .status-partial {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fde047;
-        }
-
-        .status-inactive {
-            background: rgba(107, 114, 128, 0.2);
-            color: #d1d5db;
-        }
-
-        .status-not-started {
-            background: rgba(107, 114, 128, 0.2);
-            color: #d1d5db;
-        }
-
-        .status-completed {
-            background: rgba(34, 197, 94, 0.2);
-            color: #86efac;
-        }
-
-        .last-activity {
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-
-        .action-btn {
-            background: #334155;
-            border: 1px solid #475569;
-            color: #f8fafc;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-
-        .action-btn:hover {
-            background: #475569;
-            border-color: #ea580c;
-        }
-
-        /* USER DETAIL MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 800px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid #475569;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #475569;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #ea580c;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .close-btn:hover {
-            background: #475569;
-            color: #f8fafc;
-        }
-
-        .user-detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .detail-section {
-            background: #0f172a;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #334155;
-        }
-
-        .detail-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #ea580c;
-            margin-bottom: 1rem;
-        }
-
-        .week-progress {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .week-item {
-            text-align: center;
-            padding: 0.75rem 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #334155;
-            font-size: 0.8rem;
-        }
-
-        .week-item.completed {
-            background: rgba(34, 197, 94, 0.2);
-            border-color: #22c55e;
-            color: #86efac;
-        }
-
-        .week-item.partial {
-            background: rgba(251, 191, 36, 0.2);
-            border-color: #fbbf24;
-            color: #fde047;
-        }
-
-        .week-item.not-started {
-            background: rgba(107, 114, 128, 0.2);
-            border-color: #6b7280;
-            color: #d1d5db;
-        }
-
-        .notes-section {
-            grid-column: 1 / -1;
-        }
-
-        .notes-textarea {
-            width: 100%;
-            min-height: 100px;
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #f8fafc;
-            padding: 1rem;
-            border-radius: 6px;
-            resize: vertical;
-            font-family: inherit;
-        }
-
-        .save-notes-btn {
-            background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            margin-top: 1rem;
-        }
-
-        .no-data {
-            text-align: center;
-            padding: 3rem;
-            color: #94a3b8;
-        }
-
-        .no-data-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 0 1rem;
-            }
-
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .users-table {
-                font-size: 0.8rem;
-            }
-
-            .users-table th,
-            .users-table td {
-                padding: 0.75rem 0.5rem;
-            }
-
-            .user-detail-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 1.5rem;
-            }
-        }
-    </style>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 </head>
 <body>
-    <div class="connection-status">🔄 Inizializzazione Dashboard...</div>
+    <!-- Status Connection -->
+    <div class="connection-status" id="connectionStatus">🔄 Inizializzazione Dashboard...</div>
 
     <div class="dashboard-container">
         <!-- HEADER -->
-        <div class="dashboard-header">
+        <header class="dashboard-header">
             <div class="header-content">
-                <div>
+                <div class="header-info">
                     <h1 class="header-title">👑 Admin Dashboard Fusion</h1>
                     <p class="header-subtitle">Firebase Real Data + Design Moderno - Andrea Padoan Coach</p>
                 </div>
                 <div class="header-actions">
                     <div class="admin-badge">🎯 Coach Admin</div>
-                    <button class="refresh-btn" onclick="refreshDashboard()">🔄 Aggiorna</button>
+                    <button class="refresh-btn" id="refreshBtn">🔄 Aggiorna</button>
                 </div>
             </div>
-        </div>
+        </header>
 
         <!-- KPI CARDS -->
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Utenti Totali</span>
-                    <span class="kpi-icon">👥</span>
+        <section class="kpi-section">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Utenti Totali</span>
+                        <span class="kpi-icon">👥</span>
+                    </div>
+                    <div class="kpi-value" id="totalUsers">0</div>
+                    <div class="kpi-change">
+                        <span>↗️</span>
+                        <span id="usersChange">+0% questa settimana</span>
+                    </div>
                 </div>
-                <div class="kpi-value" id="totalUsers">0</div>
-                <div class="kpi-change">
-                    <span>↗️</span>
-                    <span id="usersChange">+0% questa settimana</span>
-                </div>
-            </div>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Utenti Attivi</span>
-                    <span class="kpi-icon">⚡</span>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Lead Qualificati</span>
+                        <span class="kpi-icon">🌟</span>
+                    </div>
+                    <div class="kpi-value" id="qualifiedLeads">0</div>
+                    <div class="kpi-change">
+                        <span>📈</span>
+                        <span>Score ≥70%</span>
+                    </div>
                 </div>
-                <div class="kpi-value" id="activeUsers">0</div>
-                <div class="kpi-change">
-                    <span>📈</span>
-                    <span id="activeChange">Ultimi 7 giorni</span>
-                </div>
-            </div>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Conversione Quiz</span>
-                    <span class="kpi-icon">🎯</span>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Coaching Attivi</span>
+                        <span class="kpi-icon">🚀</span>
+                    </div>
+                    <div class="kpi-value" id="activeCoaching">0</div>
+                    <div class="kpi-change">
+                        <span>⚡</span>
+                        <span id="activeChange">In corso</span>
+                    </div>
                 </div>
-                <div class="kpi-value" id="conversionRate">0%</div>
-                <div class="kpi-change">
-                    <span>📊</span>
-                    <span>Quiz → Week 1</span>
-                </div>
-            </div>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Completamento</span>
-                    <span class="kpi-icon">✅</span>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Conversione</span>
+                        <span class="kpi-icon">🎯</span>
+                    </div>
+                    <div class="kpi-value" id="conversionRate">0%</div>
+                    <div class="kpi-change">
+                        <span>📊</span>
+                        <span>Quiz → Coaching</span>
+                    </div>
                 </div>
-                <div class="kpi-value" id="completionRate">0%</div>
-                <div class="kpi-change">
-                    <span>🏆</span>
-                    <span>Media Week 1-7</span>
-                </div>
-            </div>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Revenue Potenziale</span>
-                    <span class="kpi-icon">💰</span>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Sessioni Oggi</span>
+                        <span class="kpi-icon">📅</span>
+                    </div>
+                    <div class="kpi-value" id="todaySessions">0</div>
+                    <div class="kpi-change">
+                        <span>🔥</span>
+                        <span>Attività oggi</span>
+                    </div>
                 </div>
-                <div class="kpi-value" id="potentialRevenue">€0</div>
-                <div class="kpi-change">
-                    <span>💎</span>
-                    <span>Freemium model</span>
-                </div>
-            </div>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Sessioni Oggi</span>
-                    <span class="kpi-icon">📅</span>
-                </div>
-                <div class="kpi-value" id="todaySessions">0</div>
-                <div class="kpi-change">
-                    <span>🔥</span>
-                    <span>Attività oggi</span>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">AI Conversazioni</span>
+                        <span class="kpi-icon">🤖</span>
+                    </div>
+                    <div class="kpi-value" id="aiConversations">0</div>
+                    <div class="kpi-change">
+                        <span>💬</span>
+                        <span>Sistema AI</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- FILTERS -->
-        <div class="filters-section">
-            <h3 class="filters-title">🔍 Filtri e Ricerca</h3>
+        <section class="filters-section">
+            <div class="filters-header">
+                <h3 class="filters-title">🔍 Filtri e Ricerca</h3>
+                <div class="selection-counter">
+                    <span id="selectedCount">0 selezionati</span>
+                </div>
+            </div>
             <div class="filters-grid">
                 <div class="filter-group">
                     <label class="filter-label">Stato Progresso</label>
-                    <select class="filter-select" id="progressFilter" onchange="applyFilters()">
+                    <select class="filter-select" id="progressFilter">
                         <option value="">Tutti gli stati</option>
                         <option value="not-started">Non iniziato</option>
                         <option value="in-progress">In corso</option>
@@ -1357,7 +129,7 @@
 
                 <div class="filter-group">
                     <label class="filter-label">Ultima Attività</label>
-                    <select class="filter-select" id="activityFilter" onchange="applyFilters()">
+                    <select class="filter-select" id="activityFilter">
                         <option value="">Tutte le date</option>
                         <option value="today">Oggi</option>
                         <option value="week">Questa settimana</option>
@@ -1367,38 +139,58 @@
                 </div>
 
                 <div class="filter-group">
-                    <label class="filter-label">Cerca per Nome/Email</label>
-                    <input type="text" class="filter-input" id="searchFilter" placeholder="Cerca utente..." oninput="applyFilters()">
+                    <label class="filter-label">Lead Score</label>
+                    <select class="filter-select" id="scoreFilter">
+                        <option value="">Tutti i punteggi</option>
+                        <option value="high">Alto (≥70%)</option>
+                        <option value="medium">Medio (40-69%)</option>
+                        <option value="low">Basso (<40%)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Cerca Utente</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Nome o email...">
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- USERS TABLE -->
-        <div class="users-section">
+        <section class="users-section">
             <div class="users-header">
-                <div>
+                <div class="users-info">
                     <h3 class="users-title">👥 Gestione Utenti (Dati Reali Firebase)</h3>
                     <p class="users-count">Mostrando <span id="visibleUsers">0</span> di <span id="totalUsersCount">0</span> utenti</p>
                 </div>
-                <button class="export-btn" onclick="exportUsers()">📊 Esporta CSV</button>
+                <div class="users-actions">
+                    <button class="export-btn" id="exportBtn">📊 Esporta CSV</button>
+                    <button class="bulk-action-btn" id="bulkActionBtn" style="display: none;">⚡ Azioni Multiple</button>
+                </div>
             </div>
 
-            <div style="overflow-x: auto;">
-                <table class="users-table">
+            <div class="table-container">
+                <table class="users-table" id="usersTable">
                     <thead>
                         <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" class="select-all-checkbox">
+                            </th>
                             <th>Utente</th>
-                            <th>Ruolo</th>
+                            <th>Profilo</th>
+                            <th>Lead Score</th>
                             <th>Progresso</th>
-                            <th>Stato Sessioni</th>
+                            <th>Stato</th>
                             <th>Ultima Attività</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: #94a3b8;">
-                                🔄 Caricamento dati da Firebase...
+                            <td colspan="8" class="loading-row">
+                                <div class="loading-content">
+                                    <div class="loading-spinner"></div>
+                                    <span>🔄 Caricamento dati da Firebase...</span>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -1409,35 +201,87 @@
                 <div class="no-data-icon">👥</div>
                 <h3>Nessun utente trovato</h3>
                 <p>Modifica i filtri o attendi nuove registrazioni</p>
+                <button class="reload-btn" id="reloadBtn">🔄 Ricarica Dati</button>
             </div>
-        </div>
+        </section>
 
-        <!-- STATUS SISTEMA -->
-        <div class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Ultimo Update</span>
-                    <span class="kpi-icon">🔄</span>
-                </div>
-                <div class="kpi-value" style="font-size: 1.5rem;" id="lastUpdate">--:--:--</div>
-                <div class="kpi-change">
-                    <span>⏰</span>
-                    <span>Aggiornamento automatico</span>
+        <!-- WEEK ANALYTICS -->
+        <section class="analytics-section">
+            <h3 class="section-title">📊 Analytics Settimane Coaching</h3>
+            <div class="week-analytics-grid" id="weekAnalytics">
+                <div class="loading-analytics">
+                    <div class="loading-spinner"></div>
+                    <span>📊 Caricamento analytics...</span>
                 </div>
             </div>
+        </section>
 
-            <div class="kpi-card">
-                <div class="kpi-header">
-                    <span class="kpi-title">Firebase Status</span>
-                    <span class="kpi-icon">🔥</span>
+        <!-- AI MONITORING -->
+        <section class="ai-section">
+            <h3 class="section-title">🤖 Monitoring Sistema AI</h3>
+            <div class="ai-metrics-grid">
+                <div class="ai-metric-card">
+                    <h4>💬 Conversazioni Totali</h4>
+                    <p id="totalConversations">0</p>
                 </div>
-                <div class="kpi-value" style="font-size: 1.2rem; color: #22c55e;">Connesso</div>
-                <div class="kpi-change">
-                    <span>✅</span>
-                    <span>Dati reali caricati</span>
+                <div class="ai-metric-card">
+                    <h4>📅 Conversazioni Oggi</h4>
+                    <p id="todayConversations">0</p>
+                </div>
+                <div class="ai-metric-card">
+                    <h4>📝 Homework Generati</h4>
+                    <p id="homeworkGenerated">0</p>
+                </div>
+                <div class="ai-metric-card">
+                    <h4>💬 Media Messaggi</h4>
+                    <p id="avgMessages">0</p>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- RECENT SESSIONS -->
+        <section class="sessions-section">
+            <h3 class="section-title">📋 Sessioni Recenti</h3>
+            <div class="sessions-list" id="sessionsList">
+                <div class="loading-sessions">
+                    <div class="loading-spinner"></div>
+                    <span>📋 Caricamento sessioni...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SYSTEM STATUS -->
+        <section class="status-section">
+            <h3 class="section-title">⚡ Status Sistema</h3>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Ultimo Update</span>
+                        <span class="status-icon">🔄</span>
+                    </div>
+                    <div class="status-value" id="lastUpdate">--:--:--</div>
+                    <div class="status-subtitle">Aggiornamento automatico</div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Firebase</span>
+                        <span class="status-icon">🔥</span>
+                    </div>
+                    <div class="status-value connected">Connesso</div>
+                    <div class="status-subtitle">Dati reali caricati</div>
+                </div>
+
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-title">Sistema AI</span>
+                        <span class="status-icon">🤖</span>
+                    </div>
+                    <div class="status-value operational">Operativo</div>
+                    <div class="status-subtitle">Claude AI attivo</div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- USER DETAIL MODAL -->
@@ -1445,63 +289,74 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title" id="modalUserName">Dettaglio Utente</h2>
-                <button class="close-btn" onclick="closeUserModal()">&times;</button>
+                <button class="modal-close" id="modalClose">&times;</button>
             </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Content populated by JavaScript -->
+            </div>
+        </div>
+    </div>
 
-            <div class="user-detail-grid">
-                <div class="detail-section">
-                    <h4 class="detail-title">📊 Informazioni Generali</h4>
-                    <div id="userGeneralInfo">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <h4 class="detail-title">📈 Statistiche Attività</h4>
-                    <div id="userStats">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <h4 class="detail-title">🎯 Progresso Settimane</h4>
-                    <div class="week-progress" id="weekProgress">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="detail-section">
-                    <h4 class="detail-title">📝 Profilo Quiz</h4>
-                    <div id="userProfile">
-                        <!-- Populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div class="detail-section notes-section">
-                    <h4 class="detail-title">📝 Note Coaching</h4>
-                    <textarea class="notes-textarea" id="userNotes" placeholder="Aggiungi note private su questo utente..."></textarea>
-                    <button class="save-notes-btn" onclick="saveUserNotes()">💾 Salva Note</button>
+    <!-- BULK ACTIONS MODAL -->
+    <div class="modal-overlay" id="bulkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">⚡ Azioni Multiple</h2>
+                <button class="modal-close" id="bulkModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Azione su <span id="bulkCount">0</span> utenti selezionati:</p>
+                <div class="bulk-actions">
+                    <button class="action-btn primary" id="bulkExport">📊 Esporta Selezionati</button>
+                    <button class="action-btn secondary" id="bulkMarkCoaching">🚀 Segna Coaching Iniziato</button>
+                    <button class="action-btn whatsapp" id="bulkWhatsApp">📱 Lista WhatsApp</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript Modulare -->
+    <script type="module" src="js/firebase-admin.js"></script>
+    <script type="module" src="js/dashboard-core.js"></script>  
+    <script type="module" src="js/user-management.js"></script>
+
     <script>
-        // Close modal on escape key
+        // Global initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Admin Dashboard Modulare inizializzata');
+            
+            // Update time every 5 seconds
+            setInterval(() => {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('it-IT', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                const timeElement = document.getElementById('lastUpdate');
+                if (timeElement) {
+                    timeElement.textContent = timeString;
+                }
+            }, 5000);
+        });
+
+        // Close modals on escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeUserModal();
+                const modals = document.querySelectorAll('.modal-overlay');
+                modals.forEach(modal => modal.classList.remove('active'));
             }
         });
 
-        // Close modal on backdrop click
-        document.getElementById('userModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeUserModal();
+        // Close modals on backdrop click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
             }
         });
 
-        console.log('🎯 Admin Dashboard Fusion caricata - Firebase + Design Moderno');
+        console.log('🎯 Admin Dashboard HTML caricato - Files modulari in arrivo...');
     </script>
 </body>
 </html>
