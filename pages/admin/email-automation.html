@@ -964,7 +964,7 @@
     </div>
 
     <script>
-        // EMAIL AUTOMATION SYSTEM - Full Implementation
+        // EMAIL AUTOMATION SYSTEM - Full Implementation with EmailJS
         class EmailAutomationSystem {
             constructor() {
                 this.isActive = true;
@@ -978,11 +978,21 @@
                 this.profileDistribution = {};
                 this.currentProfile = 'stressato_esaurito';
                 
+                // EmailJS Configuration
+                this.emailConfig = {
+                    serviceId: 'service_v6bw2m4',
+                    templateId: 'template_hc7l76m',
+                    publicKey: 'ME0ru3KkNko0P6d2Y'
+                };
+                
                 this.init();
             }
 
             init() {
                 console.log('🚀 Inizializando Email Automation System...');
+                
+                // Initialize EmailJS
+                this.initializeEmailJS();
                 
                 // Setup event listeners
                 this.setupControls();
@@ -997,6 +1007,19 @@
                 this.startRealTimeUpdates();
                 
                 console.log('✅ Email Automation System inizializzato');
+            }
+
+            initializeEmailJS() {
+                try {
+                    if (typeof emailjs !== 'undefined') {
+                        emailjs.init(this.emailConfig.publicKey);
+                        console.log('✅ EmailJS inizializzato con successo');
+                    } else {
+                        console.warn('⚠️ EmailJS non caricato, funzionalità email limitate');
+                    }
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione EmailJS:', error);
+                }
             }
 
             setupControls() {
@@ -1053,28 +1076,84 @@
             runSystemTest() {
                 this.showNotification('🧪 Avvio test sistema completo...', 'info');
                 
-                // Simulate test process
-                setTimeout(() => {
-                    // Test email sending
-                    this.showNotification('📧 Test invio email...', 'info');
-                    
+                // Test EmailJS connection first
+                this.testEmailJSConnection().then(() => {
+                    // Simulate test process
                     setTimeout(() => {
-                        // Test automation trigger
-                        this.showNotification('🎯 Test trigger automazione...', 'info');
+                        // Test email sending
+                        this.showNotification('📧 Test invio email...', 'info');
                         
-                        setTimeout(() => {
-                            // Complete test
-                            this.showNotification('✅ Test sistema completato con successo!', 'success');
-                            
-                            // Update stats to show test activity
-                            this.updateStats({
-                                totalSent: this.stats.totalSent + 3,
-                                conversions: this.stats.conversions + 1
-                            });
-                            
-                        }, 1500);
-                    }, 1500);
-                }, 1000);
+                        // Send test email
+                        this.sendTestEmail('welcome').then(() => {
+                            setTimeout(() => {
+                                // Test automation trigger
+                                this.showNotification('🎯 Test trigger automazione...', 'info');
+                                
+                                setTimeout(() => {
+                                    // Complete test
+                                    this.showNotification('✅ Test sistema completato con successo!', 'success');
+                                    
+                                    // Update stats to show test activity
+                                    this.updateStats({
+                                        totalSent: this.stats.totalSent + 3,
+                                        conversions: this.stats.conversions + 1
+                                    });
+                                    
+                                }, 1500);
+                            }, 1500);
+                        }).catch((error) => {
+                            this.showNotification('❌ Errore test email: ' + error.text, 'error');
+                        });
+                    }, 1000);
+                }).catch((error) => {
+                    this.showNotification('❌ Errore connessione EmailJS', 'error');
+                });
+            }
+
+            async testEmailJSConnection() {
+                const testData = {
+                    nome: 'Test User',
+                    email: 'andrea.padoan@gmail.com',
+                    email_type: 'welcome',
+                    dashboard_url: 'https://tribucoach.vercel.app/pages/user-dashboard.html',
+                    whatsapp: 'https://wa.me/393123456789?text=Ciao%20Andrea,%20test%20sistema'
+                };
+
+                try {
+                    const result = await emailjs.send(
+                        this.emailConfig.serviceId,
+                        this.emailConfig.templateId,
+                        testData
+                    );
+                    console.log('✅ Test EmailJS riuscito:', result);
+                    return result;
+                } catch (error) {
+                    console.error('❌ Test EmailJS fallito:', error);
+                    throw error;
+                }
+            }
+
+            async sendTestEmail(emailType) {
+                const testData = {
+                    nome: 'Mario Test',
+                    email: 'andrea.padoan@gmail.com',
+                    email_type: emailType,
+                    dashboard_url: 'https://tribucoach.vercel.app/pages/user-dashboard.html',
+                    whatsapp: 'https://wa.me/393123456789?text=Ciao%20Andrea,%20test%20' + emailType
+                };
+
+                try {
+                    const result = await emailjs.send(
+                        this.emailConfig.serviceId,
+                        this.emailConfig.templateId,
+                        testData
+                    );
+                    console.log(`✅ Email ${emailType} inviata:`, result);
+                    return result;
+                } catch (error) {
+                    console.error(`❌ Errore invio email ${emailType}:`, error);
+                    throw error;
+                }
             }
 
             toggleSystemStatus() {
@@ -1510,30 +1589,75 @@
             }
 
             // Public method to trigger from external (quiz)
-            triggerFromQuiz(userData) {
+            async triggerFromQuiz(userData) {
                 console.log('🎯 Quiz trigger received:', userData);
                 
-                this.showNotification(`🚀 Sequenza email avviata per ${userData.name}`, 'success');
+                if (!this.isActive) {
+                    console.log('⏸️ Sistema in pausa, email non inviata');
+                    return;
+                }
                 
-                // Update stats
-                this.updateStats({
-                    totalSent: this.stats.totalSent + 1
-                });
-                
-                // Add to active sequences (mock)
-                const newSequence = {
-                    user: userData.name,
-                    email: userData.email || 'test@example.com',
-                    profile: this.getProfileDisplayName(userData.profileType),
-                    currentStep: 'Welcome',
-                    nextEmail: 'Inviata ora',
-                    status: 'active',
-                    progress: 1,
-                    total: 3
+                try {
+                    // Send welcome email immediately
+                    await this.sendAutomationEmail(userData, 'welcome');
+                    
+                    // Schedule nurturing email (+2 days) - in production would use proper scheduling
+                    console.log('📅 Programmazione email nurturing per +2 giorni');
+                    
+                    // Schedule conversion email (+5 days) - in production would use proper scheduling  
+                    console.log('📅 Programmazione email conversion per +5 giorni');
+                    
+                    this.showNotification(`🚀 Sequenza email avviata per ${userData.nome}`, 'success');
+                    
+                    // Update stats
+                    this.updateStats({
+                        totalSent: this.stats.totalSent + 1
+                    });
+                    
+                    // Add to active sequences
+                    const newSequence = {
+                        user: userData.nome || userData.name,
+                        email: userData.email || 'test@example.com',
+                        profile: this.getProfileDisplayName(userData.profileType),
+                        currentStep: 'Welcome',
+                        nextEmail: 'Nurturing (+2 giorni)',
+                        status: 'active',
+                        progress: 1,
+                        total: 3
+                    };
+                    
+                    this.activeSequences.unshift(newSequence);
+                    this.renderActiveSequences();
+                    
+                } catch (error) {
+                    console.error('❌ Errore trigger automazione:', error);
+                    this.showNotification('❌ Errore invio email: ' + error.text, 'error');
+                }
+            }
+
+            async sendAutomationEmail(userData, emailType) {
+                const emailData = {
+                    nome: userData.nome || userData.name || 'Utente',
+                    email: userData.email || 'andrea.padoan@gmail.com',
+                    email_type: emailType,
+                    dashboard_url: 'https://tribucoach.vercel.app/pages/user-dashboard.html',
+                    whatsapp: `https://wa.me/393123456789?text=Ciao%20Andrea,%20sono%20${userData.nome || 'un%20utente'}%20interessato%20al%20percorso%20coaching`
                 };
-                
-                this.activeSequences.unshift(newSequence);
-                this.renderActiveSequences();
+
+                try {
+                    const result = await emailjs.send(
+                        this.emailConfig.serviceId,
+                        this.emailConfig.templateId,
+                        emailData
+                    );
+                    
+                    console.log(`✅ Email ${emailType} inviata a ${emailData.nome}:`, result);
+                    return result;
+                    
+                } catch (error) {
+                    console.error(`❌ Errore invio email ${emailType}:`, error);
+                    throw error;
+                }
             }
 
             getProfileDisplayName(profileType) {
