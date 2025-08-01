@@ -315,6 +315,442 @@
         </div>
     </div>
 
+    <!-- SESSION DETAILS MODAL - Session Details System -->
+    <script>
+        // ==========================================================================
+        // SESSION DETAILS MODAL - INTEGRATED
+        // ==========================================================================
+
+        /**
+         * Mostra dettagli completi della sessione in modal popup
+         */
+        window.showSessionDetails = function(sessionId) {
+            console.log('🔍 Apertura dettagli sessione:', sessionId);
+            
+            // Find session data
+            const session = window.firebaseAdmin.firebaseData.allSessions.find(s => s.id === sessionId);
+            if (!session) {
+                console.error('❌ Sessione non trovata:', sessionId);
+                showSessionNotification('Sessione non trovata', 'error');
+                return;
+            }
+            
+            // Find user data
+            const user = window.firebaseAdmin.firebaseData.allUsers.find(u => 
+                u.id === session.userId || u.email === session.userId || u.name === session.userId
+            );
+            
+            // Create modal
+            createSessionDetailsModal(session, user);
+        };
+
+        /**
+         * Crea e mostra il modal con dettagli sessione
+         */
+        function createSessionDetailsModal(session, user) {
+            // Remove existing modal if present
+            const existingModal = document.getElementById('sessionDetailsModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Format data
+            const userName = user ? user.name : session.userId || 'Utente Sconosciuto';
+            const userEmail = user ? user.email : session.customerEmail || 'N/A';
+            const timestamp = formatSessionDateTime(session.timestamp);
+            const duration = formatSessionDuration(session.duration || 0);
+            
+            // Get session type info
+            const sessionTypeInfo = getSessionTypeInfo(session);
+            
+            // Create modal HTML
+            const modalHTML = `
+                <div class="modal-overlay active" id="sessionDetailsModal" style="z-index: 10000;">
+                    <div class="modal-content session-modal" style="max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h2>📋 Dettagli Sessione</h2>
+                            <button class="modal-close" onclick="closeSessionDetails()">×</button>
+                        </div>
+                        
+                        <div class="modal-body">
+                            <!-- Session Overview -->
+                            <div class="session-overview" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #475569;">
+                                <div class="session-header-info" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                    <div class="session-user-info" style="display: flex; align-items: center; gap: 1rem;">
+                                        <div class="user-avatar-mini" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; border: 2px solid rgba(255,255,255,0.2); ${getUserAvatarStyle(user)}">
+                                            ${getUserAvatarContent(user)}
+                                        </div>
+                                        <div class="user-details-mini">
+                                            <div class="user-name-mini" style="font-size: 1.1rem; font-weight: 600; color: white;">${userName}</div>
+                                            <div class="user-email-mini" style="font-size: 0.9rem; color: rgba(255,255,255,0.7);">${userEmail}</div>
+                                        </div>
+                                    </div>
+                                    <div class="session-time-info" style="text-align: right;">
+                                        <div class="session-date" style="font-size: 1rem; color: white; font-weight: 500;">${timestamp}</div>
+                                        <div class="session-duration" style="font-size: 0.9rem; color: #ea580c; font-weight: 600;">${duration}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Session Details Grid -->
+                            <div class="session-details-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                                <!-- Basic Info -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">📊 Informazioni Base</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Tipo:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">
+                                                ${sessionTypeInfo.icon} ${sessionTypeInfo.name}
+                                            </span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Source:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.source || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">ID Sessione:</span>
+                                            <span class="detail-value session-id" style="color: white; font-size: 0.8rem; font-family: monospace; background: rgba(255,255,255,0.1); padding: 0.25rem 0.5rem; border-radius: 4px; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${session.id}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Completata:</span>
+                                            <span class="detail-value ${session.completed ? 'completed' : 'incomplete'}" style="color: ${session.completed ? '#22c55e' : '#f59e0b'}; font-size: 0.9rem; font-weight: 600;">
+                                                ${session.completed ? '✅ Sì' : '⏳ No'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Activity Metrics -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">🎯 Metriche Attività</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Durata:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${duration}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Settimana:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.weekNumber || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">AI Responses:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.aiResponsesGenerated || session.messageCount || 0}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Messaggi:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.messageCount || session.questionsAnswered || 0}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                ${session.source === 'chatbase_conversations' ? `
+                                <!-- Chat Specific -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">💬 Dettagli Chat</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Status:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.status || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Sistema ML:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.hasMLSystem ? '✅ Attivo' : '❌ Inattivo'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Fluent System:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.hasFluentSystem ? '✅ Attivo' : '❌ Inattivo'}</span>
+                                        </div>
+                                    </div>
+                                </div>` : ''}
+
+                                ${session.source === 'analytics_events' ? `
+                                <!-- Analytics Specific -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">📈 Dettagli Analytics</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Evento:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.eventType || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Pagina:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.eventData?.page || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Tempo:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.eventData?.seconds || 0}s</span>
+                                        </div>
+                                    </div>
+                                </div>` : ''}
+
+                                <!-- Technical Info -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">🔧 Info Tecniche</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Browser:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.8rem; max-width: 150px;">${getUserAgentSummary(session.userAgent)}</span>
+                                        </div>
+                                        ${session.deviceInfo ? `
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Screen:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.deviceInfo.screen || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Timezone:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${session.deviceInfo.timezone || 'N/A'}</span>
+                                        </div>` : ''}
+                                    </div>
+                                </div>
+
+                                ${user ? `
+                                <!-- User Profile -->
+                                <div class="detail-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem;">
+                                    <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">👤 Profilo Utente</h4>
+                                    <div class="detail-items" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Profilo:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${user.profileType || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Quadrante:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${getProfileIcon(user.profileQuadrant)} ${user.profileQuadrant || 'N/A'}</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Lead Score:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${Math.round(user.leadScore || 0)}%</span>
+                                        </div>
+                                        <div class="detail-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
+                                            <span class="detail-label" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;">Quiz Score:</span>
+                                            <span class="detail-value" style="color: white; font-size: 0.9rem; font-weight: 600;">${user.quizScore || 0}%</span>
+                                        </div>
+                                    </div>
+                                </div>` : ''}
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="detail-card notes-card" style="background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                                <h4 style="color: #ea580c; font-size: 1rem; margin-bottom: 1rem; font-weight: 600;">📝 Note</h4>
+                                <div class="session-notes" style="background: rgba(255,255,255,0.05); border-radius: 6px; padding: 1rem; color: #e2e8f0; font-size: 0.9rem; line-height: 1.5; min-height: 60px;">
+                                    ${session.notes || 'Nessuna nota disponibile'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem; flex-wrap: wrap;">
+                            <button class="modal-btn btn-primary" onclick="exportSessionData('${session.id}')" style="padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #ea580c, #f97316); color: white;">
+                                📊 Esporta Dati
+                            </button>
+                            ${user ? `
+                            <button class="modal-btn btn-secondary" onclick="viewUserProfile('${user.id}')" style="padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white;">
+                                👤 Vedi Profilo Utente
+                            </button>` : ''}
+                            <button class="modal-btn btn-cancel" onclick="closeSessionDetails()" style="padding: 0.75rem 1.5rem; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; background: #374151; color: #d1d5db;">
+                                ✖️ Chiudi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to DOM
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            console.log('✅ Modal dettagli sessione creato');
+        }
+
+        /**
+         * Chiudi modal dettagli sessione
+         */
+        window.closeSessionDetails = function() {
+            const modal = document.getElementById('sessionDetailsModal');
+            if (modal) {
+                modal.remove();
+            }
+        };
+
+        /**
+         * Esporta dati sessione
+         */
+        window.exportSessionData = function(sessionId) {
+            const session = window.firebaseAdmin.firebaseData.allSessions.find(s => s.id === sessionId);
+            if (!session) return;
+            
+            const user = window.firebaseAdmin.firebaseData.allUsers.find(u => 
+                u.id === session.userId || u.email === session.userId
+            );
+            
+            const exportData = {
+                session: session,
+                user: user,
+                exportTime: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `session_${sessionId}_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            
+            showSessionNotification('Dati sessione esportati', 'success');
+        };
+
+        /**
+         * Vedi profilo utente
+         */
+        window.viewUserProfile = function(userId) {
+            closeSessionDetails();
+            // Assume this function exists in user-management.js
+            if (window.userManagement && window.userManagement.showUserDetails) {
+                window.userManagement.showUserDetails(userId);
+            } else {
+                showSessionNotification('Apertura profilo utente...', 'info');
+            }
+        };
+
+        // Helper Functions
+        function getSessionTypeInfo(session) {
+            const typeMap = {
+                'chat': { icon: '💬', name: 'Chat Conversazione' },
+                'analytics': { icon: '📈', name: 'Analytics Event' },
+                'dashboard': { icon: '📊', name: 'Dashboard Session' },
+                'coaching': { icon: '🎯', name: 'Coaching Session' }
+            };
+            
+            return typeMap[session.sessionType] || { icon: '📋', name: session.sessionType || 'Sessione' };
+        }
+
+        function getUserAvatarStyle(user) {
+            if (!user || !user.avatar) {
+                return 'background: linear-gradient(135deg, #6b7280, #4b5563); color: white;';
+            }
+            
+            return `background: linear-gradient(135deg, ${user.avatar.backgroundColor || '#6b7280'}, ${user.avatar.accentColor || '#4b5563'}); color: white;`;
+        }
+
+        function getUserAvatarContent(user) {
+            if (!user) return '👤';
+            
+            if (user.avatar && user.avatar.emoji) {
+                return user.avatar.emoji;
+            }
+            
+            const initials = user.name ? user.name.substring(0, 2).toUpperCase() : '??';
+            return initials;
+        }
+
+        function getProfileIcon(quadrant) {
+            const icons = {
+                'Q1': '🏆',
+                'Q2': '💪', 
+                'Q3': '🎯',
+                'Q4': '🌱'
+            };
+            return icons[quadrant] || '👤';
+        }
+
+        function getUserAgentSummary(userAgent) {
+            if (!userAgent) return 'N/A';
+            
+            let browser = 'Unknown';
+            let os = 'Unknown';
+            
+            if (userAgent.includes('Chrome')) browser = 'Chrome';
+            else if (userAgent.includes('Firefox')) browser = 'Firefox';
+            else if (userAgent.includes('Safari')) browser = 'Safari';
+            else if (userAgent.includes('Edge')) browser = 'Edge';
+            
+            if (userAgent.includes('Windows')) os = 'Windows';
+            else if (userAgent.includes('Mac')) os = 'Mac';
+            else if (userAgent.includes('Linux')) os = 'Linux';
+            else if (userAgent.includes('Android')) os = 'Android';
+            else if (userAgent.includes('iOS')) os = 'iOS';
+            
+            return `${browser} su ${os}`;
+        }
+
+        function formatSessionDuration(minutes) {
+            if (minutes < 60) return `${minutes}min`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        function formatSessionDateTime(date) {
+            if (!date) return 'N/A';
+            
+            return new Date(date).toLocaleString('it-IT', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showSessionNotification(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; 
+                top: 80px; 
+                right: 20px; 
+                padding: 15px 20px; 
+                border-radius: 12px; 
+                font-weight: bold; 
+                z-index: 10001; 
+                box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+                max-width: 350px;
+                animation: slideInRight 0.3s ease-out;
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                font-size: 0.9rem;
+            `;
+            
+            switch (type) {
+                case 'success':
+                    toast.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+                    toast.style.color = 'white';
+                    toast.innerHTML = `✅ ${message}`;
+                    break;
+                case 'error':
+                    toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                    toast.style.color = 'white';
+                    toast.innerHTML = `❌ ${message}`;
+                    break;
+                case 'warning':
+                    toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                    toast.style.color = 'white';
+                    toast.innerHTML = `⚠️ ${message}`;
+                    break;
+                default:
+                    toast.style.background = 'linear-gradient(135deg, #ea580c, #f97316)';
+                    toast.style.color = 'white';
+                    toast.innerHTML = `🔔 ${message}`;
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        console.log('📋 Session Details Modal integrato');
+    </script>
+
     <!-- JavaScript Modulare -->
     <script type="module">
         // Import tutti i moduli
@@ -394,6 +830,12 @@
             if (e.key === 'Escape') {
                 const modals = document.querySelectorAll('.modal-overlay');
                 modals.forEach(modal => modal.classList.remove('active'));
+                
+                // Close session details modal too
+                const sessionModal = document.getElementById('sessionDetailsModal');
+                if (sessionModal) {
+                    sessionModal.remove();
+                }
             }
         });
 
@@ -404,7 +846,7 @@
             }
         });
 
-        console.log('🎯 Admin Dashboard HTML caricato - Inizializzazione moduli...');
+        console.log('🎯 Admin Dashboard HTML completo caricato - Session Details integrato');
     </script>
 </body>
 </html>
