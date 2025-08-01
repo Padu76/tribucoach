@@ -526,12 +526,14 @@
         </div>
     </div>
 
-    <!-- JavaScript Modulare + Sistema Logout -->
+    <!-- JavaScript Modulare + Sistema Logout + SESSION DETAILS FIX -->
     <script type="module">
-        // Import tutti i moduli
+        // Import tutti i moduli + SESSION DETAILS
         import { initializeFirebaseAdmin, loadAllFirebaseData } from './js/firebase-admin.js';
         import { initializeDashboardCore } from './js/dashboard-core.js';
         import { initializeUserManagement } from './js/user-management.js';
+        // 🆕 AGGIUNGIAMO L'IMPORT DI SESSION-DETAILS
+        import './js/session-details.js';
 
         // 🔐 ADMIN SESSION MANAGEMENT
         const ADMIN_SESSION_KEY = 'admin_session_tribucoach';
@@ -689,13 +691,16 @@
                     console.log('👥 Step 3: Inizializzazione User Management...');
                     initializeUserManagement();
                     
-                    // STEP 4: Forza caricamento dati (BACKUP)
+                    // 🆕 STEP 4: Session Details è già importato come modulo
+                    console.log('📋 Step 4: Session Details module caricato');
+                    
+                    // STEP 5: Forza caricamento dati (BACKUP)
                     setTimeout(() => {
-                        console.log('🔄 Step 4: Caricamento dati automatico...');
+                        console.log('🔄 Step 5: Caricamento dati automatico...');
                         loadAllFirebaseData();
                     }, 3000);
                     
-                    console.log('✅ Tutti i moduli inizializzati!');
+                    console.log('✅ Tutti i moduli inizializzati + Session Details!');
                 }, 1000);
                 
             } catch (error) {
@@ -753,7 +758,7 @@
             }
         });
 
-        console.log('🎯 Admin Dashboard HTML caricato - Verificando sessione admin...');
+        console.log('🎯 Admin Dashboard HTML caricato con Session Details - Verificando sessione admin...');
     </script>
 </body>
 </html>
