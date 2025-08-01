@@ -989,7 +989,7 @@ export function generateUsersCSVAdvanced(users) {
 /**
  * Get style emoji for avatar analytics
  */
-function getStyleEmoji(style) {
+export function getStyleEmoji(style) {
     const styleEmojis = {
         'athletic': '🏃‍♂️',
         'active': '🚶‍♂️', 
@@ -1005,7 +1005,7 @@ function getStyleEmoji(style) {
 /**
  * Get style name for avatar analytics
  */
-function getStyleName(style) {
+export function getStyleName(style) {
     const styleNames = {
         'athletic': 'Atletico',
         'active': 'Attivo',
@@ -1221,6 +1221,8 @@ window.firebaseAdmin = {
     formatDate,
     formatDateTime,
     daysBetween,
+    getStyleEmoji,
+    getStyleName,
     firebaseData
 };
 
