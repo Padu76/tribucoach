@@ -49,6 +49,24 @@
             gap: 2rem;
         }
 
+        .ai-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+            animation: aiPulse 3s infinite;
+        }
+
+        @keyframes aiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .timer-display {
             background: rgba(255,255,255,0.2);
             padding: 0.5rem 1rem;
@@ -157,6 +175,26 @@
             font-size: 1.3rem;
             color: #ea580c;
             margin-bottom: 2rem;
+        }
+
+        .personalization-banner {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .personalization-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .personalization-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
 
         .journey-recap {
@@ -831,298 +869,6 @@
                 opacity: 0;
                 transform: translateY(10px);
             }
-            
-            // Based on previous weeks integration
-            if (previousWeeksData.week2 && previousWeeksData.week2.testResults && previousWeeksData.week2.testResults.topValues) {
-                const valueLabels = {
-                    family: 'famiglia e relazioni',
-                    career: 'successo professionale',
-                    health: 'salute e benessere',
-                    growth: 'crescita personale',
-                    freedom: 'libertà e indipendenza'
-                };
-                const topValue = valueLabels[previousWeeksData.week2.testResults.topValues[0][0]];
-                homework.push(`✅ Connetti le nuove abitudini al tuo valore: ${topValue}`);
-            }
-            
-            // Based on coaching insights
-            if (habitsInsights.includes('Preferenza per routine mattutine')) {
-                homework.push("✅ Crea una 'routine del risveglio' che includa la nuova abitudine");
-            }
-            
-            if (habitsInsights.includes('Gestione stress come priorità')) {
-                homework.push("✅ Usa le abitudini come 'ancora' nei momenti di stress");
-            }
-            
-            if (habitsInsights.includes('Componente sociale importante')) {
-                homework.push("✅ Coinvolgi famiglia/amici nel supporto alle nuove abitudini");
-            }
-            
-            // Always add
-            homework.push("✅ Celebra ogni piccola vittoria: 1% di miglioramento ogni giorno");
-            homework.push("✅ Se salti un giorno, riprendi immediatamente (regola del non-saltare-due-volte)");
-            homework.push("✅ Tieni un 'habit tracker' semplice: segna X ogni giorno completato");
-            
-            // Update homework list
-            homeworkList.innerHTML = homework.map(item => `<li>${item}</li>`).join('');
-        }
-
-        function updateUserProgress() {
-            try {
-                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
-                progress.completedWeeks = progress.completedWeeks || [];
-                
-                if (!progress.completedWeeks.includes(5)) {
-                    progress.completedWeeks.push(5);
-                    progress.currentWeek = 6;
-                    progress.lastUpdate = new Date().toISOString();
-                    
-                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
-                }
-            } catch (error) {
-                console.error('❌ Error updating progress:', error);
-            }
-        }
-
-        function downloadHabitsSystem() {
-            const systemContent = `
-                SISTEMA DI TRASFORMAZIONE ABITUDINI - SETTIMANA 5
-                
-                Andrea Padoan - Lifestyle Coach
-                
-                Caro/a ${userProfile?.name || 'Amico/a'},
-                
-                Che sistema potente abbiamo costruito insieme! 
-                Attraverso il workshop scientifico e il nostro coaching approfondito,
-                hai ora un sistema personalizzato per trasformare le tue abitudini.
-                
-                === IL TUO SISTEMA SRG (SEGNALE-ROUTINE-GRATIFICAZIONE) ===
-                
-                🔄 ABITUDINE DA ELIMINARE:
-                Segnale: "${habitsData.badHabitSignal || 'Da identificare'}"
-                Routine: "${habitsData.badHabitRoutine || 'Da eliminare'}"
-                Gratificazione: "${habitsData.badHabitReward || 'Da sostituire'}"
-                
-                ✅ ABITUDINE DA CREARE:
-                Segnale: "${habitsData.goodHabitSignal || 'Da stabilire'}"
-                Routine: "${habitsData.goodHabitRoutine || 'Da implementare'}"
-                Gratificazione: "${habitsData.goodHabitReward || 'Da gustare'}"
-                
-                === ANALISI APPROFONDITA ===
-                
-                SITUAZIONI TRIGGER:
-                "${habitsData.habitTriggers || 'Da osservare nei prossimi giorni'}"
-                
-                OSTACOLI PRINCIPALI:
-                "${habitsData.habitBarriers || 'Da superare con strategia'}"
-                
-                CONNESSIONE CON OBIETTIVI:
-                "${habitsData.habitConnection || 'Da sviluppare ulteriormente'}"
-                
-                IDENTITÀ FUTURA:
-                "${habitsData.habitIdentity || 'Versione migliore da realizzare'}"
-                
-                === INSIGHTS DAL COACHING ===
-                ${habitsInsights.length > 0 ? habitsInsights.map(insight => `• ${insight}`).join('\n                ') : '• Continua a sviluppare consapevolezza sulle abitudini'}
-                
-                === INTEGRAZIONE CON IL PERCORSO ===
-                
-                ${previousWeeksData.week1 && previousWeeksData.week1.phase1Data ? 
-                `CONNESSIONE SETTIMANA 1:
-                Il tuo obiettivo "${previousWeeksData.week1.phase1Data.dreamGoal || 'di trasformazione'}" 
-                ora ha un sistema concreto di abitudini per essere raggiunto.` : 
-                'Le abitudini supportano i tuoi obiettivi di crescita personale.'}
-                
-                ${previousWeeksData.week2 && previousWeeksData.week2.testResults ? 
-                `CONNESSIONE SETTIMANA 2:
-                Le nuove abitudini sono allineate con la tua consapevolezza e i tuoi valori profondi.` : 
-                'Le abitudini riflettono i tuoi valori autentici.'}
-                
-                === IL TUO PIANO DI IMPLEMENTAZIONE ===
-                
-                📅 SETTIMANA 1-2: STABILIRE IL SEGNALE
-                • Identifica il momento esatto per la nuova abitudine
-                • Crea promemoria ambientali (post-it, app, oggetti)
-                • Pratica la "regola dei 2 minuti": versione mini dell'abitudine
-                • Traccia quando il segnale si presenta naturalmente
-                
-                📅 SETTIMANA 3-4: CONSOLIDARE LA ROUTINE
-                • Aumenta gradualmente la durata/intensità
-                • Elimina la friction: rendi l'abitudine più facile possibile
-                • Stabilisci la gratificazione immediata
-                • Inizia habit stacking: collega a abitudini esistenti
-                
-                📅 SETTIMANA 5-8: AUTOMATIZZAZIONE
-                • L'abitudine diventa naturale e automatica
-                • Puoi aggiungere variazioni o aumentare la complessità
-                • Pianifica la prossima abitudine da aggiungere al sistema
-                • Diventa il tipo di persona che fa queste cose naturalmente
-                
-                === STRATEGIA ANTI-SABOTAGGIO ===
-                
-                🛡️ SE SALTI UN GIORNO:
-                • Non giudicarti: è normale e previsto
-                • Riprendi immediatamente il giorno dopo
-                • Analizza cosa è andato storto: segnale poco chiaro? Routine troppo complessa?
-                • Applica la regola del "non-saltare-mai-due-volte"
-                
-                🛡️ SE PERDI MOTIVAZIONE:
-                • Ricorda la tua identità futura: "${habitsData.habitIdentity || 'la migliore versione di te'}"
-                • Torna alla versione minima dell'abitudine (regola dei 2 minuti)
-                • Celebra i progressi fatti finora
-                • Riconnettiti con il "perché" profondo di questa trasformazione
-                
-                🛡️ SE GLI OSTACOLI SEMBRANO INSORMONTABILI:
-                • Rivedi: "${habitsData.habitBarriers || 'i tuoi ostacoli identificati'}"
-                • Modifica l'ambiente per rendere l'abitudine inevitabile
-                • Chiedi supporto sociale: famiglia, amici, comunità
-                • Ricorda: non serve essere perfetti, serve essere consistenti
-                
-                === HABIT TRACKER SEMPLICE ===
-                
-                Settimana: ___________
-                
-                🗓️ ABITUDINE: ${habitsData.goodHabitRoutine || '[La tua abitudine]'}
-                
-                Lun: ⭕  Mar: ⭕  Mer: ⭕  Gio: ⭕  Ven: ⭕  Sab: ⭕  Dom: ⭕
-                
-                Note della settimana:
-                _________________________________________________
-                _________________________________________________
-                
-                Celebrazione: _____________________________
-                
-                === DOMANDE POTENTI PER IL MANTENIMENTO ===
-                
-                🤔 RIFLESSIONE SETTIMANALE:
-                • Che tipo di persona sto diventando con queste abitudini?
-                • Come si sentono nel mio corpo le nuove routine?
-                • Quali effetti positivi sto già notando?
-                • Cosa posso modificare per rendere tutto più naturale?
-                
-                🤔 QUANDO È DIFFICILE:
-                • Cosa farebbe la versione migliore di me stesso?
-                • Come posso rendere questa abitudine più facile/divertente?
-                • Chi può aiutarmi in questo momento?
-                • Quale piccola azione posso fare proprio ora?
-                
-                === SCIENZA DELLE ABITUDINI: RICORDA ===
-                
-                📊 STATISTICHE MOTIVANTI:
-                • Ci vogliono in media 66 giorni per automatizzare un'abitudine
-                • 1% di miglioramento giornaliero = 37x meglio in un anno
-                • Le abitudini sono responsabili del 40% delle nostre azioni quotidiane
-                • Cambiare 1 abitudine chiave può trasformare tutto il resto
-                
-                🧠 NEUROPLASTICITÀ:
-                Il tuo cervello si sta letteralmente ricablando per supportare questi nuovi comportamenti.
-                Ogni ripetizione rafforza i circuiti neurali. Stai creando autostrade mentali
-                che renderanno questi comportamenti sempre più automatici.
-                
-                === CONNESSIONE CON LE PROSSIME SETTIMANE ===
-                
-                La Settimana 6 si concentrerà su "Scoprire le Tue Potenzialità".
-                Le abitudini che stai costruendo ora saranno la base per esprimere
-                al massimo i tuoi talenti e capacità naturali.
-                
-                Ogni abitudine è un voto per il tipo di persona che vuoi diventare.
-                
-                === MESSAGGIO PERSONALE ===
-                
-                ${userProfile?.name || 'Amico/a'}, quello che hai costruito oggi non è solo un piano:
-                è un sistema di trasformazione che può cambiare tutto.
-                
-                Le abitudini sono la compound interest della crescita personale.
-                Piccole azioni quotidiane creano risultati straordinari nel tempo.
-                
-                Ricorda: non devi essere perfetto, devi essere consistente.
-                Non devi cambiare tutto, devi cambiare la cosa giusta.
-                
-                Il potere è nelle tue mani. Ogni giorno, ogni scelta, ogni piccola azione
-                ti avvicina alla persona che vuoi diventare.
-                
-                Il tuo architect delle abitudini,
-                Andrea 🔄
-                
-                P.S. Il giorno migliore per iniziare è oggi. Il secondo giorno migliore è domani.
-                Ma ricorda: l'abitudine più importante è quella di ricominciare quando sbagli.
-            `;
-            
-            const blob = new Blob([systemContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Sistema_Trasformazione_Abitudini_Settimana_5_${userProfile?.name || 'Utente'}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showMessage('📄 Sistema di trasformazione scaricato!', 'success');
-        }
-
-        function scheduleNextSession() {
-            const nextWeekDate = new Date();
-            nextWeekDate.setDate(nextWeekDate.getDate() + 7);
-            
-            const message = `📅 Settimana 6 "Scopri le Tue Potenzialità" disponibile il ${nextWeekDate.toLocaleDateString('it-IT')}!`;
-            showMessage(message, 'info');
-            
-            localStorage.setItem('nextSessionReminder', nextWeekDate.toISOString());
-        }
-
-        function showMessage(message, type = 'info') {
-            const colors = {
-                success: '#16a34a',
-                warning: '#f59e0b',
-                info: '#3b82f6',
-                error: '#ef4444'
-            };
-            
-            const notification = document.createElement('div');
-            notification.innerHTML = `
-                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px; animation: slideIn 0.3s ease-out;">
-                    ${message}
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        // Handle Enter key in chat
-        document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-
-        // Handle page unload
-        window.addEventListener('beforeunload', function() {
-            if (currentPhase !== 'completed') {
-                autoSave();
-            }
-        });
-
-        // Add slide-in animation style
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-</html>
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1192,6 +938,9 @@
         <div class="header-content">
             <div class="logo">🔄 Settimana 5 - Trasformazione Abitudini</div>
             <div class="session-info">
+                <div class="ai-badge">
+                    🤖 AI Personalizzato Attivo
+                </div>
                 <div class="timer-display">
                     ⏱️ <span id="sessionTimer">45:00</span>
                 </div>
@@ -1220,8 +969,13 @@
 
         <!-- Welcome Section -->
         <section class="welcome-section fade-in" id="welcomeSection">
-            <h1 class="welcome-title">Benvenuto nella Settimana 5! 🚀</h1>
-            <p class="welcome-subtitle">Trasformazione Abitudini - Il Sistema per il Cambiamento Duraturo</p>
+            <div class="personalization-banner" id="personalizationBanner">
+                <div class="personalization-title">🎯 Coaching Abitudini Personalizzato Attivo</div>
+                <div class="personalization-subtitle">Il tuo sistema di trasformazione sarà calibrato sul tuo profilo specifico</div>
+            </div>
+            
+            <h1 class="welcome-title" id="welcomeTitle">Benvenuto nella Settimana 5! 🚀</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">Trasformazione Abitudini - Il Sistema per il Cambiamento Duraturo</p>
             
             <div class="journey-recap">
                 <h3 class="recap-title">🎯 Il Tuo Viaggio Fino a Qui</h3>
@@ -1462,7 +1216,7 @@
             
             <div class="chat-status">
                 <div class="status-dot"></div>
-                <span>Andrea è pronto per creare il tuo sistema di trasformazione</span>
+                <span id="chatStatusText">Andrea è pronto per creare il tuo sistema di trasformazione</span>
             </div>
             
             <div class="chat-container" id="chatContainer">
@@ -1505,8 +1259,9 @@
         </section>
     </main>
 
-    <!-- Load Andrea AI Coach System -->
-    <script src="../andrea-ai-coach.js"></script>
+    <!-- Load AI System -->
+    <script src="utils/integrated-ai-system.js"></script>
+    <script src="utils/modules-integration.js"></script>
     
     <script>
         // Session variables
@@ -1516,13 +1271,16 @@
         let currentPhase = 'welcome';
         let habitsData = {};
         let chatHistory = [];
-        let andreaAICoach = null;
         let userProfile = null;
         let previousWeeksData = {};
         let sessionExtended = false;
         let autoSaveInterval;
         let habitsInsights = [];
         let transformationPlan = {};
+        
+        // AI System Integration
+        let aiSystem = null;
+        let moduleIntegrator = null;
 
         // Initialize session
         document.addEventListener('DOMContentLoaded', function() {
@@ -1530,9 +1288,93 @@
             loadUserProfile();
             loadPreviousWeeksData();
             loadSavedSession();
-            initializeAndreaAI();
             startAutoSave();
+            
+            // Initialize AI System for Week 5
+            initializeAIIntegration();
         });
+
+        async function initializeAIIntegration() {
+            try {
+                console.log('🤖 Initializing AI System for Week 5...');
+                
+                // Wait for AI system to be available
+                if (typeof window.ModuleAutoLoader !== 'undefined') {
+                    moduleIntegrator = await window.ModuleAutoLoader.loadForCurrentPage();
+                    
+                    if (moduleIntegrator) {
+                        aiSystem = moduleIntegrator.aiSystem;
+                        console.log('✅ AI System integrated successfully for Week 5');
+                        
+                        // Update personalization banner
+                        updatePersonalizationBanner();
+                        
+                        // Update welcome messages
+                        updateWelcomePersonalization();
+                        
+                        // Update chat placeholder
+                        updateChatPersonalization();
+                    }
+                } else {
+                    console.log('⚠️ AI System not available, using fallback');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing AI integration:', error);
+            }
+        }
+
+        function updatePersonalizationBanner() {
+            if (!userProfile) return;
+            
+            const banner = document.getElementById('personalizationBanner');
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            
+            if (profileConfig) {
+                banner.innerHTML = `
+                    <div class="personalization-title">🎯 Coaching Abitudini per "${profileConfig.name}"</div>
+                    <div class="personalization-subtitle">Il tuo sistema di trasformazione sarà ${profileConfig.communication_style.toLowerCase()}</div>
+                `;
+            }
+        }
+
+        function updateWelcomePersonalization() {
+            if (!userProfile) return;
+            
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+            
+            if (userProfile.name) {
+                welcomeTitle.textContent = `Benvenuto/a ${userProfile.name} nella Settimana 5! 🚀`;
+            }
+            
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            if (profileConfig) {
+                welcomeSubtitle.textContent = `Trasformazione Abitudini Personalizzata per ${profileConfig.name}`;
+            }
+        }
+
+        function updateChatPersonalization() {
+            if (!userProfile) return;
+            
+            const chatInput = document.getElementById('chatInput');
+            const statusText = document.getElementById('chatStatusText');
+            
+            const profileConfig = window.LIFESTYLE_PROFILES_CONFIG?.[userProfile.profileType];
+            if (profileConfig) {
+                // Personalized placeholders for each profile
+                const placeholders = {
+                    stressato_esaurito: "Prenditi tutto il tempo che serve per riflettere sulle abitudini...",
+                    procrastinatore_bloccato: "Inizia con quello che ti viene in mente, anche se non è perfetto...",
+                    perfezionista_insoddisfatto: "Non serve la strategia perfetta, condividi quello che pensi...",
+                    dispersivo_confuso: "Concentrati su UNA abitudine alla volta e dimmi cosa ne pensi...",
+                    motivato_inconsistente: "Condividi con me le tue riflessioni sulle abitudini...",
+                    equilibrato_ottimizzatore: "Dimmi come vedi il sistema di abitudini dal tuo punto di vista..."
+                };
+                
+                chatInput.placeholder = placeholders[userProfile.profileType] || "Condividi i tuoi pensieri con Andrea...";
+                statusText.textContent = `Andrea è pronto per creare il tuo sistema di trasformazione con approccio ${profileConfig.communication_style.toLowerCase()}`;
+            }
+        }
 
         function startSessionTimer() {
             timerInterval = setInterval(() => {
@@ -1614,27 +1456,41 @@
             // Week 2 summary
             if (previousWeeksData.week2 && previousWeeksData.week2.testResults) {
                 const results = previousWeeksData.week2.testResults;
+                const valueLabels = {
+                    family: 'famiglia e relazioni',
+                    career: 'successo professionale',
+                    health: 'salute e benessere',
+                    growth: 'crescita personale',
+                    freedom: 'libertà e indipendenza'
+                };
+                const topValue = results.topValues?.[0]?.[0] ? valueLabels[results.topValues[0][0]] : 'identificato';
                 summary += `
                     <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #16a34a;">
                         <strong>Settimana 2:</strong><br>
-                        Autostima: ${results.selfEsteem}/5<br>
-                        Valore principale identificato
+                        Valore principale: ${topValue}
                     </div>
                 `;
             }
             
-            // Week 3 summary (if exists)
-            if (previousWeeksData.week3) {
+            // Week 3 summary
+            if (previousWeeksData.week3 && previousWeeksData.week3.smartGoalData) {
+                const areaLabels = {
+                    health: 'salute fisica',
+                    mental: 'benessere mentale',
+                    relationship: 'relazioni',
+                    career: 'carriera e crescita'
+                };
+                const area = areaLabels[previousWeeksData.week3.smartGoalData.area] || 'area definita';
                 summary += `
                     <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #ea580c;">
                         <strong>Settimana 3:</strong><br>
-                        Obiettivi SMART definiti
+                        Obiettivo SMART per ${area}
                     </div>
                 `;
             }
             
-            // Week 4 summary (if exists)
-            if (previousWeeksData.week4) {
+            // Week 4 summary
+            if (previousWeeksData.week4 && previousWeeksData.week4.actionPlanData) {
                 summary += `
                     <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #8b5cf6;">
                         <strong>Settimana 4:</strong><br>
@@ -1705,25 +1561,6 @@
                 }
             });
             updateWorkshopProgress();
-        }
-
-        async function initializeAndreaAI() {
-            try {
-                if (window.AndreaAICoach) {
-                    andreaAICoach = new window.AndreaAICoach();
-                    
-                    const userId = localStorage.getItem('lifestyleUserId') || 'user_' + Date.now();
-                    localStorage.setItem('lifestyleUserId', userId);
-                    
-                    await andreaAICoach.initialize(userId, userProfile || {});
-                    
-                    console.log('🤖 Andrea AI Coach initialized successfully');
-                } else {
-                    console.error('❌ Andrea AI Coach not available');
-                }
-            } catch (error) {
-                console.error('❌ Error initializing Andrea AI:', error);
-            }
         }
 
         function startAutoSave() {
@@ -1864,413 +1701,3 @@
             const goodSummary = document.getElementById('goodHabitSummary');
             
             badSummary.textContent = habitsData.badHabitRoutine || 'Da definire';
-            goodSummary.textContent = habitsData.goodHabitRoutine || 'Da definire';
-        }
-
-        function generateFirstCoachingQuestion() {
-            if (chatHistory.length === 0) {
-                const firstQuestion = generatePowerfulHabitsQuestion();
-                addChatMessage(firstQuestion, 'coach');
-            } else {
-                restoreChatHistory();
-            }
-        }
-
-        function generatePowerfulHabitsQuestion() {
-            let question = `Fantastico lavoro nel workshop! Ho analizzato il sistema delle tue abitudini e vedo un quadro molto interessante. `;
-            
-            // Reference mapped habits
-            if (habitsData.badHabitRoutine && habitsData.goodHabitRoutine) {
-                question += `Vuoi eliminare "${habitsData.badHabitRoutine}" e creare "${habitsData.goodHabitRoutine}". `;
-            }
-            
-            // Connect to previous weeks
-            if (previousWeeksData.week1 && previousWeeksData.week1.phase1Data && previousWeeksData.week1.phase1Data.dreamGoal) {
-                question += `Ricordo che nella Settimana 1 il tuo obiettivo da sogno era "${previousWeeksData.week1.phase1Data.dreamGoal}". `;
-            }
-            
-            if (previousWeeksData.week2 && previousWeeksData.week2.testResults && previousWeeksData.week2.testResults.topValues) {
-                const valueLabels = {
-                    family: 'famiglia e relazioni',
-                    career: 'successo professionale',
-                    health: 'salute e benessere',
-                    growth: 'crescita personale',
-                    freedom: 'libertà e indipendenza'
-                };
-                const topValue = valueLabels[previousWeeksData.week2.testResults.topValues[0][0]];
-                question += `E dalla Settimana 2 so che il tuo valore principale è ${topValue}. `;
-            }
-            
-            // Reference identity connection
-            if (habitsData.habitIdentity) {
-                question += `Mi ha colpito quando hai scritto che diventeresti: "${habitsData.habitIdentity}". `;
-            }
-            
-            // Powerful coaching question
-            question += `\n\nOra voglio farti una domanda che va al cuore della trasformazione:
-            
-**Se dovessi scegliere UNA SOLA abitudine da cambiare che avrebbe l'impatto più profondo sulla tua vita e ti avvicinerebbe di più alla persona che vuoi diventare, quale sarebbe e perché?** 🤔
-            
-Non pensare a quella più facile o più difficile, ma a quella che cambierebbe tutto il resto.`;
-            
-            return question;
-        }
-
-        function restoreChatHistory() {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.innerHTML = '';
-            
-            chatHistory.forEach(message => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${message.sender}`;
-                messageDiv.innerHTML = `
-                    <div class="message-content">${message.content}</div>
-                    <div class="message-time">${message.time}</div>
-                `;
-                chatContainer.appendChild(messageDiv);
-            });
-            
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        async function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            // Add user message
-            addChatMessage(message, 'user');
-            input.value = '';
-            
-            // Get AI coaching response
-            try {
-                const coachingResponse = await getHabitsCoachingResponse(message);
-                setTimeout(() => {
-                    addChatMessage(coachingResponse, 'coach');
-                }, 1500);
-            } catch (error) {
-                console.error('❌ Error getting coaching response:', error);
-                setTimeout(() => {
-                    addChatMessage("Sto riflettendo sul sistema di abitudini che mi hai descritto... Puoi ripetere?", 'coach');
-                }, 1000);
-            }
-        }
-
-        function addChatMessage(content, sender) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            const now = new Date();
-            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            
-            messageDiv.innerHTML = `
-                <div class="message-content">${content}</div>
-                <div class="message-time">${time}</div>
-            `;
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Store in history
-            chatHistory.push({ sender, content, time });
-            
-            // Extract insights if it's a user message
-            if (sender === 'user') {
-                extractHabitsInsights(content);
-            }
-            
-            autoSave();
-        }
-
-        async function getHabitsCoachingResponse(userMessage) {
-            // Build comprehensive context for habits coaching
-            const coachingContext = {
-                habitsData: habitsData,
-                habitsInsights: habitsInsights,
-                chatHistory: chatHistory,
-                previousWeeksData: previousWeeksData,
-                userProfile: userProfile,
-                transformationPlan: transformationPlan
-            };
-            
-            // Try Andrea AI with habits context
-            if (andreaAICoach) {
-                try {
-                    const response = await andreaAICoach.sendMessage(userMessage, 5);
-                    if (response.success) {
-                        return response.response;
-                    }
-                } catch (error) {
-                    console.error('❌ Andrea AI habits coaching error:', error);
-                }
-            }
-            
-            // Fallback to sophisticated habits coaching response
-            return generateHabitsCoachingResponse(userMessage, coachingContext);
-        }
-
-        function generateHabitsCoachingResponse(userMessage, context) {
-            const messageCount = context.chatHistory.filter(m => m.sender === 'user').length;
-            
-            // Different habits coaching approaches based on conversation depth
-            if (messageCount <= 2) {
-                return generateHabitsExplorationResponse(userMessage, context);
-            } else if (messageCount <= 4) {
-                return generateHabitsDesignResponse(userMessage, context);
-            } else {
-                return generateHabitsImplementationResponse(userMessage, context);
-            }
-        }
-
-        function generateHabitsExplorationResponse(userMessage, context) {
-            const responses = [
-                `Questa scelta rivela qualcosa di molto profondo su di te. Sento che hai colto l'essenza della trasformazione: non si tratta di cambiare mille cose, ma di trovare quella leva che muove tutto il resto. Dimmi, quando immagini di aver integrato completamente questa abitudine, come cambia la tua giornata tipo?`,
-                
-                `Wow, quello che condividi mi fa capire che hai una comprensione matura di come funziona il cambiamento. Questa abitudine che hai scelto ha un potere trasformativo enorme. Mi chiedo: qual è il momento più critico della giornata dove questa abitudine potrebbe fare la differenza?`,
-                
-                `La tua risposta mostra una consapevolezza profonda. Quello che mi colpisce è che stai pensando sistemicamente, non solo alle singole azioni. Quando pensi agli ostacoli che potrebbero sabotare questa abitudine, qual è il primo che ti viene in mente?`,
-                
-                `Perfetto! Vedo che stai connettendo questa abitudine con la tua identità più profonda. Questo è il segreto delle trasformazioni durature. Ora, se dovessi identificare il "segnale" perfetto per innescare questa abitudine, cosa sceglieresti?`
-            ];
-            
-            // Personalize based on specific habits data
-            if (context.habitsData.habitIdentity) {
-                return `La tua risposta risuona perfettamente con quello che hai scritto su chi vuoi diventare: "${context.habitsData.habitIdentity}". Vedo una coerenza bellissima tra questa abitudine e la tua visione di te stesso. Mi chiedo: se questa versione migliore di te fosse già qui, qual è la prima cosa che farebbe diversamente domani mattina?`;
-            }
-            
-            if (context.previousWeeksData.week1 && context.previousWeeksData.week1.phase1Data && context.previousWeeksData.week1.phase1Data.dreamGoal) {
-                return `Quello che mi dici si collega perfettamente con il tuo obiettivo da sogno della Settimana 1: "${context.previousWeeksData.week1.phase1Data.dreamGoal}". Questa abitudine è come un ponte verso quel sogno. Se dovessi immaginare questo ponte, qual è il primo "gradino" che potresti costruire questa settimana?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generateHabitsDesignResponse(userMessage, context) {
-            const responses = [
-                `Stiamo entrando nel cuore del design della tua trasformazione. Quello che mi descrivi ha tutti gli ingredienti per il successo. Ora, per rendere questa abitudine "a prova di fallimento", quale gratificazione immediata potresti darti ogni volta che la completi?`,
-                
-                `Eccellente! Sento che stai costruendo qualcosa di solido. La scienza delle abitudini ci dice che il 21% del successo dipende dalla chiarezza del segnale. Se dovessi rendere impossibile "dimenticare" di fare questa abitudine, come organizzeresti il tuo ambiente?`,
-                
-                `La tua strategia sta prendendo forma in modo bellissimo. Ora voglio che pensiamo al "sistema di backup": quando la motivazione sarà bassa (e succederà), quale versione "minima" di questa abitudine potresti sempre fare?`,
-                
-                `Perfetto! Quello che stai creando è un sistema, non solo un'abitudine. Mi chiedo: come potresti "stackare" questa abitudine con qualcosa che già fai automaticamente ogni giorno?`
-            ];
-            
-            // Design based on specific mapped habits
-            if (context.habitsData.badHabitSignal && context.habitsData.goodHabitSignal) {
-                return `Sto vedendo una strategia brillante. Hai identificato che il tuo trigger problematico è "${context.habitsData.badHabitSignal}" e vuoi sostituirlo con "${context.habitsData.goodHabitSignal}". Ora, il trucco è usare lo stesso segnale ma cambiare la routine. Come potresti "dirottare" quel trigger verso la nuova abitudine?`;
-            }
-            
-            if (context.habitsData.habitBarriers) {
-                return `Ripenso a quello che hai scritto sugli ostacoli: "${context.habitsData.habitBarriers}". La tua strategia deve essere più forte di questi ostacoli. Se dovessi progettare questa abitudine per essere "resistente" a queste sfide, quali accorgimenti useresti?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generateHabitsImplementationResponse(userMessage, context) {
-            const responses = [
-                `Quello che abbiamo costruito insieme è un sistema potente e personalizzato. Ora è il momento dell'implementazione strategica. Se dovessi scommettere sul successo di questa trasformazione, quale sarebbe la tua "regola d'oro" per i primi 30 giorni?`,
-                
-                `Sento che sei pronto per il lancio! Il sistema che abbiamo progettato ha tutte le caratteristiche delle trasformazioni che durano nel tempo. Ora, per il monitoraggio: come vuoi tenere traccia dei tuoi progressi senza diventare ossessivo?`,
-                
-                `Incredibile! Abbiamo creato qualcosa di veramente personalizzato e sostenibile. L'ultimo elemento è la resilienza: quando sbaglierai (ed è normale), quale sarà il tuo protocollo di "reset" per riprendere subito?`,
-                
-                `Il tuo sistema di trasformazione è pronto! Ora voglio che pensiamo al "moltiplicatore": una volta che questa abitudine sarà automatica, quale sarà la prossima che aggiungerai per creare un effetto domino positivo?`
-            ];
-            
-            // Implementation based on complete context
-            if (context.previousWeeksData.week2 && context.previousWeeksData.week2.testResults && context.previousWeeksData.week2.testResults.topValues) {
-                const valueLabels = {
-                    family: 'famiglia e relazioni',
-                    career: 'successo professionale',
-                    health: 'salute e benessere',
-                    growth: 'crescita personale',
-                    freedom: 'libertà e indipendenza'
-                };
-                const topValue = valueLabels[context.previousWeeksData.week2.testResults.topValues[0][0]];
-                return `Tutto quello che abbiamo costruito si allinea perfettamente con il tuo valore principale: ${topValue}. Questo non è solo un cambiamento di comportamento, è un atto di coerenza con chi sei veramente. Quale sarà il tuo "mantra" personale per ricordarti perché questa abitudine è importante per te?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function extractHabitsInsights(userMessage) {
-            // Extract key insights for transformation plan
-            const insights = [];
-            
-            if (userMessage.toLowerCase().includes('mattina') || userMessage.toLowerCase().includes('mattino')) {
-                insights.push('Preferenza per routine mattutine');
-            }
-            
-            if (userMessage.toLowerCase().includes('sera') || userMessage.toLowerCase().includes('notte')) {
-                insights.push('Attivazione serale identificata');
-            }
-            
-            if (userMessage.toLowerCase().includes('stress') || userMessage.toLowerCase().includes('pressione')) {
-                insights.push('Gestione stress come priorità');
-            }
-            
-            if (userMessage.toLowerCase().includes('energia') || userMessage.toLowerCase().includes('motivazione')) {
-                insights.push('Focus su energia e motivazione');
-            }
-            
-            if (userMessage.toLowerCase().includes('famiglia') || userMessage.toLowerCase().includes('relazioni')) {
-                insights.push('Componente sociale importante');
-            }
-            
-            if (userMessage.toLowerCase().includes('lavoro') || userMessage.toLowerCase().includes('carriera')) {
-                insights.push('Integrazione professionale considerata');
-            }
-            
-            habitsInsights.push(...insights);
-        }
-
-        function show30MinuteWarning() {
-            document.getElementById('timeWarning').classList.add('active');
-        }
-
-        function continueSession() {
-            sessionExtended = true;
-            document.getElementById('timeWarning').classList.remove('active');
-            showMessage('✅ Sessione estesa di 15 minuti. Completiamo la trasformazione!', 'success');
-        }
-
-        function endSession() {
-            clearInterval(timerInterval);
-            clearInterval(autoSaveInterval);
-            completeSession();
-        }
-
-        function completeSession() {
-            // Save final session data
-            const finalSessionData = {
-                habitsData: habitsData,
-                chatHistory: chatHistory,
-                habitsInsights: habitsInsights,
-                transformationPlan: transformationPlan,
-                completedAt: new Date().toISOString(),
-                sessionDuration: Date.now() - sessionStartTime,
-                userProfile: userProfile,
-                previousWeeksData: previousWeeksData
-            };
-            
-            localStorage.setItem('week5SessionCompleted', JSON.stringify(finalSessionData));
-            localStorage.removeItem('week5SessionInProgress');
-            
-            // Update progress
-            updateUserProgress();
-            
-            // Show completion
-            document.getElementById('phase2Section').classList.remove('active');
-            document.getElementById('completionSection').classList.add('active');
-            
-            // Generate transformation plan and homework
-            generateTransformationPlan();
-            generateHabitsHomework();
-            
-            document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function generateTransformationPlan() {
-            const planContainer = document.getElementById('habitsResultsPlan');
-            
-            // Bad habit elimination plan
-            let badHabitPlan = '';
-            if (habitsData.badHabitSignal && habitsData.badHabitRoutine && habitsData.badHabitReward) {
-                badHabitPlan = `
-                    <div class="plan-item">
-                        <div class="plan-type">Eliminare</div>
-                        <div class="plan-habit">${habitsData.badHabitRoutine}</div>
-                        <div class="plan-details">
-                            <strong>Segnale:</strong> ${habitsData.badHabitSignal}<br>
-                            <strong>Strategia:</strong> Sostituire con routine positiva<br>
-                            <strong>Gratificazione alternativa:</strong> Trovare sostituto sano
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Good habit creation plan
-            let goodHabitPlan = '';
-            if (habitsData.goodHabitSignal && habitsData.goodHabitRoutine && habitsData.goodHabitReward) {
-                goodHabitPlan = `
-                    <div class="plan-item">
-                        <div class="plan-type">Creare</div>
-                        <div class="plan-habit">${habitsData.goodHabitRoutine}</div>
-                        <div class="plan-details">
-                            <strong>Segnale:</strong> ${habitsData.goodHabitSignal}<br>
-                            <strong>Routine:</strong> Inizia con versione minima<br>
-                            <strong>Gratificazione:</strong> ${habitsData.goodHabitReward}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Keystone habit identification
-            let keystoneHabit = '';
-            if (habitsInsights.length > 0) {
-                keystoneHabit = `
-                    <div class="plan-item">
-                        <div class="plan-type">Abitudine Chiave</div>
-                        <div class="plan-habit">Sistema di Trasformazione</div>
-                        <div class="plan-details">
-                            <strong>Focus:</strong> Una abitudine che cambia tutto<br>
-                            <strong>Impatto:</strong> Effetto domino su altre aree<br>
-                            <strong>Monitoraggio:</strong> Tracciamento semplice e costante
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Implementation strategy
-            const implementationStrategy = `
-                <div class="plan-item">
-                    <div class="plan-type">Strategia</div>
-                    <div class="plan-habit">Piano di Implementazione</div>
-                    <div class="plan-details">
-                        <strong>Settimana 1-2:</strong> Stabilire il segnale<br>
-                        <strong>Settimana 3-4:</strong> Consolidare la routine<br>
-                        <strong>Settimana 5+:</strong> Automatizzazione completa
-                    </div>
-                </div>
-            `;
-            
-            planContainer.innerHTML = badHabitPlan + goodHabitPlan + keystoneHabit + implementationStrategy;
-            
-            // Store transformation plan
-            transformationPlan = {
-                badHabit: habitsData.badHabitRoutine,
-                goodHabit: habitsData.goodHabitRoutine,
-                keyInsights: habitsInsights,
-                implementationPhases: ['Stabilire segnale', 'Consolidare routine', 'Automatizzazione']
-            };
-        }
-
-        function generateHabitsHomework() {
-            const homeworkList = document.getElementById('personalizedHomework');
-            let homework = [];
-            
-            // Base habits homework
-            homework.push("✅ Traccia per 7 giorni i tuoi segnali automatici (quando scattano le abitudini)");
-            homework.push("✅ Implementa la regola dei 2 minuti: versione mini della nuova abitudine");
-            
-            // Personalized based on mapped habits
-            if (habitsData.badHabitSignal && habitsData.badHabitRoutine) {
-                homework.push(`✅ Quando senti "${habitsData.badHabitSignal}", fermati 10 secondi e scegli consapevolmente`);
-            }
-            
-            if (habitsData.goodHabitSignal && habitsData.goodHabitRoutine) {
-                homework.push(`✅ Ogni volta che si verifica "${habitsData.goodHabitSignal}", pratica "${habitsData.goodHabitRoutine}"`);
-            }
-            
-            // Based on barriers identified
-            if (habitsData.habitBarriers) {
-                homework.push(`✅ Prepara strategia per ostacoli: "${habitsData.habitBarriers}"`);
-            }
-            
-            // Based on identity connection
-            if (habitsData.habitIdentity) {
-                homework.push(`✅ Ogni sera chiedi: "Oggi ho agito come: ${habitsData.habitIdentity}?"`);
