@@ -1,0 +1,3551 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Mia Area V2.0 - LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .dashboard-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .dashboard-header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .version-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: linear-gradient(45deg, #10b981, #34d399);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* === 🎨 ENHANCED AVATAR SYSTEM V2.0 === */
+        .avatar-section-v2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 400px;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Avatar Andrea con Foto Reale - Migliorato */
+        .andrea-avatar-card-v2 {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .andrea-avatar-card-v2:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .andrea-avatar-card-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #ff6b35, #f39c12, #ea580c);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .andrea-photo-v2 {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.4);
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+        }
+
+        .andrea-photo-v2:hover {
+            transform: scale(1.08) rotate(3deg);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.7);
+        }
+
+        .andrea-photo-v2.triple-click-active {
+            animation: tripleClickPulse 0.8s ease-in-out;
+            transform: scale(1.15);
+            border-color: #dc2626;
+            box-shadow: 0 0 40px rgba(220, 38, 38, 0.9), 0 25px 60px rgba(0,0,0,0.4);
+        }
+
+        @keyframes tripleClickPulse {
+            0% { transform: scale(1.08); }
+            25% { transform: scale(1.2) rotate(8deg); }
+            50% { transform: scale(1.15) rotate(-3deg); }
+            75% { transform: scale(1.2) rotate(5deg); }
+            100% { transform: scale(1.15); }
+        }
+
+        .andrea-photo-v2::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(45deg, #10b981, #34d399);
+            border-radius: 50%;
+            border: 3px solid white;
+            animation: onlineIndicator 2s ease-in-out infinite;
+        }
+
+        @keyframes onlineIndicator {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.15); }
+        }
+
+        .andrea-photo-v2.loading {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            animation: photoLoading 1.5s ease-in-out infinite;
+        }
+
+        .andrea-photo-v2.loading::before {
+            content: 'AP';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        @keyframes photoLoading {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        .andrea-info-v2 h3 {
+            color: white;
+            font-size: 1.7rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .andrea-title-v2 {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .photo-indicator-v2 {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
+        .andrea-message-v2 {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            border-left: 4px solid #ff6b35;
+            backdrop-filter: blur(10px);
+        }
+
+        .message-icon-v2 {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-title-v2 {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .message-text-v2 {
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* === 🎭 ENHANCED USER AVATAR V2.0 === */
+        .user-avatar-card-v2 {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar-card-v2:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .user-avatar-card-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #3b82f6, #1e40af, #6366f1);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .user-avatar-display-v2 {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 4px solid rgba(255,255,255,0.4);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .user-avatar-display-v2:hover {
+            transform: scale(1.08) rotate(-3deg);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.7);
+        }
+
+        .user-avatar-display-v2 svg {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .user-avatar-display-v2 .photo-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .avatar-mode-indicator {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .avatar-level-indicator {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            animation: levelPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes levelPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .user-info-v2 h3 {
+            color: white;
+            font-size: 1.7rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .avatar-name-v2 {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .avatar-personality-v2 {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .avatar-stats-v2 {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-stat-v2 {
+            background: rgba(255,255,255,0.15);
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .avatar-stat-number-v2 {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .avatar-stat-label-v2 {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .customize-btn-v2 {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .customize-btn-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .customize-btn-v2:hover::before {
+            left: 100%;
+        }
+
+        .customize-btn-v2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59,130,246,0.4);
+        }
+
+        /* === 🤖 AI SUGGESTIONS PANEL === */
+        .ai-suggestions-panel {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-suggestions-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #10b981, #34d399, #6ee7b7);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .ai-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-panel-header h3 {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .ai-status-indicator {
+            background: linear-gradient(45deg, #10b981, #34d399);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .ai-suggestions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ai-suggestion-item {
+            background: rgba(255,255,255,0.1);
+            padding: 1.2rem;
+            border-radius: 15px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-suggestion-item.high-priority {
+            border-left-color: #ef4444;
+        }
+
+        .ai-suggestion-item.medium-priority {
+            border-left-color: #f59e0b;
+        }
+
+        .ai-suggestion-item.low-priority {
+            border-left-color: #10b981;
+        }
+
+        .ai-suggestion-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-title {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .suggestion-priority {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .suggestion-description {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-impact {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+            font-style: italic;
+        }
+
+        .ai-refresh-btn {
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .ai-refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* === 📊 PROGRESSION WIDGET === */
+        .progression-widget {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .progression-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .progression-header h3 {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .level-display {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .progression-bar-container {
+            background: rgba(255,255,255,0.2);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .progression-bar-fill {
+            background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progression-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .progression-milestones {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .milestone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .milestone-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .milestone.unlocked .milestone-dot {
+            background: linear-gradient(45deg, #10b981, #34d399);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+        }
+
+        .milestone.unlocked .milestone-dot::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: bold;
+        }
+
+        .milestone-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .next-milestone {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .next-milestone h4 {
+            color: #fbbf24;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .next-milestone p {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* === 🏆 ACHIEVEMENTS WIDGET === */
+        .achievements-widget {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .achievements-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .achievements-header h3 {
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .achievements-count {
+            background: linear-gradient(45deg, #8b5cf6, #a855f7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .achievement-item {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .achievement-item.unlocked {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .achievement-item.locked {
+            opacity: 0.6;
+        }
+
+        .achievement-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .achievement-name {
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .achievement-desc {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.7rem;
+            line-height: 1.2;
+        }
+
+        /* === 🎨 ENHANCED AVATAR BUILDER MODAL V2.0 === */
+        .avatar-builder-modal-v2 {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(15px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .avatar-builder-modal-v2.active {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .avatar-builder-content-v2 {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 25px;
+            padding: 2rem;
+            max-width: 1200px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+        }
+
+        .avatar-builder-header-v2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar-builder-header-v2 h2 {
+            color: white;
+            font-size: 2rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .mode-selector-v2 {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-btn-v2 {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .mode-btn-v2.active {
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .mode-btn-v2:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .close-modal-v2 {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal-v2:hover {
+            background: rgba(239, 68, 68, 0.8);
+            transform: rotate(90deg);
+        }
+
+        .avatar-builder-main-v2 {
+            display: grid;
+            grid-template-columns: 400px 1fr 350px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .avatar-preview-section-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .avatar-preview-container-v2 {
+            background: white;
+            border-radius: 25px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-preview-v2 {
+            width: 100%;
+            max-width: 250px;
+        }
+
+        .avatar-preview-v2 svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .avatar-info-preview-v2 {
+            background: rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .avatar-info-preview-v2 h4 {
+            color: #fbbf24;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mood-indicator-v2 {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .customization-controls-v2 {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .control-section-v2 {
+            margin-bottom: 2rem;
+        }
+
+        .control-section-v2 h4 {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+        }
+
+        .control-grid-v2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .control-btn-v2 {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 1rem 0.75rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .control-btn-v2:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .control-btn-v2.active {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            border-color: #ea580c;
+            box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .color-controls-v2 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .color-group-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .color-group-v2 label {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .color-group-v2 input[type="color"] {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .ai-suggestions-sidebar-v2 {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .ai-suggestions-sidebar-v2 h4 {
+            color: white;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-suggestion-mini {
+            background: rgba(255,255,255,0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid #10b981;
+        }
+
+        .ai-suggestion-mini:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(3px);
+        }
+
+        .ai-suggestion-mini h5 {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .ai-suggestion-mini p {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.8rem;
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .photo-upload-section-v2 {
+            margin-bottom: 2rem;
+        }
+
+        .upload-area-v2 {
+            border: 3px dashed rgba(255,255,255,0.4);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .upload-area-v2:hover {
+            border-color: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+        }
+
+        .upload-area-v2.dragover {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .upload-icon-v2 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .upload-text-v2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .upload-hint-v2 {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .slider-controls-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .slider-group-v2 {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .slider-group-v2 label {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slider-value {
+            background: rgba(255,255,255,0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .slider-group-v2 input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        .slider-group-v2 input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #3b82f6, #1e40af);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .avatar-builder-actions-v2 {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .avatar-action-btn-v2 {
+            background: linear-gradient(135deg, #ea580c, #f97316);
+            color: white;
+            border: none;
+            padding: 1.2rem 2.5rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-action-btn-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .avatar-action-btn-v2:hover::before {
+            left: 100%;
+        }
+
+        .avatar-action-btn-v2:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(234, 88, 12, 0.4);
+        }
+
+        .avatar-action-btn-v2.secondary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .avatar-action-btn-v2.secondary:hover {
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.4);
+        }
+
+        .avatar-action-btn-v2.tertiary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .avatar-action-btn-v2.tertiary:hover {
+            box-shadow: 0 12px 35px rgba(107, 114, 128, 0.4);
+        }
+
+        /* User Welcome - Enhanced */
+        .user-welcome-v2 {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-welcome-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #10b981, #34d399, #6ee7b7);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        .user-welcome-v2 h2 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .user-info-text-v2 {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* === ADMIN CONTROLS - Enhanced === */
+        .admin-controls-v2 {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 2px solid rgba(220, 38, 38, 0.5);
+            display: none;
+            animation: adminGlow 2s ease-in-out infinite alternate;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .admin-controls-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: adminShimmer 3s infinite;
+        }
+
+        @keyframes adminShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes adminGlow {
+            from { box-shadow: 0 0 25px rgba(220, 38, 38, 0.6); }
+            to { box-shadow: 0 0 40px rgba(220, 38, 38, 0.9), 0 0 60px rgba(220, 38, 38, 0.4); }
+        }
+
+        .admin-controls-v2.visible {
+            display: block;
+        }
+
+        .admin-controls-v2.hidden-access {
+            background: linear-gradient(135deg, #7c2d12 0%, #dc2626 100%);
+            border: 2px solid rgba(124, 45, 18, 0.8);
+            animation: hiddenAdminPulse 1.5s ease-in-out infinite;
+            transform: scale(1.02);
+        }
+
+        @keyframes hiddenAdminPulse {
+            0%, 100% { 
+                box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(124, 45, 18, 0.6);
+                border-color: rgba(124, 45, 18, 0.8);
+            }
+            50% { 
+                box-shadow: 0 0 45px rgba(220, 38, 38, 1), 0 0 80px rgba(124, 45, 18, 0.9);
+                border-color: rgba(220, 38, 38, 1);
+            }
+        }
+
+        /* Enhanced Dashboard Grid */
+        .dashboard-grid-v2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .dashboard-card-v2 {
+            background: white;
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+        }
+
+        .dashboard-card-v2:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+
+        .card-icon-v2 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .card-title-v2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .card-description-v2 {
+            color: #64748b;
+            margin-bottom: 2rem;
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .card-action-v2 {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-action-v2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .card-action-v2:hover::before {
+            left: 100%;
+        }
+
+        .card-action-v2:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,53,0.4);
+        }
+
+        /* Enhanced Quick Actions */
+        .quick-actions-v2 {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .quick-actions-v2 h3 {
+            color: white;
+            margin-bottom: 2rem;
+            font-size: 1.6rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .actions-grid-v2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .quick-btn-v2 {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: none;
+            padding: 1.5rem 1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .quick-btn-v2:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Role indicator - Enhanced */
+        .role-indicator-v2 {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            animation: slideInLeft 0.5s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .role-indicator-v2.visible {
+            display: block;
+        }
+
+        .role-indicator-v2.admin {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .role-indicator-v2.beta {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Back button - Enhanced */
+        .back-btn-v2 {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .back-btn-v2:hover {
+            background: rgba(59, 130, 246, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Notification system - Enhanced */
+        .notification-v2 {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .notification-v2.error {
+            background: #ef4444;
+        }
+
+        .notification-v2.success {
+            background: #10b981;
+        }
+
+        .notification-v2.info {
+            background: #3b82f6;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive Design - Enhanced */
+        @media (max-width: 1200px) {
+            .avatar-section-v2 {
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
+
+            .ai-suggestions-panel {
+                grid-column: 1 / -1;
+            }
+
+            .avatar-builder-main-v2 {
+                grid-template-columns: 1fr 350px;
+            }
+
+            .ai-suggestions-sidebar-v2 {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2rem;
+            }
+
+            .avatar-section-v2 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .andrea-photo-v2, .user-avatar-display-v2 {
+                width: 100px;
+                height: 100px;
+            }
+
+            .dashboard-grid-v2 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .actions-grid-v2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .role-indicator-v2 {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
+
+            .avatar-builder-main-v2 {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .avatar-builder-content-v2 {
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+
+            .avatar-builder-actions-v2 {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .progression-milestones {
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+
+            .achievements-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .back-btn-v2 {
+                position: static;
+                margin-bottom: 1rem;
+                width: fit-content;
+            }
+        }
+
+        /* Loading animations */
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Scroll animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Custom scrollbar */
+        .customization-controls-v2::-webkit-scrollbar,
+        .ai-suggestions-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .customization-controls-v2::-webkit-scrollbar-track,
+        .ai-suggestions-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        .customization-controls-v2::-webkit-scrollbar-thumb,
+        .ai-suggestions-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+
+        .customization-controls-v2::-webkit-scrollbar-thumb:hover,
+        .ai-suggestions-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Role Indicator V2.0 -->
+    <div id="roleIndicatorV2" class="role-indicator-v2">
+        <span id="roleTextV2">USER</span>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Enhanced Header -->
+        <header class="dashboard-header">
+            <a href="../index.html" class="back-btn-v2">← Homepage</a>
+            <div class="version-badge">V2.0 Enhanced</div>
+            <h1>La Mia Area V2.0</h1>
+            <p>Il tuo centro di controllo potenziato con AI Avatar System</p>
+        </header>
+
+        <!-- 🎨 ENHANCED AVATAR SYSTEM V2.0 -->
+        <div class="avatar-section-v2">
+            <!-- Avatar Andrea con Foto Reale - Enhanced -->
+            <div class="andrea-avatar-card-v2">
+                <div class="andrea-photo-v2 loading" id="andreaPhotoV2"></div>
+                <div class="andrea-info-v2">
+                    <h3>Andrea Padoan</h3>
+                    <p class="andrea-title-v2">Il tuo Coach Personale AI</p>
+                    <div class="photo-indicator-v2" id="photoIndicatorV2">📸 Caricamento foto...</div>
+                </div>
+                <div class="andrea-message-v2" id="andreaMessageV2">
+                    <div class="message-icon-v2">🚀</div>
+                    <div class="message-title-v2">Benvenuto nel Sistema V2.0!</div>
+                    <div class="message-text-v2">Il nuovo Avatar System V2.0 si adatta al tuo profilo lifestyle e evolve con i tuoi progressi. Intelligenza artificiale al servizio della tua trasformazione!</div>
+                </div>
+            </div>
+
+            <!-- Enhanced User Avatar V2.0 -->
+            <div class="user-avatar-card-v2">
+                <div class="user-avatar-display-v2" id="userAvatarDisplayV2">
+                    <!-- Avatar will be rendered here by Enhanced Avatar System V2.0 -->
+                    <svg viewBox="0 0 140 140" id="userAvatarSvgV2">
+                        <!-- Default avatar SVG -->
+                        <circle cx="70" cy="70" r="65" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                        <ellipse cx="70" cy="75" rx="35" ry="40" fill="#fdbcbc"/>
+                        <path d="M40,55 Q70,35 100,55 Q95,50 80,50 Q70,45 60,50 Q45,50 40,55" fill="#4A5568"/>
+                        <circle cx="60" cy="70" r="3" fill="white"/>
+                        <circle cx="60" cy="70" r="2" fill="#2D3748"/>
+                        <circle cx="80" cy="70" r="3" fill="white"/>
+                        <circle cx="80" cy="70" r="2" fill="#2D3748"/>
+                        <ellipse cx="70" cy="80" rx="2" ry="1" fill="#f8a5a5"/>
+                        <path d="M65,90 Q70,95 75,90" stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                    
+                    <!-- Mode indicator -->
+                    <div class="avatar-mode-indicator" id="avatarModeIndicator">🎭</div>
+                    <!-- Level indicator -->
+                    <div class="avatar-level-indicator" id="avatarLevelIndicator">1</div>
+                </div>
+                <div class="user-info-v2">
+                    <h3 id="userNameV2">Il Tuo Avatar V2.0</h3>
+                    <p class="avatar-name-v2" id="avatarNameV2">Avatar Intelligente</p>
+                    <p class="avatar-personality-v2" id="avatarPersonalityV2">Pronto per l'evoluzione</p>
+                    
+                    <!-- Avatar Stats -->
+                    <div class="avatar-stats-v2">
+                        <div class="avatar-stat-v2">
+                            <span class="avatar-stat-number-v2" id="avatarLevel">1</span>
+                            <span class="avatar-stat-label-v2">Livello</span>
+                        </div>
+                        <div class="avatar-stat-v2">
+                            <span class="avatar-stat-number-v2" id="avatarAchievements">0</span>
+                            <span class="avatar-stat-label-v2">Achievement</span>
+                        </div>
+                    </div>
+                    
+                    <button class="customize-btn-v2" id="customizeBtnV2">
+                        🎨 Avatar Builder V2.0
+                    </button>
+                </div>
+            </div>
+
+            <!-- 🤖 AI Suggestions Panel -->
+            <div class="ai-suggestions-panel">
+                <div class="ai-panel-header">
+                    <h3>🤖 Suggerimenti AI</h3>
+                    <div class="ai-status-indicator" id="aiStatusIndicator">ATTIVO</div>
+                </div>
+                <div class="ai-suggestions-list" id="aiSuggestionsList">
+                    <!-- AI suggestions will be populated here -->
+                    <div class="ai-suggestion-item high-priority">
+                        <div class="suggestion-header">
+                            <div class="suggestion-title">Ottimizzazione Profilo Lifestyle</div>
+                            <div class="suggestion-priority">ALTA</div>
+                        </div>
+                        <div class="suggestion-description">
+                            Il tuo avatar può adattarsi automaticamente al tuo profilo comportamentale per supportarti meglio nel percorso.
+                        </div>
+                        <div class="suggestion-impact">
+                            Impact: Migliore allineamento psicologico
+                        </div>
+                    </div>
+                    
+                    <div class="ai-suggestion-item medium-priority">
+                        <div class="suggestion-header">
+                            <div class="suggestion-title">Celebra i Tuoi Progressi</div>
+                            <div class="suggestion-priority">MEDIA</div>
+                        </div>
+                        <div class="suggestion-description">
+                            Aggiungi elementi visivi che mostrano i tuoi risultati nel coaching per motivazione extra.
+                        </div>
+                        <div class="suggestion-impact">
+                            Impact: Aumento motivazione visiva
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="ai-refresh-btn" id="aiRefreshBtn">
+                    🔄 Genera Nuovi Suggerimenti
+                </button>
+            </div>
+        </div>
+
+        <!-- User Welcome V2.0 -->
+        <div class="user-welcome-v2">
+            <h2>👋 Ciao <span id="userNameWelcomeV2">Utente</span>!</h2>
+            <div class="user-info-text-v2">
+                <p>Benvenuto nella tua area personale di coaching V2.0 con Avatar System intelligente</p>
+                <p id="accessInfoV2">Sistema AI attivo - Avatar adattivo abilitato</p>
+            </div>
+        </div>
+
+        <!-- 📊 Progression Widget -->
+        <div class="progression-widget">
+            <div class="progression-header">
+                <h3>🚀 Progressione Avatar</h3>
+                <div class="level-display" id="levelDisplay">Livello 1/10</div>
+            </div>
+            
+            <div class="progression-bar-container">
+                <div class="progression-bar-fill" id="progressionBarFill" style="width: 10%"></div>
+            </div>
+            
+            <div class="progression-milestones" id="progressionMilestones">
+                <!-- Milestones will be generated here -->
+                <div class="milestone unlocked">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">1</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">2</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">3</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">4</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">5</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">6</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">7</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">8</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">9</div>
+                </div>
+                <div class="milestone">
+                    <div class="milestone-dot"></div>
+                    <div class="milestone-label">10</div>
+                </div>
+            </div>
+            
+            <div class="next-milestone">
+                <h4>🎯 Prossimo Obiettivo</h4>
+                <p id="nextMilestoneText">Completa la prima settimana di coaching per sbloccare nuovi stili avatar</p>
+            </div>
+        </div>
+
+        <!-- 🏆 Achievements Widget -->
+        <div class="achievements-widget">
+            <div class="achievements-header">
+                <h3>🏆 Achievement Gallery</h3>
+                <div class="achievements-count" id="achievementsCount">0/12</div>
+            </div>
+            
+            <div class="achievements-grid" id="achievementsGrid">
+                <!-- Achievements will be populated here -->
+                <div class="achievement-item locked" data-achievement="first_customization">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">Primo Stile</div>
+                    <div class="achievement-desc">Personalizza il tuo primo avatar</div>
+                </div>
+                
+                <div class="achievement-item locked" data-achievement="photo_upload">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">Foto Personale</div>
+                    <div class="achievement-desc">Carica la tua prima foto</div>
+                </div>
+                
+                <div class="achievement-item locked" data-achievement="style_explorer">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">Esploratore</div>
+                    <div class="achievement-desc">Prova 5 stili diversi</div>
+                </div>
+                
+                <div class="achievement-item locked" data-achievement="ai_collaborator">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">AI Collaborator</div>
+                    <div class="achievement-desc">Usa 10 suggerimenti AI</div>
+                </div>
+                
+                <div class="achievement-item locked" data-achievement="consistency_king">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">Re Costanza</div>
+                    <div class="achievement-desc">Stesso avatar per 7 giorni</div>
+                </div>
+                
+                <div class="achievement-item locked" data-achievement="perfectionist">
+                    <div class="achievement-icon">🔒</div>
+                    <div class="achievement-name">Perfezionista</div>
+                    <div class="achievement-desc">30+ minuti personalizzazione</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🚨 ENHANCED ADMIN CONTROLS -->
+        <div id="adminControlsV2" class="admin-controls-v2">
+            <div class="admin-header">
+                <div class="admin-badge" id="adminBadgeV2">🔓 ACCESSO NASCOSTO V2.0</div>
+                <h3 class="admin-title">Pannello Amministrazione Enhanced</h3>
+            </div>
+            <p class="admin-description">
+                🎯 Accesso protetto alla dashboard di amministrazione V2.0 con controllo completo del sistema coaching e avatar analytics avanzati.
+            </p>
+            <div class="admin-dashboard-link" id="adminDashboardLinkV2">
+                👑 Accedi alla Dashboard Admin V2.0
+            </div>
+        </div>
+
+        <!-- Enhanced Dashboard Grid -->
+        <div class="dashboard-grid-v2">
+            <!-- Test Lifestyle -->
+            <div class="dashboard-card-v2">
+                <span class="card-icon-v2">🎯</span>
+                <h3 class="card-title-v2">Test Lifestyle AI</h3>
+                <p class="card-description-v2">Scopri il tuo profilo benessere con intelligenza artificiale che adatta automaticamente il tuo avatar e percorso coaching.</p>
+                <a href="lifestyle-quiz.html" class="card-action-v2">Fai il Test AI</a>
+            </div>
+
+            <!-- Coaching Modules -->
+            <div class="dashboard-card-v2">
+                <span class="card-icon-v2">📚</span>
+                <h3 class="card-title-v2">Moduli Coaching V2.0</h3>
+                <p class="card-description-v2">Percorso di crescita potenziato con progressione avatar, achievement system e contenuti personalizzati AI.</p>
+                <a href="../modules/module-hub.html" class="card-action-v2">Inizia il Percorso</a>
+            </div>
+
+            <!-- Chat with Andrea -->
+            <div class="dashboard-card-v2">
+                <span class="card-icon-v2">💬</span>
+                <h3 class="card-title-v2">Chat Andrea AI</h3>
+                <p class="card-description-v2">Coach virtuale potenziato che comprende il tuo avatar, profilo lifestyle e progressi per supporto ultra-personalizzato.</p>
+                <a href="chat-andrea.html" class="card-action-v2">Avvia Chat AI</a>
+            </div>
+
+            <!-- Avatar Analytics -->
+            <div class="dashboard-card-v2">
+                <span class="card-icon-v2">📊</span>
+                <h3 class="card-title-v2">Avatar Analytics</h3>
+                <p class="card-description-v2">Dashboard completa sui tuoi progressi avatar, utilizzo features, effectiveness AI suggestions e crescita personale.</p>
+                <a href="#" class="card-action-v2" onclick="viewAvatarAnalytics()">Vedi Analytics</a>
+            </div>
+        </div>
+
+        <!-- Enhanced Quick Actions -->
+        <div class="quick-actions-v2">
+            <h3>⚡ Azioni Rapide V2.0</h3>
+            <div class="actions-grid-v2">
+                <a href="lifestyle-quiz.html" class="quick-btn-v2">🎯 Test Lifestyle AI</a>
+                <a href="../modules/module-hub.html" class="quick-btn-v2">📚 Continua Corso</a>
+                <a href="chat-andrea.html" class="quick-btn-v2">💬 Chat Andrea AI</a>
+                <a href="#" class="quick-btn-v2" onclick="viewCalendarV2()">📅 Calendario Smart</a>
+                <a href="#" class="quick-btn-v2" onclick="viewResourcesV2()">📖 Risorse AI</a>
+                <a href="#" class="quick-btn-v2" onclick="viewCommunityV2()">👥 Community</a>
+                <a href="#" class="quick-btn-v2" onclick="openAvatarBuilderV2()">🎨 Avatar Builder</a>
+                <a href="#" class="quick-btn-v2" onclick="viewProgressionV2()">🚀 Progressione</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎨 ENHANCED AVATAR BUILDER MODAL V2.0 -->
+    <div class="avatar-builder-modal-v2" id="avatarBuilderModalV2">
+        <div class="avatar-builder-content-v2">
+            <button class="close-modal-v2" id="closeModalBtnV2">×</button>
+            <div class="avatar-builder-header-v2">
+                <h2>🎨 Avatar Builder V2.0</h2>
+                <div class="mode-selector-v2">
+                    <button class="mode-btn-v2 active" data-mode="cartoon" id="cartoonModeBtn">
+                        🎭 Cartoon Evolution
+                    </button>
+                    <button class="mode-btn-v2" data-mode="photo" id="photoModeBtn">
+                        📷 Foto Personale
+                    </button>
+                </div>
+            </div>
+            
+            <div class="avatar-builder-main-v2">
+                <!-- Avatar Preview Section -->
+                <div class="avatar-preview-section-v2">
+                    <div class="avatar-preview-container-v2">
+                        <div class="avatar-preview-v2" id="avatarPreviewV2">
+                            <!-- Avatar preview will be rendered here -->
+                            <svg viewBox="0 0 140 140" id="avatarPreviewSvgV2">
+                                <!-- Default preview SVG -->
+                                <circle cx="70" cy="70" r="65" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                                <ellipse cx="70" cy="75" rx="35" ry="40" fill="#fdbcbc"/>
+                                <path d="M40,55 Q70,35 100,55 Q95,50 80,50 Q70,45 60,50 Q45,50 40,55" fill="#4A5568"/>
+                                <circle cx="60" cy="70" r="3" fill="white"/>
+                                <circle cx="60" cy="70" r="2" fill="#2D3748"/>
+                                <circle cx="80" cy="70" r="3" fill="white"/>
+                                <circle cx="80" cy="70" r="2" fill="#2D3748"/>
+                                <ellipse cx="70" cy="80" rx="2" ry="1" fill="#f8a5a5"/>
+                                <path d="M65,90 Q70,95 75,90" stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="avatar-info-preview-v2">
+                        <h4>Il Tuo Avatar AI</h4>
+                        <div class="mood-indicator-v2">
+                            <span id="moodEmojiV2">😊</span>
+                            <span id="moodTextV2">Pronto per l'evoluzione!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization Controls -->
+                <div class="customization-controls-v2" id="customizationControlsV2">
+                    <!-- Cartoon Controls -->
+                    <div id="cartoonControlsV2">
+                        <!-- Forma Viso -->
+                        <div class="control-section-v2">
+                            <h4>👤 Forma Viso</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2 active" data-control="faceShape" data-value="oval">Ovale</button>
+                                <button class="control-btn-v2" data-control="faceShape" data-value="round">Rotondo</button>
+                                <button class="control-btn-v2" data-control="faceShape" data-value="square">Quadrato</button>
+                                <button class="control-btn-v2" data-control="faceShape" data-value="heart">Cuore</button>
+                                <button class="control-btn-v2" data-control="faceShape" data-value="diamond">Diamante</button>
+                            </div>
+                        </div>
+
+                        <!-- Stile Capelli -->
+                        <div class="control-section-v2">
+                            <h4>💇 Stile Capelli</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2 active" data-control="hairStyle" data-value="short_modern">Corti Moderni</button>
+                                <button class="control-btn-v2" data-control="hairStyle" data-value="medium_layered">Medi Layered</button>
+                                <button class="control-btn-v2" data-control="hairStyle" data-value="long_flowing">Lunghi Flow</button>
+                                <button class="control-btn-v2" data-control="hairStyle" data-value="curly_natural">Ricci Natural</button>
+                                <button class="control-btn-v2" data-control="hairStyle" data-value="buzz_cut">Buzz Cut</button>
+                                <button class="control-btn-v2" data-control="hairStyle" data-value="professional">Professional</button>
+                            </div>
+                        </div>
+
+                        <!-- Stile Occhi -->
+                        <div class="control-section-v2">
+                            <h4>👀 Stile Occhi</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2 active" data-control="eyeStyle" data-value="natural">Natural</button>
+                                <button class="control-btn-v2" data-control="eyeStyle" data-value="expressive">Expressivi</button>
+                                <button class="control-btn-v2" data-control="eyeStyle" data-value="gentle">Gentili</button>
+                                <button class="control-btn-v2" data-control="eyeStyle" data-value="focused">Concentrati</button>
+                                <button class="control-btn-v2" data-control="eyeStyle" data-value="bright">Brillanti</button>
+                            </div>
+                        </div>
+
+                        <!-- Espressione -->
+                        <div class="control-section-v2">
+                            <h4>😊 Espressione</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2 active" data-control="mouthExpression" data-value="calm">😌 Calmo</button>
+                                <button class="control-btn-v2" data-control="mouthExpression" data-value="determined">💪 Determinato</button>
+                                <button class="control-btn-v2" data-control="mouthExpression" data-value="confident">😎 Sicuro</button>
+                                <button class="control-btn-v2" data-control="mouthExpression" data-value="creative">🎨 Creativo</button>
+                                <button class="control-btn-v2" data-control="mouthExpression" data-value="happy">😊 Felice</button>
+                                <button class="control-btn-v2" data-control="mouthExpression" data-value="focused">🎯 Focalizzato</button>
+                            </div>
+                        </div>
+
+                        <!-- Colori -->
+                        <div class="control-section-v2">
+                            <h4>🎨 Personalizza Colori</h4>
+                            <div class="color-controls-v2">
+                                <div class="color-group-v2">
+                                    <label>Capelli</label>
+                                    <input type="color" id="hairColorV2" data-control="hairColor" value="#4A5568">
+                                </div>
+                                <div class="color-group-v2">
+                                    <label>Occhi</label>
+                                    <input type="color" id="eyeColorV2" data-control="eyeColor" value="#2D3748">
+                                </div>
+                                <div class="color-group-v2">
+                                    <label>Pelle</label>
+                                    <input type="color" id="skinToneV2" data-control="skinTone" value="#F7FAFC">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Controls -->
+                    <div id="photoControlsV2" style="display: none;">
+                        <!-- Photo Upload -->
+                        <div class="photo-upload-section-v2">
+                            <div class="upload-area-v2" id="photoUploadAreaV2">
+                                <input type="file" id="photoFileInputV2" accept="image/*" style="display: none;">
+                                <div class="upload-icon-v2">📷</div>
+                                <div class="upload-text-v2">Clicca per caricare una foto</div>
+                                <div class="upload-hint-v2">JPG, PNG, WEBP - Max 5MB</div>
+                            </div>
+                        </div>
+
+                        <!-- Cornice -->
+                        <div class="control-section-v2">
+                            <h4>🖼️ Cornice</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2 active" data-control="frame" data-value="circle">Cerchio</button>
+                                <button class="control-btn-v2" data-control="frame" data-value="rounded">Arrotondata</button>
+                                <button class="control-btn-v2" data-control="frame" data-value="square">Quadrata</button>
+                                <button class="control-btn-v2" data-control="frame" data-value="hexagon">Esagonale</button>
+                                <button class="control-btn-v2" data-control="frame" data-value="diamond">Diamante</button>
+                            </div>
+                        </div>
+
+                        <!-- Effetti Foto -->
+                        <div class="control-section-v2">
+                            <h4>✨ Effetti Foto</h4>
+                            <div class="slider-controls-v2">
+                                <div class="slider-group-v2">
+                                    <label>
+                                        Luminosità
+                                        <span class="slider-value" id="brightnessValueV2">1.0</span>
+                                    </label>
+                                    <input type="range" id="brightnessSliderV2" data-control="brightness" min="0.5" max="1.5" step="0.1" value="1.0">
+                                </div>
+                                <div class="slider-group-v2">
+                                    <label>
+                                        Contrasto
+                                        <span class="slider-value" id="contrastValueV2">1.0</span>
+                                    </label>
+                                    <input type="range" id="contrastSliderV2" data-control="contrast" min="0.5" max="2" step="0.1" value="1.0">
+                                </div>
+                                <div class="slider-group-v2">
+                                    <label>
+                                        Saturazione
+                                        <span class="slider-value" id="saturationValueV2">1.0</span>
+                                    </label>
+                                    <input type="range" id="saturationSliderV2" data-control="saturation" min="0" max="2" step="0.1" value="1.0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filtri Artistici -->
+                        <div class="control-section-v2">
+                            <h4>🎨 Filtri Artistici</h4>
+                            <div class="control-grid-v2">
+                                <button class="control-btn-v2" data-control="artisticFilter" data-value="vintage">Vintage</button>
+                                <button class="control-btn-v2" data-control="artisticFilter" data-value="modern">Moderno</button>
+                                <button class="control-btn-v2" data-control="artisticFilter" data-value="dramatic">Drammatico</button>
+                                <button class="control-btn-v2" data-control="artisticFilter" data-value="soft">Soft</button>
+                                <button class="control-btn-v2" data-control="artisticFilter" data-value="vibrant">Vibrante</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Suggestions Sidebar -->
+                <div class="ai-suggestions-sidebar-v2">
+                    <h4>🤖 Suggerimenti AI</h4>
+                    <div id="aiSuggestionsModalList">
+                        <div class="ai-suggestion-mini">
+                            <h5>Palette Stagionale</h5>
+                            <p>Colori invernali per armonia stagionale</p>
+                        </div>
+                        <div class="ai-suggestion-mini">
+                            <h5>Mood Motivazionale</h5>
+                            <p>Espressione determinata per spinta motivazionale</p>
+                        </div>
+                        <div class="ai-suggestion-mini">
+                            <h5>Stile Professionale</h5>
+                            <p>Look curato per presentazioni di lavoro</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avatar Builder Actions -->
+            <div class="avatar-builder-actions-v2">
+                <button class="avatar-action-btn-v2" id="saveAvatarBtnV2">
+                    💾 Salva Avatar V2.0
+                </button>
+                <button class="avatar-action-btn-v2 secondary" id="randomAvatarBtnV2">
+                    🎲 Randomizza AI
+                </button>
+                <button class="avatar-action-btn-v2 tertiary" id="resetAvatarBtnV2">
+                    🔄 Reset Default
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔐 Admin Login Modal - Enhanced (mantiene funzionalità originale) -->
+    <div class="admin-login-modal" id="adminLoginModalV2">
+        <div class="admin-login-content">
+            <button class="admin-close-login" id="adminCloseLoginV2">×</button>
+            <div class="admin-login-header">
+                <span class="admin-icon">🔐</span>
+                <h2>Accesso Amministratore V2.0</h2>
+                <p>Dashboard amministrazione con Avatar Analytics avanzati</p>
+            </div>
+            
+            <form class="admin-login-form" id="adminLoginFormV2">
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="adminUsernameV2">Username</label>
+                    <input 
+                        type="text" 
+                        id="adminUsernameV2" 
+                        class="admin-form-input" 
+                        placeholder="Inserisci username admin"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+                
+                <div class="admin-form-group">
+                    <label class="admin-form-label" for="adminPasswordV2">Password</label>
+                    <input 
+                        type="password" 
+                        id="adminPasswordV2" 
+                        class="admin-form-input" 
+                        placeholder="Inserisci password admin"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+                
+                <div class="admin-login-error" id="adminLoginErrorV2">
+                    Credenziali non valide. Riprova.
+                </div>
+                
+                <div class="admin-login-actions">
+                    <button type="submit" class="admin-login-btn admin-btn-login" id="adminLoginBtnV2">
+                        🔓 Accedi V2.0
+                    </button>
+                    <button type="button" class="admin-login-btn admin-btn-cancel" id="adminCancelLoginV2">
+                        ❌ Annulla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Avatar System V2.0 JavaScript -->
+    <script src="../utils/enhanced-avatar-system-v2.js"></script>
+    <script src="../api/auth-guard.js"></script>
+    
+    <script>
+        console.log('🏠 Dashboard V2.0 con Enhanced Avatar System caricata - Inizializzazione...');
+
+        let currentUserId = 'guest_' + Date.now();
+        let avatarSystemV2 = null;
+        let clickCount = 0;
+        let clickTimer = null;
+        const TRIPLE_CLICK_THRESHOLD = 3;
+        const CLICK_TIMEOUT = 800;
+
+        // Admin credentials
+        const ADMIN_CREDENTIALS = {
+            username: 'admin',
+            password: 'tribucoach2024'
+        };
+        const ADMIN_SESSION_KEY = 'admin_session_tribucoach_v2';
+
+        // Avatar configuration V2.0
+        const avatarConfigV2 = {
+            mode: 'cartoon',
+            cartoon: {
+                faceShape: 'oval',
+                hairStyle: 'short_modern',
+                hairColor: '#4A5568',
+                eyeStyle: 'natural',
+                eyeColor: '#2D3748',
+                noseStyle: 'subtle',
+                mouthExpression: 'calm',
+                skinTone: '#F7FAFC',
+                accessories: [],
+                aura: null
+            },
+            photo: {
+                imageData: null,
+                filter: 'none',
+                frame: 'circle',
+                brightness: 1.0,
+                contrast: 1.0,
+                saturation: 1.0
+            },
+            level: 1,
+            achievements: [],
+            lastModified: new Date()
+        };
+
+        // Initialize Dashboard V2.0
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initializeDashboardV2();
+            checkUserRole();
+            setupEventListeners();
+            setupTripleClickAccess();
+            setupAdminLogin();
+            await setupEnhancedAvatarSystem();
+        });
+
+        async function initializeDashboardV2() {
+            try {
+                console.log('🚀 Inizializzazione Dashboard V2.0...');
+                
+                // Setup Andrea photo
+                await setupAndreaPhotoV2();
+                
+                // Load saved avatar configuration
+                loadSavedAvatarConfigV2();
+                
+                // Initialize AI suggestions
+                await generateAISuggestionsV2();
+                
+                // Update UI with loaded data
+                updateDashboardUIV2();
+                
+                console.log('✅ Dashboard V2.0 inizializzata con successo');
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione Dashboard V2.0:', error);
+            }
+        }
+
+        async function setupEnhancedAvatarSystem() {
+            try {
+                // Check if Enhanced Avatar System V2.0 is available
+                if (typeof initializeEnhancedAvatarSystemV2 !== 'undefined') {
+                    console.log('🎨 Inizializzazione Enhanced Avatar System V2.0...');
+                    
+                    // Get user lifestyle profile if available
+                    const lifestyleProfile = await getUserLifestyleProfile();
+                    
+                    // Initialize the enhanced avatar system
+                    const result = await initializeEnhancedAvatarSystemV2(currentUserId, lifestyleProfile);
+                    
+                    if (result.success) {
+                        avatarSystemV2 = result.manager;
+                        console.log('✅ Enhanced Avatar System V2.0 attivo');
+                        
+                        // Update avatar display with enhanced system
+                        await updateAvatarDisplayV2();
+                        
+                        // Setup avatar change listeners
+                        document.addEventListener('avatar_v2_changed', handleAvatarChangeV2);
+                        
+                    } else {
+                        console.warn('⚠️ Enhanced Avatar System V2.0 non disponibile, fallback al sistema base');
+                        setupBasicAvatarSystem();
+                    }
+                } else {
+                    console.warn('⚠️ Enhanced Avatar System V2.0 non trovato, usando sistema base');
+                    setupBasicAvatarSystem();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore setup Enhanced Avatar System:', error);
+                setupBasicAvatarSystem();
+            }
+        }
+
+        function setupBasicAvatarSystem() {
+            console.log('🔄 Setup sistema avatar base...');
+            updateBasicAvatarDisplay();
+        }
+
+        async function updateAvatarDisplayV2() {
+            if (!avatarSystemV2) return;
+            
+            try {
+                const avatarDisplayV2 = document.getElementById('userAvatarDisplayV2');
+                const modeIndicator = document.getElementById('avatarModeIndicator');
+                const levelIndicator = document.getElementById('avatarLevelIndicator');
+                
+                if (avatarDisplayV2) {
+                    if (avatarSystemV2.currentAvatar.mode === 'cartoon') {
+                        // Generate cartoon SVG
+                        const cartoonSVG = avatarSystemV2.generateCartoonSVG();
+                        avatarDisplayV2.innerHTML = cartoonSVG;
+                        modeIndicator.textContent = '🎭';
+                    } else {
+                        // Generate photo HTML
+                        const photoHTML = avatarSystemV2.generatePhotoHTML();
+                        avatarDisplayV2.innerHTML = photoHTML;
+                        modeIndicator.textContent = '📷';
+                    }
+                    
+                    // Update level indicator
+                    levelIndicator.textContent = avatarSystemV2.currentAvatar.level;
+                    
+                    // Update avatar info
+                    updateAvatarInfoV2();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore aggiornamento avatar display:', error);
+            }
+        }
+
+        function updateBasicAvatarDisplay() {
+            const avatarDisplayV2 = document.getElementById('userAvatarDisplayV2');
+            const modeIndicator = document.getElementById('avatarModeIndicator');
+            const levelIndicator = document.getElementById('avatarLevelIndicator');
+            
+            if (avatarDisplayV2) {
+                // Use basic SVG
+                avatarDisplayV2.innerHTML = `
+                    <svg viewBox="0 0 140 140">
+                        <circle cx="70" cy="70" r="65" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                        <ellipse cx="70" cy="75" rx="35" ry="40" fill="${avatarConfigV2.cartoon.skinTone}"/>
+                        <path d="M40,55 Q70,35 100,55 Q95,50 80,50 Q70,45 60,50 Q45,50 40,55" fill="${avatarConfigV2.cartoon.hairColor}"/>
+                        <circle cx="60" cy="70" r="3" fill="white"/>
+                        <circle cx="60" cy="70" r="2" fill="${avatarConfigV2.cartoon.eyeColor}"/>
+                        <circle cx="80" cy="70" r="3" fill="white"/>
+                        <circle cx="80" cy="70" r="2" fill="${avatarConfigV2.cartoon.eyeColor}"/>
+                        <ellipse cx="70" cy="80" rx="2" ry="1" fill="#f8a5a5"/>
+                        <path d="M65,90 Q70,95 75,90" stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                `;
+                
+                modeIndicator.textContent = avatarConfigV2.mode === 'cartoon' ? '🎭' : '📷';
+                levelIndicator.textContent = avatarConfigV2.level;
+            }
+        }
+
+        function updateAvatarInfoV2() {
+            const avatarName = document.getElementById('avatarNameV2');
+            const avatarPersonality = document.getElementById('avatarPersonalityV2');
+            const avatarLevel = document.getElementById('avatarLevel');
+            const avatarAchievements = document.getElementById('avatarAchievements');
+            const levelDisplay = document.getElementById('levelDisplay');
+            
+            if (avatarSystemV2) {
+                const avatar = avatarSystemV2.currentAvatar;
+                
+                if (avatarName) avatarName.textContent = avatar.mode === 'cartoon' ? 'Avatar Cartoon V2.0' : 'Avatar Foto V2.0';
+                if (avatarPersonality) avatarPersonality.textContent = `Livello ${avatar.level} - Evoluzione AI`;
+                if (avatarLevel) avatarLevel.textContent = avatar.level;
+                if (avatarAchievements) avatarAchievements.textContent = avatar.achievements.length;
+                if (levelDisplay) levelDisplay.textContent = `Livello ${avatar.level}/10`;
+                
+                // Update progression bar
+                updateProgressionBarV2();
+                
+                // Update achievements
+                updateAchievementsV2();
+            }
+        }
+
+        function updateProgressionBarV2() {
+            const progressionBarFill = document.getElementById('progressionBarFill');
+            const progressionMilestones = document.getElementById('progressionMilestones');
+            const nextMilestoneText = document.getElementById('nextMilestoneText');
+            
+            if (avatarSystemV2) {
+                const level = avatarSystemV2.currentAvatar.level;
+                const progress = (level / 10) * 100;
+                
+                if (progressionBarFill) {
+                    progressionBarFill.style.width = `${progress}%`;
+                }
+                
+                // Update milestones
+                if (progressionMilestones) {
+                    const milestones = progressionMilestones.querySelectorAll('.milestone');
+                    milestones.forEach((milestone, index) => {
+                        const milestoneLevel = index + 1;
+                        if (milestoneLevel <= level) {
+                            milestone.classList.add('unlocked');
+                        } else {
+                            milestone.classList.remove('unlocked');
+                        }
+                    });
+                }
+                
+                // Update next milestone text
+                if (nextMilestoneText && level < 10) {
+                    const nextLevel = level + 1;
+                    const milestoneTexts = {
+                        2: "Completa la prima settimana di coaching per sbloccare nuovi stili avatar",
+                        3: "Raggiungi 2 settimane consecutive per ottenere expressions pack",
+                        4: "Mantieni la costanza per 3 settimane e sblocca accessori premium",
+                        5: "Completa un mese intero per la trasformazione avatar",
+                        6: "Raggiungi la padronanza con 5 settimane completate",
+                        7: "Diventa un maestro con 6 settimane di coaching",
+                        8: "Raggiungi l'eccellenza con 7 settimane completate",
+                        9: "Diventa mentore per altri utenti",
+                        10: "Raggiungi lo status di leggenda del coaching"
+                    };
+                    
+                    nextMilestoneText.textContent = milestoneTexts[nextLevel] || "Livello massimo raggiunto!";
+                }
+            }
+        }
+
+        function updateAchievementsV2() {
+            const achievementsCount = document.getElementById('achievementsCount');
+            const achievementsGrid = document.getElementById('achievementsGrid');
+            
+            if (avatarSystemV2) {
+                const achievements = avatarSystemV2.currentAvatar.achievements;
+                const totalAchievements = achievementsGrid ? achievementsGrid.children.length : 6;
+                
+                if (achievementsCount) {
+                    achievementsCount.textContent = `${achievements.length}/${totalAchievements}`;
+                }
+                
+                // Update achievement items
+                if (achievementsGrid) {
+                    const items = achievementsGrid.querySelectorAll('.achievement-item');
+                    items.forEach(item => {
+                        const achievementId = item.dataset.achievement;
+                        if (achievements.includes(achievementId)) {
+                            item.classList.remove('locked');
+                            item.classList.add('unlocked');
+                            item.querySelector('.achievement-icon').textContent = '🏆';
+                        }
+                    });
+                }
+            }
+        }
+
+        async function generateAISuggestionsV2() {
+            try {
+                const aiSuggestionsList = document.getElementById('aiSuggestionsList');
+                
+                if (!aiSuggestionsList) return;
+                
+                // Generate dynamic AI suggestions based on user profile
+                const suggestions = await getContextualSuggestions();
+                
+                // Clear existing suggestions except the first ones
+                const existingSuggestions = aiSuggestionsList.querySelectorAll('.ai-suggestion-item');
+                if (existingSuggestions.length > 2) {
+                    for (let i = 2; i < existingSuggestions.length; i++) {
+                        existingSuggestions[i].remove();
+                    }
+                }
+                
+                // Add new suggestions
+                suggestions.forEach(suggestion => {
+                    const suggestionElement = createSuggestionElement(suggestion);
+                    aiSuggestionsList.appendChild(suggestionElement);
+                });
+                
+            } catch (error) {
+                console.error('❌ Errore generazione suggerimenti AI:', error);
+            }
+        }
+
+        async function getContextualSuggestions() {
+            // Mock AI suggestions based on time, season, user behavior
+            const now = new Date();
+            const hour = now.getHours();
+            const suggestions = [];
+            
+            if (hour >= 18 || hour <= 6) {
+                suggestions.push({
+                    type: 'contextual',
+                    priority: 'low',
+                    title: 'Modalità Serale',
+                    description: 'Applica colori più soft e rilassanti per la modalità serale',
+                    impact: 'Riduce affaticamento visivo durante le ore serali'
+                });
+            }
+            
+            if (avatarConfigV2.level === 1) {
+                suggestions.push({
+                    type: 'progression',
+                    priority: 'high',
+                    title: 'Prima Personalizzazione',
+                    description: 'Personalizza il tuo avatar per sbloccare il primo achievement',
+                    impact: 'Sblocca "Primo Stile" e inizia la progressione'
+                });
+            }
+            
+            return suggestions;
+        }
+
+        function createSuggestionElement(suggestion) {
+            const element = document.createElement('div');
+            element.className = `ai-suggestion-item ${suggestion.priority}-priority`;
+            element.innerHTML = `
+                <div class="suggestion-header">
+                    <div class="suggestion-title">${suggestion.title}</div>
+                    <div class="suggestion-priority">${suggestion.priority.toUpperCase()}</div>
+                </div>
+                <div class="suggestion-description">${suggestion.description}</div>
+                <div class="suggestion-impact">${suggestion.impact}</div>
+            `;
+            
+            element.addEventListener('click', () => applySuggestionV2(suggestion));
+            
+            return element;
+        }
+
+        async function applySuggestionV2(suggestion) {
+            try {
+                console.log('🤖 Applicazione suggerimento AI:', suggestion.title);
+                
+                if (avatarSystemV2) {
+                    await avatarSystemV2.applySuggestion(suggestion);
+                } else {
+                    // Basic suggestion application
+                    applyBasicSuggestion(suggestion);
+                }
+                
+                showNotificationV2(`✅ Suggerimento "${suggestion.title}" applicato!`, 'success');
+                
+            } catch (error) {
+                console.error('❌ Errore applicazione suggerimento:', error);
+                showNotificationV2('❌ Errore applicazione suggerimento', 'error');
+            }
+        }
+
+        function applyBasicSuggestion(suggestion) {
+            switch (suggestion.type) {
+                case 'contextual':
+                    if (suggestion.title === 'Modalità Serale') {
+                        avatarConfigV2.cartoon.skinTone = '#F1F2F6';
+                        avatarConfigV2.cartoon.hairColor = '#6C7B7F';
+                        updateBasicAvatarDisplay();
+                    }
+                    break;
+                case 'progression':
+                    if (suggestion.title === 'Prima Personalizzazione') {
+                        openAvatarBuilderV2();
+                    }
+                    break;
+            }
+        }
+
+        function handleAvatarChangeV2(event) {
+            console.log('🔄 Avatar cambiato:', event.detail);
+            
+            // Update display
+            updateAvatarDisplayV2();
+            
+            // Check for new achievements
+            checkNewAchievements(event.detail);
+            
+            // Update AI suggestions
+            generateAISuggestionsV2();
+        }
+
+        function checkNewAchievements(changeData) {
+            if (!avatarSystemV2) return;
+            
+            const { type, data } = changeData;
+            
+            switch (type) {
+                case 'cartoon_updated':
+                case 'photo_updated':
+                    avatarSystemV2.unlockAchievement('first_customization');
+                    break;
+                case 'photo_uploaded':
+                    avatarSystemV2.unlockAchievement('photo_upload');
+                    break;
+                case 'suggestion_applied':
+                    // Track AI collaboration
+                    const collaboratorCount = parseInt(localStorage.getItem('ai_suggestions_applied') || '0') + 1;
+                    localStorage.setItem('ai_suggestions_applied', collaboratorCount.toString());
+                    
+                    if (collaboratorCount >= 10) {
+                        avatarSystemV2.unlockAchievement('ai_collaborator');
+                    }
+                    break;
+            }
+        }
+
+        async function setupAndreaPhotoV2() {
+            try {
+                const andreaPhotoV2 = document.getElementById('andreaPhotoV2');
+                const photoIndicatorV2 = document.getElementById('photoIndicatorV2');
+                
+                // Enhanced photo options
+                const photos = [
+                    { src: '../assets/images/andrea/andrea-beach.jpg', name: 'Beach Session' },
+                    { src: '../assets/images/andrea/andrea-city.jpg', name: 'Urban Coaching' },
+                    { src: '../assets/images/andrea/andrea-outdoor.jpg', name: 'Outdoor Training' }
+                ];
+                
+                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                
+                setTimeout(() => {
+                    andreaPhotoV2.style.backgroundImage = `url(${randomPhoto.src})`;
+                    andreaPhotoV2.classList.remove('loading');
+                    
+                    if (photoIndicatorV2) {
+                        photoIndicatorV2.textContent = `📸 ${randomPhoto.name}`;
+                    }
+                }, 1200);
+                
+            } catch (error) {
+                console.error('❌ Errore setup foto Andrea V2:', error);
+                
+                const andreaPhotoV2 = document.getElementById('andreaPhotoV2');
+                if (andreaPhotoV2) {
+                    andreaPhotoV2.classList.remove('loading');
+                }
+            }
+        }
+
+        function loadSavedAvatarConfigV2() {
+            try {
+                const savedConfig = localStorage.getItem(`avatar_v2_config_${currentUserId}`);
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    Object.assign(avatarConfigV2, config);
+                    console.log('✅ Configurazione avatar V2.0 caricata');
+                }
+            } catch (error) {
+                console.error('❌ Errore caricamento configurazione avatar:', error);
+            }
+        }
+
+        function saveAvatarConfigV2() {
+            try {
+                localStorage.setItem(`avatar_v2_config_${currentUserId}`, JSON.stringify(avatarConfigV2));
+                console.log('💾 Configurazione avatar V2.0 salvata');
+            } catch (error) {
+                console.error('❌ Errore salvataggio configurazione avatar:', error);
+            }
+        }
+
+        function updateDashboardUIV2() {
+            // Update welcome message
+            const userNameWelcomeV2 = document.getElementById('userNameWelcomeV2');
+            const userNameV2 = document.getElementById('userNameV2');
+            
+            if (userNameWelcomeV2) userNameWelcomeV2.textContent = 'Utente V2.0';
+            if (userNameV2) userNameV2.textContent = 'Il Tuo Avatar V2.0';
+            
+            // Add fade-in animation to cards
+            const cards = document.querySelectorAll('.dashboard-card-v2, .avatar-section-v2 > div');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in-up');
+                }, index * 100);
+            });
+        }
+
+        // Enhanced Event Listeners
+        function setupEventListeners() {
+            // Avatar builder button
+            const customizeBtnV2 = document.getElementById('customizeBtnV2');
+            if (customizeBtnV2) {
+                customizeBtnV2.addEventListener('click', openAvatarBuilderV2);
+            }
+
+            // Avatar display click
+            const avatarDisplayV2 = document.getElementById('userAvatarDisplayV2');
+            if (avatarDisplayV2) {
+                avatarDisplayV2.addEventListener('click', openAvatarBuilderV2);
+            }
+
+            // AI refresh button
+            const aiRefreshBtn = document.getElementById('aiRefreshBtn');
+            if (aiRefreshBtn) {
+                aiRefreshBtn.addEventListener('click', generateAISuggestionsV2);
+            }
+
+            // Modal controls
+            setupModalEventListeners();
+        }
+
+        function setupModalEventListeners() {
+            const modal = document.getElementById('avatarBuilderModalV2');
+            const closeBtn = document.getElementById('closeModalBtnV2');
+            const cartoonModeBtn = document.getElementById('cartoonModeBtn');
+            const photoModeBtn = document.getElementById('photoModeBtn');
+            const saveBtn = document.getElementById('saveAvatarBtnV2');
+            const randomBtn = document.getElementById('randomAvatarBtnV2');
+            const resetBtn = document.getElementById('resetAvatarBtnV2');
+
+            if (closeBtn) closeBtn.addEventListener('click', closeAvatarBuilderV2);
+            if (cartoonModeBtn) cartoonModeBtn.addEventListener('click', () => switchAvatarMode('cartoon'));
+            if (photoModeBtn) photoModeBtn.addEventListener('click', () => switchAvatarMode('photo'));
+            if (saveBtn) saveBtn.addEventListener('click', saveAvatarV2);
+            if (randomBtn) randomBtn.addEventListener('click', randomizeAvatarV2);
+            if (resetBtn) resetBtn.addEventListener('click', resetAvatarV2);
+
+            // Modal backdrop click
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeAvatarBuilderV2();
+                    }
+                });
+            }
+
+            // Setup control listeners
+            setupControlListeners();
+        }
+
+        function setupControlListeners() {
+            // Cartoon controls
+            document.querySelectorAll('[data-control]').forEach(control => {
+                const controlType = control.dataset.control;
+                
+                if (control.type === 'color') {
+                    control.addEventListener('input', (e) => {
+                        handleControlChangeV2(controlType, e.target.value);
+                    });
+                } else if (control.type === 'range') {
+                    control.addEventListener('input', (e) => {
+                        handleControlChangeV2(controlType, parseFloat(e.target.value));
+                        updateSliderValue(controlType, e.target.value);
+                    });
+                } else {
+                    control.addEventListener('click', (e) => {
+                        if (e.target.dataset.value) {
+                            handleControlChangeV2(controlType, e.target.dataset.value);
+                            updateActiveControlButton(e.target);
+                        }
+                    });
+                }
+            });
+
+            // Photo upload
+            const uploadArea = document.getElementById('photoUploadAreaV2');
+            const fileInput = document.getElementById('photoFileInputV2');
+            
+            if (uploadArea && fileInput) {
+                uploadArea.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', handleDragOver);
+                uploadArea.addEventListener('drop', handleDrop);
+                fileInput.addEventListener('change', handleFileSelect);
+            }
+        }
+
+        function handleControlChangeV2(controlType, value) {
+            if (avatarConfigV2.mode === 'cartoon') {
+                avatarConfigV2.cartoon[controlType] = value;
+            } else {
+                avatarConfigV2.photo[controlType] = value;
+            }
+            
+            updateAvatarPreviewV2();
+            
+            if (avatarSystemV2) {
+                if (avatarConfigV2.mode === 'cartoon') {
+                    avatarSystemV2.updateCartoonConfig({ [controlType]: value });
+                } else {
+                    avatarSystemV2.updatePhotoConfig({ [controlType]: value });
+                }
+            }
+        }
+
+        function updateActiveControlButton(button) {
+            const siblings = button.parentElement.querySelectorAll('.control-btn-v2');
+            siblings.forEach(sibling => sibling.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        function updateSliderValue(controlType, value) {
+            const valueDisplay = document.getElementById(`${controlType}ValueV2`);
+            if (valueDisplay) {
+                valueDisplay.textContent = parseFloat(value).toFixed(1);
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handlePhotoUpload(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files[0]) {
+                handlePhotoUpload(e.target.files[0]);
+            }
+        }
+
+        async function handlePhotoUpload(file) {
+            try {
+                console.log('📷 Upload foto avatar V2.0...');
+                
+                if (avatarSystemV2) {
+                    await avatarSystemV2.uploadPhoto(file);
+                } else {
+                    // Basic photo processing
+                    const imageData = await processPhotoBasic(file);
+                    avatarConfigV2.photo.imageData = imageData;
+                    avatarConfigV2.mode = 'photo';
+                    updateAvatarPreviewV2();
+                }
+                
+                showNotificationV2('📷 Foto caricata con successo!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Errore upload foto:', error);
+                showNotificationV2('❌ Errore caricamento foto', 'error');
+            }
+        }
+
+        function processPhotoBasic(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('Errore lettura file'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function openAvatarBuilderV2() {
+            const modal = document.getElementById('avatarBuilderModalV2');
+            if (!modal) return;
+            
+            console.log('🎨 Apertura Avatar Builder V2.0');
+            
+            // Update preview
+            updateAvatarPreviewV2();
+            
+            // Update controls
+            updateControlsStateV2();
+            
+            // Show modal
+            modal.classList.add('active');
+            
+            // Track customization start time
+            avatarConfigV2.customizationStartTime = Date.now();
+        }
+
+        function closeAvatarBuilderV2() {
+            const modal = document.getElementById('avatarBuilderModalV2');
+            if (modal) {
+                modal.classList.remove('active');
+                
+                // Track customization time
+                if (avatarConfigV2.customizationStartTime) {
+                    const timeSpent = Date.now() - avatarConfigV2.customizationStartTime;
+                    console.log(`⏱️ Tempo personalizzazione: ${timeSpent}ms`);
+                    
+                    // Check for perfectionist achievement
+                    if (timeSpent > 1800000) { // 30+ minutes
+                        if (avatarSystemV2) {
+                            avatarSystemV2.unlockAchievement('perfectionist');
+                        }
+                    }
+                }
+            }
+        }
+
+        function switchAvatarMode(mode) {
+            avatarConfigV2.mode = mode;
+            
+            // Update mode buttons
+            const cartoonBtn = document.getElementById('cartoonModeBtn');
+            const photoBtn = document.getElementById('photoModeBtn');
+            const cartoonControls = document.getElementById('cartoonControlsV2');
+            const photoControls = document.getElementById('photoControlsV2');
+            
+            if (mode === 'cartoon') {
+                cartoonBtn?.classList.add('active');
+                photoBtn?.classList.remove('active');
+                if (cartoonControls) cartoonControls.style.display = 'block';
+                if (photoControls) photoControls.style.display = 'none';
+            } else {
+                photoBtn?.classList.add('active');
+                cartoonBtn?.classList.remove('active');
+                if (photoControls) photoControls.style.display = 'block';
+                if (cartoonControls) cartoonControls.style.display = 'none';
+            }
+            
+            updateAvatarPreviewV2();
+            
+            if (avatarSystemV2) {
+                avatarSystemV2.switchAvatarMode(mode);
+            }
+        }
+
+        function updateAvatarPreviewV2() {
+            const preview = document.getElementById('avatarPreviewV2');
+            if (!preview) return;
+            
+            if (avatarConfigV2.mode === 'cartoon') {
+                // Generate cartoon SVG
+                preview.innerHTML = generateCartoonSVGV2();
+            } else if (avatarConfigV2.photo.imageData) {
+                // Show photo
+                preview.innerHTML = generatePhotoHTMLV2();
+            } else {
+                // Show placeholder
+                preview.innerHTML = '<div style="color: #666; text-align: center; padding: 2rem;">📷 Carica una foto</div>';
+            }
+        }
+
+        function generateCartoonSVGV2() {
+            const config = avatarConfigV2.cartoon;
+            
+            return `
+                <svg viewBox="0 0 140 140">
+                    <!-- Background -->
+                    <circle cx="70" cy="70" r="65" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+                    
+                    <!-- Face -->
+                    <ellipse cx="70" cy="75" rx="35" ry="40" fill="${config.skinTone}"/>
+                    
+                    <!-- Hair -->
+                    <path d="M40,55 Q70,35 100,55 Q95,50 80,50 Q70,45 60,50 Q45,50 40,55" fill="${config.hairColor}"/>
+                    
+                    <!-- Eyes -->
+                    <circle cx="60" cy="70" r="4" fill="white"/>
+                    <circle cx="60" cy="70" r="2.5" fill="${config.eyeColor}"/>
+                    <circle cx="80" cy="70" r="4" fill="white"/>
+                    <circle cx="80" cy="70" r="2.5" fill="${config.eyeColor}"/>
+                    
+                    <!-- Nose -->
+                    <ellipse cx="70" cy="80" rx="2" ry="1.5" fill="#f8a5a5"/>
+                    
+                    <!-- Mouth -->
+                    <path d="M65,90 Q70,95 75,90" stroke="#d97706" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    
+                    <!-- Level indicator -->
+                    ${avatarConfigV2.level > 1 ? `<text x="110" y="25" fill="#f59e0b" font-size="12" font-weight="bold">${avatarConfigV2.level}</text>` : ''}
+                </svg>
+            `;
+        }
+
+        function generatePhotoHTMLV2() {
+            const config = avatarConfigV2.photo;
+            
+            return `
+                <img src="${config.imageData}" 
+                     alt="Avatar Foto" 
+                     style="width: 100%; height: 250px; object-fit: cover; 
+                            border-radius: ${config.frame === 'circle' ? '50%' : config.frame === 'rounded' ? '20px' : '0'};
+                            filter: brightness(${config.brightness}) contrast(${config.contrast}) saturate(${config.saturation});">
+            `;
+        }
+
+        function updateControlsStateV2() {
+            // Update color inputs
+            const hairColorInput = document.getElementById('hairColorV2');
+            const eyeColorInput = document.getElementById('eyeColorV2');
+            const skinToneInput = document.getElementById('skinToneV2');
+            
+            if (hairColorInput) hairColorInput.value = avatarConfigV2.cartoon.hairColor;
+            if (eyeColorInput) eyeColorInput.value = avatarConfigV2.cartoon.eyeColor;
+            if (skinToneInput) skinToneInput.value = avatarConfigV2.cartoon.skinTone;
+            
+            // Update active buttons
+            document.querySelectorAll('.control-btn-v2').forEach(btn => {
+                const control = btn.dataset.control;
+                const value = btn.dataset.value;
+                
+                if (control && value) {
+                    const isActive = avatarConfigV2.cartoon[control] === value;
+                    btn.classList.toggle('active', isActive);
+                }
+            });
+            
+            // Update sliders for photo mode
+            const brightnessSlider = document.getElementById('brightnessSliderV2');
+            const contrastSlider = document.getElementById('contrastSliderV2');
+            const saturationSlider = document.getElementById('saturationSliderV2');
+            
+            if (brightnessSlider) {
+                brightnessSlider.value = avatarConfigV2.photo.brightness;
+                updateSliderValue('brightness', avatarConfigV2.photo.brightness);
+            }
+            if (contrastSlider) {
+                contrastSlider.value = avatarConfigV2.photo.contrast;
+                updateSliderValue('contrast', avatarConfigV2.photo.contrast);
+            }
+            if (saturationSlider) {
+                saturationSlider.value = avatarConfigV2.photo.saturation;
+                updateSliderValue('saturation', avatarConfigV2.photo.saturation);
+            }
+        }
+
+        function saveAvatarV2() {
+            try {
+                console.log('💾 Salvataggio Avatar V2.0...');
+                
+                avatarConfigV2.lastModified = new Date();
+                saveAvatarConfigV2();
+                
+                if (avatarSystemV2) {
+                    avatarSystemV2.saveAvatar();
+                }
+                
+                // Update main display
+                updateAvatarDisplayV2();
+                
+                // Close modal
+                closeAvatarBuilderV2();
+                
+                // Unlock achievement
+                if (avatarSystemV2) {
+                    avatarSystemV2.unlockAchievement('first_customization');
+                }
+                
+                showNotificationV2('💾 Avatar V2.0 salvato con successo!', 'success');
+                
+            } catch (error) {
+                console.error('❌ Errore salvataggio avatar:', error);
+                showNotificationV2('❌ Errore salvataggio avatar', 'error');
+            }
+        }
+
+        function randomizeAvatarV2() {
+            console.log('🎲 Randomizzazione Avatar V2.0...');
+            
+            if (avatarSystemV2) {
+                avatarSystemV2.randomizeAvatar();
+            } else {
+                // Basic randomization
+                const hairColors = ['#4A5568', '#2D3748', '#8B4513', '#2F1B14', '#FFD700', '#DC143C'];
+                const eyeColors = ['#2D3748', '#4169E1', '#228B22', '#8B4513', '#708090'];
+                const skinTones = ['#F7FAFC', '#FDF2E9', '#FEF5E7', '#FFFAF0'];
+                
+                avatarConfigV2.cartoon.hairColor = hairColors[Math.floor(Math.random() * hairColors.length)];
+                avatarConfigV2.cartoon.eyeColor = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+                avatarConfigV2.cartoon.skinTone = skinTones[Math.floor(Math.random() * skinTones.length)];
+                
+                updateControlsStateV2();
+                updateAvatarPreviewV2();
+            }
+            
+            showNotificationV2('🎲 Avatar randomizzato!', 'success');
+        }
+
+        function resetAvatarV2() {
+            console.log('🔄 Reset Avatar V2.0...');
+            
+            // Reset to defaults
+            avatarConfigV2.cartoon = {
+                faceShape: 'oval',
+                hairStyle: 'short_modern',
+                hairColor: '#4A5568',
+                eyeStyle: 'natural',
+                eyeColor: '#2D3748',
+                noseStyle: 'subtle',
+                mouthExpression: 'calm',
+                skinTone: '#F7FAFC',
+                accessories: [],
+                aura: null
+            };
+            
+            avatarConfigV2.photo = {
+                imageData: null,
+                filter: 'none',
+                frame: 'circle',
+                brightness: 1.0,
+                contrast: 1.0,
+                saturation: 1.0
+            };
+            
+            updateControlsStateV2();
+            updateAvatarPreviewV2();
+            
+            showNotificationV2('🔄 Avatar ripristinato alle impostazioni default', 'info');
+        }
+
+        // Triple-click admin access (mantiene funzionalità originale)
+        function setupTripleClickAccess() {
+            const andreaPhotoV2 = document.getElementById('andreaPhotoV2');
+            
+            if (andreaPhotoV2) {
+                andreaPhotoV2.addEventListener('click', handleAndreaPhotoClick);
+                console.log('🔒 Triple-click admin access V2.0 configurato');
+            }
+        }
+
+        function handleAndreaPhotoClick(event) {
+            event.preventDefault();
+            
+            clickCount++;
+            console.log(`🖱️ Click ${clickCount}/3 su avatar Andrea V2.0`);
+            
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+            }
+            
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, CLICK_TIMEOUT);
+            
+            if (clickCount >= TRIPLE_CLICK_THRESHOLD) {
+                activateHiddenAdminAccessV2();
+                clickCount = 0;
+                clearTimeout(clickTimer);
+            }
+        }
+
+        function activateHiddenAdminAccessV2() {
+            console.log('🚨 TRIPLE-CLICK V2.0 RILEVATO - Verifica accesso admin...');
+            
+            const andreaPhotoV2 = document.getElementById('andreaPhotoV2');
+            andreaPhotoV2.classList.add('triple-click-active');
+            
+            const isAdminLoggedIn = checkAdminSessionV2();
+            
+            if (isAdminLoggedIn) {
+                redirectToAdminDashboardV2();
+            } else {
+                showAdminLoginModalV2();
+            }
+            
+            setTimeout(() => {
+                andreaPhotoV2.classList.remove('triple-click-active');
+            }, 1000);
+        }
+
+        // Admin login system V2.0
+        function setupAdminLogin() {
+            const adminLoginFormV2 = document.getElementById('adminLoginFormV2');
+            const adminCancelLoginV2 = document.getElementById('adminCancelLoginV2');
+            const adminCloseLoginV2 = document.getElementById('adminCloseLoginV2');
+            const adminDashboardLinkV2 = document.getElementById('adminDashboardLinkV2');
+
+            if (adminLoginFormV2) {
+                adminLoginFormV2.addEventListener('submit', handleAdminLoginV2);
+            }
+
+            if (adminCancelLoginV2) {
+                adminCancelLoginV2.addEventListener('click', hideAdminLoginModalV2);
+            }
+
+            if (adminCloseLoginV2) {
+                adminCloseLoginV2.addEventListener('click', hideAdminLoginModalV2);
+            }
+
+            if (adminDashboardLinkV2) {
+                adminDashboardLinkV2.addEventListener('click', handleAdminDashboardClickV2);
+            }
+
+            const adminLoginModalV2 = document.getElementById('adminLoginModalV2');
+            if (adminLoginModalV2) {
+                adminLoginModalV2.addEventListener('click', (e) => {
+                    if (e.target === adminLoginModalV2) {
+                        hideAdminLoginModalV2();
+                    }
+                });
+            }
+        }
+
+        function checkAdminSessionV2() {
+            try {
+                const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+                if (sessionData) {
+                    const session = JSON.parse(sessionData);
+                    
+                    if (session.username === ADMIN_CREDENTIALS.username && session.timestamp) {
+                        console.log('✅ Sessione admin V2.0 valida trovata');
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Errore verifica sessione admin V2.0:', error);
+                localStorage.removeItem(ADMIN_SESSION_KEY);
+            }
+            
+            return false;
+        }
+
+        function showAdminLoginModalV2() {
+            const modal = document.getElementById('adminLoginModalV2');
+            const usernameInput = document.getElementById('adminUsernameV2');
+            const passwordInput = document.getElementById('adminPasswordV2');
+            const errorDiv = document.getElementById('adminLoginErrorV2');
+            
+            if (usernameInput) usernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            if (errorDiv) errorDiv.classList.remove('show');
+            
+            if (modal) {
+                modal.classList.add('active');
+                if (usernameInput) usernameInput.focus();
+            }
+            
+            console.log('🔐 Modal login admin V2.0 mostrato');
+        }
+
+        function hideAdminLoginModalV2() {
+            const modal = document.getElementById('adminLoginModalV2');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        async function handleAdminLoginV2(event) {
+            event.preventDefault();
+            
+            const usernameInput = document.getElementById('adminUsernameV2');
+            const passwordInput = document.getElementById('adminPasswordV2');
+            const loginBtn = document.getElementById('adminLoginBtnV2');
+            const errorDiv = document.getElementById('adminLoginErrorV2');
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = '🔄 Verifica V2.0...';
+            
+            errorDiv.classList.remove('show');
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                console.log('✅ Login admin V2.0 riuscito');
+                
+                const sessionData = {
+                    username: username,
+                    timestamp: Date.now(),
+                    loginTime: new Date().toISOString(),
+                    version: '2.0'
+                };
+                
+                localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
+                
+                hideAdminLoginModalV2();
+                
+                showNotificationV2('🎉 Accesso Admin V2.0 Riuscito!', 'success');
+                
+                setTimeout(() => {
+                    redirectToAdminDashboardV2();
+                }, 1000);
+                
+            } else {
+                console.log('❌ Login admin V2.0 fallito');
+                
+                errorDiv.classList.add('show');
+                
+                loginBtn.disabled = false;
+                loginBtn.textContent = '🔓 Accedi V2.0';
+                
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                showNotificationV2('❌ Credenziali non valide', 'error');
+            }
+        }
+
+        function handleAdminDashboardClickV2() {
+            const isAdminLoggedIn = checkAdminSessionV2();
+            
+            if (isAdminLoggedIn) {
+                redirectToAdminDashboardV2();
+            } else {
+                showAdminLoginModalV2();
+            }
+        }
+
+        function redirectToAdminDashboardV2() {
+            console.log('🚀 Reindirizzamento admin dashboard V2.0...');
+            
+            showNotificationV2('🚀 Caricamento Dashboard Admin V2.0...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'admin/admin-dashboard.html';
+            }, 500);
+        }
+
+        // Enhanced user role detection
+        async function checkUserRole() {
+            try {
+                if (window.AuthGuard) {
+                    const authGuard = new window.AuthGuard();
+                    
+                    try {
+                        const user = await authGuard.getCurrentUser();
+                        
+                        if (user && user.role) {
+                            showUserRoleV2(user);
+                            currentUserId = user.id || user.email || currentUserId;
+                            console.log('✅ Utente V2.0 riconosciuto:', user.email, 'Ruolo:', user.role);
+                        } else {
+                            showDefaultUserV2();
+                            console.log('👤 Utente generico V2.0 - nessun ruolo specifico');
+                        }
+                    } catch (error) {
+                        console.log('👤 Nessun utente loggato V2.0 - modalità ospite');
+                        showDefaultUserV2();
+                    }
+                } else {
+                    console.log('⚠️ AuthGuard non disponibile V2.0 - modalità base');
+                    showDefaultUserV2();
+                }
+            } catch (error) {
+                console.error('❌ Errore controllo ruoli V2.0:', error);
+                showDefaultUserV2();
+            }
+        }
+
+        function showUserRoleV2(user) {
+            const role = user.role;
+            const email = user.email;
+            const name = user.name || email.split('@')[0];
+
+            document.getElementById('userNameV2').textContent = name;
+            document.getElementById('userNameWelcomeV2').textContent = name;
+
+            const roleIndicatorV2 = document.getElementById('roleIndicatorV2');
+            const roleTextV2 = document.getElementById('roleTextV2');
+            const accessInfoV2 = document.getElementById('accessInfoV2');
+            
+            if (role === 'admin') {
+                roleIndicatorV2.className = 'role-indicator-v2 visible admin';
+                roleTextV2.textContent = '👑 ADMIN V2.0';
+                accessInfoV2.textContent = 'Accesso amministratore V2.0 - Analytics avatar completi';
+                
+            } else if (role === 'beta') {
+                roleIndicatorV2.className = 'role-indicator-v2 visible beta';
+                roleTextV2.textContent = '🧪 BETA V2.0';
+                accessInfoV2.textContent = 'Accesso beta tester V2.0 - Features avatar avanzate';
+                
+            } else {
+                roleIndicatorV2.className = 'role-indicator-v2 visible';
+                roleTextV2.textContent = '👤 USER V2.0';
+                accessInfoV2.textContent = 'Accesso utente registrato V2.0';
+            }
+        }
+
+        function showDefaultUserV2() {
+            document.getElementById('userNameV2').textContent = 'Il Tuo Avatar V2.0';
+            document.getElementById('userNameWelcomeV2').textContent = 'Utente V2.0';
+            document.getElementById('accessInfoV2').textContent = 'Sistema AI attivo - Avatar adattivo abilitato';
+            console.log('👤 Modalità utente standard V2.0');
+        }
+
+        async function getUserLifestyleProfile() {
+            try {
+                const savedProfile = localStorage.getItem(`lifestyle_profile_${currentUserId}`);
+                if (savedProfile) {
+                    return JSON.parse(savedProfile);
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Errore caricamento profilo lifestyle:', error);
+                return null;
+            }
+        }
+
+        // Enhanced notification system
+        function showNotificationV2(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification-v2 ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Enhanced action functions
+        window.viewAvatarAnalytics = function() {
+            console.log('📊 Apertura Avatar Analytics V2.0...');
+            showNotificationV2('📊 Avatar Analytics V2.0!\n\nDashboard completa su utilizzo features, efficacia AI, progressione e insights comportamentali.', 'info');
+        };
+
+        window.viewCalendarV2 = function() {
+            console.log('📅 Apertura calendario smart V2.0...');
+            showNotificationV2('📅 Calendario Smart V2.0!\n\nPianificazione intelligente con integrazione avatar e coaching AI personalizzato.', 'success');
+        };
+
+        window.viewResourcesV2 = function() {
+            console.log('📖 Apertura risorse AI V2.0...');
+            showNotificationV2('📖 Libreria Risorse AI V2.0!\n\nContenuti personalizzati basati sul tuo profilo e progressi avatar.', 'success');
+        };
+
+        window.viewCommunityV2 = function() {
+            console.log('👥 Apertura community V2.0...');
+            showNotificationV2('👥 Community Enhanced V2.0!\n\nConnettiti con altri utenti, condividi avatar e progressi coaching.', 'success');
+        };
+
+        window.openAvatarBuilderV2 = function() {
+            openAvatarBuilderV2();
+        };
+
+        window.viewProgressionV2 = function() {
+            console.log('🚀 Visualizzazione progressione dettagliata...');
+            showNotificationV2('🚀 Progressione Avatar V2.0!\n\nAnalisi dettagliata del tuo percorso, achievement e evoluzione AI.', 'info');
+        };
+
+        // Auto-update stats
+        function updateStatsV2() {
+            const stats = [
+                { min: 1, max: 10 },
+                { min: 0, max: 12 },
+                { min: 800, max: 1200 },
+                { min: 20, max: 40 }
+            ];
+
+            const elements = [
+                document.getElementById('avatarLevel'),
+                document.getElementById('avatarAchievements'),
+                null, // placeholder for future stat
+                null  // placeholder for future stat
+            ];
+
+            elements.forEach((el, index) => {
+                if (el && stats[index]) {
+                    const stat = stats[index];
+                    const newValue = Math.floor(Math.random() * (stat.max - stat.min + 1)) + stat.min;
+                    if (index < 2) { // Only update existing stats
+                        el.textContent = newValue;
+                    }
+                }
+            });
+        }
+
+        // Update stats every 30 seconds
+        setInterval(updateStatsV2, 30000);
+
+        // Performance monitoring
+        function monitorPerformanceV2() {
+            console.log('📈 Performance Dashboard V2.0:', {
+                avatarSystemLoaded: !!avatarSystemV2,
+                aiSuggestionsActive: document.getElementById('aiSuggestionsList')?.children.length > 0,
+                modalResponsive: document.getElementById('avatarBuilderModalV2') !== null,
+                enhancedFeaturesActive: true
+            });
+        }
+
+        // Monitor performance every minute
+        setInterval(monitorPerformanceV2, 60000);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            saveAvatarConfigV2();
+            console.log('💾 Configurazione Avatar V2.0 salvata automaticamente');
+        });
+
+        console.log('✅ Dashboard V2.0 con Enhanced Avatar System completamente inizializzata!');
+    </script>
+</body>
+</html>
+                        
