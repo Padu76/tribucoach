@@ -664,28 +664,47 @@ function updateAvatarAnalytics() {
             </div>
         </div>
         
-        <!-- Avatar Types -->
+        <!-- Profile Distribution -->
         <div class="avatar-metric-card">
-            <h4>🎨 Tipi Avatar</h4>
-            <div class="avatar-types">
-                <div class="avatar-type-item">
-                    <span class="type-icon">🤖</span>
-                    <span class="type-label">Automatici</span>
-                    <span class="type-value">${avatarMetrics.generatedAvatars}</span>
+            <h4>👥 Distribuzione Profili</h4>
+            <div class="profile-distribution">
+                ${Object.entries(avatarMetrics.profileDistribution || {}).map(([profile, count]) => `
+                    <div class="profile-item">
+                        <span class="profile-label">${getProfileEmoji(profile)} ${getProfileDisplayName(profile)}</span>
+                        <span class="profile-value">${count}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <!-- Score Medi -->
+        <div class="avatar-metric-card">
+            <h4>📈 Score Medi</h4>
+            <div class="avg-scores">
+                <div class="score-item">
+                    <span class="score-label">💪 Salute</span>
+                    <span class="score-value">${avatarMetrics.avgScores?.health || 0}</span>
                 </div>
-                <div class="avatar-type-item">
-                    <span class="type-icon">✨</span>
-                    <span class="type-label">Personalizzati</span>
-                    <span class="type-value">${avatarMetrics.customizedAvatars}</span>
+                <div class="score-item">
+                    <span class="score-label">💼 Professionale</span>
+                    <span class="score-value">${avatarMetrics.avgScores?.professional || 0}</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">👥 Sociale</span>
+                    <span class="score-value">${avatarMetrics.avgScores?.social || 0}</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">🌟 Benessere</span>
+                    <span class="score-value">${avatarMetrics.avgScores?.wellbeing || 0}</span>
                 </div>
             </div>
         </div>
         
         <!-- Avatar Styles Popular -->
         <div class="avatar-metric-card">
-            <h4>🏃‍♂️ Stili Popolari</h4>
+            <h4>🎨 Stili Avatar Popolari</h4>
             <div class="avatar-styles">
-                ${Object.entries(avatarMetrics.avatarStyles).map(([style, count]) => `
+                ${Object.entries(avatarMetrics.avatarStyles || {}).map(([style, count]) => `
                     <div class="style-item">
                         <span class="style-label">${getStyleEmoji(style)} ${getStyleName(style)}</span>
                         <span class="style-value">${count}</span>
@@ -695,6 +714,7 @@ function updateAvatarAnalytics() {
         </div>
     `;
 }
+
 function updateSessionsList() {
     const container = document.getElementById('sessionsList');
     if (!container) return;
@@ -715,8 +735,8 @@ function updateSessionsList() {
     }
     
     container.innerHTML = sessions.map(session => {
-        const user = firebaseData.allUsers.find(u => u.id === session.userId);
-        const userName = user ? user.name : 'Utente sconosciuto';
+        const user = firebaseData.allUsers.find(u => u.id === session.userId || u.email === session.userId);
+        const userName = user ? user.name : session.userId || 'Utente sconosciuto';
         const duration = formatDuration(session.duration || 0);
         const timestamp = formatDateTime(session.timestamp);
         
@@ -725,9 +745,10 @@ function updateSessionsList() {
                 <div class="session-info">
                     <div class="session-user">👤 ${userName}</div>
                     <div class="session-details">
-                        <span>📝 Settimana ${session.weekNumber}</span>
+                        <span>📝 ${session.sessionType || 'Sessione'}</span>
                         <span>⏱️ ${duration}</span>
                         <span>💬 ${session.aiResponsesGenerated || 0} AI responses</span>
+                        <span>📊 ${session.source || 'unknown'}</span>
                     </div>
                 </div>
                 <div class="session-meta">
@@ -858,8 +879,70 @@ function showTableErrorState() {
 }
 
 // ==========================================================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - AGGIUNTE LE FUNZIONI MANCANTI
 // ==========================================================================
+
+/**
+ * Get style emoji for avatar analytics
+ */
+function getStyleEmoji(style) {
+    const styleEmojis = {
+        'athletic': '🏃‍♂️',
+        'active': '🚶‍♂️', 
+        'beginner': '🧘‍♂️',
+        'energetic': '⚡',
+        'tired': '😴',
+        'focused': '🎯',
+        'experienced': '🏆'
+    };
+    return styleEmojis[style] || '👤';
+}
+
+/**
+ * Get style name for avatar analytics
+ */
+function getStyleName(style) {
+    const styleNames = {
+        'athletic': 'Atletico',
+        'active': 'Attivo',
+        'beginner': 'Principiante',
+        'energetic': 'Energico',
+        'tired': 'Stanco',
+        'focused': 'Concentrato',
+        'experienced': 'Esperto'
+    };
+    return styleNames[style] || style;
+}
+
+/**
+ * Get profile emoji for display
+ */
+function getProfileEmoji(profileType) {
+    const profileEmojis = {
+        'motivato_inconsistente': '🎢',
+        'stressato_esaurito': '😰',
+        'perfezionista_bloccato': '🔒',
+        'equilibrato_avanzato': '⚖️',
+        'principiante_entusiasta': '🌟',
+        'esperto_demotivato': '😐'
+    };
+    return profileEmojis[profileType] || '👤';
+}
+
+/**
+ * Get profile display name
+ */
+function getProfileDisplayName(profileType) {
+    const profileNames = {
+        'motivato_inconsistente': 'Motivato Inconsistente',
+        'stressato_esaurito': 'Stressato Esaurito',
+        'perfezionista_bloccato': 'Perfezionista Bloccato',
+        'equilibrato_avanzato': 'Equilibrato Avanzato',
+        'principiante_entusiasta': 'Principiante Entusiasta',
+        'esperto_demotivato': 'Esperto Demotivato'
+    };
+    return profileNames[profileType] || profileType;
+}
 
 /**
  * Get profile icon
@@ -1009,6 +1092,36 @@ style.textContent = `
     @keyframes slideOutRight {
         from { transform: translateX(0); opacity: 1; }
         to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .profile-distribution, .avatar-styles, .avg-scores {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .profile-item, .score-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 6px;
+        border: 1px solid #334155;
+    }
+    
+    .profile-label, .score-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #f8fafc;
+        font-size: 0.8rem;
+    }
+    
+    .profile-value, .score-value {
+        color: #ea580c;
+        font-weight: bold;
+        font-size: 0.9rem;
     }
 `;
 document.head.appendChild(style);
