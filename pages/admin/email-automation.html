@@ -981,7 +981,7 @@
                 // EmailJS Configuration
                 this.emailConfig = {
                     serviceId: 'service_v6bw2m4',
-                    templateId: 'template_hc7l76m',
+                    templateId: 'template_l605n5c',
                     publicKey: 'ME0ru3KkNko0P6d2Y'
                 };
                 
@@ -1010,16 +1010,22 @@
             }
 
             initializeEmailJS() {
-                try {
+                // Wait for EmailJS to load
+                const waitForEmailJS = () => {
                     if (typeof emailjs !== 'undefined') {
-                        emailjs.init(this.emailConfig.publicKey);
-                        console.log('✅ EmailJS inizializzato con successo');
+                        try {
+                            emailjs.init(this.emailConfig.publicKey);
+                            console.log('✅ EmailJS inizializzato con successo');
+                        } catch (error) {
+                            console.error('❌ Errore inizializzazione EmailJS:', error);
+                        }
                     } else {
-                        console.warn('⚠️ EmailJS non caricato, funzionalità email limitate');
+                        console.log('⏳ Aspettando caricamento EmailJS...');
+                        setTimeout(waitForEmailJS, 500); // Retry after 500ms
                     }
-                } catch (error) {
-                    console.error('❌ Errore inizializzazione EmailJS:', error);
-                }
+                };
+                
+                waitForEmailJS();
             }
 
             setupControls() {
@@ -1677,17 +1683,20 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('📧 Inizializzando Email Automation Module...');
             
-            // Initialize the email automation system
-            window.emailAutomationSystem = new EmailAutomationSystem();
-            
-            // Global function for integration with quiz
-            window.triggerEmailAutomationFromQuiz = function(quizResults) {
-                if (window.emailAutomationSystem) {
-                    window.emailAutomationSystem.triggerFromQuiz(quizResults);
-                }
-            };
-            
-            console.log('✅ Email Automation Module caricato completamente!');
+            // Wait a bit for EmailJS SDK to load
+            setTimeout(() => {
+                // Initialize the email automation system
+                window.emailAutomationSystem = new EmailAutomationSystem();
+                
+                // Global function for integration with quiz
+                window.triggerEmailAutomationFromQuiz = function(quizResults) {
+                    if (window.emailAutomationSystem) {
+                        window.emailAutomationSystem.triggerFromQuiz(quizResults);
+                    }
+                };
+                
+                console.log('✅ Email Automation Module caricato completamente!');
+            }, 1000); // Wait 1 second for EmailJS to load
         });
 
         // Keyboard shortcuts
