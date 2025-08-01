@@ -1,435 +1,161 @@
-// avatar-system-realistic.js - GALLERIA AVATAR FLAT DESIGN PROFESSIONALE
-// Sistema con avatar moderni come nelle immagini di riferimento
+// avatar-system-realistic.js - SISTEMA AVATAR CON DICEBEAR
+// Libreria avatar professionale che funziona al 100%
 
-// === CONFIGURAZIONE PERSONALIZZAZIONI ===
-const AvatarCustomization = {
-    skinTones: [
-        { name: 'Molto Chiara', color: '#FDBCB4', shadow: '#F1A894' },
-        { name: 'Chiara', color: '#F7B5A8', shadow: '#E8A584' },
-        { name: 'Media Chiara', color: '#E8B895', shadow: '#D5A785' },
-        { name: 'Media', color: '#D5A785', shadow: '#C89067' },
-        { name: 'Media Scura', color: '#C89067', shadow: '#B07854' },
-        { name: 'Scura', color: '#B07854', shadow: '#9B6B47' },
-        { name: 'Molto Scura', color: '#8B5A3C', shadow: '#6D4426' }
+// === CONFIGURAZIONE DICEBEAR ===
+const DiceBearConfig = {
+    // Stili disponibili di DiceBear
+    styles: [
+        { name: 'Avataaars', value: 'avataaars', description: 'Stile moderno e professionale' },
+        { name: 'Big Ears', value: 'big-ears', description: 'Stile cartone animato carino' },
+        { name: 'Big Smile', value: 'big-smile', description: 'Sempre sorridente' },
+        { name: 'Bottts', value: 'bottts', description: 'Robot colorati' },
+        { name: 'Croodles', value: 'croodles', description: 'Disegnati a mano' },
+        { name: 'Micah', value: 'micah', description: 'Illustrazioni moderne' },
+        { name: 'Miniavs', value: 'miniavs', description: 'Avatar minimal' },
+        { name: 'Open Peeps', value: 'open-peeps', description: 'Persone stilizzate' },
+        { name: 'Personas', value: 'personas', description: 'Avatar business' }
     ],
     
-    hairColors: [
-        { name: 'Nero', color: '#2C1B18' },
-        { name: 'Castano Scuro', color: '#4A2C17' },
-        { name: 'Castano', color: '#654321' },
-        { name: 'Castano Chiaro', color: '#8B4513' },
-        { name: 'Biondo Scuro', color: '#B8860B' },
-        { name: 'Biondo', color: '#DAA520' },
-        { name: 'Biondo Chiaro', color: '#F4A460' },
-        { name: 'Rosso', color: '#D2691E' },
-        { name: 'Grigio', color: '#808080' },
-        { name: 'Argento', color: '#C0C0C0' }
-    ],
-    
-    hairStyles: {
-        male: [
-            'short', 'buzz', 'curly', 'wavy', 'fade', 'pompadour', 'messy', 'slicked', 'afro', 'bald'
+    // Opzioni per Avataaars (il più professionale)
+    avataaarsOptions: {
+        accessoriesType: [
+            'Blank', 'Kurt', 'Prescription01', 'Prescription02', 'Round', 'Sunglasses', 'Wayfarers'
         ],
-        female: [
-            'long', 'bob', 'pixie', 'curly', 'wavy', 'ponytail', 'bun', 'shoulder', 'bangs', 'afro'
+        clothingType: [
+            'BlazerShirt', 'BlazerSweater', 'CollarSweater', 'GraphicShirt', 'Hoodie', 'Overall', 'ShirtCrewNeck', 'ShirtScoopNeck', 'ShirtVNeck'
+        ],
+        eyeType: [
+            'Close', 'Cry', 'Default', 'Dizzy', 'EyeRoll', 'Happy', 'Hearts', 'Side', 'Squint', 'Surprised', 'Wink', 'WinkWacky'
+        ],
+        eyebrowType: [
+            'Angry', 'AngryNatural', 'Default', 'DefaultNatural', 'FlatNatural', 'RaisedExcited', 'RaisedExcitedNatural', 'SadConcerned', 'SadConcernedNatural', 'UnibrowNatural', 'UpDown', 'UpDownNatural'
+        ],
+        facialHairType: [
+            'Blank', 'BeardMedium', 'BeardLight', 'BeardMajestic', 'MoustacheFancy', 'MoustacheMagnum'
+        ],
+        hairColor: [
+            'Auburn', 'Black', 'Blonde', 'BlondeGolden', 'Brown', 'BrownDark', 'PastelPink', 'Platinum', 'Red', 'SilverGray'
+        ],
+        hatColor: [
+            'Black', 'Blue01', 'Blue02', 'Blue03', 'Gray01', 'Gray02', 'Heather', 'PastelBlue', 'PastelGreen', 'PastelOrange', 'PastelRed', 'PastelYellow', 'Pink', 'Red', 'White'
+        ],
+        mouthType: [
+            'Concerned', 'Default', 'Disbelief', 'Eating', 'Grimace', 'Sad', 'ScreamOpen', 'Serious', 'Smile', 'Tongue', 'Twinkle', 'Vomit'
+        ],
+        skinColor: [
+            'Tanned', 'Yellow', 'Pale', 'Light', 'Brown', 'DarkBrown', 'Black'
+        ],
+        topType: [
+            'NoHair', 'Eyepatch', 'Hat', 'Hijab', 'Turban', 'WinterHat1', 'WinterHat2', 'WinterHat3', 'WinterHat4', 'LongHairBigHair', 'LongHairBob', 'LongHairBun', 'LongHairCurly', 'LongHairCurvy', 'LongHairDreads', 'LongHairFrida', 'LongHairFro', 'LongHairFroBand', 'LongHairNotTooLong', 'LongHairShavedSides', 'LongHairMiaWallace', 'LongHairStraight', 'LongHairStraight2', 'LongHairStraightStrand', 'ShortHairDreads01', 'ShortHairDreads02', 'ShortHairFrizzle', 'ShortHairShaggyMullet', 'ShortHairShortCurly', 'ShortHairShortFlat', 'ShortHairShortRound', 'ShortHairShortWaved', 'ShortHairSides', 'ShortHairTheCaesar', 'ShortHairTheCaesarSidePart'
         ]
-    },
-    
-    eyeColors: [
-        { name: 'Marroni Scuri', color: '#654321' },
-        { name: 'Marroni', color: '#8B4513' },
-        { name: 'Nocciola', color: '#CD853F' },
-        { name: 'Verdi', color: '#228B22' },
-        { name: 'Azzurri', color: '#4169E1' },
-        { name: 'Blu Scuri', color: '#191970' },
-        { name: 'Grigi', color: '#708090' },
-        { name: 'Ambra', color: '#FF8C00' }
-    ],
-    
-    expressions: [
-        { name: 'Sorriso', value: 'smile' },
-        { name: 'Neutrale', value: 'neutral' },
-        { name: 'Felice', value: 'happy' },
-        { name: 'Serio', value: 'serious' },
-        { name: 'Rilassato', value: 'relaxed' }
-    ],
-    
-    accessories: [
-        { name: 'Nessuno', value: 'none' },
-        { name: 'Occhiali', value: 'glasses' },
-        { name: 'Occhiali da Sole', value: 'sunglasses' },
-        { name: 'Occhiali Rotondi', value: 'round_glasses' }
-    ],
-    
-    facialHair: [
-        { name: 'Nessuno', value: 'none' },
-        { name: 'Barba Corta', value: 'short_beard' },
-        { name: 'Barba Lunga', value: 'long_beard' },
-        { name: 'Baffi', value: 'mustache' },
-        { name: 'Pizzetto', value: 'goatee' },
-        { name: 'Stubble', value: 'stubble' }
-    ]
+    }
 };
 
-// === GENERATORE AVATAR FLAT DESIGN ===
-class FlatDesignAvatarGenerator {
-    static generate(config) {
-        const avatarId = `avatar_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+// === GENERATORE AVATAR DICEBEAR ===
+class DiceBearAvatarGenerator {
+    static generateURL(style, seed, options = {}) {
+        const baseURL = 'https://api.dicebear.com/7.x';
+        let url = `${baseURL}/${style}/svg?seed=${encodeURIComponent(seed)}`;
         
-        return `
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" style="background: ${this.getBackgroundColor(config)}; border-radius: 50%;">
-    <defs>
-        ${this.generateGradients(config, avatarId)}
-    </defs>
-    
-    <!-- Background Circle -->
-    <circle cx="100" cy="100" r="95" fill="${this.getBackgroundColor(config)}"/>
-    
-    <!-- Neck -->
-    ${this.generateNeck(config)}
-    
-    <!-- Face -->
-    ${this.generateFace(config, avatarId)}
-    
-    <!-- Hair Back -->
-    ${this.generateHairBack(config)}
-    
-    <!-- Ears -->
-    ${this.generateEars(config)}
-    
-    <!-- Face Details -->
-    ${this.generateFaceDetails(config)}
-    
-    <!-- Eyes -->
-    ${this.generateEyes(config)}
-    
-    <!-- Nose -->
-    ${this.generateNose(config)}
-    
-    <!-- Mouth -->
-    ${this.generateMouth(config)}
-    
-    <!-- Hair Front -->
-    ${this.generateHairFront(config)}
-    
-    <!-- Facial Hair -->
-    ${config.gender === 'male' ? this.generateFacialHair(config) : ''}
-    
-    <!-- Accessories -->
-    ${this.generateAccessories(config)}
-</svg>`;
-    }
-    
-    static getBackgroundColor(config) {
-        const colors = [
-            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
-            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
-        ];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-    
-    static generateGradients(config, avatarId) {
-        const skin = config.skinTone;
-        return `
-            <radialGradient id="faceGradient${avatarId}" cx="0.3" cy="0.3" r="0.8">
-                <stop offset="0%" stop-color="${skin.color}"/>
-                <stop offset="100%" stop-color="${skin.shadow}"/>
-            </radialGradient>
-        `;
-    }
-    
-    static generateNeck(config) {
-        return `<ellipse cx="100" cy="185" rx="20" ry="18" fill="${config.skinTone.color}"/>`;
-    }
-    
-    static generateFace(config, avatarId) {
-        return `
-            <ellipse cx="100" cy="120" rx="45" ry="55" fill="url(#faceGradient${avatarId})" stroke="${config.skinTone.shadow}" stroke-width="0.5"/>
-        `;
-    }
-    
-    static generateEars(config) {
-        return `
-            <ellipse cx="65" cy="115" rx="8" ry="15" fill="${config.skinTone.color}"/>
-            <ellipse cx="135" cy="115" rx="8" ry="15" fill="${config.skinTone.color}"/>
-        `;
-    }
-    
-    static generateFaceDetails(config) {
-        return `
-            <!-- Cheek highlights -->
-            <ellipse cx="78" cy="125" rx="6" ry="4" fill="#FFB6C1" opacity="0.3"/>
-            <ellipse cx="122" cy="125" rx="6" ry="4" fill="#FFB6C1" opacity="0.3"/>
-        `;
-    }
-    
-    static generateHairBack(config) {
-        const hairColor = config.hairColor.color;
-        const hairStyle = config.hairStyle;
-        
-        const maleHairStyles = {
-            short: `<path d="M55 85 Q100 50 145 85 L140 110 Q100 70 60 110 Z" fill="${hairColor}"/>`,
-            buzz: `<path d="M65 80 Q100 60 135 80 L130 95 Q100 75 70 95 Z" fill="${hairColor}"/>`,
-            curly: `
-                <circle cx="85" cy="75" r="12" fill="${hairColor}"/>
-                <circle cx="100" cy="68" r="15" fill="${hairColor}"/>
-                <circle cx="115" cy="75" r="12" fill="${hairColor}"/>
-                <circle cx="75" cy="90" r="10" fill="${hairColor}"/>
-                <circle cx="125" cy="90" r="10" fill="${hairColor}"/>
-            `,
-            wavy: `<path d="M50 78 Q75 65 100 78 Q125 65 150 78 L145 105 Q100 75 55 105 Z" fill="${hairColor}"/>`,
-            fade: `<path d="M60 88 Q100 65 140 88 L135 105 Q100 80 65 105 Z" fill="${hairColor}"/>`,
-            pompadour: `<path d="M55 85 Q100 45 145 85 Q130 70 100 65 Q70 70 55 85 Z" fill="${hairColor}"/>`,
-            messy: `<path d="M50 82 Q80 60 100 75 Q120 60 150 82 L145 108 Q100 78 55 108 Z" fill="${hairColor}"/>`,
-            slicked: `<path d="M55 85 Q100 55 145 85 L140 105 Q100 75 60 105 Z" fill="${hairColor}"/>`,
-            afro: `
-                <circle cx="70" cy="80" r="18" fill="${hairColor}"/>
-                <circle cx="100" cy="70" r="22" fill="${hairColor}"/>
-                <circle cx="130" cy="80" r="18" fill="${hairColor}"/>
-                <circle cx="85" cy="95" r="15" fill="${hairColor}"/>
-                <circle cx="115" cy="95" r="15" fill="${hairColor}"/>
-            `,
-            bald: ``
-        };
-        
-        const femaleHairStyles = {
-            long: `<path d="M45 75 Q100 40 155 75 L160 140 Q100 100 40 140 Z" fill="${hairColor}"/>`,
-            bob: `<path d="M55 80 Q100 55 145 80 L150 115 Q100 90 50 115 Z" fill="${hairColor}"/>`,
-            pixie: `<path d="M65 85 Q100 65 135 85 L130 100 Q100 80 70 100 Z" fill="${hairColor}"/>`,
-            curly: `
-                <circle cx="75" cy="78" r="15" fill="${hairColor}"/>
-                <circle cx="100" cy="65" r="20" fill="${hairColor}"/>
-                <circle cx="125" cy="78" r="15" fill="${hairColor}"/>
-                <circle cx="85" cy="105" r="12" fill="${hairColor}"/>
-                <circle cx="115" cy="105" r="12" fill="${hairColor}"/>
-            `,
-            wavy: `<path d="M45 75 Q70 65 95 75 Q120 65 145 75 Q155 90 150 120 Q100 95 50 120 Q45 90 45 75 Z" fill="${hairColor}"/>`,
-            ponytail: `
-                <path d="M55 85 Q100 55 145 85 L140 105 Q100 75 60 105 Z" fill="${hairColor}"/>
-                <ellipse cx="150" cy="110" rx="8" ry="25" fill="${hairColor}"/>
-            `,
-            bun: `
-                <path d="M60 85 Q100 60 140 85 L135 100 Q100 75 65 100 Z" fill="${hairColor}"/>
-                <circle cx="100" cy="65" r="18" fill="${hairColor}"/>
-            `,
-            shoulder: `<path d="M50 75 Q100 45 150 75 L155 125 Q100 95 45 125 Z" fill="${hairColor}"/>`,
-            bangs: `
-                <path d="M45 75 Q100 40 155 75 L160 130 Q100 95 40 130 Z" fill="${hairColor}"/>
-                <rect x="70" y="75" width="60" height="12" rx="6" fill="${hairColor}"/>
-            `,
-            afro: `
-                <circle cx="70" cy="75" r="20" fill="${hairColor}"/>
-                <circle cx="100" cy="65" r="25" fill="${hairColor}"/>
-                <circle cx="130" cy="75" r="20" fill="${hairColor}"/>
-                <circle cx="80" cy="100" r="16" fill="${hairColor}"/>
-                <circle cx="120" cy="100" r="16" fill="${hairColor}"/>
-            `
-        };
-        
-        const styles = config.gender === 'male' ? maleHairStyles : femaleHairStyles;
-        return styles[hairStyle] || styles[Object.keys(styles)[0]];
-    }
-    
-    static generateHairFront(config) {
-        // Dettagli frontali per alcuni stili
-        if (config.hairStyle === 'bangs' && config.gender === 'female') {
-            return `<path d="M70 85 Q100 80 130 85" stroke="${config.hairColor.color}" stroke-width="2" fill="none"/>`;
-        }
-        return '';
-    }
-    
-    static generateEyes(config) {
-        const eyeColor = config.eyeColor.color;
-        const expression = config.expression;
-        
-        const expressions = {
-            smile: {
-                leftEye: `<ellipse cx="85" cy="105" rx="8" ry="6" fill="white"/>`,
-                rightEye: `<ellipse cx="115" cy="105" rx="8" ry="6" fill="white"/>`,
-                leftIris: `<circle cx="85" cy="105" r="4" fill="${eyeColor}"/>`,
-                rightIris: `<circle cx="115" cy="105" r="4" fill="${eyeColor}"/>`,
-                leftPupil: `<circle cx="85" cy="105" r="2" fill="#000"/>`,
-                rightPupil: `<circle cx="115" cy="105" r="2" fill="#000"/>`,
-                leftHighlight: `<circle cx="86" cy="103" r="1" fill="white"/>`,
-                rightHighlight: `<circle cx="116" cy="103" r="1" fill="white"/>`
-            },
-            happy: {
-                leftEye: `<path d="M77 105 Q85 100 93 105 Q85 108 77 105" fill="white"/>`,
-                rightEye: `<path d="M107 105 Q115 100 123 105 Q115 108 107 105" fill="white"/>`,
-                leftIris: `<circle cx="85" cy="105" r="3" fill="${eyeColor}"/>`,
-                rightIris: `<circle cx="115" cy="105" r="3" fill="${eyeColor}"/>`,
-                leftPupil: `<circle cx="85" cy="105" r="1.5" fill="#000"/>`,
-                rightPupil: `<circle cx="115" cy="105" r="1.5" fill="#000"/>`,
-                leftHighlight: `<circle cx="86" cy="104" r="0.8" fill="white"/>`,
-                rightHighlight: `<circle cx="116" cy="104" r="0.8" fill="white"/>`
-            },
-            neutral: {
-                leftEye: `<ellipse cx="85" cy="105" rx="8" ry="7" fill="white"/>`,
-                rightEye: `<ellipse cx="115" cy="105" rx="8" ry="7" fill="white"/>`,
-                leftIris: `<circle cx="85" cy="105" r="4" fill="${eyeColor}"/>`,
-                rightIris: `<circle cx="115" cy="105" r="4" fill="${eyeColor}"/>`,
-                leftPupil: `<circle cx="85" cy="105" r="2" fill="#000"/>`,
-                rightPupil: `<circle cx="115" cy="105" r="2" fill="#000"/>`,
-                leftHighlight: `<circle cx="86" cy="103" r="1" fill="white"/>`,
-                rightHighlight: `<circle cx="116" cy="103" r="1" fill="white"/>`
-            },
-            serious: {
-                leftEye: `<ellipse cx="85" cy="105" rx="8" ry="5" fill="white"/>`,
-                rightEye: `<ellipse cx="115" cy="105" rx="8" ry="5" fill="white"/>`,
-                leftIris: `<circle cx="85" cy="105" r="4" fill="${eyeColor}"/>`,
-                rightIris: `<circle cx="115" cy="105" r="4" fill="${eyeColor}"/>`,
-                leftPupil: `<circle cx="85" cy="105" r="2" fill="#000"/>`,
-                rightPupil: `<circle cx="115" cy="105" r="2" fill="#000"/>`,
-                leftHighlight: `<circle cx="86" cy="103" r="1" fill="white"/>`,
-                rightHighlight: `<circle cx="116" cy="103" r="1" fill="white"/>`
-            },
-            relaxed: {
-                leftEye: `<ellipse cx="85" cy="105" rx="8" ry="6" fill="white"/>`,
-                rightEye: `<ellipse cx="115" cy="105" rx="8" ry="6" fill="white"/>`,
-                leftIris: `<circle cx="85" cy="105" r="4" fill="${eyeColor}"/>`,
-                rightIris: `<circle cx="115" cy="105" r="4" fill="${eyeColor}"/>`,
-                leftPupil: `<circle cx="85" cy="105" r="2" fill="#000"/>`,
-                rightPupil: `<circle cx="115" cy="105" r="2" fill="#000"/>`,
-                leftHighlight: `<circle cx="86" cy="103" r="1" fill="white"/>`,
-                rightHighlight: `<circle cx="116" cy="103" r="1" fill="white"/>`
+        // Aggiungi opzioni specifiche
+        Object.keys(options).forEach(key => {
+            if (options[key] !== null && options[key] !== undefined && options[key] !== '') {
+                url += `&${key}=${encodeURIComponent(options[key])}`;
             }
-        };
+        });
         
-        const eye = expressions[expression] || expressions.neutral;
-        
-        return `
-            <!-- Left Eye -->
-            ${eye.leftEye}
-            ${eye.leftIris}
-            ${eye.leftPupil}
-            ${eye.leftHighlight}
+        return url;
+    }
+    
+    static async generateSVG(style, seed, options = {}) {
+        try {
+            const url = this.generateURL(style, seed, options);
+            const response = await fetch(url);
             
-            <!-- Right Eye -->
-            ${eye.rightEye}
-            ${eye.rightIris}
-            ${eye.rightPupil}
-            ${eye.rightHighlight}
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
-            <!-- Eyebrows -->
-            <path d="M77 98 Q85 95 93 98" stroke="${config.hairColor.color}" stroke-width="3" fill="none" stroke-linecap="round"/>
-            <path d="M107 98 Q115 95 123 98" stroke="${config.hairColor.color}" stroke-width="3" fill="none" stroke-linecap="round"/>
-        `;
+            const svgText = await response.text();
+            return svgText;
+        } catch (error) {
+            console.error('Errore generazione avatar DiceBear:', error);
+            return this.getFallbackSVG();
+        }
     }
     
-    static generateNose(config) {
+    static getFallbackSVG() {
         return `
-            <ellipse cx="100" cy="115" rx="2" ry="4" fill="${config.skinTone.shadow}" opacity="0.6"/>
-            <ellipse cx="98" cy="117" rx="1" ry="1.5" fill="${config.skinTone.shadow}" opacity="0.8"/>
-            <ellipse cx="102" cy="117" rx="1" ry="1.5" fill="${config.skinTone.shadow}" opacity="0.8"/>
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="#4ECDC4"/>
+                <circle cx="100" cy="90" r="40" fill="#FFE4C4"/>
+                <circle cx="85" cy="80" r="3" fill="#000"/>
+                <circle cx="115" cy="80" r="3" fill="#000"/>
+                <path d="M90 100 Q100 110 110 100" stroke="#000" stroke-width="2" fill="none"/>
+                <text x="100" y="150" text-anchor="middle" font-family="Arial" font-size="12" fill="#333">Avatar</text>
+            </svg>
         `;
-    }
-    
-    static generateMouth(config) {
-        const expressions = {
-            smile: `<path d="M90 130 Q100 138 110 130" stroke="#E74C3C" stroke-width="4" fill="none" stroke-linecap="round"/>`,
-            happy: `<ellipse cx="100" cy="133" rx="12" ry="6" fill="#E74C3C"/>
-                   <ellipse cx="100" cy="131" rx="10" ry="4" fill="#FF69B4"/>`,
-            neutral: `<ellipse cx="100" cy="132" rx="8" ry="3" fill="#E74C3C"/>`,
-            serious: `<rect x="92" y="130" width="16" height="3" rx="1.5" fill="#CD5C5C"/>`,
-            relaxed: `<path d="M92 132 Q100 136 108 132" stroke="#E74C3C" stroke-width="3" fill="none" stroke-linecap="round"/>`
-        };
-        
-        return expressions[config.expression] || expressions.neutral;
-    }
-    
-    static generateFacialHair(config) {
-        if (config.facialHair === 'none') return '';
-        
-        const hairColor = config.hairColor.color;
-        
-        const facialHairStyles = {
-            short_beard: `<ellipse cx="100" cy="145" rx="18" ry="12" fill="${hairColor}" opacity="0.8"/>`,
-            long_beard: `<path d="M82 140 Q100 160 118 140 Q118 155 100 165 Q82 155 82 140" fill="${hairColor}"/>`,
-            mustache: `<ellipse cx="100" cy="125" rx="12" ry="4" fill="${hairColor}"/>`,
-            goatee: `<ellipse cx="100" cy="145" rx="8" ry="10" fill="${hairColor}"/>`,
-            stubble: `
-                <ellipse cx="100" cy="140" rx="20" ry="15" fill="${hairColor}" opacity="0.3"/>
-                <circle cx="95" cy="135" r="0.5" fill="${hairColor}" opacity="0.6"/>
-                <circle cx="105" cy="135" r="0.5" fill="${hairColor}" opacity="0.6"/>
-                <circle cx="90" cy="145" r="0.5" fill="${hairColor}" opacity="0.6"/>
-                <circle cx="110" cy="145" r="0.5" fill="${hairColor}" opacity="0.6"/>
-            `
-        };
-        
-        return facialHairStyles[config.facialHair] || '';
-    }
-    
-    static generateAccessories(config) {
-        if (config.accessories === 'none') return '';
-        
-        const accessoryStyles = {
-            glasses: `
-                <ellipse cx="85" cy="105" rx="15" ry="12" fill="none" stroke="#2C3E50" stroke-width="3"/>
-                <ellipse cx="115" cy="105" rx="15" ry="12" fill="none" stroke="#2C3E50" stroke-width="3"/>
-                <line x1="100" y1="105" x2="100" y2="105" stroke="#2C3E50" stroke-width="3"/>
-                <ellipse cx="82" cy="100" rx="3" ry="6" fill="white" opacity="0.7"/>
-                <ellipse cx="112" cy="100" rx="3" ry="6" fill="white" opacity="0.7"/>
-            `,
-            sunglasses: `
-                <ellipse cx="85" cy="105" rx="15" ry="12" fill="#2C3E50" stroke="#34495E" stroke-width="2"/>
-                <ellipse cx="115" cy="105" rx="15" ry="12" fill="#2C3E50" stroke="#34495E" stroke-width="2"/>
-                <line x1="100" y1="105" x2="100" y2="105" stroke="#34495E" stroke-width="3"/>
-                <ellipse cx="82" cy="100" rx="2" ry="4" fill="white" opacity="0.3"/>
-                <ellipse cx="112" cy="100" rx="2" ry="4" fill="white" opacity="0.3"/>
-            `,
-            round_glasses: `
-                <circle cx="85" cy="105" r="15" fill="none" stroke="#2C3E50" stroke-width="3"/>
-                <circle cx="115" cy="105" r="15" fill="none" stroke="#2C3E50" stroke-width="3"/>
-                <line x1="100" y1="105" x2="100" y2="105" stroke="#2C3E50" stroke-width="3"/>
-                <circle cx="82" cy="100" r="3" fill="white" opacity="0.7"/>
-                <circle cx="112" cy="100" r="3" fill="white" opacity="0.7"/>
-            `
-        };
-        
-        return accessoryStyles[config.accessories] || '';
     }
 }
 
-// === MANAGER AVATAR FLAT DESIGN ===
-class FlatDesignAvatarManager {
+// === MANAGER AVATAR DICEBEAR ===
+class DiceBearAvatarManager {
     constructor(userId) {
         this.userId = userId;
         this.config = this.getDefaultConfig();
-        this.mode = 'gallery';
+        this.mode = 'dicebear';
         this.photoUrl = null;
+        this.cachedSVG = null;
         this.loadFromStorage();
+        
+        // Genera avatar iniziale
+        this.generateAvatar();
     }
     
     getDefaultConfig() {
         return {
-            gender: 'male',
-            skinTone: AvatarCustomization.skinTones[2],
-            hairColor: AvatarCustomization.hairColors[2],
-            hairStyle: 'short',
-            eyeColor: AvatarCustomization.eyeColors[1],
-            expression: 'smile',
-            accessories: 'none',
-            facialHair: 'none'
+            style: 'avataaars',
+            seed: this.userId || Math.random().toString(36).substring(7),
+            options: {
+                accessoriesType: 'Blank',
+                clothingType: 'BlazerShirt',
+                eyeType: 'Default',
+                eyebrowType: 'Default',
+                facialHairType: 'Blank',
+                hairColor: 'Brown',
+                mouthType: 'Smile',
+                skinColor: 'Light',
+                topType: 'ShortHairShortFlat'
+            }
         };
     }
     
     updateConfig(property, value) {
-        this.config[property] = value;
-        
-        // Auto-update hair style when gender changes
-        if (property === 'gender') {
-            const availableStyles = AvatarCustomization.hairStyles[value];
-            if (!availableStyles.includes(this.config.hairStyle)) {
-                this.config.hairStyle = availableStyles[0];
+        if (property === 'style') {
+            this.config.style = value;
+            // Reset options when changing style
+            if (value === 'avataaars') {
+                this.config.options = this.getDefaultConfig().options;
+            } else {
+                this.config.options = {};
             }
+        } else {
+            this.config.options[property] = value;
         }
         
         this.saveToStorage();
+        this.generateAvatar();
         return this.config;
     }
     
+    updateSeed(seed) {
+        this.config.seed = seed || Math.random().toString(36).substring(7);
+        this.saveToStorage();
+        this.generateAvatar();
+    }
+    
     setMode(mode) {
-        if (['gallery', 'photo'].includes(mode)) {
+        if (['dicebear', 'photo'].includes(mode)) {
             this.mode = mode;
             this.saveToStorage();
             return true;
@@ -443,35 +169,62 @@ class FlatDesignAvatarManager {
         this.saveToStorage();
     }
     
-    generateSVG() {
-        return FlatDesignAvatarGenerator.generate(this.config);
+    async generateAvatar() {
+        try {
+            this.cachedSVG = await DiceBearAvatarGenerator.generateSVG(
+                this.config.style,
+                this.config.seed,
+                this.config.options
+            );
+            console.log('✅ Avatar DiceBear generato con successo');
+        } catch (error) {
+            console.error('❌ Errore generazione avatar:', error);
+            this.cachedSVG = DiceBearAvatarGenerator.getFallbackSVG();
+        }
     }
     
     getDisplayHTML() {
         if (this.mode === 'photo' && this.photoUrl) {
             return `<img src="${this.photoUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" alt="Avatar Photo">`;
+        } else if (this.cachedSVG) {
+            return this.cachedSVG;
         } else {
-            return this.generateSVG();
+            return '<div style="display: flex; align-items: center; justify-content: center; height: 100%; font-size: 48px;">⏳</div>';
         }
     }
     
     randomize() {
-        const gender = Math.random() > 0.5 ? 'male' : 'female';
+        // Randomizza tutto
+        const styles = DiceBearConfig.styles;
+        const randomStyle = styles[Math.floor(Math.random() * styles.length)].value;
         
-        this.config = {
-            gender: gender,
-            skinTone: AvatarCustomization.skinTones[Math.floor(Math.random() * AvatarCustomization.skinTones.length)],
-            hairColor: AvatarCustomization.hairColors[Math.floor(Math.random() * AvatarCustomization.hairColors.length)],
-            hairStyle: AvatarCustomization.hairStyles[gender][Math.floor(Math.random() * AvatarCustomization.hairStyles[gender].length)],
-            eyeColor: AvatarCustomization.eyeColors[Math.floor(Math.random() * AvatarCustomization.eyeColors.length)],
-            expression: AvatarCustomization.expressions[Math.floor(Math.random() * AvatarCustomization.expressions.length)].value,
-            accessories: AvatarCustomization.accessories[Math.floor(Math.random() * AvatarCustomization.accessories.length)].value,
-            facialHair: gender === 'male' ? 
-                AvatarCustomization.facialHair[Math.floor(Math.random() * AvatarCustomization.facialHair.length)].value : 'none'
-        };
+        this.config.style = randomStyle;
+        this.config.seed = Math.random().toString(36).substring(7);
+        
+        if (randomStyle === 'avataaars') {
+            const options = DiceBearConfig.avataaarsOptions;
+            this.config.options = {
+                accessoriesType: this.randomFromArray(options.accessoriesType),
+                clothingType: this.randomFromArray(options.clothingType),
+                eyeType: this.randomFromArray(options.eyeType),
+                eyebrowType: this.randomFromArray(options.eyebrowType),
+                facialHairType: this.randomFromArray(options.facialHairType),
+                hairColor: this.randomFromArray(options.hairColor),
+                mouthType: this.randomFromArray(options.mouthType),
+                skinColor: this.randomFromArray(options.skinColor),
+                topType: this.randomFromArray(options.topType)
+            };
+        } else {
+            this.config.options = {};
+        }
         
         this.saveToStorage();
+        this.generateAvatar();
         return this.config;
+    }
+    
+    randomFromArray(array) {
+        return array[Math.floor(Math.random() * array.length)];
     }
     
     saveToStorage() {
@@ -484,7 +237,7 @@ class FlatDesignAvatarManager {
             };
             if (!window.avatarStorage) window.avatarStorage = {};
             window.avatarStorage[this.userId] = data;
-            console.log('💾 Avatar flat design salvato');
+            console.log('💾 Avatar DiceBear salvato');
         } catch (e) {
             console.error('Errore salvataggio avatar:', e);
         }
@@ -495,9 +248,9 @@ class FlatDesignAvatarManager {
             if (window.avatarStorage && window.avatarStorage[this.userId]) {
                 const data = window.avatarStorage[this.userId];
                 this.config = { ...this.getDefaultConfig(), ...data.config };
-                this.mode = data.mode || 'gallery';
+                this.mode = data.mode || 'dicebear';
                 this.photoUrl = data.photoUrl || null;
-                console.log('📂 Avatar flat design caricato');
+                console.log('📂 Avatar DiceBear caricato');
             }
         } catch (e) {
             console.error('Errore caricamento avatar:', e);
@@ -505,8 +258,8 @@ class FlatDesignAvatarManager {
     }
 }
 
-// === UI FLAT DESIGN AVATAR ===
-class FlatDesignAvatarUI {
+// === UI DICEBEAR AVATAR ===
+class DiceBearAvatarUI {
     constructor(containerId, manager) {
         this.container = document.getElementById(containerId);
         this.manager = manager;
@@ -517,10 +270,10 @@ class FlatDesignAvatarUI {
         if (!this.container) return;
         
         this.container.innerHTML = `
-            <div class="flat-avatar-ui">
+            <div class="dicebear-avatar-ui">
                 <div class="mode-selector">
-                    <button class="mode-btn ${this.manager.mode === 'gallery' ? 'active' : ''}" data-mode="gallery">
-                        🎨 Crea Avatar
+                    <button class="mode-btn ${this.manager.mode === 'dicebear' ? 'active' : ''}" data-mode="dicebear">
+                        🎨 Avatar Professionale
                     </button>
                     <button class="mode-btn ${this.manager.mode === 'photo' ? 'active' : ''}" data-mode="photo">
                         📸 Foto Personale
@@ -531,10 +284,14 @@ class FlatDesignAvatarUI {
                     <div class="preview-container" id="previewContainer">
                         ${this.manager.getDisplayHTML()}
                     </div>
+                    <div class="avatar-info">
+                        <div class="style-name">${this.getStyleDisplayName()}</div>
+                        <button class="refresh-btn" onclick="window.avatarUI.refreshAvatar()">🔄 Genera Nuovo</button>
+                    </div>
                 </div>
                 
                 <div class="controls" id="controls">
-                    ${this.manager.mode === 'gallery' ? this.buildCustomizationControls() : this.buildPhotoControls()}
+                    ${this.manager.mode === 'dicebear' ? this.buildDiceBearControls() : this.buildPhotoControls()}
                 </div>
                 
                 <div class="actions">
@@ -548,111 +305,119 @@ class FlatDesignAvatarUI {
         this.injectStyles();
     }
     
-    buildCustomizationControls() {
+    getStyleDisplayName() {
+        const style = DiceBearConfig.styles.find(s => s.value === this.manager.config.style);
+        return style ? style.name : 'Avatar Professionale';
+    }
+    
+    buildDiceBearControls() {
         return `
             <div class="control-section">
-                <!-- Gender -->
+                <!-- Style Selection -->
                 <div class="control-group">
-                    <label>👤 Genere</label>
-                    <div class="button-group">
-                        <button class="option-btn ${this.manager.config.gender === 'male' ? 'active' : ''}" 
-                                data-property="gender" data-value="male">🙂 Uomo</button>
-                        <button class="option-btn ${this.manager.config.gender === 'female' ? 'active' : ''}" 
-                                data-property="gender" data-value="female">😊 Donna</button>
-                    </div>
-                </div>
-                
-                <!-- Skin Tone -->
-                <div class="control-group">
-                    <label>🎨 Tonalità Pelle</label>
-                    <div class="color-grid">
-                        ${AvatarCustomization.skinTones.map((tone, index) => 
-                            `<div class="color-swatch ${JSON.stringify(this.manager.config.skinTone) === JSON.stringify(tone) ? 'active' : ''}" 
-                                  data-property="skinTone" data-index="${index}"
-                                  style="background: linear-gradient(135deg, ${tone.color}, ${tone.shadow});" 
-                                  title="${tone.name}"></div>`
-                        ).join('')}
-                    </div>
-                </div>
-                
-                <!-- Hair Color -->
-                <div class="control-group">
-                    <label>💇 Colore Capelli</label>
-                    <div class="color-grid">
-                        ${AvatarCustomization.hairColors.map((hair, index) => 
-                            `<div class="color-swatch ${JSON.stringify(this.manager.config.hairColor) === JSON.stringify(hair) ? 'active' : ''}" 
-                                  data-property="hairColor" data-index="${index}"
-                                  style="background: ${hair.color};" 
-                                  title="${hair.name}"></div>`
-                        ).join('')}
-                    </div>
-                </div>
-                
-                <!-- Hair Style -->
-                <div class="control-group">
-                    <label>✂️ Stile Capelli</label>
-                    <div class="select-group">
-                        <select class="control-select" data-property="hairStyle">
-                            ${AvatarCustomization.hairStyles[this.manager.config.gender].map(style => 
-                                `<option value="${style}" ${this.manager.config.hairStyle === style ? 'selected' : ''}>${style}</option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Eye Color -->
-                <div class="control-group">
-                    <label>👁️ Colore Occhi</label>
-                    <div class="color-grid">
-                        ${AvatarCustomization.eyeColors.map((eye, index) => 
-                            `<div class="color-swatch ${JSON.stringify(this.manager.config.eyeColor) === JSON.stringify(eye) ? 'active' : ''}" 
-                                  data-property="eyeColor" data-index="${index}"
-                                  style="background: ${eye.color};" 
-                                  title="${eye.name}"></div>`
-                        ).join('')}
-                    </div>
-                </div>
-                
-                <!-- Expression -->
-                <div class="control-group">
-                    <label>😊 Espressione</label>
-                    <div class="button-group">
-                        ${AvatarCustomization.expressions.map(expr => 
-                            `<button class="option-btn ${this.manager.config.expression === expr.value ? 'active' : ''}" 
-                                    data-property="expression" data-value="${expr.value}">
-                                ${expr.name}
+                    <label>🎨 Stile Avatar</label>
+                    <div class="style-grid">
+                        ${DiceBearConfig.styles.map(style => 
+                            `<button class="style-btn ${this.manager.config.style === style.value ? 'active' : ''}" 
+                                    data-style="${style.value}" title="${style.description}">
+                                ${style.name}
                             </button>`
                         ).join('')}
                     </div>
                 </div>
                 
-                <!-- Accessories -->
+                ${this.manager.config.style === 'avataaars' ? this.buildAvataaarsControls() : ''}
+                
                 <div class="control-group">
+                    <label>🎯 Seed Personalizzato</label>
+                    <div class="seed-input-group">
+                        <input type="text" class="seed-input" value="${this.manager.config.seed}" 
+                               placeholder="Inserisci un nome o parola" id="seedInput">
+                        <button class="seed-btn" onclick="window.avatarUI.updateSeed()">Applica</button>
+                    </div>
+                    <div class="seed-hint">Cambia il testo per generare avatar diversi</div>
+                </div>
+            </div>
+        `;
+    }
+    
+    buildAvataaarsControls() {
+        const options = DiceBearConfig.avataaarsOptions;
+        const config = this.manager.config.options;
+        
+        return `
+            <div class="avataaars-controls">
+                <div class="control-row">
+                    <label>👤 Tipo Viso</label>
+                    <select class="control-select" data-option="skinColor">
+                        ${options.skinColor.map(option => 
+                            `<option value="${option}" ${config.skinColor === option ? 'selected' : ''}>${option}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="control-row">
+                    <label>💇 Capelli</label>
+                    <select class="control-select" data-option="topType">
+                        ${options.topType.map(option => 
+                            `<option value="${option}" ${config.topType === option ? 'selected' : ''}>${option.replace(/([A-Z])/g, ' $1').trim()}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="control-row">
+                    <label>🎨 Colore Capelli</label>
+                    <select class="control-select" data-option="hairColor">
+                        ${options.hairColor.map(option => 
+                            `<option value="${option}" ${config.hairColor === option ? 'selected' : ''}>${option}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="control-row">
+                    <label>👁️ Occhi</label>
+                    <select class="control-select" data-option="eyeType">
+                        ${options.eyeType.map(option => 
+                            `<option value="${option}" ${config.eyeType === option ? 'selected' : ''}>${option}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="control-row">
+                    <label>😊 Bocca</label>
+                    <select class="control-select" data-option="mouthType">
+                        ${options.mouthType.map(option => 
+                            `<option value="${option}" ${config.mouthType === option ? 'selected' : ''}>${option}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="control-row">
                     <label>👓 Accessori</label>
-                    <div class="button-group">
-                        ${AvatarCustomization.accessories.map(acc => 
-                            `<button class="option-btn ${this.manager.config.accessories === acc.value ? 'active' : ''}" 
-                                    data-property="accessories" data-value="${acc.value}">
-                                ${acc.name}
-                            </button>`
+                    <select class="control-select" data-option="accessoriesType">
+                        ${options.accessoriesType.map(option => 
+                            `<option value="${option}" ${config.accessoriesType === option ? 'selected' : ''}>${option === 'Blank' ? 'Nessuno' : option}</option>`
                         ).join('')}
-                    </div>
+                    </select>
                 </div>
                 
-                ${this.manager.config.gender === 'male' ? `
-                <!-- Facial Hair -->
-                <div class="control-group">
-                    <label>🧔 Peli Facciali</label>
-                    <div class="button-group">
-                        ${AvatarCustomization.facialHair.map(fh => 
-                            `<button class="option-btn ${this.manager.config.facialHair === fh.value ? 'active' : ''}" 
-                                    data-property="facialHair" data-value="${fh.value}">
-                                ${fh.name}
-                            </button>`
+                <div class="control-row">
+                    <label>🧔 Barba</label>
+                    <select class="control-select" data-option="facialHairType">
+                        ${options.facialHairType.map(option => 
+                            `<option value="${option}" ${config.facialHairType === option ? 'selected' : ''}>${option === 'Blank' ? 'Nessuna' : option}</option>`
                         ).join('')}
-                    </div>
+                    </select>
                 </div>
-                ` : ''}
+                
+                <div class="control-row">
+                    <label>👕 Vestiti</label>
+                    <select class="control-select" data-option="clothingType">
+                        ${options.clothingType.map(option => 
+                            `<option value="${option}" ${config.clothingType === option ? 'selected' : ''}>${option.replace(/([A-Z])/g, ' $1').trim()}</option>`
+                        ).join('')}
+                    </select>
+                </div>
             </div>
         `;
     }
@@ -684,29 +449,19 @@ class FlatDesignAvatarUI {
             });
         });
         
-        // Option buttons
-        this.container.querySelectorAll('.option-btn').forEach(btn => {
+        // Style buttons
+        this.container.querySelectorAll('.style-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const property = e.target.dataset.property;
-                const value = e.target.dataset.value;
-                this.updateProperty(property, value);
+                const style = e.target.dataset.style;
+                this.updateStyle(style);
             });
         });
         
-        // Color swatches
-        this.container.querySelectorAll('.color-swatch').forEach(swatch => {
-            swatch.addEventListener('click', (e) => {
-                const property = e.target.dataset.property;
-                const index = parseInt(e.target.dataset.index);
-                this.updateColorProperty(property, index);
-            });
-        });
-        
-        // Select controls
+        // Select controls for Avataaars
         this.container.querySelectorAll('.control-select').forEach(select => {
             select.addEventListener('change', (e) => {
-                const property = e.target.dataset.property;
-                this.updateProperty(property, e.target.value);
+                const option = e.target.dataset.option;
+                this.updateOption(option, e.target.value);
             });
         });
         
@@ -728,29 +483,31 @@ class FlatDesignAvatarUI {
         }
     }
     
-    updateProperty(property, value) {
-        this.manager.updateConfig(property, value);
+    updateStyle(style) {
+        this.manager.updateConfig('style', style);
         this.refreshControls();
+        this.updatePreview();
+        this.updateStyleInfo();
+    }
+    
+    updateOption(option, value) {
+        this.manager.updateConfig(option, value);
         this.updatePreview();
     }
     
-    updateColorProperty(property, index) {
-        let value;
-        switch(property) {
-            case 'skinTone':
-                value = AvatarCustomization.skinTones[index];
-                break;
-            case 'hairColor':
-                value = AvatarCustomization.hairColors[index];
-                break;
-            case 'eyeColor':
-                value = AvatarCustomization.eyeColors[index];
-                break;
+    updateSeed() {
+        const seedInput = this.container.querySelector('#seedInput');
+        if (seedInput) {
+            this.manager.updateSeed(seedInput.value);
+            this.updatePreview();
+            this.showNotification('🎯 Seed aggiornato!');
         }
-        
-        this.manager.updateConfig(property, value);
+    }
+    
+    refreshAvatar() {
+        this.manager.updateSeed();
         this.updatePreview();
-        this.updateActiveStates();
+        this.showNotification('🔄 Nuovo avatar generato!');
     }
     
     switchMode(mode) {
@@ -764,34 +521,30 @@ class FlatDesignAvatarUI {
     
     refreshControls() {
         const controlsContainer = this.container.querySelector('#controls');
-        controlsContainer.innerHTML = this.manager.mode === 'gallery' ? 
-            this.buildCustomizationControls() : this.buildPhotoControls();
+        controlsContainer.innerHTML = this.manager.mode === 'dicebear' ? 
+            this.buildDiceBearControls() : this.buildPhotoControls();
         this.attachEvents();
     }
     
     updatePreview() {
         const preview = this.container.querySelector('#previewContainer');
-        preview.innerHTML = this.manager.getDisplayHTML();
+        setTimeout(() => {
+            preview.innerHTML = this.manager.getDisplayHTML();
+        }, 100);
     }
     
-    updateActiveStates() {
-        // Update color swatches
-        this.container.querySelectorAll('.color-swatch').forEach(swatch => {
-            swatch.classList.remove('active');
-        });
-        
-        // Update option buttons
-        this.container.querySelectorAll('.option-btn').forEach(btn => {
-            const property = btn.dataset.property;
-            const value = btn.dataset.value;
-            btn.classList.toggle('active', this.manager.config[property] === value);
-        });
+    updateStyleInfo() {
+        const styleNameEl = this.container.querySelector('.style-name');
+        if (styleNameEl) {
+            styleNameEl.textContent = this.getStyleDisplayName();
+        }
     }
     
     randomize() {
         this.manager.randomize();
         this.refreshControls();
         this.updatePreview();
+        this.updateStyleInfo();
         this.showNotification('🎲 Avatar randomizzato!');
     }
     
@@ -816,12 +569,12 @@ class FlatDesignAvatarUI {
     }
     
     injectStyles() {
-        if (document.getElementById('flat-avatar-styles')) return;
+        if (document.getElementById('dicebear-avatar-styles')) return;
         
         const styles = document.createElement('style');
-        styles.id = 'flat-avatar-styles';
+        styles.id = 'dicebear-avatar-styles';
         styles.textContent = `
-            .flat-avatar-ui {
+            .dicebear-avatar-ui {
                 max-width: 700px;
                 margin: 0 auto;
                 padding: 30px;
@@ -868,7 +621,7 @@ class FlatDesignAvatarUI {
             .preview-container {
                 width: 180px;
                 height: 180px;
-                margin: 0 auto;
+                margin: 0 auto 15px;
                 border: 4px solid rgba(255,255,255,0.3);
                 border-radius: 50%;
                 overflow: hidden;
@@ -882,6 +635,36 @@ class FlatDesignAvatarUI {
             
             .preview-container:hover {
                 transform: scale(1.05);
+            }
+            
+            .avatar-info {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .style-name {
+                color: white;
+                font-size: 16px;
+                font-weight: 600;
+            }
+            
+            .refresh-btn {
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+            
+            .refresh-btn:hover {
+                background: rgba(255,255,255,0.3);
+                transform: translateY(-1px);
             }
             
             .control-section {
@@ -910,13 +693,13 @@ class FlatDesignAvatarUI {
                 font-size: 16px;
             }
             
-            .button-group {
+            .style-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
                 gap: 10px;
             }
             
-            .option-btn {
+            .style-btn {
                 padding: 12px;
                 border: 2px solid rgba(255,255,255,0.3);
                 background: rgba(255,255,255,0.1);
@@ -925,74 +708,93 @@ class FlatDesignAvatarUI {
                 cursor: pointer;
                 font-weight: 600;
                 transition: all 0.3s ease;
-                font-size: 13px;
+                font-size: 12px;
             }
             
-            .option-btn:hover {
+            .style-btn:hover {
                 background: rgba(255,255,255,0.2);
                 transform: translateY(-1px);
             }
             
-            .option-btn.active {
+            .style-btn.active {
                 border-color: #F39C12;
                 background: rgba(243, 156, 18, 0.3);
                 box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
             }
             
-            .color-grid {
+            .avataaars-controls {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-                gap: 10px;
-                max-width: 400px;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+                margin-top: 20px;
             }
             
-            .color-swatch {
-                width: 40px;
-                height: 40px;
-                border-radius: 12px;
-                cursor: pointer;
-                border: 3px solid rgba(255,255,255,0.3);
-                transition: all 0.3s ease;
-                position: relative;
+            .control-row {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
             }
             
-            .color-swatch:hover {
-                transform: scale(1.1);
-                border-color: rgba(255,255,255,0.7);
-            }
-            
-            .color-swatch.active {
-                border-color: #F39C12;
-                transform: scale(1.15);
-                box-shadow: 0 4px 15px rgba(243, 156, 18, 0.5);
-            }
-            
-            .color-swatch.active::after {
-                content: '✓';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
-                font-weight: bold;
-                font-size: 16px;
-                text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            .control-row label {
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 0;
             }
             
             .control-select {
-                width: 100%;
-                padding: 12px;
+                padding: 10px;
                 border: 2px solid rgba(255,255,255,0.3);
-                border-radius: 10px;
+                border-radius: 8px;
                 background: rgba(255,255,255,0.1);
                 color: white;
-                font-weight: 600;
-                font-size: 14px;
+                font-weight: 500;
+                font-size: 13px;
             }
             
             .control-select option {
                 background: #2C3E50;
                 color: white;
+            }
+            
+            .seed-input-group {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+            }
+            
+            .seed-input {
+                flex: 1;
+                padding: 12px;
+                border: 2px solid rgba(255,255,255,0.3);
+                border-radius: 10px;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                font-weight: 500;
+            }
+            
+            .seed-input::placeholder {
+                color: rgba(255,255,255,0.7);
+            }
+            
+            .seed-btn {
+                padding: 12px 20px;
+                border: none;
+                background: rgba(255,255,255,0.2);
+                color: white;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+            
+            .seed-btn:hover {
+                background: rgba(255,255,255,0.3);
+            }
+            
+            .seed-hint {
+                font-size: 12px;
+                color: rgba(255,255,255,0.8);
+                margin-top: 5px;
             }
             
             .photo-upload {
@@ -1064,9 +866,17 @@ class FlatDesignAvatarUI {
             }
             
             @media (max-width: 650px) {
-                .flat-avatar-ui {
+                .dicebear-avatar-ui {
                     padding: 20px;
                     margin: 10px;
+                }
+                
+                .style-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                
+                .avataaars-controls {
+                    grid-template-columns: 1fr;
                 }
                 
                 .preview-container {
@@ -1074,15 +884,11 @@ class FlatDesignAvatarUI {
                     height: 150px;
                 }
                 
-                .button-group {
-                    grid-template-columns: 1fr;
-                }
-                
-                .color-grid {
-                    grid-template-columns: repeat(6, 1fr);
-                }
-                
                 .actions {
+                    flex-direction: column;
+                }
+                
+                .seed-input-group {
                     flex-direction: column;
                 }
             }
@@ -1094,14 +900,14 @@ class FlatDesignAvatarUI {
 // === SISTEMA PRINCIPALE ===
 class RealisticAvatarSystem {
     static init(userId) {
-        console.log('🎨 Sistema Avatar Flat Design inizializzato per:', userId);
-        const manager = new FlatDesignAvatarManager(userId);
+        console.log('🎨 Sistema Avatar DiceBear inizializzato per:', userId);
+        const manager = new DiceBearAvatarManager(userId);
         return manager;
     }
     
     static createUI(containerId, manager) {
-        console.log('🎭 Creazione UI Avatar Flat Design per container:', containerId);
-        const ui = new FlatDesignAvatarUI(containerId, manager);
+        console.log('🎭 Creazione UI Avatar DiceBear per container:', containerId);
+        const ui = new DiceBearAvatarUI(containerId, manager);
         // Store reference globally for button actions
         window.avatarUI = ui;
         return ui;
@@ -1110,7 +916,7 @@ class RealisticAvatarSystem {
 
 // === ESPOSIZIONE GLOBALE ===
 window.RealisticAvatarSystem = RealisticAvatarSystem;
-window.FlatDesignAvatarManager = FlatDesignAvatarManager;
-window.FlatDesignAvatarUI = FlatDesignAvatarUI;
+window.DiceBearAvatarManager = DiceBearAvatarManager;
+window.DiceBearAvatarUI = DiceBearAvatarUI;
 
-console.log('✅ Sistema Avatar Flat Design caricato - STILE PROFESSIONALE MODERNO!');
+console.log('✅ Sistema Avatar DiceBear caricato - AVATAR PROFESSIONALI GARANTITI!');
