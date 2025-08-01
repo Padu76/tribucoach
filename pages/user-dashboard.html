@@ -799,7 +799,7 @@
                 <div class="andrea-message" id="andreaMessage">
                     <div class="message-icon">👋</div>
                     <div class="message-title">Benvenuto nel tuo percorso!</div>
-                    <div class="message-text">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di creare sia avatar realistici che cartoon, oppure caricare la tua foto!</div>
+                    <div class="message-text">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di creare avatar realistici oppure caricare la tua foto!</div>
                 </div>
             </div>
 
@@ -821,11 +821,11 @@
                     </svg>
                     
                     <!-- Mode indicator -->
-                    <div class="avatar-mode-indicator" id="avatarModeIndicator">🎭</div>
+                    <div class="avatar-mode-indicator" id="avatarModeIndicator">👤</div>
                 </div>
                 <div class="user-info">
                     <h3 id="userName">Il Tuo Avatar</h3>
-                    <p class="avatar-name" id="avatarName">Avatar Personalizzato</p>
+                    <p class="avatar-name" id="avatarName">Avatar Realistico</p>
                     <p class="avatar-personality" id="avatarPersonality">Pronto per il cambiamento</p>
                     
                     <button class="customize-btn" id="customizeBtn">
@@ -993,16 +993,19 @@
                     const avatarSVG = avatarManager.generateAvatarSVG();
                     if (avatarSVG) {
                         avatarDisplay.innerHTML = avatarSVG;
+                    } else if (avatarManager.currentMode === 'photo' && avatarManager.photoFile) {
+                        // Show photo
+                        avatarDisplay.innerHTML = `<img src="${avatarManager.photoFile}" alt="Avatar Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
                     }
                     
-                    // Update mode indicator
-                    const currentAvatar = avatarManager.currentAvatar;
-                    if (currentAvatar.mode === 'photo') {
-                        modeIndicator.textContent = '📷';
-                    } else if (currentAvatar.mode === 'realistic') {
-                        modeIndicator.textContent = '👤';
-                    } else {
-                        modeIndicator.textContent = '🎭';
+                    // Update mode indicator - check if element exists
+                    if (modeIndicator) {
+                        const currentAvatar = avatarManager.currentAvatar;
+                        if (avatarManager.currentMode === 'photo') {
+                            modeIndicator.textContent = '📷';
+                        } else {
+                            modeIndicator.textContent = '👤';
+                        }
                     }
                     
                     // Update avatar info
@@ -1017,22 +1020,23 @@
         function updateAvatarInfo() {
             if (!avatarManager) return;
             
-            const currentAvatar = avatarManager.currentAvatar;
-            const avatarName = document.getElementById('avatarName');
-            const avatarPersonality = document.getElementById('avatarPersonality');
-            
-            if (avatarName) {
-                if (currentAvatar.mode === 'photo') {
-                    avatarName.textContent = 'Avatar Foto Personale';
-                } else if (currentAvatar.mode === 'realistic') {
-                    avatarName.textContent = 'Avatar Realistico';
-                } else {
-                    avatarName.textContent = 'Avatar Cartoon';
+            try {
+                const avatarName = document.getElementById('avatarName');
+                const avatarPersonality = document.getElementById('avatarPersonality');
+                
+                if (avatarName) {
+                    if (avatarManager.currentMode === 'photo') {
+                        avatarName.textContent = 'Avatar Foto Personale';
+                    } else {
+                        avatarName.textContent = 'Avatar Realistico';
+                    }
                 }
-            }
-            
-            if (avatarPersonality) {
-                avatarPersonality.textContent = 'Personalizzato per te';
+                
+                if (avatarPersonality) {
+                    avatarPersonality.textContent = 'Personalizzato per te';
+                }
+            } catch (error) {
+                console.error('❌ Errore aggiornamento info avatar:', error);
             }
         }
 
@@ -1174,7 +1178,9 @@
             }
             
             // Update main avatar display
-            updateAvatarDisplay();
+            setTimeout(() => {
+                updateAvatarDisplay();
+            }, 100);
         }
 
         // Triple-click admin access (mantiene funzionalità originale)
@@ -1258,34 +1264,42 @@
             const email = user.email;
             const name = user.name || email.split('@')[0];
 
-            document.getElementById('userName').textContent = name;
-            document.getElementById('userNameWelcome').textContent = name;
+            const userNameEl = document.getElementById('userName');
+            const userNameWelcomeEl = document.getElementById('userNameWelcome');
+            
+            if (userNameEl) userNameEl.textContent = name;
+            if (userNameWelcomeEl) userNameWelcomeEl.textContent = name;
 
             const roleIndicator = document.getElementById('roleIndicator');
             const roleText = document.getElementById('roleText');
             const accessInfo = document.getElementById('accessInfo');
             
             if (role === 'admin') {
-                roleIndicator.className = 'role-indicator visible admin';
-                roleText.textContent = '👑 ADMIN';
-                accessInfo.textContent = 'Accesso amministratore - Controllo completo sistema';
+                if (roleIndicator) roleIndicator.className = 'role-indicator visible admin';
+                if (roleText) roleText.textContent = '👑 ADMIN';
+                if (accessInfo) accessInfo.textContent = 'Accesso amministratore - Controllo completo sistema';
                 
             } else if (role === 'beta') {
-                roleIndicator.className = 'role-indicator visible beta';
-                roleText.textContent = '🧪 BETA';
-                accessInfo.textContent = 'Accesso beta tester - Testing e feedback';
+                if (roleIndicator) roleIndicator.className = 'role-indicator visible beta';
+                if (roleText) roleText.textContent = '🧪 BETA';
+                if (accessInfo) accessInfo.textContent = 'Accesso beta tester - Testing e feedback';
                 
             } else {
-                roleIndicator.className = 'role-indicator visible';
-                roleText.textContent = '👤 USER';
-                accessInfo.textContent = 'Accesso utente registrato';
+                if (roleIndicator) roleIndicator.className = 'role-indicator visible';
+                if (roleText) roleText.textContent = '👤 USER';
+                if (accessInfo) accessInfo.textContent = 'Accesso utente registrato';
             }
         }
 
         function showDefaultUser() {
-            document.getElementById('userName').textContent = 'Il Tuo Avatar';
-            document.getElementById('userNameWelcome').textContent = 'Utente';
-            document.getElementById('accessInfo').textContent = 'Accesso libero a tutti i contenuti - Avatar realistico attivo';
+            const userNameEl = document.getElementById('userName');
+            const userNameWelcomeEl = document.getElementById('userNameWelcome');
+            const accessInfoEl = document.getElementById('accessInfo');
+            
+            if (userNameEl) userNameEl.textContent = 'Il Tuo Avatar';
+            if (userNameWelcomeEl) userNameWelcomeEl.textContent = 'Utente';
+            if (accessInfoEl) accessInfoEl.textContent = 'Accesso libero a tutti i contenuti - Avatar realistico attivo';
+            
             console.log('👤 Modalità utente standard');
         }
 
