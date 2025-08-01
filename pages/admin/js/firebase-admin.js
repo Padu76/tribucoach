@@ -161,7 +161,7 @@ export async function loadAllFirebaseData() {
 }
 
 /**
- * Carica dati utenti da quiz_results
+ * Carica dati utenti da quiz_results con sistema avatar
  */
 async function loadUsersData() {
     try {
@@ -179,6 +179,9 @@ async function loadUsersData() {
             const quadrant = determineQuadrant(data);
             const consciousnessLevel = determineConsciousnessLevel(data);
             const leadScore = calculateLeadScore(data);
+            
+            // Genera avatar automatico
+            const avatarData = generateUserAvatar(data, quadrant, consciousnessLevel);
             
             const user = {
                 id: doc.id,
@@ -199,8 +202,12 @@ async function loadUsersData() {
                 consciousnessLevel: consciousnessLevel,
                 leadScore: leadScore,
                 
+                // Avatar system
+                avatar: avatarData,
+                
                 // Quiz data completi
                 quizData: data,
+                quizScore: calculateQuizCompleteness(data),
                 source: 'quiz',
                 
                 // Profile metadata
@@ -219,13 +226,18 @@ async function loadUsersData() {
                 
                 // Admin notes
                 notes: data.notes || '',
-                tags: data.tags || []
+                tags: data.tags || [],
+                
+                // Quiz analytics
+                quizCompletionDate: data.timestamp ? data.timestamp.toDate() : new Date(),
+                quizDuration: data.quiz_duration || 0,
+                quizSource: data.source || 'website'
             };
             
             firebaseData.allUsers.push(user);
         });
         
-        console.log('✅ Utenti caricati:', firebaseData.allUsers.length);
+        console.log('✅ Utenti caricati con avatar:', firebaseData.allUsers.length);
         return firebaseData.allUsers;
         
     } catch (error) {
@@ -371,9 +383,131 @@ function determineConsciousnessLevel(quizData) {
     return level;
 }
 
+// ==========================================================================
+// AVATAR GENERATION SYSTEM
+// ==========================================================================
+
 /**
- * Calcola lead score migliorato
+ * Genera avatar automatico basato su dati utente
  */
+function generateUserAvatar(userData, quadrant, consciousnessLevel) {
+    const name = userData.name || 'User';
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    
+    // Colori basati su quadrante
+    const quadrantColors = {
+        'Q1': { bg: '#ea580c', accent: '#f97316', emoji: '🏆' }, // Atleta - Orange
+        'Q2': { bg: '#2563eb', accent: '#3b82f6', emoji: '💪' }, // Esploratore - Blue
+        'Q3': { bg: '#7c3aed', accent: '#8b5cf6', emoji: '🎯' }, // Esperto - Purple
+        'Q4': { bg: '#16a34a', accent: '#22c55e', emoji: '🌱' }  // Guerriero - Green
+    };
+    
+    // Avatar personalizzato basato su dati quiz
+    const avatarStyle = getAvatarStyleFromQuiz(userData);
+    const colors = quadrantColors[quadrant] || quadrantColors['Q4'];
+    
+    return {
+        initials: initials,
+        backgroundColor: colors.bg,
+        accentColor: colors.accent,
+        emoji: colors.emoji,
+        style: avatarStyle,
+        quadrant: quadrant,
+        level: consciousnessLevel,
+        
+        // Avatar avanzato
+        bodyType: getBodyTypeFromQuiz(userData),
+        activity: getActivityAvatarFromQuiz(userData),
+        mood: getMoodFromQuiz(userData),
+        
+        // Metadata
+        generated: true,
+        lastUpdated: new Date(),
+        customizable: true
+    };
+}
+
+/**
+ * Determina stile avatar da dati quiz
+ */
+function getAvatarStyleFromQuiz(userData) {
+    const experience = (userData.experience || '').toLowerCase();
+    const activityLevel = (userData.activity_level || '').toLowerCase();
+    
+    if (experience.includes('avanzato') || activityLevel.includes('molto attivo')) {
+        return 'athletic'; // Avatar atletico
+    } else if (experience.includes('intermedio') || activityLevel.includes('moderato')) {
+        return 'active';   // Avatar attivo
+    } else {
+        return 'beginner'; // Avatar principiante
+    }
+}
+
+/**
+ * Determina tipo corporeo da quiz
+ */
+function getBodyTypeFromQuiz(userData) {
+    const goals = Array.isArray(userData.goals) ? userData.goals.join(' ').toLowerCase() : '';
+    
+    if (goals.includes('massa') || goals.includes('muscoli')) {
+        return 'muscular';
+    } else if (goals.includes('dimagrire') || goals.includes('peso')) {
+        return 'slim';
+    } else {
+        return 'balanced';
+    }
+}
+
+/**
+ * Determina attività avatar da quiz
+ */
+function getActivityAvatarFromQuiz(userData) {
+    const activityLevel = (userData.activity_level || '').toLowerCase();
+    
+    if (activityLevel.includes('molto attivo')) {
+        return '🏃‍♂️'; // Running
+    } else if (activityLevel.includes('moderato')) {
+        return '🚶‍♂️'; // Walking
+    } else {
+        return '🧘‍♂️'; // Meditation
+    }
+}
+
+/**
+ * Determina mood da dati quiz
+ */
+function getMoodFromQuiz(userData) {
+    const readiness = userData.readiness_level || 0;
+    const commitment = userData.commitment_level || 0;
+    const avgMotivation = (readiness + commitment) / 2;
+    
+    if (avgMotivation >= 4) {
+        return 'motivated'; // 😄
+    } else if (avgMotivation >= 3) {
+        return 'neutral';   // 😐
+    } else {
+        return 'concerned'; // 😟
+    }
+}
+
+/**
+ * Calcola completezza quiz
+ */
+function calculateQuizCompleteness(quizData) {
+    const requiredFields = [
+        'name', 'email', 'age', 'experience', 'activity_level', 
+        'goals', 'readiness_level', 'commitment_level'
+    ];
+    
+    let filledFields = 0;
+    requiredFields.forEach(field => {
+        if (quizData[field] && quizData[field] !== '' && quizData[field] !== null) {
+            filledFields++;
+        }
+    });
+    
+    return Math.round((filledFields / requiredFields.length) * 100);
+}
 function calculateLeadScore(quizData) {
     if (quizData.lead_score && quizData.lead_score > 0) return quizData.lead_score;
     
@@ -650,12 +784,54 @@ export function calculateAIMetrics() {
 // ==========================================================================
 
 /**
- * Genera CSV da array utenti
+ * Calcola metriche avatar
  */
-export function generateUsersCSV(users) {
+export function calculateAvatarMetrics() {
+    const users = firebaseData.allUsers;
+    
+    // Distribuzione quadranti
+    const quadrantDistribution = {
+        'Q1': users.filter(u => u.profileQuadrant === 'Q1').length,
+        'Q2': users.filter(u => u.profileQuadrant === 'Q2').length,
+        'Q3': users.filter(u => u.profileQuadrant === 'Q3').length,
+        'Q4': users.filter(u => u.profileQuadrant === 'Q4').length
+    };
+    
+    // Stili avatar più popolari
+    const avatarStyles = {};
+    users.forEach(user => {
+        if (user.avatar && user.avatar.style) {
+            avatarStyles[user.avatar.style] = (avatarStyles[user.avatar.style] || 0) + 1;
+        }
+    });
+    
+    // Completezza quiz media
+    const avgQuizCompleteness = users.length > 0 ? 
+        Math.round(users.reduce((sum, user) => sum + (user.quizScore || 0), 0) / users.length) : 0;
+    
+    // Avatar personalizzati vs automatici
+    const customizedAvatars = users.filter(u => u.avatar && !u.avatar.generated).length;
+    const generatedAvatars = users.filter(u => u.avatar && u.avatar.generated).length;
+    
+    return {
+        quadrantDistribution,
+        avatarStyles,
+        avgQuizCompleteness,
+        customizedAvatars,
+        generatedAvatars,
+        totalAvatars: customizedAvatars + generatedAvatars
+    };
+}
+
+/**
+ * Genera CSV potenziato con dati avatar
+ */
+export function generateUsersCSVAdvanced(users) {
     const headers = [
         'Nome', 'Email', 'Telefono', 'Registrazione', 'Ultima Attività',
-        'Lead Score', 'Profilo', 'Quadrante', 'Livello Coscienza', 
+        'Lead Score', 'Quiz Score', 'Profilo', 'Quadrante', 'Livello Coscienza', 
+        'Avatar Emoji', 'Avatar Style', 'Esperienza', 'Livello Attività',
+        'Motivazione', 'Impegno', 'Età', 'Città', 'Obiettivi', 'Sfide',
         'Settimane Completate', 'Coaching Iniziato', 'Note'
     ];
     
@@ -669,9 +845,20 @@ export function generateUsersCSV(users) {
             user.registrationDate ? user.registrationDate.toLocaleDateString('it-IT') : '',
             user.lastActivity ? user.lastActivity.toLocaleDateString('it-IT') : '',
             Math.round(user.leadScore || 0),
+            user.quizScore || 0,
             user.profileType || '',
             user.profileQuadrant || '',
             user.consciousnessLevel || '',
+            user.avatar ? user.avatar.emoji : '',
+            user.avatar ? user.avatar.style : '',
+            user.experience || '',
+            user.activityLevel || '',
+            user.readinessLevel || '',
+            user.commitmentLevel || '',
+            user.age || '',
+            user.city || '',
+            Array.isArray(user.goals) ? user.goals.join('; ') : '',
+            Array.isArray(user.challenges) ? user.challenges.join('; ') : '',
             completedWeeks,
             user.hasStartedCoaching ? 'Sì' : 'No',
             user.notes || ''
