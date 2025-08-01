@@ -913,8 +913,7 @@ document.head.appendChild(style);
 // ==========================================================================
 export { 
     dashboardState,
-    toggleUserSelection,
-    handleRefreshClick: () => handleRefreshClick({ target: document.getElementById('refreshBtn') })
+    toggleUserSelection
 };
 
 // Export for window access

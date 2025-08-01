@@ -5,8 +5,8 @@
 import { 
     firebaseData, 
     updateUserNotes, 
-    markCoachingStarted, 
-    addUserTag,
+    markCoachingStarted as firebaseMarkCoachingStarted, 
+    addUserTag as firebaseAddUserTag,
     formatDate,
     formatDateTime,
     daysBetween
@@ -460,7 +460,7 @@ export async function markCoachingStartedSingle(userId) {
     }
     
     try {
-        await markCoachingStarted(userId);
+        await firebaseMarkCoachingStarted(userId);
         
         // Update local data
         const user = firebaseData.allUsers.find(u => u.id === userId);
@@ -497,7 +497,7 @@ export async function addUserTag(userId) {
     if (!tag || !tag.trim()) return;
     
     try {
-        const success = await addUserTag(userId, tag.trim());
+        const success = await firebaseAddUserTag(userId, tag.trim());
         
         if (success) {
             showNotification(`Tag "${tag}" aggiunto`, 'success');
@@ -746,7 +746,7 @@ async function handleBulkMarkCoaching() {
         
         for (const userId of eligibleUsers) {
             try {
-                await markCoachingStarted(userId);
+                await firebaseMarkCoachingStarted(userId);
                 successCount++;
             } catch (error) {
                 console.error('Errore per utente:', userId, error);
