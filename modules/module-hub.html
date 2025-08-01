@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hub Coaching - 7 Settimane LifestyleFitnessCoach</title>
+    <title>Hub Coaching AI v2.0 - 7 Settimane LifestyleFitnessCoach</title>
 
     <style>
         * {
@@ -18,6 +18,42 @@
             color: #fff;
             min-height: 100vh;
             padding: 20px;
+        }
+
+        /* AI Badge */
+        .ai-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .personalization-banner {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .personalization-banner.active {
+            display: block;
         }
 
         .hub-container {
@@ -107,6 +143,68 @@
             font-size: 1rem;
         }
 
+        /* Progress Overview */
+        .progress-overview {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #475569;
+        }
+
+        .progress-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .progress-header h2 {
+            color: #ea580c;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .progress-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(234, 88, 12, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(234, 88, 12, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ea580c;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .completion-bar {
+            background: #334155;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .completion-fill {
+            background: linear-gradient(90deg, #ea580c, #f97316);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
         .quiz-results-section {
             background: linear-gradient(135deg, #2a2a2a, #333);
             padding: 30px;
@@ -171,6 +269,13 @@
             margin-bottom: 10px;
         }
 
+        .profile-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
         .lead-score {
             padding: 8px 16px;
             border-radius: 20px;
@@ -215,6 +320,44 @@
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* AI Recommendations */
+        .ai-recommendations {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #475569;
+        }
+
+        .recommendations-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .recommendations-header h3 {
+            color: #ea580c;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card {
+            background: rgba(234, 88, 12, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ea580c;
+        }
+
+        .recommendation-card h4 {
+            color: #ea580c;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-card p {
+            color: #cbd5e1;
+            line-height: 1.5;
         }
 
         .detailed-analysis {
@@ -388,6 +531,19 @@
             background: linear-gradient(90deg, #ea580c, #f97316);
         }
 
+        .week-module.completed::before {
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+        }
+
+        .week-module.recommended {
+            border-color: #fbbf24;
+            box-shadow: 0 8px 25px rgba(251, 191, 36, 0.2);
+        }
+
+        .week-module.recommended::before {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
         .week-module:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(234, 88, 12, 0.2);
@@ -416,6 +572,16 @@
             color: #10b981;
         }
 
+        .week-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .week-status.recommended {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
         .week-title {
             font-size: 1.4rem;
             font-weight: 700;
@@ -426,8 +592,18 @@
         .week-description {
             color: #cbd5e1;
             line-height: 1.5;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-size: 0.95rem;
+        }
+
+        .week-personalization {
+            background: rgba(234, 88, 12, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #fbbf24;
+            font-style: italic;
         }
 
         .week-button {
@@ -442,6 +618,10 @@
             transition: all 0.3s ease;
             width: 100%;
             box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+        }
+
+        .week-button.completed {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
         }
 
         .week-button:hover {
@@ -543,6 +723,53 @@
             box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
         }
 
+        /* Achievement Badges */
+        .achievement-badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: rgba(234, 88, 12, 0.2);
+            color: #ea580c;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        /* Loading States */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid transparent;
+            border-top: 2px solid #ea580c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .hub-header h1 {
@@ -579,17 +806,29 @@
             .info-steps {
                 grid-template-columns: 1fr;
             }
+            
+            .progress-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
+    <!-- AI Badge -->
+    <div class="ai-badge">🤖 AI v2.0 Hub Integrato</div>
+    
+    <!-- Personalization Banner -->
+    <div class="personalization-banner" id="personalizationBanner">
+        <span id="personalizationText">🎯 Hub personalizzato attivo per il tuo profilo</span>
+    </div>
+
     <div class="hub-container">
         
         <div class="hub-header">
             <div class="header-content">
                 <div class="header-text">
-                    <h1>🎯 Hub Coaching - 7 Settimane</h1>
-                    <p>Il tuo percorso di trasformazione personalizzato con Andrea Padoan</p>
+                    <h1 id="hubTitle">🎯 Hub Coaching AI v2.0 - 7 Settimane</h1>
+                    <p id="hubSubtitle">Il tuo percorso di trasformazione personalizzato con Andrea Padoan</p>
                 </div>
                 <div class="header-actions">
                     <a href="../user-dashboard.html" class="back-to-dashboard-btn">
@@ -599,225 +838,151 @@
             </div>
         </div>
 
+        <!-- Progress Overview -->
+        <div class="progress-overview">
+            <div class="progress-header">
+                <h2>📈 Il Tuo Progresso di Trasformazione</h2>
+                <p id="progressSubtitle">Panoramica del tuo percorso personalizzato</p>
+            </div>
+            
+            <div class="progress-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="completedWeeks">0</div>
+                    <div class="stat-label">Settimane Completate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalHours">0</div>
+                    <div class="stat-label">Ore di Coaching</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="transformationScore">0</div>
+                    <div class="stat-label">Punteggio Trasformazione</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="streakDays">0</div>
+                    <div class="stat-label">Giorni di Crescita</div>
+                </div>
+            </div>
+            
+            <div class="completion-bar">
+                <div class="completion-fill" id="completionFill" style="width: 0%"></div>
+            </div>
+            <div style="text-align: center; margin-top: 10px; color: #cbd5e1;">
+                <span id="completionText">Inizia il tuo percorso di trasformazione</span>
+            </div>
+        </div>
+
         <!-- User Welcome -->
         <div class="user-welcome">
-            <h2>👋 Benvenuto nel Hub Coaching!</h2>
-            <p>Accesso libero a tutti i moduli di coaching • Inizia quando vuoi</p>
+            <h2 id="welcomeTitle">👋 Benvenuto nel Hub Coaching AI!</h2>
+            <p id="welcomeSubtitle">Coaching personalizzato con Sistema AI v2.0 • Trasformazione adattiva</p>
+        </div>
+
+        <!-- AI Recommendations -->
+        <div class="ai-recommendations" id="aiRecommendations" style="display: none;">
+            <div class="recommendations-header">
+                <h3>🤖 Raccomandazioni AI Personalizzate</h3>
+                <p>Basate sul tuo profilo e i tuoi progressi</p>
+            </div>
+            <div id="recommendationsList">
+                <!-- Recommendations will be populated here -->
+            </div>
         </div>
 
         <!-- RISULTATI QUIZ E ANALISI PROFILO -->
         <div class="quiz-results-section">
             <div class="results-header">
-                <h2>📊 Analisi del Tuo Profilo</h2>
-                <p>La tua situazione attuale e come posso aiutarti</p>
+                <h2>📊 Analisi del Tuo Profilo AI</h2>
+                <p id="analysisSubtitle">La tua situazione attuale e come il Sistema AI ti supporta</p>
             </div>
             
             <div class="profile-summary">
                 <div class="profile-card">
-                    <div class="profile-icon">👤</div>
+                    <div class="profile-icon" id="profileIcon">👤</div>
                     <div class="profile-info">
-                        <h3>Guerriero Determinato</h3>
-                        <p>Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.</p>
-                        <div class="lead-score">75%</div>
+                        <h3 id="profileName">Caricamento Profilo...</h3>
+                        <p id="profileDescription">Analisi AI del tuo profilo in corso...</p>
+                        <div class="profile-description" id="profileDetailedDescription"></div>
+                        <div class="lead-score" id="leadScore">Caricamento...</div>
+                        <div class="achievement-badges" id="achievementBadges"></div>
                     </div>
                 </div>
                 
                 <div class="coaching-actions">
-                    <button class="action-btn start-btn" onclick="startCoachingJourney()">
-                        🚀 Inizia Subito il Tuo Miglioramento
+                    <button class="action-btn start-btn" id="startCoachingBtn" onclick="startCoachingJourney()">
+                        🚀 Inizia/Continua il Tuo Percorso
                     </button>
                     <button class="action-btn quiz-btn" onclick="retakeQuiz()">
-                        🔄 Rifai il Test
+                        🔄 Rifai il Test Lifestyle
                     </button>
                 </div>
             </div>
             
             <div class="detailed-analysis">
                 <div class="analysis-card">
-                    <h3>🎯 La tua situazione in sintesi</h3>
-                    <div class="situation-summary">
-                        <p><strong>Ciao!</strong> Ho analizzato i risultati del tuo test e voglio condividere alcune riflessioni sulla tua situazione attuale.</p>
-                        <p><strong>Il tuo profilo:</strong> Guerriero Determinato</p>
-                        <p>Sei una persona con grande potenziale di crescita, pronta ad affrontare nuove sfide per migliorare il tuo benessere complessivo.</p>
-                        <div class="highlight-box info">Il tuo punteggio è 75/100, che indica ottime potenzialità per la trasformazione!</div>
+                    <h3 id="situationTitle">🎯 La tua situazione personalizzata</h3>
+                    <div class="situation-summary" id="situationSummary">
+                        <p>Caricamento analisi personalizzata...</p>
                     </div>
                 </div>
                 
                 <div class="insights-grid">
                     <div class="insight-card">
                         <h4>🏆 Le tue aree di forza</h4>
-                        <ul>
-                            <li>💪 Forte volontà di miglioramento</li>
-                            <li>🎯 Capacità di affrontare le sfide</li>
-                            <li>🌱 Potenziale di crescita elevato</li>
+                        <ul id="strengthsList">
+                            <li>Caricamento punti di forza...</li>
                         </ul>
                     </div>
                     <div class="insight-card">
                         <h4>🎯 Le aree che richiedono attenzione</h4>
-                        <ul>
-                            <li>🧠 Sviluppo della fiducia in sé</li>
-                            <li>📈 Creazione di abitudini sostenibili</li>
-                            <li>💭 Gestione del dialogo interno</li>
+                        <ul id="improvementsList">
+                            <li>Caricamento aree di miglioramento...</li>
                         </ul>
                     </div>
                 </div>
                 
                 <div class="coaching-story">
-                    <h3>💭 La mia storia ti suonerà familiare</h3>
-                    <p>Dopo 12 anni come manager stressato, riconosco perfettamente la tua determinazione nel voler cambiare. Sei nel posto giusto!</p>
-                    <div class="highlight-box info">
-                        <strong>Per persone come te:</strong> Il focus è sulla costruzione di fondamenta solide e sullo sviluppo graduale ma costante del benessere.
+                    <h3>💭 Approccio coaching personalizzato per te</h3>
+                    <p id="coachingApproachText">Caricamento approccio personalizzato...</p>
+                    <div class="highlight-box info" id="coachingHighlight">
+                        <strong>Per il tuo profilo:</strong> Caricamento strategia specifica...
                     </div>
                 </div>
                 
                 <div class="wellness-scores-section">
-                    <div class="scores-grid">
-                        <div class="score-card">
-                            <div class="score-number">3</div>
-                            <div class="score-label">Benessere Emotivo</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: 60%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">3</div>
-                            <div class="score-label">Salute Fisica</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: 60%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">2</div>
-                            <div class="score-label">Relazioni Sociali</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: 40%"></div>
-                            </div>
-                            <div class="score-action">Puoi migliorare!</div>
-                        </div>
-                        
-                        <div class="score-card">
-                            <div class="score-number">4</div>
-                            <div class="score-label">Vita Professionale</div>
-                            <div class="score-bar">
-                                <div class="score-fill" style="width: 80%"></div>
-                            </div>
-                            <div class="score-action">Molto bene!</div>
-                        </div>
+                    <div class="scores-grid" id="wellnessScores">
+                        <!-- Scores will be populated dynamically -->
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- MODULI SETTIMANE -->
-        <div class="modules-grid">
-            
-            <div class="week-module" data-week="1">
-                <div class="week-header">
-                    <div class="week-number">1</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Benvenuto</div>
-                <div class="week-description">
-                    Conosciamoci meglio! Iniziamo il percorso con un questionario approfondito e la prima sessione di coaching personalizzato.
-                </div>
-                <button class="week-button" onclick="accessWeek(1)">🚀 Inizia Settimana 1</button>
-            </div>
-
-            <div class="week-module" data-week="2">
-                <div class="week-header">
-                    <div class="week-number">2</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Consapevolezza di Sé</div>
-                <div class="week-description">
-                    Esploriamo le tue motivazioni profonde e scopriamo cosa ti spinge veramente verso il cambiamento.
-                </div>
-                <button class="week-button" onclick="accessWeek(2)">🚀 Inizia Settimana 2</button>
-            </div>
-
-            <div class="week-module" data-week="3">
-                <div class="week-header">
-                    <div class="week-number">3</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Obiettivi SMART</div>
-                <div class="week-description">
-                    Trasformiamo i tuoi desideri in obiettivi concreti, misurabili e raggiungibili con un piano d'azione chiaro.
-                </div>
-                <button class="week-button" onclick="accessWeek(3)">🚀 Inizia Settimana 3</button>
-            </div>
-
-            <div class="week-module" data-week="4">
-                <div class="week-header">
-                    <div class="week-number">4</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Piano di Azione</div>
-                <div class="week-description">
-                    Creiamo una strategia concreta per raggiungere i tuoi obiettivi, identificando risorse e superando gli ostacoli.
-                </div>
-                <button class="week-button" onclick="accessWeek(4)">🚀 Inizia Settimana 4</button>
-            </div>
-
-            <div class="week-module" data-week="5">
-                <div class="week-header">
-                    <div class="week-number">5</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Trasformazione Abitudini</div>
-                <div class="week-description">
-                    Costruiamo abitudini sostenibili che ti porteranno verso il successo a lungo termine, passo dopo passo.
-                </div>
-                <button class="week-button" onclick="accessWeek(5)">🚀 Inizia Settimana 5</button>
-            </div>
-
-            <div class="week-module" data-week="6">
-                <div class="week-header">
-                    <div class="week-number">6</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Scopri le Tue Potenzialità</div>
-                <div class="week-description">
-                    Riconosci e sviluppa i tuoi punti di forza nascosti per massimizzare il tuo potenziale di crescita.
-                </div>
-                <button class="week-button" onclick="accessWeek(6)">🚀 Inizia Settimana 6</button>
-            </div>
-
-            <div class="week-module" data-week="7">
-                <div class="week-header">
-                    <div class="week-number">7</div>
-                    <div class="week-status">▶️ Disponibile</div>
-                </div>
-                <div class="week-title">Consolidamento e Futuro</div>
-                <div class="week-description">
-                    Consolidiamo i risultati raggiunti e pianifichiamo il mantenimento a lungo termine della tua trasformazione.
-                </div>
-                <button class="week-button" onclick="accessWeek(7)">🚀 Inizia Settimana 7</button>
-            </div>
-
+        <div class="modules-grid" id="modulesGrid">
+            <!-- Week modules will be populated dynamically -->
         </div>
 
         <!-- INFO PERCORSO -->
         <div class="info-section">
-            <h3>🎯 Come Funziona il Percorso</h3>
-            <p>Tutte le settimane sono ora disponibili! Puoi accedere liberamente a qualsiasi modulo di coaching.</p>
+            <h3>🎯 Come Funziona il Sistema AI v2.0</h3>
+            <p id="systemDescription">Il Sistema AI personalizza ogni aspetto del tuo percorso basandosi sul tuo profilo lifestyle unico.</p>
             
             <div class="info-steps">
                 <div class="info-step">
-                    <h4>1. 📚 Ricevi Materiali</h4>
-                    <p>Ogni settimana contiene guide, test e esercizi personalizzati</p>
+                    <h4>1. 🤖 AI Personalizzato</h4>
+                    <p>Ogni modulo si adatta automaticamente al tuo profilo comportamentale</p>
                 </div>
                 <div class="info-step">
-                    <h4>2. 💬 Chatta con Andrea</h4>
-                    <p>Scrivi quando hai domande o bisogno di supporto</p>
+                    <h4>2. 💬 Coaching Adattivo</h4>
+                    <p>Andrea risponde nel modo più efficace per il tuo tipo di personalità</p>
                 </div>
                 <div class="info-step">
-                    <h4>3. ✅ Completa Attività</h4>
-                    <p>Segui i compiti settimanali per ottenere i migliori risultati</p>
+                    <h4>3. 📊 Progress Intelligente</h4>
+                    <p>Il sistema traccia e ottimizza il tuo percorso in tempo reale</p>
+                </div>
+                <div class="info-step">
+                    <h4>4. 🎯 Raccomandazioni Smart</h4>
+                    <p>Ricevi suggerimenti personalizzati basati sui tuoi progressi</p>
                 </div>
             </div>
         </div>
@@ -825,10 +990,10 @@
         <!-- CALL TO ACTION FINALE -->
         <div class="final-cta-section">
             <div class="main-cta-box">
-                <h3>🚀 Sei Pronto per la Trasformazione?</h3>
-                <p>Questo è il momento perfetto per iniziare. Hai accesso libero a tutti i contenuti. Lascia che ti guidi verso la versione migliore di te stesso!</p>
-                <button class="final-cta-btn" onclick="startCoachingJourney()">
-                    ✨ Inizia il Tuo Percorso di Trasformazione
+                <h3 id="finalCtaTitle">🚀 Sei Pronto per la Trasformazione AI?</h3>
+                <p id="finalCtaText">Il Sistema AI v2.0 è calibrato sul tuo profilo unico. Ogni interazione è personalizzata per massimizzare la tua crescita!</p>
+                <button class="final-cta-btn" id="finalCtaBtn" onclick="startCoachingJourney()">
+                    ✨ Inizia la Tua Trasformazione Personalizzata
                 </button>
             </div>
         </div>
@@ -836,57 +1001,580 @@
     </div>
 
     <script>
-        console.log('🎯 Module Hub caricato - Accesso libero a tutti i moduli');
-
-        // 🚀 ACCESSO SETTIMANA
-        function accessWeek(weekNumber) {
-            console.log(`🚀 Accesso settimana ${weekNumber}`);
+        // 🤖 SISTEMA AI INTEGRATO v2.0 - MODULE HUB
+        // ==========================================
+        
+        // === CONFIGURAZIONE PROFILI LIFESTYLE ===
+        const LIFESTYLE_PROFILES_CONFIG = {
+            'stressato_esaurito': {
+                name: 'Stressato Esaurito',
+                emoji: '😰',
+                description: 'Persona con alto stress che ha bisogno di recuperare energie e trovare equilibrio',
+                coaching_approach: 'Approccio gentile e graduale, focus su auto-cura e gestione stress',
+                strengths: ['Resilienza naturale', 'Capacità di sopportare pressione', 'Esperienza nella gestione delle sfide'],
+                improvements: ['Gestione dello stress', 'Boundaries personali', 'Tecniche di rilassamento'],
+                recommended_weeks: [2, 5, 7],
+                cta_text: 'Ritrova il tuo equilibrio con un approccio gentile e sostenibile'
+            },
             
-            // URL settimane
-            const weekUrls = {
-                1: 'week-1.html',
-                2: 'week-2.html',
-                3: 'week-3.html',
-                4: 'week-4.html',
-                5: 'week-5.html',
-                6: 'week-6.html',
-                7: 'week-7.html'
-            };
+            'procrastinatore_bloccato': {
+                name: 'Procrastinatore Bloccato',
+                emoji: '⏳',
+                description: 'Persona che sa cosa fare ma fatica a iniziare e portare a termine le azioni',
+                coaching_approach: 'Approccio energico e pratico, focus su micro-azioni e momentum',
+                strengths: ['Consapevolezza dei propri obiettivi', 'Capacità di visione', 'Potenziale energetico elevato'],
+                improvements: ['Iniziare le azioni', 'Mantenere la costanza', 'Superare i blocchi mentali'],
+                recommended_weeks: [3, 4, 5],
+                cta_text: 'Trasforma la tua energia in azione concreta e risultati tangibili'
+            },
             
-            if (weekUrls[weekNumber]) {
-                // Redirect diretto
-                window.location.href = `${weekUrls[weekNumber]}?week=${weekNumber}`;
-            } else {
-                alert(`Settimana ${weekNumber} non ancora disponibile.`);
+            'perfezionista_insoddisfatto': {
+                name: 'Perfezionista Insoddisfatto',
+                emoji: '🎯',
+                description: 'Persona con standard elevati che spesso si blocca nella ricerca della perfezione',
+                coaching_approach: 'Approccio paziente e compassionevole, focus su progresso vs perfezione',
+                strengths: ['Standard elevati di qualità', 'Attenzione ai dettagli', 'Dedizione al miglioramento'],
+                improvements: ['Auto-compassione', 'Accettare il "buono abbastanza"', 'Celebrare i progressi'],
+                recommended_weeks: [2, 6, 7],  
+                cta_text: 'Scopri come l\'eccellenza nasce dal progresso, non dalla perfezione'
+            },
+            
+            'dispersivo_confuso': {
+                name: 'Dispersivo Confuso',
+                emoji: '🤯',
+                description: 'Persona con molte idee e interessi che fatica a mantenere il focus su priorità chiare',
+                coaching_approach: 'Approccio strutturato e chiarificatore, focus su prioritizzazione',
+                strengths: ['Creatività e versatilità', 'Mente aperta a nuove possibilità', 'Potenziale multidisciplinare'],
+                improvements: ['Focus e concentrazione', 'Prioritizzazione efficace', 'Completamento dei progetti'],
+                recommended_weeks: [1, 3, 4],
+                cta_text: 'Trasforma la tua creatività in risultati concreti con focus laser'
+            },
+            
+            'motivato_inconsistente': {
+                name: 'Motivato Inconsistente',
+                emoji: '🎢',
+                description: 'Persona con alta motivazione che varia nel tempo, alla ricerca di costanza',
+                coaching_approach: 'Approccio sistematico e strutturato, focus su automatismi e tracking',
+                strengths: ['Energia e entusiasmo elevati', 'Capacità di visioning', 'Resilienza motivazionale'],
+                improvements: ['Costanza nel tempo', 'Sistemi di supporto', 'Abitudini automatiche'],
+                recommended_weeks: [4, 5, 7],
+                cta_text: 'Trasforma la tua motivazione in risultati costanti e duraturi'
+            },
+            
+            'equilibrato_ottimizzatore': {
+                name: 'Equilibrato Ottimizzatore',
+                emoji: '⚡',
+                description: 'Persona già equilibrata che cerca ottimizzazioni avanzate per la performance',
+                coaching_approach: 'Approccio consulenziale e sofisticato, focus su marginal gains',
+                strengths: ['Approccio bilanciato alla vita', 'Mentalità di crescita', 'Capacità di auto-analisi'],
+                improvements: ['Ottimizzazione avanzata', 'Marginal gains', 'Performance di alto livello'],
+                recommended_weeks: [6, 7, 3],
+                cta_text: 'Porta la tua performance al livello successivo con ottimizzazioni avanzate'
             }
-        }
+        };
 
-        // 🚀 INIZIA PERCORSO COACHING
-        function startCoachingJourney() {
-            console.log('🚀 Avvio percorso coaching...');
-            
-            // Scroll ai moduli
-            document.querySelector('.modules-grid').scrollIntoView({ 
-                behavior: 'smooth' 
-            });
-            
-            // Notifica
-            setTimeout(() => {
-                alert('🎉 Percorso coaching iniziato! Tutte le settimane sono disponibili. Inizia dalla Settimana 1!');
-            }, 500);
-        }
-
-        // 🔄 RIFAI QUIZ
-        function retakeQuiz() {
-            if (confirm('Sei sicuro di voler rifare il test?')) {
-                window.location.href = '../lifestyle-quiz.html';
+        // === CONFIGURAZIONE SETTIMANE ===
+        const WEEKS_CONFIG = {
+            1: {
+                title: 'Incontro Conoscitivo',
+                description: 'Conosciamoci meglio! Iniziamo il percorso con un questionario approfondito e la prima sessione di coaching personalizzato.',
+                ai_focus: 'Exploration e discovery iniziale',
+                personalization: {
+                    'stressato_esaurito': 'Focus su ascolto e comprensione della tua situazione di stress',
+                    'procrastinatore_bloccato': 'Identificazione degli obiettivi che ti motivano davvero',
+                    'perfezionista_insoddisfatto': 'Esplorazione dei tuoi standard e aspettative',
+                    'dispersivo_confuso': 'Chiarificazione delle tue priorità principali',
+                    'motivato_inconsistente': 'Mappatura dei tuoi pattern motivazionali',
+                    'equilibrato_ottimizzatore': 'Analisi delle aree di ottimizzazione potenziale'
+                }
+            },
+            2: {
+                title: 'Consapevolezza di Sé',
+                description: 'Esploriamo le tue motivazioni profonde e scopriamo cosa ti spinge veramente verso il cambiamento.',
+                ai_focus: 'Introspezione guidata e auto-consapevolezza',
+                personalization: {
+                    'stressato_esaurito': 'Riconoscimento dei tuoi pattern di stress e trigger',
+                    'procrastinatore_bloccato': 'Esplorazione delle radici della procrastinazione',
+                    'perfezionista_insoddisfatto': 'Lavoro su auto-compassione e accettazione',
+                    'dispersivo_confuso': 'Identificazione dei tuoi valori core',
+                    'motivato_inconsistente': 'Comprensione dei tuoi cicli motivazionali',
+                    'equilibrato_ottimizzatore': 'Analisi profonda delle tue zone di comfort'
+                }
+            },
+            3: {
+                title: 'Obiettivi SMART',
+                description: 'Trasformiamo i tuoi desideri in obiettivi concreti, misurabili e raggiungibili con un piano d\'azione chiaro.',
+                ai_focus: 'Goal setting strategico e pianificazione',
+                personalization: {
+                    'stressato_esaurito': 'Obiettivi di benessere sostenibili e anti-stress',
+                    'procrastinatore_bloccato': 'Obiettivi con micro-step immediati e actionable',
+                    'perfezionista_insoddisfatto': 'Obiettivi "abbastanza buoni" con margini di flessibilità',
+                    'dispersivo_confuso': 'Un obiettivo principale chiaro e focalizzato',
+                    'motivato_inconsistente': 'Obiettivi con sistemi di tracking integrati',
+                    'equilibrato_ottimizzatore': 'Obiettivi ambiziosi con metriche avanzate'
+                }
+            },
+            4: {
+                title: 'Piano di Azione',
+                description: 'Creiamo una strategia concreta per raggiungere i tuoi obiettivi, identificando risorse e superando gli ostacoli.',
+                ai_focus: 'Strategic planning e execution',
+                personalization: {
+                    'stressato_esaurito': 'Piano graduale con pause e momenti di recupero',
+                    'procrastinatore_bloccato': 'Piano con accountability e deadline serrate',
+                    'perfezionista_insoddisfatto': 'Piano flessibile con iterazioni progressive',
+                    'dispersivo_confuso': 'Piano lineare e sequenziale molto chiaro',
+                    'motivato_inconsistente': 'Piano con backup e sistemi automatici',
+                    'equilibrato_ottimizzatore': 'Piano sofisticato con multiple strategie'
+                }
+            },
+            5: {
+                title: 'Trasformazione Abitudini',
+                description: 'Costruiamo abitudini sostenibili che ti porteranno verso il successo a lungo termine, passo dopo passo.',
+                ai_focus: 'Habit formation e behavior change',
+                personalization: {
+                    'stressato_esaurito': 'Abitudini di auto-cura e gestione energia',
+                    'procrastinatore_bloccato': 'Abitudini di azione immediata e momentum',
+                    'perfezionista_insoddisfatto': 'Abitudini di auto-compassione e progresso',
+                    'dispersivo_confuso': 'Una abitudine focus alla volta',
+                    'motivato_inconsistente': 'Abitudini automatiche indipendenti da motivazione',
+                    'equilibrato_ottimizzatore': 'Habit stacking avanzato per performance'
+                }
+            },
+            6: {
+                title: 'Scopri le Tue Potenzialità',
+                description: 'Riconosci e sviluppa i tuoi punti di forza nascosti per massimizzare il tuo potenziale di crescita.',
+                ai_focus: 'Strengths discovery e amplification',
+                personalization: {
+                    'stressato_esaurito': 'Potenzialità di resilienza e gestione pressione',
+                    'procrastinatore_bloccato': 'Potenzialità di energia e determinazione',
+                    'perfezionista_insoddisfatto': 'Potenzialità di eccellenza e qualità',
+                    'dispersivo_confuso': 'Potenzialità di creatività e versatilità',
+                    'motivato_inconsistente': 'Potenzialità di leadership e ispirazione',
+                    'equilibrato_ottimizzatore': 'Potenzialità di mentorship e coaching'
+                }
+            },
+            7: {
+                title: 'Consolidamento e Futuro',
+                description: 'Consolidiamo i risultati raggiunti e pianifichiamo il mantenimento a lungo termine della tua trasformazione.',
+                ai_focus: 'Consolidation e future planning',
+                personalization: {
+                    'stressato_esaurito': 'Piano mantenimento anti-stress a lungo termine',
+                    'procrastinatore_bloccato': 'Sistema anti-ricadute e accountability permanente',
+                    'perfezionista_insoddisfatto': 'Piano crescita continua vs perfezione',
+                    'dispersivo_confuso': 'Strutture semplici per focus duraturo',
+                    'motivato_inconsistente': 'Sistemi automatici per costanza',
+                    'equilibrato_ottimizzatore': 'Piano evoluzione e crescita avanzata'
+                }
             }
-        }
+        };
 
-        // Welcome message
-        setTimeout(() => {
-            console.log('✅ Module Hub completamente caricato - Accesso libero a tutte le settimane');
-        }, 1000);
-    </script>
-</body>
-</html>
+        // === VARIABILI GLOBALI ===
+        let userProfile = null;
+        let progressData = null;
+        let completedWeeks = [];
+        let hubAI = null;
+        let isInitialized = false;
+
+        // === CLASSE SISTEMA AI HUB ===
+        class ModuleHubAI {
+            constructor() {
+                this.userProfile = null;
+                this.progressData = null;
+                this.isInitialized = false;
+            }
+
+            async initialize() {
+                try {
+                    // Carica dati utente
+                    await this.loadUserData();
+                    
+                    // Personalizza interfaccia
+                    this.personalizeInterface();
+                    
+                    // Carica progress
+                    this.loadProgressData();
+                    
+                    // Genera raccomandazioni
+                    this.generateRecommendations();
+                    
+                    // Popola moduli
+                    this.populateModules();
+                    
+                    this.isInitialized = true;
+                    console.log('🤖 Hub AI Sistema inizializzato');
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione Hub AI:', error);
+                    this.loadFallbackData();
+                    return false;
+                }
+            }
+
+            async loadUserData() {
+                // Carica profilo lifestyle
+                const quizData = localStorage.getItem('lifestyleQuizResults');
+                if (quizData) {
+                    this.userProfile = JSON.parse(quizData);
+                } else {
+                    this.userProfile = {
+                        profileType: 'motivato_inconsistente',
+                        name: 'Utente',
+                        challenges: [],
+                        scores: { wellbeing: 3, health: 3, professional: 4, social: 2 }
+                    };
+                }
+
+                // Carica progress generale
+                const progressData = localStorage.getItem('lifestyleProgress');
+                if (progressData) {
+                    this.progressData = JSON.parse(progressData);
+                } else {
+                    this.progressData = {
+                        completedWeeks: [],
+                        currentWeek: 1,
+                        totalSessions: 0,
+                        totalHours: 0,
+                        transformationScore: 0,
+                        streakDays: 0
+                    };
+                }
+            }
+
+            personalizeInterface() {
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                if (!config) {
+                    console.warn('⚠️ Profilo non trovato, uso fallback');
+                    return;
+                }
+
+                // Banner personalizzazione
+                const banner = document.getElementById('personalizationBanner');
+                const bannerText = document.getElementById('personalizationText');
+                if (banner && bannerText) {
+                    banner.classList.add('active');
+                    bannerText.textContent = `🎯 Hub personalizzato per: ${config.name} ${config.emoji}`;
+                }
+
+                // Titoli personalizzati
+                const hubTitle = document.getElementById('hubTitle');
+                const hubSubtitle = document.getElementById('hubSubtitle');
+                const welcomeTitle = document.getElementById('welcomeTitle');
+                const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+
+                if (hubTitle && this.userProfile.name) {
+                    hubTitle.textContent = `🎯 Hub Coaching ${this.userProfile.name} - AI v2.0`;
+                }
+
+                if (hubSubtitle) {
+                    hubSubtitle.textContent = `Percorso personalizzato per ${config.name}`;
+                }
+
+                if (welcomeTitle) {
+                    welcomeTitle.textContent = `👋 Benvenuto ${this.userProfile.name}!`;
+                }
+
+                if (welcomeSubtitle) {
+                    welcomeSubtitle.textContent = `Coaching AI personalizzato per ${config.name} • Trasformazione adattiva`;
+                }
+
+                // Profilo display
+                this.updateProfileDisplay(config);
+
+                // CTA personalizzate
+                this.personalizeCTAs(config);
+
+                // Progress subtitle
+                const progressSubtitle = document.getElementById('progressSubtitle');
+                if (progressSubtitle) {
+                    progressSubtitle.textContent = `Il tuo progresso come ${config.name}`;
+                }
+            }
+
+            updateProfileDisplay(config) {
+                const profileIcon = document.getElementById('profileIcon');
+                const profileName = document.getElementById('profileName');
+                const profileDescription = document.getElementById('profileDescription');
+                const profileDetailedDescription = document.getElementById('profileDetailedDescription');
+                const leadScore = document.getElementById('leadScore');
+
+                if (profileIcon) {
+                    profileIcon.textContent = config.emoji;
+                }
+
+                if (profileName) {
+                    profileName.textContent = config.name;
+                }
+
+                if (profileDescription) {
+                    profileDescription.textContent = config.description;
+                }
+
+                if (profileDetailedDescription) {
+                    profileDetailedDescription.textContent = config.coaching_approach;
+                }
+
+                if (leadScore) {
+                    const score = this.calculateOverallScore();
+                    leadScore.textContent = `${score}% Potenziale`;
+                    leadScore.className = score >= 75 ? 'lead-score' : 'lead-score medium';
+                }
+
+                // Update detailed analysis
+                this.updateDetailedAnalysis(config);
+            }
+
+            updateDetailedAnalysis(config) {
+                // Situation summary
+                const situationSummary = document.getElementById('situationSummary');
+                if (situationSummary) {
+                    situationSummary.innerHTML = `
+                        <p><strong>Ciao ${this.userProfile.name}!</strong> Ho analizzato il tuo profilo con il Sistema AI v2.0 e voglio condividere alcune riflessioni personalizzate.</p>
+                        <p><strong>Il tuo profilo:</strong> ${config.name} ${config.emoji}</p>
+                        <p>${config.description}</p>
+                        <div class="highlight-box info">Il Sistema AI ha calibrato tutto il percorso sul tuo profilo comportamentale unico!</div>
+                    `;
+                }
+
+                // Update strengths and improvements
+                const strengthsList = document.getElementById('strengthsList');
+                const improvementsList = document.getElementById('improvementsList');
+
+                if (strengthsList && config.strengths) {
+                    strengthsList.innerHTML = config.strengths.map(strength => `<li>💪 ${strength}</li>`).join('');
+                }
+
+                if (improvementsList && config.improvements) {
+                    improvementsList.innerHTML = config.improvements.map(improvement => `<li>🎯 ${improvement}</li>`).join('');
+                }
+
+                // Update coaching approach
+                const coachingApproachText = document.getElementById('coachingApproachText');
+                const coachingHighlight = document.getElementById('coachingHighlight');
+
+                if (coachingApproachText) {
+                    coachingApproachText.textContent = `Con il Sistema AI v2.0, il mio approccio con te sarà: ${config.coaching_approach}. Ogni interazione è calibrata per il tuo modo unico di apprendere e crescere.`;
+                }
+
+                if (coachingHighlight) {
+                    coachingHighlight.innerHTML = `<strong>Per il tuo profilo "${config.name}":</strong> ${config.cta_text}`;
+                }
+
+                // Update wellness scores
+                this.updateWellnessScores();
+            }
+
+            updateWellnessScores() {
+                const wellnessScores = document.getElementById('wellnessScores');
+                if (!wellnessScores || !this.userProfile.scores) return;
+
+                const scoreLabels = {
+                    wellbeing: 'Benessere Emotivo',
+                    health: 'Salute Fisica',
+                    social: 'Relazioni Sociali',
+                    professional: 'Vita Professionale'
+                };
+
+                wellnessScores.innerHTML = '';
+                Object.entries(this.userProfile.scores).forEach(([key, value]) => {
+                    const scoreCard = document.createElement('div');
+                    scoreCard.className = 'score-card';
+                    
+                    const percentage = (value / 5) * 100;
+                    const action = value >= 4 ? 'Molto bene!' : value >= 3 ? 'Buon livello!' : 'Puoi migliorare!';
+                    
+                    scoreCard.innerHTML = `
+                        <div class="score-number">${value}</div>
+                        <div class="score-label">${scoreLabels[key] || key}</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="score-action">${action}</div>
+                    `;
+                    
+                    wellnessScores.appendChild(scoreCard);
+                });
+            }
+
+            loadProgressData() {
+                // Carica dati completamento settimane
+                completedWeeks = [];
+                let totalHours = 0;
+                let transformationScore = 0;
+
+                for (let i = 1; i <= 7; i++) {
+                    const weekData = localStorage.getItem(`week${i}SessionCompleted`);
+                    if (weekData) {
+                        completedWeeks.push(i);
+                        totalHours += 0.75; // 45 min per sessione
+                    }
+                }
+
+                // Carica score finale se completato
+                const finalData = localStorage.getItem('lifestyleCoachingCompleted');
+                if (finalData) {
+                    const final = JSON.parse(finalData);
+                    transformationScore = Math.round(final.finalScore * 20) || 0; // Convert to percentage
+                }
+
+                // Update progress display
+                this.updateProgressDisplay(completedWeeks.length, totalHours, transformationScore);
+                
+                // Update progress bar
+                const completionPercentage = (completedWeeks.length / 7) * 100;
+                this.updateCompletionBar(completionPercentage);
+            }
+
+            updateProgressDisplay(completed, hours, score) {
+                document.getElementById('completedWeeks').textContent = completed;
+                document.getElementById('totalHours').textContent = hours.toFixed(1);
+                document.getElementById('transformationScore').textContent = score;
+                
+                // Calculate streak (placeholder)
+                const streakDays = completed * 7; // Estimated
+                document.getElementById('streakDays').textContent = streakDays;
+
+                // Update completion text
+                const completionText = document.getElementById('completionText');
+                if (completed === 0) {
+                    completionText.textContent = 'Inizia il tuo percorso di trasformazione personalizzato';
+                } else if (completed === 7) {
+                    completionText.textContent = '🎉 Percorso completato! Trasformazione straordinaria raggiunta!';
+                } else {
+                    completionText.textContent = `${completed}/7 settimane completate - Ottimi progressi!`;
+                }
+            }
+
+            updateCompletionBar(percentage) {
+                const fill = document.getElementById('completionFill');
+                if (fill) {
+                    setTimeout(() => {
+                        fill.style.width = `${percentage}%`;
+                    }, 500);
+                }
+            }
+
+            generateRecommendations() {
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                if (!config || !config.recommended_weeks) return;
+
+                const recommendationsSection = document.getElementById('aiRecommendations');
+                const recommendationsList = document.getElementById('recommendationsList');
+
+                if (!recommendationsSection || !recommendationsList) return;
+
+                // Show recommendations section
+                recommendationsSection.style.display = 'block';
+
+                // Generate recommendations based on profile and progress
+                const recommendations = this.generateSmartRecommendations(config);
+                
+                recommendationsList.innerHTML = recommendations.map(rec => `
+                    <div class="recommendation-card">
+                        <h4>${rec.title}</h4>
+                        <p>${rec.description}</p>
+                    </div>
+                `).join('');
+            }
+
+            generateSmartRecommendations(config) {
+                const recommendations = [];
+                
+                // Next week recommendation
+                const nextWeek = this.getNextRecommendedWeek();
+                if (nextWeek) {
+                    const weekConfig = WEEKS_CONFIG[nextWeek];
+                    const personalization = weekConfig.personalization[this.userProfile.profileType];
+                    
+                    recommendations.push({
+                        title: `🎯 Prossimo Step: Settimana ${nextWeek}`,
+                        description: `${weekConfig.title} - ${personalization}`
+                    });
+                }
+
+                // Profile-specific recommendation
+                if (completedWeeks.length > 0) {
+                    recommendations.push({
+                        title: '🤖 Raccomandazione AI Personalizzata',
+                        description: this.getPersonalizedAdvice(config)
+                    });
+                }
+
+                // Progress-based recommendation
+                if (completedWeeks.length >= 3) {
+                    recommendations.push({
+                        title: '📈 Ottimizzazione Progresso',
+                        description: 'Hai fatto ottimi progressi! Considera di rivedere le settimane precedenti per consolidare i risultati.'
+                    });
+                }
+
+                return recommendations;
+            }
+
+            getNextRecommendedWeek() {
+                // Logic to determine next recommended week based on profile and progress
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                
+                if (completedWeeks.length === 0) {
+                    return 1; // Always start with week 1
+                }
+
+                // Find first incomplete recommended week
+                for (const weekNum of config.recommended_weeks) {
+                    if (!completedWeeks.includes(weekNum)) {
+                        return weekNum;
+                    }
+                }
+
+                // If all recommended weeks are done, suggest next sequential week
+                for (let i = 1; i <= 7; i++) {
+                    if (!completedWeeks.includes(i)) {
+                        return i;
+                    }
+                }
+
+                return null; // All weeks completed
+            }
+
+            getPersonalizedAdvice(config) {
+                const adviceMap = {
+                    'stressato_esaurito': 'Focus sulle settimane che lavorano su gestione stress e auto-cura. Il tuo ritmo è perfetto, continua gradualmente.',
+                    'procrastinatore_bloccato': 'Concentrati su azione immediata! Le settimane 3 e 4 ti daranno strumenti concreti per passare all\'azione.',
+                    'perfezionista_insoddisfatto': 'Ricorda: progresso over perfezione. Ogni settimana completata è una vittoria da celebrare.',
+                    'dispersivo_confuso': 'Una settimana alla volta, un focus chiaro. Il Sistema AI ti aiuta a mantenere la direzione giusta.',
+                    'motivato_inconsistente': 'Costruisci sistemi automatici con le settimane 4 e 5. La costanza è la tua chiave del successo.',
+                    'equilibrato_ottimizzatore': 'Ottimizza il tuo percorso con le settimane avanzate. Il tuo approccio strategico sta dando risultati.'
+                };
+
+                return adviceMap[this.userProfile.profileType] || 'Continua il tuo percorso personalizzato, stai facendo progressi straordinari!';
+            }
+
+            populateModules() {
+                const modulesGrid = document.getElementById('modulesGrid');
+                if (!modulesGrid) return;
+
+                modulesGrid.innerHTML = '';
+
+                for (let weekNum = 1; weekNum <= 7; weekNum++) {
+                    const weekConfig = WEEKS_CONFIG[weekNum];
+                    const isCompleted = completedWeeks.includes(weekNum);
+                    const isRecommended = this.isWeekRecommended(weekNum);
+                    
+                    const moduleCard = this.createModuleCard(weekNum, weekConfig, isCompleted, isRecommended);
+                    modulesGrid.appendChild(moduleCard);
+                }
+            }
+
+            isWeekRecommended(weekNum) {
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                return config && config.recommended_weeks && config.recommended_weeks.includes(weekNum);
+            }
+
+            createModuleCard(weekNum, weekConfig, isCompleted, isRecommended) {
+                const card = document.createElement('div');
+                card.className = `week-module ${isCompleted ? 'completed' : ''} ${isRecommended ? 'recommended' : ''}`;
+                card.setAttribute('data-week', weekNum);
+
+                const personalization = weekConfig.personalization[this.userProfile.profileType] || weekConfig.description;
+                
+                let statusText = '▶️ Disponibile
