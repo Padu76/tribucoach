@@ -8,7 +8,9 @@ import {
     calculateDashboardKPIs, 
     calculateWeekAnalytics, 
     calculateAIMetrics,
+    calculateAvatarMetrics,
     generateUsersCSV,
+    generateUsersCSVAdvanced,
     formatDate,
     formatDateTime,
     daysBetween
@@ -387,6 +389,7 @@ function updateDashboard() {
     updateUsersTable();
     updateWeekAnalytics();
     updateAIMetrics();
+    updateAvatarAnalytics();
     updateSessionsList();
     updateTimeDisplay();
 }
@@ -451,7 +454,6 @@ function updateUsersTable() {
     tbody.innerHTML = dashboardState.filteredUsers.map(user => {
         const completedWeeks = user.completedWeeks ? user.completedWeeks.length : 0;
         const progressPercentage = Math.round((completedWeeks / 7) * 100);
-        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         const lastActivityFormatted = formatDate(user.lastActivity);
         const daysSinceActivity = daysBetween(user.lastActivity, new Date());
         
@@ -467,6 +469,13 @@ function updateUsersTable() {
         
         const isSelected = dashboardState.selectedUsers.has(user.id);
         
+        // Avatar rendering
+        const avatar = user.avatar || {};
+        const avatarStyle = `background: linear-gradient(135deg, ${avatar.backgroundColor || '#ea580c'}, ${avatar.accentColor || '#f97316'})`;
+        const avatarContent = avatar.emoji ? 
+            `<span class="avatar-emoji">${avatar.emoji}</span>` : 
+            `<span class="avatar-initials">${avatar.initials || user.name.substring(0, 2).toUpperCase()}</span>`;
+        
         return `
             <tr class="${isSelected ? 'selected' : ''}" data-user-id="${user.id}">
                 <td>
@@ -476,16 +485,21 @@ function updateUsersTable() {
                 </td>
                 <td>
                     <div class="user-info">
-                        <div class="user-avatar">${initials}</div>
+                        <div class="user-avatar-advanced" style="${avatarStyle}" title="${avatar.style || 'Auto-generated'}">
+                            ${avatarContent}
+                            ${avatar.activity ? `<span class="avatar-activity">${avatar.activity}</span>` : ''}
+                        </div>
                         <div class="user-details">
                             <div class="user-name">${user.name}</div>
                             <div class="user-email">${user.email}</div>
+                            ${user.quizScore ? `<div class="quiz-score">Quiz: ${user.quizScore}%</div>` : ''}
                         </div>
                     </div>
                 </td>
                 <td>
                     <div class="profile-badge">
                         ${getProfileIcon(user.profileQuadrant)} ${user.profileQuadrant}
+                        <div class="profile-meta">${user.consciousnessLevel}</div>
                     </div>
                 </td>
                 <td>
@@ -588,8 +602,99 @@ function updateAIMetrics() {
 }
 
 /**
- * Update sessions list
+ * Update avatar analytics
  */
+function updateAvatarAnalytics() {
+    const avatarMetrics = calculateAvatarMetrics();
+    
+    // Se non c'è una sezione avatar, la creiamo dinamicamente
+    let avatarSection = document.getElementById('avatarAnalytics');
+    if (!avatarSection) {
+        // Inserisci dopo la sezione AI
+        const aiSection = document.querySelector('.ai-section');
+        if (aiSection) {
+            avatarSection = document.createElement('section');
+            avatarSection.className = 'analytics-section';
+            avatarSection.id = 'avatarAnalytics';
+            avatarSection.innerHTML = `
+                <h3 class="section-title">🎨 Analytics Avatar & Quiz</h3>
+                <div class="avatar-analytics-grid" id="avatarAnalyticsGrid"></div>
+            `;
+            aiSection.parentNode.insertBefore(avatarSection, aiSection.nextSibling);
+        }
+    }
+    
+    const container = document.getElementById('avatarAnalyticsGrid');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <!-- Distribuzione Quadranti -->
+        <div class="avatar-metric-card">
+            <h4>📊 Distribuzione Quadranti</h4>
+            <div class="quadrant-distribution">
+                <div class="quadrant-item">
+                    <span class="quadrant-icon">🏆</span>
+                    <span class="quadrant-label">Q1</span>
+                    <span class="quadrant-value">${avatarMetrics.quadrantDistribution.Q1}</span>
+                </div>
+                <div class="quadrant-item">
+                    <span class="quadrant-icon">💪</span>
+                    <span class="quadrant-label">Q2</span>
+                    <span class="quadrant-value">${avatarMetrics.quadrantDistribution.Q2}</span>
+                </div>
+                <div class="quadrant-item">
+                    <span class="quadrant-icon">🎯</span>
+                    <span class="quadrant-label">Q3</span>
+                    <span class="quadrant-value">${avatarMetrics.quadrantDistribution.Q3}</span>
+                </div>
+                <div class="quadrant-item">
+                    <span class="quadrant-icon">🌱</span>
+                    <span class="quadrant-label">Q4</span>
+                    <span class="quadrant-value">${avatarMetrics.quadrantDistribution.Q4}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Completeness -->
+        <div class="avatar-metric-card">
+            <h4>📝 Completezza Quiz Media</h4>
+            <div class="completion-circle">
+                <div class="completion-value">${avatarMetrics.avgQuizCompleteness}%</div>
+                <div class="completion-label">Media Completezza</div>
+            </div>
+        </div>
+        
+        <!-- Avatar Types -->
+        <div class="avatar-metric-card">
+            <h4>🎨 Tipi Avatar</h4>
+            <div class="avatar-types">
+                <div class="avatar-type-item">
+                    <span class="type-icon">🤖</span>
+                    <span class="type-label">Automatici</span>
+                    <span class="type-value">${avatarMetrics.generatedAvatars}</span>
+                </div>
+                <div class="avatar-type-item">
+                    <span class="type-icon">✨</span>
+                    <span class="type-label">Personalizzati</span>
+                    <span class="type-value">${avatarMetrics.customizedAvatars}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Avatar Styles Popular -->
+        <div class="avatar-metric-card">
+            <h4>🏃‍♂️ Stili Popolari</h4>
+            <div class="avatar-styles">
+                ${Object.entries(avatarMetrics.avatarStyles).map(([style, count]) => `
+                    <div class="style-item">
+                        <span class="style-label">${getStyleEmoji(style)} ${getStyleName(style)}</span>
+                        <span class="style-value">${count}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
 function updateSessionsList() {
     const container = document.getElementById('sessionsList');
     if (!container) return;
