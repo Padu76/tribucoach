@@ -1013,7 +1013,7 @@ class AvatarUIBuilder {
     }
 }
 
-// === 🎯 SISTEMA PRINCIPALE EXPORT ===
+// === 🎯 SISTEMA PRINCIPALE ===
 
 // Instance globale
 let globalAvatarManagerRealistic = null;
@@ -1077,28 +1077,7 @@ function getAvatarUIBuilder() {
     return globalAvatarUIBuilder;
 }
 
-// === EXPORTS ===
-export {
-    AvatarManagerRealistic,
-    AvatarUIBuilder,
-    initializeRealisticAvatarSystem,
-    createAvatarUI,
-    getRealisticAvatarManager,
-    getAvatarUIBuilder,
-    AVATAR_CONFIG,
-    FACE_SHAPES,
-    HAIR_STYLES,
-    HAIR_COLORS,
-    EYE_SHAPES,
-    EYE_COLORS,
-    NOSE_SHAPES,
-    MOUTH_SHAPES,
-    SKIN_TONES,
-    ACCESSORIES,
-    CLOTHING
-};
-
-// Compatibilità window
+// Compatibilità window per uso diretto nel browser
 if (typeof window !== 'undefined') {
     window.RealisticAvatarSystem = {
         AvatarManagerRealistic,
