@@ -88,12 +88,29 @@
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             background-size: cover;
             background-position: center;
+            cursor: pointer;
         }
 
         .andrea-photo:hover {
             transform: scale(1.05) rotate(2deg);
             box-shadow: 0 20px 50px rgba(0,0,0,0.4);
             border-color: rgba(255,255,255,0.6);
+        }
+
+        /* Triple-click effect */
+        .andrea-photo.triple-click-active {
+            animation: tripleClickPulse 0.6s ease-in-out;
+            transform: scale(1.1);
+            border-color: #dc2626;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 20px 50px rgba(0,0,0,0.4);
+        }
+
+        @keyframes tripleClickPulse {
+            0% { transform: scale(1.05); }
+            25% { transform: scale(1.15) rotate(5deg); }
+            50% { transform: scale(1.1) rotate(-2deg); }
+            75% { transform: scale(1.15) rotate(3deg); }
+            100% { transform: scale(1.1); }
         }
 
         /* Status indicator sulla foto */
@@ -464,6 +481,25 @@
             display: block;
         }
 
+        /* 🚨 HIDDEN ADMIN ACCESS */
+        .admin-controls.hidden-access {
+            background: linear-gradient(135deg, #7c2d12 0%, #dc2626 100%);
+            border: 2px solid rgba(124, 45, 18, 0.8);
+            animation: hiddenAdminPulse 1.5s ease-in-out infinite;
+            transform: scale(1.02);
+        }
+
+        @keyframes hiddenAdminPulse {
+            0%, 100% { 
+                box-shadow: 0 0 25px rgba(220, 38, 38, 0.7), 0 0 50px rgba(124, 45, 18, 0.5);
+                border-color: rgba(124, 45, 18, 0.8);
+            }
+            50% { 
+                box-shadow: 0 0 35px rgba(220, 38, 38, 1), 0 0 70px rgba(124, 45, 18, 0.8);
+                border-color: rgba(220, 38, 38, 1);
+            }
+        }
+
         .admin-header {
             display: flex;
             align-items: center;
@@ -479,6 +515,16 @@
             font-size: 0.9rem;
             font-weight: bold;
             backdrop-filter: blur(10px);
+        }
+
+        .admin-badge.hidden-access {
+            background: rgba(124, 45, 18, 0.8);
+            animation: badgePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         .admin-title {
@@ -514,6 +560,47 @@
             background: rgba(255,255,255,0.3);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .admin-dashboard-link.hidden-access {
+            background: rgba(124, 45, 18, 0.6);
+            border: 1px solid rgba(124, 45, 18, 0.8);
+            animation: linkGlow 2s ease-in-out infinite;
+        }
+
+        .admin-dashboard-link.hidden-access:hover {
+            background: rgba(124, 45, 18, 0.8);
+            box-shadow: 0 8px 25px rgba(124, 45, 18, 0.4);
+        }
+
+        @keyframes linkGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(124, 45, 18, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(124, 45, 18, 0.6); }
+        }
+
+        /* Triple-click feedback */
+        .triple-click-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.95);
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10000;
+            animation: feedbackPop 0.8s ease-out;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        @keyframes feedbackPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         .dashboard-grid {
@@ -852,17 +939,17 @@
             </div>
         </div>
 
-        <!-- Admin Controls - Solo per Admin/Beta -->
+        <!-- 🚨 HIDDEN ADMIN ACCESS - Triple-click su Andrea per attivare -->
         <div id="adminControls" class="admin-controls">
             <div class="admin-header">
-                <div class="admin-badge" id="adminBadge">👑 ADMIN</div>
-                <h3 class="admin-title">Pannello di Controllo</h3>
+                <div class="admin-badge" id="adminBadge">🔓 ACCESSO NASCOSTO</div>
+                <h3 class="admin-title">Pannello Amministrazione</h3>
             </div>
             <p class="admin-description">
-                Accedi alla dashboard di amministrazione per gestire utenti, monitorare progressi e analytics del sistema di coaching.
+                🎯 Accesso speciale alla dashboard di amministrazione per controllo completo del sistema coaching.
             </p>
-            <a href="admin/admin-dashboard.html" class="admin-dashboard-link">
-                👑 Admin Dashboard - Gestione Utenti
+            <a href="https://tribucoach.vercel.app/pages/admin/admin-dashboard.html" class="admin-dashboard-link" id="adminDashboardLink">
+                👑 Accedi alla Dashboard Admin
             </a>
         </div>
 
@@ -986,11 +1073,19 @@
         let avatarManager = null;
         let photoManager = null;
 
+        // 🚨 TRIPLE-CLICK ADMIN ACCESS SYSTEM
+        let clickCount = 0;
+        let clickTimer = null;
+        const TRIPLE_CLICK_THRESHOLD = 3;
+        const CLICK_TIMEOUT = 800; // 800ms per rilevare il triple-click
+        const ADMIN_TIMEOUT = 10000; // 10 secondi prima di nascondere
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             await initializeDashboard();
             checkUserRole();
             setupEventListeners();
+            setupTripleClickAccess();
         });
 
         async function initializeDashboard() {
@@ -1015,6 +1110,99 @@
             } catch (error) {
                 console.error('❌ Errore inizializzazione dashboard:', error);
             }
+        }
+
+        // 🚨 TRIPLE-CLICK ACCESS SETUP
+        function setupTripleClickAccess() {
+            const andreaPhoto = document.getElementById('andreaPhoto');
+            
+            if (andreaPhoto) {
+                andreaPhoto.addEventListener('click', handleAndreaPhotoClick);
+                console.log('🔒 Triple-click admin access configurato');
+            }
+        }
+
+        function handleAndreaPhotoClick(event) {
+            event.preventDefault();
+            
+            clickCount++;
+            console.log(`🖱️ Click ${clickCount}/3 su avatar Andrea`);
+            
+            // Clear existing timer
+            if (clickTimer) {
+                clearTimeout(clickTimer);
+            }
+            
+            // Set timer to reset click count
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, CLICK_TIMEOUT);
+            
+            // Check for triple-click
+            if (clickCount >= TRIPLE_CLICK_THRESHOLD) {
+                activateHiddenAdminAccess();
+                clickCount = 0;
+                clearTimeout(clickTimer);
+            }
+        }
+
+        function activateHiddenAdminAccess() {
+            console.log('🚨 TRIPLE-CLICK RILEVATO - Attivazione accesso admin nascosto!');
+            
+            // Visual feedback immediate
+            const andreaPhoto = document.getElementById('andreaPhoto');
+            andreaPhoto.classList.add('triple-click-active');
+            
+            // Show feedback popup
+            showTripleClickFeedback();
+            
+            // Show admin controls with special styling
+            const adminControls = document.getElementById('adminControls');
+            const adminBadge = document.getElementById('adminBadge');
+            const adminDashboardLink = document.getElementById('adminDashboardLink');
+            
+            adminControls.classList.add('visible', 'hidden-access');
+            adminBadge.classList.add('hidden-access');
+            adminBadge.textContent = '🔓 ACCESSO SBLOCCATO';
+            adminDashboardLink.classList.add('hidden-access');
+            
+            // Remove photo animation after a bit
+            setTimeout(() => {
+                andreaPhoto.classList.remove('triple-click-active');
+            }, 1000);
+            
+            // Auto-hide after timeout
+            setTimeout(() => {
+                hideHiddenAdminAccess();
+            }, ADMIN_TIMEOUT);
+            
+            // Show success notification
+            showNotification('🚨 Accesso Admin Sbloccato!', 'success');
+        }
+
+        function showTripleClickFeedback() {
+            const feedback = document.createElement('div');
+            feedback.className = 'triple-click-feedback';
+            feedback.innerHTML = '🚨 ACCESSO ADMIN ATTIVATO';
+            
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                feedback.remove();
+            }, 2000);
+        }
+
+        function hideHiddenAdminAccess() {
+            const adminControls = document.getElementById('adminControls');
+            const adminBadge = document.getElementById('adminBadge');
+            const adminDashboardLink = document.getElementById('adminDashboardLink');
+            
+            adminControls.classList.remove('visible', 'hidden-access');
+            adminBadge.classList.remove('hidden-access');
+            adminBadge.textContent = '👑 ADMIN';
+            adminDashboardLink.classList.remove('hidden-access');
+            
+            console.log('🔒 Accesso admin nascosto - timeout raggiunto');
         }
 
         async function setupAndreaRealPhoto() {
@@ -1281,29 +1469,16 @@
             if (role === 'admin') {
                 roleIndicator.className = 'role-indicator visible admin';
                 roleText.textContent = '👑 ADMIN';
-                
-                const adminControls = document.getElementById('adminControls');
-                const adminBadge = document.getElementById('adminBadge');
-                adminControls.classList.add('visible');
-                adminBadge.textContent = '👑 ADMIN';
-                
                 document.getElementById('accessInfo').textContent = 'Accesso amministratore - Controllo completo sistema';
                 
             } else if (role === 'beta') {
                 roleIndicator.className = 'role-indicator visible beta';
                 roleText.textContent = '🧪 BETA';
-                
-                const adminControls = document.getElementById('adminControls');
-                const adminBadge = document.getElementById('adminBadge');
-                adminControls.classList.add('visible');
-                adminBadge.textContent = '🧪 BETA TESTER';
-                
                 document.getElementById('accessInfo').textContent = 'Accesso beta tester - Testing e feedback';
                 
             } else {
                 roleIndicator.className = 'role-indicator visible';
                 roleText.textContent = '👤 USER';
-                
                 document.getElementById('accessInfo').textContent = 'Accesso utente registrato';
             }
         }
@@ -1357,7 +1532,7 @@
         setInterval(updateStats, 30000);
 
         setTimeout(() => {
-            console.log('✅ Dashboard con avatar system completamente caricata');
+            console.log('✅ Dashboard con avatar system e accesso admin nascosto completamente caricata');
         }, 1000);
     </script>
 </body>
