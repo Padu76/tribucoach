@@ -508,6 +508,10 @@ function calculateQuizCompleteness(quizData) {
     
     return Math.round((filledFields / requiredFields.length) * 100);
 }
+
+/**
+ * Calcola lead score
+ */
 function calculateLeadScore(quizData) {
     if (quizData.lead_score && quizData.lead_score > 0) return quizData.lead_score;
     
@@ -779,10 +783,6 @@ export function calculateAIMetrics() {
     };
 }
 
-// ==========================================================================
-// EXPORT FUNCTIONS
-// ==========================================================================
-
 /**
  * Calcola metriche avatar
  */
@@ -821,6 +821,36 @@ export function calculateAvatarMetrics() {
         generatedAvatars,
         totalAvatars: customizedAvatars + generatedAvatars
     };
+}
+
+// ==========================================================================
+// CSV EXPORT FUNCTIONS
+// ==========================================================================
+
+/**
+ * Genera CSV base utenti (versione semplificata)
+ */
+export function generateUsersCSV(users) {
+    const headers = [
+        'Nome', 'Email', 'Telefono', 'Registrazione', 
+        'Lead Score', 'Profilo', 'Coaching Iniziato'
+    ];
+    
+    const rows = users.map(user => {
+        return [
+            user.name || '',
+            user.email || '',
+            user.phone || '',
+            user.registrationDate ? user.registrationDate.toLocaleDateString('it-IT') : '',
+            Math.round(user.leadScore || 0),
+            user.profileType || '',
+            user.hasStartedCoaching ? 'Sì' : 'No'
+        ];
+    });
+    
+    return [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
 }
 
 /**
@@ -978,6 +1008,7 @@ window.firebaseAdmin = {
     calculateWeekAnalytics,
     calculateAIMetrics,
     generateUsersCSV,
+    generateUsersCSVAdvanced,
     formatDate,
     formatDateTime,
     daysBetween,
