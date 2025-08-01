@@ -1,10 +1,10 @@
-// avatar-system-realistic.js - Sistema Avatar 3 Modalità (Cartoon Pulito + Realistico + Foto)
-// Stile professionale come immagini allegate - NO proporzioni esagerate
+// avatar-system-realistic.js - Sistema Avatar Pulito (Solo Realistico + Foto)
+// Elimina il cartoon orribile - mantiene solo quello che funziona
 
 // === 🎨 CONFIGURAZIONE AVATAR SYSTEM ===
 const AVATAR_CONFIG = {
-    version: '3.0',
-    modes: ['cartoon', 'realistic', 'photo'],
+    version: '4.0',
+    modes: ['realistic', 'photo'], // Solo realistico e foto
     
     // Generi
     genders: {
@@ -22,7 +22,7 @@ const AVATAR_CONFIG = {
         long: 'Allungato'
     },
     
-    // Tonalità pelle
+    // Tonalità pelle (naturali)
     skinTones: [
         '#FDBCB4', '#F1C9A3', '#E8B895', '#D5A785', 
         '#C4956B', '#A67C52', '#8B5A3C', '#6B4226'
@@ -47,11 +47,11 @@ const AVATAR_CONFIG = {
         long: 'Lunghi'
     },
     
-    // Colori capelli
+    // Colori capelli (naturali)
     hairColors: [
         '#2C1B18', '#4A312C', '#8B4513', '#D2691E',
-        '#DEB887', '#F4A460', '#FFD700', '#FF6347',
-        '#8A2BE2', '#FF1493', '#00CED1', '#32CD32'
+        '#DEB887', '#F4A460', '#FFD700', '#B22222',
+        '#8A2BE2', '#708090', '#A9A9A9', '#FFFFFF'
     ],
     
     // Forme occhi
@@ -59,10 +59,10 @@ const AVATAR_CONFIG = {
         'normal', 'round', 'almond', 'narrow', 'wide', 'asian'
     ],
     
-    // Colori occhi
+    // Colori occhi (naturali)
     eyeColors: [
         '#8B4513', '#654321', '#228B22', '#0000FF',
-        '#808080', '#90EE90', '#FFA500', '#800080'
+        '#808080', '#90EE90', '#006400', '#4169E1'
     ],
     
     // Forme naso
@@ -93,40 +93,9 @@ const AVATAR_CONFIG = {
     }
 };
 
-// === 🎨 SVG GENERATORS ===
-class SVGAvatarGenerator {
+// === 🎨 SVG GENERATOR - SOLO REALISTICO ===
+class RealisticSVGGenerator {
     
-    // CARTOON STYLE - Pulito e professionale come immagini
-    static generateCartoonAvatar(config) {
-        const { gender, faceShape, skinTone, hairStyle, hairColor, hairLength, 
-                eyeShape, eyeColor, noseShape, mouthExpression, accessories } = config;
-        
-        return `
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <!-- Sfondo -->
-            <circle cx="100" cy="100" r="90" fill="#f8f9fa" stroke="#e9ecef" stroke-width="2"/>
-            
-            <!-- Viso -->
-            ${this.generateCartoonFace(faceShape, skinTone, gender)}
-            
-            <!-- Capelli -->
-            ${this.generateCartoonHair(hairStyle, hairColor, hairLength, gender)}
-            
-            <!-- Occhi -->
-            ${this.generateCartoonEyes(eyeShape, eyeColor, gender)}
-            
-            <!-- Naso -->
-            ${this.generateCartoonNose(noseShape, gender)}
-            
-            <!-- Bocca -->
-            ${this.generateCartoonMouth(mouthExpression, gender)}
-            
-            <!-- Accessori -->
-            ${this.generateCartoonAccessories(accessories, gender)}
-        </svg>`;
-    }
-    
-    // REALISTIC STYLE - Versione più dettagliata
     static generateRealisticAvatar(config) {
         const { gender, faceShape, skinTone, hairStyle, hairColor, hairLength, 
                 eyeShape, eyeColor, noseShape, mouthExpression, accessories } = config;
@@ -134,264 +103,428 @@ class SVGAvatarGenerator {
         return `
         <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <!-- Gradienti per realismo -->
+                <!-- Gradienti realistici -->
                 <radialGradient id="faceGradient" cx="0.3" cy="0.3" r="0.8">
-                    <stop offset="0%" stop-color="${this.lightenColor(skinTone, 20)}"/>
-                    <stop offset="100%" stop-color="${skinTone}"/>
+                    <stop offset="0%" stop-color="${this.lightenColor(skinTone, 25)}"/>
+                    <stop offset="60%" stop-color="${skinTone}"/>
+                    <stop offset="100%" stop-color="${this.darkenColor(skinTone, 15)}"/>
                 </radialGradient>
                 <linearGradient id="hairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="${this.lightenColor(hairColor, 30)}"/>
-                    <stop offset="100%" stop-color="${hairColor}"/>
+                    <stop offset="0%" stop-color="${this.lightenColor(hairColor, 35)}"/>
+                    <stop offset="50%" stop-color="${hairColor}"/>
+                    <stop offset="100%" stop-color="${this.darkenColor(hairColor, 20)}"/>
                 </linearGradient>
+                <radialGradient id="eyeGradient" cx="0.3" cy="0.3" r="0.7">
+                    <stop offset="0%" stop-color="${this.lightenColor(eyeColor, 30)}"/>
+                    <stop offset="100%" stop-color="${this.darkenColor(eyeColor, 20)}"/>
+                </radialGradient>
+                <!-- Ombre -->
+                <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="2" dy="3" stdDeviation="2" flood-opacity="0.2"/>
+                </filter>
+                <filter id="innerShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.15"/>
+                </filter>
             </defs>
             
             <!-- Sfondo -->
-            <circle cx="100" cy="100" r="90" fill="#f1f3f4" stroke="#dadce0" stroke-width="1"/>
+            <circle cx="100" cy="100" r="90" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1"/>
+            
+            <!-- Collo -->
+            ${this.generateNeck(skinTone, gender)}
             
             <!-- Viso -->
             ${this.generateRealisticFace(faceShape, skinTone, gender)}
             
-            <!-- Capelli -->
-            ${this.generateRealisticHair(hairStyle, hairColor, hairLength, gender)}
+            <!-- Capelli (dietro) -->
+            ${this.generateRealisticHair(hairStyle, hairColor, hairLength, gender, 'back')}
             
             <!-- Occhi -->
             ${this.generateRealisticEyes(eyeShape, eyeColor, gender)}
             
+            <!-- Sopracciglia -->
+            ${this.generateEyebrows(hairColor, gender)}
+            
             <!-- Naso -->
-            ${this.generateRealisticNose(noseShape, gender)}
+            ${this.generateRealisticNose(noseShape, skinTone, gender)}
             
             <!-- Bocca -->
             ${this.generateRealisticMouth(mouthExpression, gender)}
+            
+            <!-- Capelli (davanti) -->
+            ${this.generateRealisticHair(hairStyle, hairColor, hairLength, gender, 'front')}
             
             <!-- Accessori -->
             ${this.generateRealisticAccessories(accessories, gender)}
         </svg>`;
     }
     
-    // === CARTOON COMPONENTS ===
+    // === COMPONENTI REALISTICI ===
     
-    static generateCartoonFace(shape, skinTone, gender) {
-        const shapes = {
-            oval: `<ellipse cx="100" cy="110" rx="45" ry="55" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`,
-            round: `<circle cx="100" cy="110" r="50" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`,
-            square: `<rect x="55" y="65" width="90" height="90" rx="15" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`,
-            heart: `<path d="M100 65 C120 65, 140 85, 140 110 L140 140 C140 155, 125 165, 100 165 C75 165, 60 155, 60 140 L60 110 C60 85, 80 65, 100 65 Z" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`,
-            diamond: `<path d="M100 70 L125 100 L100 160 L75 100 Z" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`,
-            long: `<ellipse cx="100" cy="115" rx="40" ry="60" fill="${skinTone}" stroke="#00000020" stroke-width="1"/>`
-        };
-        return shapes[shape] || shapes.oval;
+    static generateNeck(skinTone, gender) {
+        const neckWidth = gender === 'male' ? 25 : 20;
+        return `
+            <ellipse cx="100" cy="175" rx="${neckWidth}" ry="20" 
+                     fill="url(#faceGradient)" 
+                     filter="url(#innerShadow)"/>
+        `;
     }
     
-    static generateCartoonHair(style, color, length, gender) {
+    static generateRealisticFace(shape, skinTone, gender) {
+        const shapes = {
+            oval: `<ellipse cx="100" cy="110" rx="42" ry="52" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`,
+            round: `<circle cx="100" cy="110" r="47" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`,
+            square: `<rect x="58" y="68" width="84" height="84" rx="12" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`,
+            heart: `<path d="M100 68 C115 68, 132 80, 132 105 L132 135 C132 150, 120 160, 100 160 C80 160, 68 150, 68 135 L68 105 C68 80, 85 68, 100 68 Z" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`,
+            diamond: `<path d="M100 72 L122 100 L100 155 L78 100 Z" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`,
+            long: `<ellipse cx="100" cy="115" rx="38" ry="58" fill="url(#faceGradient)" stroke="${this.darkenColor(skinTone, 10)}" stroke-width="0.5" filter="url(#softShadow)"/>`
+        };
+        
+        // Aggiungi definizione mascella per uomini
+        let jaw = '';
+        if (gender === 'male') {
+            jaw = `<path d="M75 135 Q100 145 125 135" stroke="${this.darkenColor(skinTone, 20)}" stroke-width="1" fill="none" opacity="0.3"/>`;
+        }
+        
+        return (shapes[shape] || shapes.oval) + jaw;
+    }
+    
+    static generateRealisticHair(style, color, length, gender, layer) {
+        // Layer 'back' per capelli dietro la testa, 'front' per ciuffi davanti
         const hairStyles = {
             // MASCHI
-            short_neat: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="${color}"/>`,
-            short_messy: `<path d="M65 80 Q75 65 85 75 Q95 60 105 70 Q115 55 125 70 Q135 65 135 85 L130 90 Q100 75 70 90 Z" fill="${color}"/>`,
-            crew_cut: `<path d="M75 88 Q100 75 125 88 L120 92 Q100 82 80 92 Z" fill="${color}"/>`,
-            pompadour: `<path d="M70 90 Q80 60 100 65 Q120 60 130 90 L125 95 Q100 80 75 95 Z" fill="${color}"/>`,
-            medium_side: `<path d="M65 85 Q70 70 85 75 Q100 70 115 75 Q130 70 135 85 L130 100 Q100 85 70 100 Z" fill="${color}"/>`,
-            long_wavy: `<path d="M60 85 Q65 65 80 70 Q95 60 110 70 Q125 60 140 85 L135 110 Q120 100 105 110 Q90 100 75 110 L65 100 Z" fill="${color}"/>`,
-            curly: `<circle cx="85" cy="80" r="8" fill="${color}"/><circle cx="100" cy="75" r="10" fill="${color}"/><circle cx="115" cy="80" r="8" fill="${color}"/>`,
-            bald: ``,
+            short_neat: {
+                back: `<path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5" filter="url(#innerShadow)"/>`,
+                front: ``
+            },
+            short_messy: {
+                back: `<path d="M70 80 Q80 65 90 75 Q100 60 110 70 Q120 55 130 75 L125 90 Q100 75 75 90 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/>`,
+                front: `<path d="M85 75 Q95 65 105 75" stroke="url(#hairGradient)" stroke-width="3" fill="none" stroke-linecap="round"/>`
+            },
+            crew_cut: {
+                back: `<path d="M78 88 Q100 75 122 88 L118 92 Q100 82 82 92 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/>`,
+                front: ``
+            },
+            pompadour: {
+                back: `<path d="M75 90 Q85 60 100 65 Q115 60 125 90 L120 95 Q100 80 80 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/>`,
+                front: `<ellipse cx="100" cy="70" rx="15" ry="8" fill="url(#hairGradient)" filter="url(#softShadow)"/>`
+            },
+            medium_side: {
+                back: `<path d="M68 85 Q75 70 88 75 Q100 70 112 75 Q125 70 132 85 L127 100 Q100 85 73 100 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/>`,
+                front: `<path d="M70 85 Q85 75 100 85" stroke="url(#hairGradient)" stroke-width="4" fill="none" stroke-linecap="round"/>`
+            },
+            long_wavy: {
+                back: `<path d="M65 85 Q70 65 85 70 Q100 60 115 70 Q130 60 135 85 L135 110 Q120 100 105 110 Q90 100 75 110 L65 100 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/>`,
+                front: `<path d="M75 95 Q85 85 95 95 Q105 85 115 95" stroke="url(#hairGradient)" stroke-width="3" fill="none" stroke-linecap="round"/>`
+            },
+            curly: {
+                back: `<circle cx="85" cy="80" r="10" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="100" cy="75" r="12" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="115" cy="80" r="10" fill="url(#hairGradient)" filter="url(#softShadow)"/>`,
+                front: `<circle cx="90" cy="85" r="6" fill="url(#hairGradient)" opacity="0.8"/><circle cx="110" cy="85" r="6" fill="url(#hairGradient)" opacity="0.8"/>`
+            },
+            bald: {
+                back: ``,
+                front: ``
+            },
             
             // FEMMINE  
-            bob_short: `<path d="M65 85 Q100 70 135 85 L135 105 Q100 95 65 105 Z" fill="${color}"/>`,
-            bob_medium: `<path d="M60 85 Q100 65 140 85 L140 115 Q100 100 60 115 Z" fill="${color}"/>`,
-            long_straight: `<path d="M65 85 Q100 70 135 85 L135 140 Q100 130 65 140 Z" fill="${color}"/>`,
-            long_wavy: `<path d="M60 85 Q100 65 140 85 Q145 100 135 115 Q140 130 130 145 Q70 145 60 130 Q55 115 65 100 Q60 90 60 85 Z" fill="${color}"/>`,
-            curly_short: `<circle cx="80" cy="80" r="10" fill="${color}"/><circle cx="100" cy="75" r="12" fill="${color}"/><circle cx="120" cy="80" r="10" fill="${color}"/>`,
-            curly_long: `<circle cx="75" cy="85" r="12" fill="${color}"/><circle cx="100" cy="75" r="15" fill="${color}"/><circle cx="125" cy="85" r="12" fill="${color}"/><circle cx="85" cy="110" r="10" fill="${color}"/><circle cx="115" cy="110" r="10" fill="${color}"/>`,
-            ponytail: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="${color}"/><ellipse cx="130" cy="100" rx="8" ry="20" fill="${color}"/>`,
-            bun: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="${color}"/><circle cx="100" cy="75" r="15" fill="${color}"/>`
+            bob_short: {
+                back: `<path d="M68 85 Q100 70 132 85 L132 105 Q100 95 68 105 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5" filter="url(#innerShadow)"/>`,
+                front: `<path d="M70 95 Q85 90 100 95 Q115 90 130 95" stroke="url(#hairGradient)" stroke-width="2" fill="none" stroke-linecap="round"/>`
+            },
+            bob_medium: {
+                back: `<path d="M65 85 Q100 65 135 85 L135 115 Q100 100 65 115 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5" filter="url(#innerShadow)"/>`,
+                front: `<path d="M68 105 Q100 95 132 105" stroke="url(#hairGradient)" stroke-width="3" fill="none" stroke-linecap="round"/>`
+            },
+            long_straight: {
+                back: `<path d="M68 85 Q100 70 132 85 L132 140 Q100 130 68 140 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5" filter="url(#innerShadow)"/>`,
+                front: `<path d="M70 130 L70 140 M130 130 L130 140" stroke="url(#hairGradient)" stroke-width="4" stroke-linecap="round"/>`
+            },
+            long_wavy: {
+                back: `<path d="M65 85 Q100 65 135 85 Q140 100 130 115 Q135 130 125 145 Q75 145 65 130 Q60 115 70 100 Q65 90 65 85 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5" filter="url(#innerShadow)"/>`,
+                front: `<path d="M68 110 Q75 100 82 110 Q88 100 95 110" stroke="url(#hairGradient)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M105 110 Q112 100 118 110 Q125 100 132 110" stroke="url(#hairGradient)" stroke-width="3" fill="none" stroke-linecap="round"/>`
+            },
+            curly_short: {
+                back: `<circle cx="80" cy="80" r="12" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="100" cy="75" r="15" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="120" cy="80" r="12" fill="url(#hairGradient)" filter="url(#softShadow)"/>`,
+                front: `<circle cx="85" cy="90" r="8" fill="url(#hairGradient)" opacity="0.9"/><circle cx="115" cy="90" r="8" fill="url(#hairGradient)" opacity="0.9"/>`
+            },
+            curly_long: {
+                back: `<circle cx="75" cy="85" r="15" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="100" cy="75" r="18" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="125" cy="85" r="15" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="85" cy="110" r="12" fill="url(#hairGradient)" filter="url(#softShadow)"/><circle cx="115" cy="110" r="12" fill="url(#hairGradient)" filter="url(#softShadow)"/>`,
+                front: `<circle cx="80" cy="100" r="9" fill="url(#hairGradient)" opacity="0.8"/><circle cx="120" cy="100" r="9" fill="url(#hairGradient)" opacity="0.8"/>`
+            },
+            ponytail: {
+                back: `<path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/><ellipse cx="125" cy="100" rx="6" ry="25" fill="url(#hairGradient)" filter="url(#softShadow)"/>`,
+                front: ``
+            },
+            bun: {
+                back: `<path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 25)}" stroke-width="0.5"/><circle cx="100" cy="75" r="18" fill="url(#hairGradient)" filter="url(#softShadow)"/>`,
+                front: ``
+            }
         };
         
-        return hairStyles[style] || hairStyles[gender === 'male' ? 'short_neat' : 'bob_short'];
+        const hairStyle = hairStyles[style] || hairStyles[gender === 'male' ? 'short_neat' : 'bob_short'];
+        return hairStyle[layer] || '';
     }
     
-    static generateCartoonEyes(shape, color, gender) {
+    static generateEyebrows(hairColor, gender) {
+        const browColor = this.darkenColor(hairColor, 30);
+        const thickness = gender === 'male' ? 3 : 2;
+        
+        return `
+            <path d="M78 95 Q85 92 92 95" stroke="${browColor}" stroke-width="${thickness}" fill="none" stroke-linecap="round"/>
+            <path d="M108 95 Q115 92 122 95" stroke="${browColor}" stroke-width="${thickness}" fill="none" stroke-linecap="round"/>
+        `;
+    }
+    
+    static generateRealisticEyes(shape, color, gender) {
+        const eyeSize = gender === 'male' ? { rx: 8, ry: 6 } : { rx: 9, ry: 7 };
+        
         const baseEye = `
-            <ellipse cx="85" cy="105" rx="8" ry="6" fill="white" stroke="#00000030" stroke-width="1"/>
-            <ellipse cx="115" cy="105" rx="8" ry="6" fill="white" stroke="#00000030" stroke-width="1"/>
-            <circle cx="85" cy="105" r="4" fill="${color}"/>
-            <circle cx="115" cy="105" r="4" fill="${color}"/>
-            <circle cx="86" cy="103" r="1.5" fill="white"/>
-            <circle cx="116" cy="103" r="1.5" fill="white"/>
+            <!-- Occhio sinistro -->
+            <ellipse cx="85" cy="105" rx="${eyeSize.rx}" ry="${eyeSize.ry}" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+            <circle cx="85" cy="105" r="4.5" fill="url(#eyeGradient)"/>
+            <circle cx="85" cy="105" r="2" fill="${this.darkenColor(color, 40)}"/>
+            <circle cx="86" cy="103" r="1.5" fill="white" opacity="0.9"/>
+            
+            <!-- Occhio destro -->
+            <ellipse cx="115" cy="105" rx="${eyeSize.rx}" ry="${eyeSize.ry}" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+            <circle cx="115" cy="105" r="4.5" fill="url(#eyeGradient)"/>
+            <circle cx="115" cy="105" r="2" fill="${this.darkenColor(color, 40)}"/>
+            <circle cx="116" cy="103" r="1.5" fill="white" opacity="0.9"/>
+            
+            <!-- Ciglia -->
+            <path d="M77 100 Q85 98 93 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+            <path d="M107 100 Q115 98 123 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
         `;
         
+        // Forme specifiche
         const shapes = {
             normal: baseEye,
-            round: baseEye.replace(/rx="8" ry="6"/g, 'rx="7" ry="7"'),
+            round: baseEye.replace(/ry="[0-9]"/g, `ry="${eyeSize.rx}"`),
             almond: `
-                <ellipse cx="85" cy="105" rx="10" ry="5" fill="white" stroke="#00000030" stroke-width="1"/>
-                <ellipse cx="115" cy="105" rx="10" ry="5" fill="white" stroke="#00000030" stroke-width="1"/>
-                <circle cx="85" cy="105" r="3" fill="${color}"/>
-                <circle cx="115" cy="105" r="3" fill="${color}"/>
+                <ellipse cx="85" cy="105" rx="10" ry="5" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+                <ellipse cx="115" cy="105" rx="10" ry="5" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+                <circle cx="85" cy="105" r="3.5" fill="url(#eyeGradient)"/>
+                <circle cx="115" cy="105" r="3.5" fill="url(#eyeGradient)"/>
+                <circle cx="85" cy="105" r="1.5" fill="${this.darkenColor(color, 40)}"/>
+                <circle cx="115" cy="105" r="1.5" fill="${this.darkenColor(color, 40)}"/>
                 <circle cx="86" cy="103" r="1" fill="white"/>
                 <circle cx="116" cy="103" r="1" fill="white"/>
+                <path d="M75 102 Q85 100 95 102" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
+                <path d="M105 102 Q115 100 125 102" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
             `,
-            narrow: baseEye.replace(/ry="6"/g, 'ry="4"'),
-            wide: baseEye.replace(/rx="8"/g, 'rx="10"'),
+            narrow: baseEye.replace(/ry="[0-9]"/g, 'ry="4"'),
+            wide: baseEye.replace(/rx="[0-9]"/g, 'rx="10"'),
             asian: `
-                <path d="M77 105 Q85 102 93 105 Q85 108 77 105" fill="white" stroke="#00000030" stroke-width="1"/>
-                <path d="M107 105 Q115 102 123 105 Q115 108 107 105" fill="white" stroke="#00000030" stroke-width="1"/>
-                <circle cx="85" cy="105" r="3" fill="${color}"/>
-                <circle cx="115" cy="105" r="3" fill="${color}"/>
+                <path d="M77 105 Q85 102 93 105 Q85 108 77 105" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+                <path d="M107 105 Q115 102 123 105 Q115 108 107 105" fill="white" stroke="#00000020" stroke-width="0.5" filter="url(#softShadow)"/>
+                <circle cx="85" cy="105" r="3" fill="url(#eyeGradient)"/>
+                <circle cx="115" cy="105" r="3" fill="url(#eyeGradient)"/>
+                <circle cx="85" cy="105" r="1.5" fill="${this.darkenColor(color, 40)}"/>
+                <circle cx="115" cy="105" r="1.5" fill="${this.darkenColor(color, 40)}"/>
+                <circle cx="86" cy="103" r="0.8" fill="white"/>
+                <circle cx="116" cy="103" r="0.8" fill="white"/>
             `
         };
         
         return shapes[shape] || shapes.normal;
     }
     
-    static generateCartoonNose(shape, gender) {
+    static generateRealisticNose(shape, skinTone, gender) {
+        const noseColor = this.darkenColor(skinTone, 15);
+        const nostrilColor = this.darkenColor(skinTone, 25);
+        
         const noses = {
-            small: `<ellipse cx="100" cy="115" rx="2" ry="3" fill="#00000015"/>`,
-            medium: `<ellipse cx="100" cy="115" rx="3" ry="4" fill="#00000020"/>`,
-            large: `<ellipse cx="100" cy="115" rx="4" ry="5" fill="#00000025"/>`,
-            pointed: `<path d="M100 110 L105 120 L100 118 L95 120 Z" fill="#00000020"/>`,
-            wide: `<ellipse cx="100" cy="115" rx="5" ry="3" fill="#00000020"/>`,
-            narrow: `<ellipse cx="100" cy="115" rx="2" ry="5" fill="#00000015"/>`
-        };
-        return noses[shape] || noses.medium;
-    }
-    
-    static generateCartoonMouth(expression, gender) {
-        const mouths = {
-            neutral: `<ellipse cx="100" cy="130" rx="8" ry="3" fill="#FF6B6B"/>`,
-            smile: `<path d="M92 130 Q100 138 108 130" stroke="#FF6B6B" stroke-width="3" fill="none"/>`,
-            happy: `<path d="M90 128 Q100 140 110 128" stroke="#FF6B6B" stroke-width="4" fill="none"/>`,
-            laugh: `<ellipse cx="100" cy="132" rx="12" ry="8" fill="#FF6B6B"/><ellipse cx="100" cy="130" rx="10" ry="6" fill="#FFB6C1"/>`,
-            serious: `<line x1="92" y1="130" x2="108" y2="130" stroke="#FF6B6B" stroke-width="3"/>`,
-            sad: `<path d="M92 132 Q100 125 108 132" stroke="#FF6B6B" stroke-width="3" fill="none"/>`
-        };
-        return mouths[expression] || mouths.neutral;
-    }
-    
-    static generateCartoonAccessories(accessories, gender) {
-        let result = '';
-        
-        // Occhiali
-        if (accessories.glasses && accessories.glasses !== 'none') {
-            const glasses = {
-                round: `<circle cx="85" cy="105" r="12" fill="none" stroke="#333" stroke-width="2"/><circle cx="115" cy="105" r="12" fill="none" stroke="#333" stroke-width="2"/><line x1="97" y1="105" x2="103" y2="105" stroke="#333" stroke-width="2"/>`,
-                square: `<rect x="73" y="93" width="24" height="24" rx="2" fill="none" stroke="#333" stroke-width="2"/><rect x="103" y="93" width="24" height="24" rx="2" fill="none" stroke="#333" stroke-width="2"/><line x1="97" y1="105" x2="103" y2="105" stroke="#333" stroke-width="2"/>`,
-                aviator: `<ellipse cx="85" cy="105" rx="15" ry="12" fill="none" stroke="#333" stroke-width="2"/><ellipse cx="115" cy="105" rx="15" ry="12" fill="none" stroke="#333" stroke-width="2"/><line x1="100" y1="105" x2="100" y2="105" stroke="#333" stroke-width="2"/>`,
-                reading: `<rect x="75" y="100" width="20" height="15" rx="2" fill="none" stroke="#333" stroke-width="2"/><rect x="105" y="100" width="20" height="15" rx="2" fill="none" stroke="#333" stroke-width="2"/><line x1="95" y1="107" x2="105" y2="107" stroke="#333" stroke-width="2"/>`,
-                sunglasses: `<ellipse cx="85" cy="105" rx="12" ry="10" fill="#333"/><ellipse cx="115" cy="105" rx="12" ry="10" fill="#333"/><line x1="97" y1="105" x2="103" y2="105" stroke="#333" stroke-width="3"/>`
-            };
-            result += glasses[accessories.glasses] || '';
-        }
-        
-        // Peli facciali (solo maschi)
-        if (gender === 'male' && accessories.facialHair && accessories.facialHair !== 'none') {
-            const facialHair = {
-                mustache: `<ellipse cx="100" cy="122" rx="8" ry="2" fill="#4A4A4A"/>`,
-                goatee: `<ellipse cx="100" cy="140" rx="6" ry="8" fill="#4A4A4A"/>`,
-                beard_short: `<path d="M85 125 Q100 145 115 125 Q115 140 100 145 Q85 140 85 125" fill="#4A4A4A"/>`,
-                beard_full: `<path d="M80 120 Q100 150 120 120 Q120 145 100 155 Q80 145 80 120" fill="#4A4A4A"/>`,
-                stubble: `<ellipse cx="100" cy="130" rx="15" ry="12" fill="#4A4A4A" opacity="0.3"/>`
-            };
-            result += facialHair[accessories.facialHair] || '';
-        }
-        
-        // Orecchini
-        if (accessories.earrings && accessories.earrings !== 'none') {
-            const earrings = {
-                studs: `<circle cx="70" cy="110" r="2" fill="#FFD700"/><circle cx="130" cy="110" r="2" fill="#FFD700"/>`,
-                hoops: `<circle cx="70" cy="110" r="4" fill="none" stroke="#FFD700" stroke-width="2"/><circle cx="130" cy="110" r="4" fill="none" stroke="#FFD700" stroke-width="2"/>`,
-                drops: `<ellipse cx="70" cy="115" rx="2" ry="5" fill="#FFD700"/><ellipse cx="130" cy="115" rx="2" ry="5" fill="#FFD700"/>`
-            };
-            result += earrings[accessories.earrings] || '';
-        }
-        
-        return result;
-    }
-    
-    // === REALISTIC COMPONENTS ===
-    
-    static generateRealisticFace(shape, skinTone, gender) {
-        const shapes = {
-            oval: `<ellipse cx="100" cy="110" rx="45" ry="55" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`,
-            round: `<circle cx="100" cy="110" r="50" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`,
-            square: `<rect x="55" y="65" width="90" height="90" rx="15" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`,
-            heart: `<path d="M100 65 C120 65, 140 85, 140 110 L140 140 C140 155, 125 165, 100 165 C75 165, 60 155, 60 140 L60 110 C60 85, 80 65, 100 65 Z" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`,
-            diamond: `<path d="M100 70 L125 100 L100 160 L75 100 Z" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`,
-            long: `<ellipse cx="100" cy="115" rx="40" ry="60" fill="url(#faceGradient)" stroke="#00000010" stroke-width="1"/>`
-        };
-        return shapes[shape] || shapes.oval;
-    }
-    
-    static generateRealisticHair(style, color, length, gender) {
-        // Versione più dettagliata dei capelli cartoon con gradienti
-        const hairStyles = {
-            // MASCHI
-            short_neat: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            short_messy: `<path d="M65 80 Q75 65 85 75 Q95 60 105 70 Q115 55 125 70 Q135 65 135 85 L130 90 Q100 75 70 90 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            crew_cut: `<path d="M75 88 Q100 75 125 88 L120 92 Q100 82 80 92 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            pompadour: `<path d="M70 90 Q80 60 100 65 Q120 60 130 90 L125 95 Q100 80 75 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            medium_side: `<path d="M65 85 Q70 70 85 75 Q100 70 115 75 Q130 70 135 85 L130 100 Q100 85 70 100 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            long_wavy: `<path d="M60 85 Q65 65 80 70 Q95 60 110 70 Q125 60 140 85 L135 110 Q120 100 105 110 Q90 100 75 110 L65 100 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            curly: `<circle cx="85" cy="80" r="8" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="100" cy="75" r="10" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="115" cy="80" r="8" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            bald: ``,
-            
-            // FEMMINE  
-            bob_short: `<path d="M65 85 Q100 70 135 85 L135 105 Q100 95 65 105 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            bob_medium: `<path d="M60 85 Q100 65 140 85 L140 115 Q100 100 60 115 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            long_straight: `<path d="M65 85 Q100 70 135 85 L135 140 Q100 130 65 140 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            long_wavy: `<path d="M60 85 Q100 65 140 85 Q145 100 135 115 Q140 130 130 145 Q70 145 60 130 Q55 115 65 100 Q60 90 60 85 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            curly_short: `<circle cx="80" cy="80" r="10" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="100" cy="75" r="12" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="120" cy="80" r="10" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            curly_long: `<circle cx="75" cy="85" r="12" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="100" cy="75" r="15" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="125" cy="85" r="12" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="85" cy="110" r="10" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="115" cy="110" r="10" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            ponytail: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><ellipse cx="130" cy="100" rx="8" ry="20" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`,
-            bun: `<path d="M70 85 Q100 70 130 85 L125 95 Q100 80 75 95 Z" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/><circle cx="100" cy="75" r="15" fill="url(#hairGradient)" stroke="${this.darkenColor(color, 20)}" stroke-width="0.5"/>`
-        };
-        
-        return hairStyles[style] || hairStyles[gender === 'male' ? 'short_neat' : 'bob_short'];
-    }
-    
-    static generateRealisticEyes(shape, color, gender) {
-        const baseEye = `
-            <ellipse cx="85" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
-            <ellipse cx="115" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
-            <circle cx="85" cy="105" r="4" fill="${color}"/>
-            <circle cx="115" cy="105" r="4" fill="${color}"/>
-            <circle cx="85" cy="105" r="2" fill="${this.darkenColor(color, 30)}"/>
-            <circle cx="115" cy="105" r="2" fill="${this.darkenColor(color, 30)}"/>
-            <circle cx="86" cy="103" r="1.5" fill="white"/>
-            <circle cx="116" cy="103" r="1.5" fill="white"/>
-            <!-- Ciglia -->
-            <path d="M77 100 Q85 98 93 100" stroke="#333" stroke-width="0.8" fill="none"/>
-            <path d="M107 100 Q115 98 123 100" stroke="#333" stroke-width="0.8" fill="none"/>
-        `;
-        
-        return baseEye; // Versione più dettagliata per il realistico
-    }
-    
-    static generateRealisticNose(shape, gender) {
-        const noses = {
-            small: `<ellipse cx="100" cy="115" rx="2" ry="3" fill="#00000010"/><path d="M98 113 L102 113" stroke="#00000020" stroke-width="0.5"/>`,
-            medium: `<ellipse cx="100" cy="115" rx="3" ry="4" fill="#00000015"/><path d="M97 112 L103 112" stroke="#00000025" stroke-width="0.8"/>`,
-            large: `<ellipse cx="100" cy="115" rx="4" ry="5" fill="#00000020"/><path d="M96 111 L104 111" stroke="#00000030" stroke-width="1"/>`,
-            pointed: `<path d="M100 110 L105 120 L100 118 L95 120 Z" fill="#00000015"/><path d="M98 112 L102 112" stroke="#00000025" stroke-width="0.5"/>`,
-            wide: `<ellipse cx="100" cy="115" rx="5" ry="3" fill="#00000015"/><path d="M95 114 L105 114" stroke="#00000025" stroke-width="0.8"/>`,
-            narrow: `<ellipse cx="100" cy="115" rx="2" ry="5" fill="#00000010"/><path d="M99 110 L101 110" stroke="#00000020" stroke-width="0.5"/>`
+            small: `
+                <ellipse cx="100" cy="115" rx="2.5" ry="4" fill="${noseColor}" opacity="0.6"/>
+                <path d="M98 116 L102 116" stroke="${nostrilColor}" stroke-width="0.8" opacity="0.7"/>
+            `,
+            medium: `
+                <ellipse cx="100" cy="115" rx="3.5" ry="5" fill="${noseColor}" opacity="0.6" filter="url(#innerShadow)"/>
+                <path d="M97 116 L103 116" stroke="${nostrilColor}" stroke-width="1" opacity="0.7"/>
+                <ellipse cx="98" cy="117" rx="1" ry="1.5" fill="${nostrilColor}" opacity="0.4"/>
+                <ellipse cx="102" cy="117" rx="1" ry="1.5" fill="${nostrilColor}" opacity="0.4"/>
+            `,
+            large: `
+                <ellipse cx="100" cy="115" rx="4.5" ry="6" fill="${noseColor}" opacity="0.6" filter="url(#innerShadow)"/>
+                <path d="M96 117 L104 117" stroke="${nostrilColor}" stroke-width="1.2" opacity="0.7"/>
+                <ellipse cx="97" cy="118" rx="1.5" ry="2" fill="${nostrilColor}" opacity="0.5"/>
+                <ellipse cx="103" cy="118" rx="1.5" ry="2" fill="${nostrilColor}" opacity="0.5"/>
+            `,
+            pointed: `
+                <path d="M100 110 L103 118 L100 120 L97 118 Z" fill="${noseColor}" opacity="0.6" filter="url(#innerShadow)"/>
+                <path d="M98 118 L102 118" stroke="${nostrilColor}" stroke-width="0.8" opacity="0.7"/>
+            `,
+            wide: `
+                <ellipse cx="100" cy="115" rx="5" ry="4" fill="${noseColor}" opacity="0.6" filter="url(#innerShadow)"/>
+                <path d="M95 116 L105 116" stroke="${nostrilColor}" stroke-width="1" opacity="0.7"/>
+                <ellipse cx="97" cy="117" rx="1.5" ry="1" fill="${nostrilColor}" opacity="0.4"/>
+                <ellipse cx="103" cy="117" rx="1.5" ry="1" fill="${nostrilColor}" opacity="0.4"/>
+            `,
+            narrow: `
+                <ellipse cx="100" cy="115" rx="2" ry="6" fill="${noseColor}" opacity="0.6"/>
+                <path d="M99 117 L101 117" stroke="${nostrilColor}" stroke-width="0.6" opacity="0.7"/>
+            `
         };
         return noses[shape] || noses.medium;
     }
     
     static generateRealisticMouth(expression, gender) {
+        const lipColor = gender === 'female' ? '#FF6B9D' : '#CC5577';
+        const lipGradient = `
+            <defs>
+                <linearGradient id="lipGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="${this.lightenColor(lipColor, 20)}"/>
+                    <stop offset="100%" stop-color="${this.darkenColor(lipColor, 10)}"/>
+                </linearGradient>
+            </defs>
+        `;
+        
         const mouths = {
-            neutral: `<ellipse cx="100" cy="130" rx="8" ry="3" fill="#FF6B6B"/><ellipse cx="100" cy="129" rx="6" ry="2" fill="#FFB6C1"/>`,
-            smile: `<path d="M92 130 Q100 138 108 130" stroke="#FF6B6B" stroke-width="3" fill="none"/><path d="M94 131 Q100 136 106 131" stroke="#FFB6C1" stroke-width="1.5" fill="none"/>`,
-            happy: `<path d="M90 128 Q100 140 110 128" stroke="#FF6B6B" stroke-width="4" fill="none"/><ellipse cx="100" cy="132" rx="8" ry="4" fill="#FFB6C1"/>`,
-            laugh: `<ellipse cx="100" cy="132" rx="12" ry="8" fill="#FF6B6B"/><ellipse cx="100" cy="130" rx="10" ry="6" fill="#FFB6C1"/><rect x="95" y="128" width="10" height="3" fill="white"/>`,
-            serious: `<line x1="92" y1="130" x2="108" y2="130" stroke="#FF6B6B" stroke-width="3"/><line x1="94" y1="129" x2="106" y2="129" stroke="#FFB6C1" stroke-width="1"/>`,
-            sad: `<path d="M92 132 Q100 125 108 132" stroke="#FF6B6B" stroke-width="3" fill="none"/><path d="M94 131 Q100 127 106 131" stroke="#FFB6C1" stroke-width="1.5" fill="none"/>`
+            neutral: `
+                ${lipGradient}
+                <ellipse cx="100" cy="130" rx="8" ry="3" fill="url(#lipGradient)" filter="url(#softShadow)"/>
+                <ellipse cx="100" cy="129" rx="6" ry="2" fill="${this.lightenColor(lipColor, 30)}" opacity="0.7"/>
+            `,
+            smile: `
+                ${lipGradient}
+                <path d="M92 130 Q100 138 108 130" stroke="url(#lipGradient)" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#softShadow)"/>
+                <path d="M94 131 Q100 136 106 131" stroke="${this.lightenColor(lipColor, 30)}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            `,
+            happy: `
+                ${lipGradient}
+                <path d="M90 128 Q100 140 110 128" stroke="url(#lipGradient)" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#softShadow)"/>
+                <ellipse cx="100" cy="132" rx="8" ry="4" fill="${this.lightenColor(lipColor, 20)}" opacity="0.8"/>
+            `,
+            laugh: `
+                ${lipGradient}
+                <ellipse cx="100" cy="132" rx="12" ry="8" fill="url(#lipGradient)" filter="url(#softShadow)"/>
+                <ellipse cx="100" cy="130" rx="10" ry="6" fill="${this.lightenColor(lipColor, 25)}"/>
+                <rect x="95" y="128" width="10" height="3" fill="white" opacity="0.9"/>
+            `,
+            serious: `
+                ${lipGradient}
+                <line x1="92" y1="130" x2="108" y2="130" stroke="url(#lipGradient)" stroke-width="3" stroke-linecap="round" filter="url(#softShadow)"/>
+                <line x1="94" y1="129" x2="106" y2="129" stroke="${this.lightenColor(lipColor, 20)}" stroke-width="1"/>
+            `,
+            sad: `
+                ${lipGradient}
+                <path d="M92 132 Q100 125 108 132" stroke="url(#lipGradient)" stroke-width="4" fill="none" stroke-linecap="round" filter="url(#softShadow)"/>
+                <path d="M94 131 Q100 127 106 131" stroke="${this.lightenColor(lipColor, 30)}" stroke-width="2" fill="none" stroke-linecap="round"/>
+            `
         };
         return mouths[expression] || mouths.neutral;
     }
     
     static generateRealisticAccessories(accessories, gender) {
-        // Versione più dettagliata degli accessori cartoon
-        return this.generateCartoonAccessories(accessories, gender); // Per ora usa la stessa logica ma più dettagliata
+        let result = '';
+        
+        // Occhiali con riflessi realistici
+        if (accessories.glasses && accessories.glasses !== 'none') {
+            const glassesColor = '#333333';
+            const glasses = {
+                round: `
+                    <circle cx="85" cy="105" r="12" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <circle cx="115" cy="105" r="12" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <line x1="97" y1="105" x2="103" y2="105" stroke="${glassesColor}" stroke-width="2.5"/>
+                    <!-- Riflessi -->
+                    <ellipse cx="82" cy="102" rx="3" ry="6" fill="white" opacity="0.3"/>
+                    <ellipse cx="112" cy="102" rx="3" ry="6" fill="white" opacity="0.3"/>
+                `,
+                square: `
+                    <rect x="73" y="93" width="24" height="24" rx="2" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <rect x="103" y="93" width="24" height="24" rx="2" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <line x1="97" y1="105" x2="103" y2="105" stroke="${glassesColor}" stroke-width="2.5"/>
+                    <!-- Riflessi -->
+                    <rect x="76" y="98" width="4" height="8" fill="white" opacity="0.3"/>
+                    <rect x="106" y="98" width="4" height="8" fill="white" opacity="0.3"/>
+                `,
+                aviator: `
+                    <ellipse cx="85" cy="105" rx="15" ry="12" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <ellipse cx="115" cy="105" rx="15" ry="12" fill="none" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <line x1="100" y1="105" x2="100" y2="105" stroke="${glassesColor}" stroke-width="2.5"/>
+                    <!-- Riflessi -->
+                    <ellipse cx="80" cy="100" rx="4" ry="8" fill="white" opacity="0.3"/>
+                    <ellipse cx="110" cy="100" rx="4" ry="8" fill="white" opacity="0.3"/>
+                `,
+                reading: `
+                    <rect x="75" y="100" width="20" height="15" rx="2" fill="none" stroke="${glassesColor}" stroke-width="2" filter="url(#softShadow)"/>
+                    <rect x="105" y="100" width="20" height="15" rx="2" fill="none" stroke="${glassesColor}" stroke-width="2" filter="url(#softShadow)"/>
+                    <line x1="95" y1="107" x2="105" y2="107" stroke="${glassesColor}" stroke-width="2"/>
+                    <!-- Riflessi -->
+                    <rect x="77" y="103" width="3" height="6" fill="white" opacity="0.3"/>
+                    <rect x="107" y="103" width="3" height="6" fill="white" opacity="0.3"/>
+                `,
+                sunglasses: `
+                    <ellipse cx="85" cy="105" rx="12" ry="10" fill="#1a1a1a" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <ellipse cx="115" cy="105" rx="12" ry="10" fill="#1a1a1a" stroke="${glassesColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <line x1="97" y1="105" x2="103" y2="105" stroke="${glassesColor}" stroke-width="3"/>
+                    <!-- Riflessi -->
+                    <ellipse cx="82" cy="102" rx="2" ry="4" fill="white" opacity="0.4"/>
+                    <ellipse cx="112" cy="102" rx="2" ry="4" fill="white" opacity="0.4"/>
+                `
+            };
+            result += glasses[accessories.glasses] || '';
+        }
+        
+        // Peli facciali realistici (solo maschi)
+        if (gender === 'male' && accessories.facialHair && accessories.facialHair !== 'none') {
+            const hairColor = '#4A4A4A';
+            const facialHair = {
+                mustache: `
+                    <ellipse cx="100" cy="122" rx="9" ry="3" fill="${hairColor}" filter="url(#innerShadow)"/>
+                    <path d="M91 122 Q100 120 109 122" stroke="${this.darkenColor(hairColor, 20)}" stroke-width="0.8"/>
+                `,
+                goatee: `
+                    <ellipse cx="100" cy="140" rx="7" ry="10" fill="${hairColor}" filter="url(#innerShadow)"/>
+                    <ellipse cx="100" cy="138" rx="5" ry="8" fill="${this.lightenColor(hairColor, 10)}" opacity="0.6"/>
+                `,
+                beard_short: `
+                    <path d="M85 125 Q100 145 115 125 Q115 140 100 145 Q85 140 85 125" fill="${hairColor}" filter="url(#innerShadow)"/>
+                    <path d="M87 128 Q100 142 113 128" stroke="${this.darkenColor(hairColor, 20)}" stroke-width="1"/>
+                `,
+                beard_full: `
+                    <path d="M80 120 Q100 150 120 120 Q120 145 100 155 Q80 145 80 120" fill="${hairColor}" filter="url(#innerShadow)"/>
+                    <path d="M82 125 Q100 147 118 125" stroke="${this.darkenColor(hairColor, 20)}" stroke-width="1.2"/>
+                    <ellipse cx="100" cy="135" rx="15" ry="8" fill="${this.lightenColor(hairColor, 15)}" opacity="0.4"/>
+                `,
+                stubble: `
+                    <ellipse cx="100" cy="130" rx="18" ry="15" fill="${hairColor}" opacity="0.3" filter="url(#innerShadow)"/>
+                    <circle cx="95" cy="125" r="0.5" fill="${hairColor}" opacity="0.6"/>
+                    <circle cx="105" cy="125" r="0.5" fill="${hairColor}" opacity="0.6"/>
+                    <circle cx="92" cy="135" r="0.5" fill="${hairColor}" opacity="0.6"/>
+                    <circle cx="108" cy="135" r="0.5" fill="${hairColor}" opacity="0.6"/>
+                `
+            };
+            result += facialHair[accessories.facialHair] || '';
+        }
+        
+        // Orecchini realistici
+        if (accessories.earrings && accessories.earrings !== 'none') {
+            const earringColor = '#FFD700';
+            const earrings = {
+                studs: `
+                    <circle cx="70" cy="110" r="2.5" fill="${earringColor}" filter="url(#softShadow)"/>
+                    <circle cx="130" cy="110" r="2.5" fill="${earringColor}" filter="url(#softShadow)"/>
+                    <circle cx="70" cy="110" r="1" fill="${this.lightenColor(earringColor, 30)}"/>
+                    <circle cx="130" cy="110" r="1" fill="${this.lightenColor(earringColor, 30)}"/>
+                `,
+                hoops: `
+                    <circle cx="70" cy="110" r="5" fill="none" stroke="${earringColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <circle cx="130" cy="110" r="5" fill="none" stroke="${earringColor}" stroke-width="2.5" filter="url(#softShadow)"/>
+                    <ellipse cx="68" cy="107" rx="1" ry="2" fill="white" opacity="0.6"/>
+                    <ellipse cx="128" cy="107" rx="1" ry="2" fill="white" opacity="0.6"/>
+                `,
+                drops: `
+                    <ellipse cx="70" cy="115" rx="2.5" ry="6" fill="${earringColor}" filter="url(#softShadow)"/>
+                    <ellipse cx="130" cy="115" rx="2.5" ry="6" fill="${earringColor}" filter="url(#softShadow)"/>
+                    <ellipse cx="69" cy="112" rx="1" ry="3" fill="${this.lightenColor(earringColor, 30)}"/>
+                    <ellipse cx="129" cy="112" rx="1" ry="3" fill="${this.lightenColor(earringColor, 30)}"/>
+                `
+            };
+            result += earrings[accessories.earrings] || '';
+        }
+        
+        return result;
     }
     
     // === UTILITY FUNCTIONS ===
@@ -425,12 +558,13 @@ class AvatarManager {
         this.userId = userId;
         this.currentAvatar = this.getDefaultAvatar();
         this.avatarHistory = [];
-        this.currentMode = 'cartoon'; // cartoon, realistic, photo
+        this.currentMode = 'realistic'; // Solo realistico per default
+        this.photoFile = null;
     }
     
     getDefaultAvatar() {
         return {
-            mode: 'cartoon',
+            mode: 'realistic',
             gender: 'male',
             faceShape: 'oval',
             skinTone: '#FDBCB4',
@@ -458,7 +592,7 @@ class AvatarManager {
     }
     
     setMode(mode) {
-        if (['cartoon', 'realistic', 'photo'].includes(mode)) {
+        if (['realistic', 'photo'].includes(mode)) {
             this.currentMode = mode;
             this.currentAvatar.mode = mode;
             this.saveAvatar();
@@ -467,11 +601,14 @@ class AvatarManager {
         return false;
     }
     
+    setPhoto(photoDataUrl) {
+        this.photoFile = photoDataUrl;
+        this.setMode('photo');
+    }
+    
     generateAvatarSVG() {
-        if (this.currentMode === 'cartoon') {
-            return SVGAvatarGenerator.generateCartoonAvatar(this.currentAvatar);
-        } else if (this.currentMode === 'realistic') {
-            return SVGAvatarGenerator.generateRealisticAvatar(this.currentAvatar);
+        if (this.currentMode === 'realistic') {
+            return RealisticSVGGenerator.generateRealisticAvatar(this.currentAvatar);
         }
         return null; // Photo mode non genera SVG
     }
@@ -481,6 +618,7 @@ class AvatarManager {
             const avatarData = {
                 userId: this.userId,
                 avatar: this.currentAvatar,
+                photoFile: this.photoFile,
                 timestamp: Date.now()
             };
             
@@ -501,7 +639,8 @@ class AvatarManager {
             if (window.avatarStorage && window.avatarStorage[this.userId]) {
                 const saved = window.avatarStorage[this.userId];
                 this.currentAvatar = saved.avatar;
-                this.currentMode = saved.avatar.mode || 'cartoon';
+                this.currentMode = saved.avatar.mode || 'realistic';
+                this.photoFile = saved.photoFile || null;
                 console.log('✅ Avatar caricato:', saved);
                 return true;
             }
@@ -516,7 +655,7 @@ class AvatarManager {
         const selectedGender = genders[Math.floor(Math.random() * genders.length)];
         
         const randomAvatar = {
-            mode: this.currentMode,
+            mode: 'realistic',
             gender: selectedGender,
             faceShape: Object.keys(AVATAR_CONFIG.faceShapes)[Math.floor(Math.random() * Object.keys(AVATAR_CONFIG.faceShapes).length)],
             skinTone: AVATAR_CONFIG.skinTones[Math.floor(Math.random() * AVATAR_CONFIG.skinTones.length)],
@@ -551,7 +690,7 @@ class AvatarManager {
     }
 }
 
-// === 🎨 UI BUILDER ===
+// === 🎨 UI BUILDER SEMPLIFICATO ===
 class AvatarUIBuilder {
     constructor(containerId, avatarManager) {
         this.container = document.getElementById(containerId);
@@ -575,13 +714,10 @@ class AvatarUIBuilder {
     
     createUI() {
         this.container.innerHTML = `
-            <div class="avatar-builder-v3">
+            <div class="avatar-builder-simple">
                 <!-- Header con modalità -->
                 <div class="avatar-modes">
-                    <button class="mode-btn active" data-mode="cartoon">
-                        🎨 Cartoon
-                    </button>
-                    <button class="mode-btn" data-mode="realistic">
+                    <button class="mode-btn active" data-mode="realistic">
                         👤 Realistico
                     </button>
                     <button class="mode-btn" data-mode="photo">
@@ -787,36 +923,7 @@ class AvatarUIBuilder {
         });
         
         // Upload foto
-        const photoUpload = this.container.querySelector('#photoUpload');
-        const uploadArea = this.container.querySelector('#uploadArea');
-        
-        if (photoUpload && uploadArea) {
-            uploadArea.addEventListener('click', () => photoUpload.click());
-            
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    this.handlePhotoUpload(files[0]);
-                }
-            });
-            
-            photoUpload.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    this.handlePhotoUpload(e.target.files[0]);
-                }
-            });
-        }
+        this.setupPhotoUpload();
         
         // Azioni
         const randomizeBtn = this.container.querySelector('#randomizeBtn');
@@ -844,7 +951,7 @@ class AvatarUIBuilder {
         if (saveBtn) {
             saveBtn.addEventListener('click', () => {
                 this.avatarManager.saveAvatar();
-                alert('✅ Avatar salvato!');
+                this.showNotification('✅ Avatar salvato!');
             });
         }
     }
@@ -926,13 +1033,9 @@ class AvatarUIBuilder {
         
         if (this.avatarManager.currentMode === 'photo' && this.photoFile) {
             // Display uploaded photo
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                preview.innerHTML = `<img src="${e.target.result}" alt="Avatar Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-            };
-            reader.readAsDataURL(this.photoFile);
-        } else if (this.avatarManager.currentMode !== 'photo') {
-            // Display SVG avatar
+            preview.innerHTML = `<img src="${this.photoFile}" alt="Avatar Photo" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        } else if (this.avatarManager.currentMode === 'realistic') {
+            // Display realistic SVG avatar
             const svg = this.avatarManager.generateAvatarSVG();
             if (svg) {
                 preview.innerHTML = svg;
@@ -982,21 +1085,84 @@ class AvatarUIBuilder {
         });
     }
     
+    setupPhotoUpload() {
+        const uploadArea = this.container.querySelector('#uploadArea');
+        const photoUpload = this.container.querySelector('#photoUpload');
+        
+        if (uploadArea && photoUpload) {
+            uploadArea.addEventListener('click', () => photoUpload.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.handlePhotoUpload(files[0]);
+                }
+            });
+            
+            photoUpload.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    this.handlePhotoUpload(e.target.files[0]);
+                }
+            });
+        }
+    }
+    
     handlePhotoUpload(file) {
         if (file && file.type.startsWith('image/')) {
-            this.photoFile = file;
-            this.updateAvatarDisplay();
-            console.log('📸 Foto caricata:', file.name);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.photoFile = e.target.result;
+                this.avatarManager.setPhoto(e.target.result);
+                this.updateAvatarDisplay();
+                this.showNotification('📸 Foto caricata con successo!');
+            };
+            reader.readAsDataURL(file);
         } else {
-            alert('❌ Seleziona un file immagine valido');
+            this.showNotification('❌ Seleziona un file immagine valido');
         }
+    }
+    
+    showNotification(message) {
+        // Simple notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 }
 
 // === 🎨 MAIN AVATAR SYSTEM ===
 class RealisticAvatarSystem {
     static async initializeRealisticAvatarSystem(userId) {
-        console.log('🚀 Inizializzazione Sistema Avatar Realistico v3.0...');
+        console.log('🚀 Inizializzazione Sistema Avatar Realistico v4.0...');
         
         // Inject CSS
         this.injectCSS();
@@ -1021,7 +1187,7 @@ class RealisticAvatarSystem {
         
         const styles = `
             <style id="realistic-avatar-styles">
-                .avatar-builder-v3 {
+                .avatar-builder-simple {
                     max-width: 500px;
                     margin: 0 auto;
                     padding: 20px;
@@ -1263,7 +1429,7 @@ class RealisticAvatarSystem {
                 
                 /* Responsive */
                 @media (max-width: 600px) {
-                    .avatar-builder-v3 {
+                    .avatar-builder-simple {
                         padding: 15px;
                     }
                     
@@ -1296,29 +1462,6 @@ class RealisticAvatarSystem {
                 .avatar-preview svg {
                     animation: avatarUpdate 0.3s ease;
                 }
-                
-                /* Hide scrollbars but keep functionality */
-                .avatar-builder-v3 {
-                    scrollbar-width: thin;
-                    scrollbar-color: #ccc transparent;
-                }
-                
-                .avatar-builder-v3::-webkit-scrollbar {
-                    width: 6px;
-                }
-                
-                .avatar-builder-v3::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                
-                .avatar-builder-v3::-webkit-scrollbar-thumb {
-                    background-color: #ccc;
-                    border-radius: 3px;
-                }
-                
-                .avatar-builder-v3::-webkit-scrollbar-thumb:hover {
-                    background-color: #999;
-                }
             </style>
         `;
         
@@ -1332,10 +1475,8 @@ class RealisticAvatarSystem {
     }
     
     static createStandaloneAvatar(config) {
-        if (config.mode === 'cartoon') {
-            return SVGAvatarGenerator.generateCartoonAvatar(config);
-        } else if (config.mode === 'realistic') {
-            return SVGAvatarGenerator.generateRealisticAvatar(config);
+        if (config.mode === 'realistic') {
+            return RealisticSVGGenerator.generateRealisticAvatar(config);
         }
         return null;
     }
@@ -1346,7 +1487,7 @@ class RealisticAvatarSystem {
 window.RealisticAvatarSystem = RealisticAvatarSystem;
 window.AvatarManager = AvatarManager;
 window.AvatarUIBuilder = AvatarUIBuilder;
-window.SVGAvatarGenerator = SVGAvatarGenerator;
+window.RealisticSVGGenerator = RealisticSVGGenerator;
 window.AVATAR_CONFIG = AVATAR_CONFIG;
 
 // Initialize when DOM is ready
@@ -1358,4 +1499,4 @@ if (document.readyState === 'loading') {
     console.log('🎨 Realistic Avatar System Ready!');
 }
 
-console.log('✅ Avatar System Realistic v3.0 caricato completamente!');
+console.log('✅ Avatar System Realistic v4.0 caricato completamente!');
