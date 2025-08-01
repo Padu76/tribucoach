@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lifestyle Coaching - Metodologia | LifestyleFitnessCoach</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: #000;
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b35;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ff6b35;
+        }
+
+        .dashboard-btn {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 8px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 3px 10px rgba(255,107,53,0.3);
+        }
+
+        .dashboard-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 120px 0 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="25" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="25" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero-highlight {
+            color: #ff6b35;
+            font-weight: 800;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* What We Talk About Section */
+        .talk-about-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .talk-about-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 3rem;
+        }
+
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .topic-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff7ed 100%);
+            padding: 2.5rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 6px solid #ff6b35;
+            transition: transform 0.3s;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .topic-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .topic-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .topic-description {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .highlight-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 4rem;
+            border-radius: 20px;
+            text-align: center;
+            margin: 4rem 0;
+            position: relative;
+        }
+
+        .highlight-section::before {
+            content: '"';
+            font-size: 6rem;
+            position: absolute;
+            top: -20px;
+            left: 40px;
+            color: #ff6b35;
+            opacity: 0.3;
+        }
+
+        .highlight-section h3 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: #ff6b35;
+        }
+
+        .highlight-section p {
+            font-size: 1.3rem;
+            line-height: 1.8;
+        }
+
+        /* Process Section */
+        .process-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .process-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 3rem;
+        }
+
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+
+        .step-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            border-left: 6px solid #ff6b35;
+        }
+
+        .step-number {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff6b35;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+        }
+
+        .step-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .step-description {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Questions Section */
+        .questions-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .questions-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .questions-section h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 3rem;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            padding: 3rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            border-left: 6px solid #ff6b35;
+            text-align: left;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            font-style: italic;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .question-answer {
+            font-size: 1.1rem;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* Why Change Section */
+        .why-change-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .why-change-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .why-change-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #ff6b35;
+        }
+
+        .change-reasons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .reason-card {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .reason-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .reason-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #ff6b35;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: white;
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .cta-primary {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255,107,53,0.4);
+        }
+
+        .cta-secondary {
+            background: transparent;
+            color: #2c3e50;
+            padding: 15px 40px;
+            border: 2px solid #2c3e50;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-secondary:hover {
+            background: #2c3e50;
+            color: white;
+        }
+
+        /* Footer */
+        footer {
+            background: #000;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .process-steps,
+            .change-reasons {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .topics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* WhatsApp Button */
+        .whatsapp-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 15px rgba(37,211,102,0.3);
+            z-index: 1000;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <a href="../index.html" class="logo">LifestyleFitnessCoach</a>
+            <ul class="nav-links">
+                <li><a href="../index.html#problema">Il Problema</a></li>
+                <li><a href="../index.html#soluzione">La Soluzione</a></li>
+                <li><a href="../index.html#andrea">Il Coach</a></li>
+                <li><a href="chi-sono.html">Chi Sono</a></li>
+                <li><a href="lifestyle-coaching.html" class="active">Lifestyle Coaching</a></li>
+                <li><a href="../index.html#inizia">Inizia Gratis</a></li>
+                <li><a href="user-dashboard.html" class="dashboard-btn">🏠 La Mia Area</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Obiettivi del <span class="hero-highlight">Lifestyle Coaching</span></h1>
+                <p>Scopri come trasformiamo insieme il disordine nella tua vita in un piano d'azione chiaro e sostenibile</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We Talk About Section -->
+    <section class="talk-about-section">
+        <div class="container">
+            <h2>Di Cosa Si Parla Durante le Sessioni di Coaching?</h2>
+            
+            <div class="topics-grid">
+                <div class="topic-card">
+                    <span class="topic-icon">🧠</span>
+                    <h3 class="topic-title">Stress & Mindset</h3>
+                    <p class="topic-description">Impariamo a gestire lo stress quotidiano e sviluppare un mindset di crescita che ti sostiene nei momenti difficili.</p>
+                </div>
+                <div class="topic-card">
+                    <span class="topic-icon">😴</span>
+                    <h3 class="topic-title">Sonno & Recupero</h3>
+                    <p class="topic-description">Ottimizziamo la qualità del tuo riposo per avere più energia durante il giorno e migliorare le performance.</p>
+                </div>
+                <div class="topic-card">
+                    <span class="topic-icon">🍎</span>
+                    <h3 class="topic-title">Alimentazione Consapevole</h3>
+                    <p class="topic-description">Sviluppiamo un rapporto sano con il cibo, senza diete drastiche ma con abitudini sostenibili.</p>
+                </div>
+                <div class="topic-card">
+                    <span class="topic-icon">💪</span>
+                    <h3 class="topic-title">Attività Fisica</h3>
+                    <p class="topic-description">Integriamo il movimento nella tua routine quotidiana in modo naturale e piacevole.</p>
+                </div>
+                <div class="topic-card">
+                    <span class="topic-icon">⚖️</span>
+                    <h3 class="topic-title">Equilibrio Vita-Lavoro</h3>
+                    <p class="topic-description">Troviamo il giusto equilibrio tra responsabilità professionali e tempo per te stesso.</p>
+                </div>
+                <div class="topic-card">
+                    <span class="topic-icon">🗂️</span>
+                    <h3 class="topic-title">Disordine nello Stile di Vita</h3>
+                    <p class="topic-description">Il nostro ambiente di vita gioca un ruolo fondamentale nei livelli di stress. Mettiamo ordine!</p>
+                </div>
+            </div>
+
+            <div class="highlight-section">
+                <h3>Il Lifestyle Coach è una persona capace di ascoltare</h3>
+                <p>Una persona in grado di fare luce sugli obiettivi desiderati, quelli veri, profondi. Il processo di coaching si rivolge a specifici obiettivi personali di cambiamento.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process-section">
+        <div class="container">
+            <h2>Come Funziona il Processo di Coaching</h2>
+            
+            <div class="process-steps">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">Scopriamo gli Ostacoli</h3>
+                    <p class="step-description">Identifichiamo insieme quali sono gli ostacoli o le sfide da affrontare. Cosa ti sta veramente trattenendo dal cambiamento?</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">Definiamo gli Obiettivi</h3>
+                    <p class="step-description">Facciamo chiarezza sui tuoi obiettivi veri e profondi, non quelli che credi di dover raggiungere, ma quelli che TU desideri davvero.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">Scegliamo il Percorso</h3>
+                    <p class="step-description">Insieme scegliamo un percorso di azione concreto e sostenibile per arrivare a vivere la vita che desideri.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Questions Section -->
+    <section class="questions-section">
+        <div class="container">
+            <div class="questions-container">
+                <h2>Ti Sei Mai Fatto Queste Domande?</h2>
+                
+                <div class="question-card">
+                    <p class="question-text">"So cosa devo fare, semplicemente non riesco a farlo"</p>
+                    <p class="question-answer">Questo è il problema più comune. Non ti manca la conoscenza, ti manca il sistema giusto per trasformare la conoscenza in azione costante. Insieme troviamo il TUO sistema.</p>
+                </div>
+
+                <div class="question-card">
+                    <p class="question-text">"Vorrei stare meglio, ma non so da dove cominciare"</p>
+                    <p class="question-answer">Quando tutto sembra da sistemare, è normale sentirsi sopraffatti. Il segreto è iniziare dal punto giusto per TE. Ogni persona ha un punto di partenza diverso.</p>
+                </div>
+
+                <p style="font-size: 1.3rem; font-weight: 600; color: #ff6b35; margin-top: 3rem;">Se è così, un Lifestyle Coach potrebbe essere il punto di partenza!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Change Section -->
+    <section class="why-change-section">
+        <div class="container">
+            <div class="why-change-content">
+                <h2>Se Sei Qui È Perché Hai Voglia di Cambiare</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem;">Prima di iniziare un'altra dieta drastica o iniziare un altro programma strappato dalle pagine di una rivista, ricorda che ognuno di noi ha fisici e necessità diverse.</p>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem;">Solo TU puoi sapere cosa significa PER TE sentirsi bene.</p>
+
+                <div class="change-reasons">
+                    <div class="reason-card">
+                        <div class="reason-icon">🎯</div>
+                        <h3 class="reason-title">Obiettivi Autentici</h3>
+                        <p>Non sempre siamo consapevoli di ciò che desideriamo davvero per noi. Spesso abbiamo aspettative che non ci rispecchiano realmente.</p>
+                    </div>
+                    <div class="reason-card">
+                        <div class="reason-icon">😤</div>
+                        <h3 class="reason-title">Stop alla Frustrazione</h3>
+                        <p>Quelle aspettative sbagliate ci portano ad una sensazione di frustrazione costante. È ora di liberarsene!</p>
+                    </div>
+                    <div class="reason-card">
+                        <div class="reason-icon">🔍</div>
+                        <h3 class="reason-title">Scoperta Personale</h3>
+                        <p>Il coaching ti aiuta a scoprire cosa vuoi VERAMENTE, al di là delle influenze esterne e delle aspettative degli altri.</p>
+                    </div>
+                    <div class="reason-card">
+                        <div class="reason-icon">🚀</div>
+                        <h3 class="reason-title">Trasformazione Duratura</h3>
+                        <p>Non si tratta di cambiamenti temporanei, ma di una trasformazione profonda e duratura del tuo stile di vita.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Pronto a Iniziare il Tuo Percorso?</h2>
+                <p>Non aspettare il "momento giusto". Il momento giusto è adesso. Inizia con il test gratuito e scopri quale tipo di cambiamento è perfetto per te.</p>
+                <div class="cta-buttons">
+                    <a href="lifestyle-quiz.html" class="cta-primary">Inizia con il Test Gratuito</a>
+                    <a href="chi-sono.html" class="cta-secondary">Conosci Andrea</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 LifestyleFitnessCoach by Andrea Padoan. Tutti i diritti riservati.</p>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Button -->
+    <a href="https://wa.me/393478881515" class="whatsapp-btn" target="_blank">📱</a>
+
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(0,0,0,0.95)';
+            } else {
+                header.style.background = '#000';
+            }
+        });
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
