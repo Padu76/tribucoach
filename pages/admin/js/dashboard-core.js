@@ -911,16 +911,11 @@ document.head.appendChild(style);
 // ==========================================================================
 // EXPORTS
 // ==========================================================================
-export { 
-    dashboardState,
-    toggleUserSelection
-};
 
 // Export for window access
 window.dashboardCore = {
     initializeDashboardCore,
     toggleUserSelection,
-    handleRefreshClick: () => handleRefreshClick({ target: document.getElementById('refreshBtn') }),
     dashboardState
 };
 

@@ -12,7 +12,8 @@ import {
     daysBetween
 } from './firebase-admin.js';
 
-import { dashboardState } from './dashboard-core.js';
+// Get dashboard state from window (since no export available)
+const getDashboardState = () => window.dashboardCore?.dashboardState || { selectedUsers: new Set() };
 
 // ==========================================================================
 // GLOBAL STATE
@@ -699,6 +700,7 @@ export function generateUserReport(userId) {
  * Handle bulk export
  */
 async function handleBulkExport() {
+    const dashboardState = getDashboardState();
     const selectedUsers = Array.from(dashboardState.selectedUsers).map(id => 
         firebaseData.allUsers.find(u => u.id === id)
     ).filter(Boolean);
@@ -726,6 +728,7 @@ async function handleBulkExport() {
  * Handle bulk mark coaching
  */
 async function handleBulkMarkCoaching() {
+    const dashboardState = getDashboardState();
     const selectedUserIds = Array.from(dashboardState.selectedUsers);
     const eligibleUsers = selectedUserIds.filter(id => {
         const user = firebaseData.allUsers.find(u => u.id === id);
@@ -769,6 +772,7 @@ async function handleBulkMarkCoaching() {
  * Handle bulk WhatsApp
  */
 function handleBulkWhatsApp() {
+    const dashboardState = getDashboardState();
     const selectedUsers = Array.from(dashboardState.selectedUsers).map(id => 
         firebaseData.allUsers.find(u => u.id === id)
     ).filter(u => u && u.phone);
@@ -894,11 +898,57 @@ function downloadCSV(csvContent, filename) {
  * Show notification
  */
 function showNotification(message, type = 'info') {
-    // Reuse the notification system from dashboard-core
-    const event = new CustomEvent('showNotification', {
-        detail: { message, type }
-    });
-    window.dispatchEvent(event);
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; 
+        top: 80px; 
+        right: 20px; 
+        padding: 15px 20px; 
+        border-radius: 12px; 
+        font-weight: bold; 
+        z-index: 10000; 
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+        max-width: 350px;
+        animation: slideInRight 0.3s ease-out;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.9rem;
+    `;
+    
+    switch (type) {
+        case 'success':
+            toast.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            toast.style.color = 'white';
+            toast.innerHTML = `✅ ${message}`;
+            break;
+        case 'error':
+            toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            toast.style.color = 'white';
+            toast.innerHTML = `❌ ${message}`;
+            break;
+        case 'warning':
+            toast.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            toast.style.color = 'white';
+            toast.innerHTML = `⚠️ ${message}`;
+            break;
+        default:
+            toast.style.background = 'linear-gradient(135deg, #ea580c, #f97316)';
+            toast.style.color = 'white';
+            toast.innerHTML = `🔔 ${message}`;
+    }
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }
+    }, 4000);
 }
 
 /**
@@ -911,56 +961,501 @@ function generateReportHTML(reportData) {
         <head>
             <title>Report Utente - ${reportData.user.name}</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { border-bottom: 2px solid #ea580c; padding-bottom: 10px; }
-                .section { margin: 20px 0; }
-                .data-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-                .data-item { padding: 8px; border: 1px solid #ddd; }
-                @media print { body { margin: 0; } }
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    color: #333;
+                }
+                .header { 
+                    border-bottom: 2px solid #ea580c; 
+                    padding-bottom: 10px; 
+                    margin-bottom: 20px;
+                }
+                .section { 
+                    margin: 20px 0; 
+                    padding: 15px;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                }
+                .data-grid { 
+                    display: grid; 
+                    grid-template-columns: repeat(2, 1fr); 
+                    gap: 10px; 
+                    margin: 10px 0;
+                }
+                .data-item { 
+                    padding: 8px; 
+                    border: 1px solid #eee; 
+                    border-radius: 4px;
+                    background: #f9f9f9;
+                }
+                .highlight {
+                    background: #fff3cd;
+                    padding: 10px;
+                    border-radius: 4px;
+                    border-left: 4px solid #ea580c;
+                }
+                @media print { 
+                    body { margin: 0; }
+                    .section { break-inside: avoid; }
+                }
             </style>
         </head>
         <body>
             <div class="header">
-                <h1>Report Utente Completo</h1>
+                <h1>📊 Report Utente Completo</h1>
                 <h2>${reportData.user.name}</h2>
-                <p>Generato il: ${formatDateTime(reportData.generatedAt)}</p>
+                <p><strong>Generato il:</strong> ${formatDateTime(reportData.generatedAt)}</p>
             </div>
             
             <div class="section">
-                <h3>Informazioni Generali</h3>
+                <h3>📋 Informazioni Generali</h3>
                 <div class="data-grid">
                     <div class="data-item"><strong>Email:</strong> ${reportData.user.email}</div>
                     <div class="data-item"><strong>Telefono:</strong> ${reportData.user.phone || 'N/A'}</div>
-                    <div class="data-item"><strong>Lead Score:</strong> ${Math.round(reportData.user.leadScore || 0)}%</div>
-                    <div class="data-item"><strong>Quadrante:</strong> ${reportData.user.profileQuadrant}</div>
+                    <div class="data-item"><strong>Città:</strong> ${reportData.user.city || 'N/A'}</div>
+                    <div class="data-item"><strong>Età:</strong> ${reportData.user.age || 'N/A'}</div>
+                    <div class="data-item"><strong>Registrazione:</strong> ${formatDate(reportData.user.registrationDate)}</div>
+                    <div class="data-item"><strong>Ultima Attività:</strong> ${formatDate(reportData.user.lastActivity)}</div>
                 </div>
             </div>
             
             <div class="section">
-                <h3>Progresso Coaching</h3>
-                <p><strong>Coaching Iniziato:</strong> ${reportData.user.hasStartedCoaching ? 'Sì' : 'No'}</p>
-                <p><strong>Settimana Corrente:</strong> ${reportData.user.currentWeek || 1}/7</p>
-                <p><strong>Sessioni Completate:</strong> ${reportData.sessions.length}</p>
+                <h3>🎯 Profilo Coaching</h3>
+                <div class="highlight">
+                    <p><strong>Lead Score:</strong> ${Math.round(reportData.user.leadScore || 0)}%</p>
+                    <p><strong>Quadrante:</strong> ${reportData.user.profileQuadrant} - ${getQuadrantDescription(reportData.user.profileQuadrant)}</p>
+                    <p><strong>Livello Coscienza:</strong> ${reportData.user.consciousnessLevel}</p>
+                </div>
+                <div class="data-grid" style="margin-top: 15px;">
+                    <div class="data-item"><strong>Esperienza:</strong> ${reportData.user.experience || 'N/A'}</div>
+                    <div class="data-item"><strong>Livello Attività:</strong> ${reportData.user.activityLevel || 'N/A'}</div>
+                    <div class="data-item"><strong>Motivazione:</strong> ${reportData.user.readinessLevel || 'N/A'}/5</div>
+                    <div class="data-item"><strong>Impegno:</strong> ${reportData.user.commitmentLevel || 'N/A'}/5</div>
+                </div>
             </div>
+            
+            <div class="section">
+                <h3>📊 Progresso Coaching</h3>
+                <div class="data-grid">
+                    <div class="data-item"><strong>Coaching Iniziato:</strong> ${reportData.user.hasStartedCoaching ? 'Sì' : 'No'}</div>
+                    <div class="data-item"><strong>Settimana Corrente:</strong> ${reportData.user.currentWeek || 1}/7</div>
+                    <div class="data-item"><strong>Settimane Completate:</strong> ${reportData.user.completedWeeks ? reportData.user.completedWeeks.length : 0}</div>
+                    <div class="data-item"><strong>Sessioni Totali:</strong> ${reportData.user.totalSessions || 0}</div>
+                </div>
+            </div>
+            
+            ${reportData.user.goals && reportData.user.goals.length > 0 ? `
+                <div class="section">
+                    <h3>🎯 Obiettivi Dichiarati</h3>
+                    <ul>
+                        ${reportData.user.goals.map(goal => `<li>${goal}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            ${reportData.user.challenges && reportData.user.challenges.length > 0 ? `
+                <div class="section">
+                    <h3>⚠️ Sfide e Ostacoli</h3>
+                    <ul>
+                        ${reportData.user.challenges.map(challenge => `<li>${challenge}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            ${reportData.sessions.length > 0 ? `
+                <div class="section">
+                    <h3>📋 Cronologia Sessioni</h3>
+                    <p><strong>Totale sessioni registrate:</strong> ${reportData.sessions.length}</p>
+                    ${reportData.sessions.slice(0, 5).map(session => `
+                        <div class="data-item" style="margin: 5px 0;">
+                            <strong>Settimana ${session.weekNumber}</strong> - ${formatDateTime(session.timestamp)}
+                            ${session.duration ? ` (${session.duration} min)` : ''}
+                        </div>
+                    `).join('')}
+                    ${reportData.sessions.length > 5 ? `<p><em>... e altre ${reportData.sessions.length - 5} sessioni</em></p>` : ''}
+                </div>
+            ` : ''}
             
             ${reportData.user.notes ? `
                 <div class="section">
-                    <h3>Note Coaching</h3>
+                    <h3>📝 Note Coaching</h3>
                     <p>${reportData.user.notes}</p>
                 </div>
             ` : ''}
+            
+            <div class="section">
+                <h3>📈 Raccomandazioni</h3>
+                <div class="highlight">
+                    ${generateRecommendations(reportData.user)}
+                </div>
+            </div>
         </body>
         </html>
     `;
 }
 
+/**
+ * Generate recommendations based on user profile
+ */
+function generateRecommendations(user) {
+    let recommendations = [];
+    
+    const leadScore = user.leadScore || 0;
+    const quadrant = user.profileQuadrant;
+    const hasStarted = user.hasStartedCoaching;
+    
+    if (leadScore >= 70) {
+        recommendations.push('✅ <strong>Utente qualificato</strong> - Priorità alta per follow-up personalizzato');
+    } else if (leadScore >= 40) {
+        recommendations.push('⚠️ <strong>Potenziale medio</strong> - Necessita nurturing per aumentare engagement');
+    } else {
+        recommendations.push('🔄 <strong>Lead da sviluppare</strong> - Focus su educazione e costruzione fiducia');
+    }
+    
+    if (!hasStarted) {
+        recommendations.push('🚀 <strong>Coaching non iniziato</strong> - Programmare call di benvenuto');
+    }
+    
+    switch (quadrant) {
+        case 'Q1':
+            recommendations.push('🏆 <strong>Atleta in Crescita</strong> - Approccio collaborativo, sfide progressive');
+            break;
+        case 'Q2':
+            recommendations.push('💪 <strong>Esploratore Motivato</strong> - Fornire struttura e guidance tecnica');
+            break;
+        case 'Q3':
+            recommendations.push('🎯 <strong>Esperto Demotivato</strong> - Focus su motivazione e obiettivi personali');
+            break;
+        case 'Q4':
+            recommendations.push('🌱 <strong>Guerriero Determinato</strong> - Supporto completo e incoraggiamento costante');
+            break;
+    }
+    
+    const daysSinceActivity = daysBetween(user.lastActivity, new Date());
+    if (daysSinceActivity > 7) {
+        recommendations.push('📞 <strong>Follow-up necessario</strong> - Utente inattivo da più di 7 giorni');
+    }
+    
+    return recommendations.map(rec => `<p>${rec}</p>`).join('');
+}
+
+// ==========================================================================
+// ANIMATION STYLES
+// ==========================================================================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    /* Modal Styles */
+    .user-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-section {
+        background: rgba(15, 23, 42, 0.5);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #334155;
+    }
+    
+    .detail-section.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .detail-title {
+        color: #ea580c;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #334155;
+        padding-bottom: 0.5rem;
+    }
+    
+    .detail-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .detail-row .label {
+        color: #94a3b8;
+        font-weight: 500;
+        min-width: 140px;
+    }
+    
+    .detail-row .value {
+        color: #f8fafc;
+        text-align: right;
+        flex: 1;
+    }
+    
+    .progress-overview {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .progress-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .progress-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        border: 1px solid #334155;
+    }
+    
+    .progress-label {
+        display: block;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .progress-value {
+        display: block;
+        color: #ea580c;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .week-progress-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .week-progress-item {
+        text-align: center;
+        padding: 0.75rem 0.5rem;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: rgba(15, 23, 42, 0.7);
+    }
+    
+    .week-progress-item.completed {
+        background: rgba(34, 197, 94, 0.2);
+        border-color: #22c55e;
+    }
+    
+    .week-progress-item.current {
+        background: rgba(251, 191, 36, 0.2);
+        border-color: #fbbf24;
+    }
+    
+    .week-progress-item.accessible {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: #3b82f6;
+    }
+    
+    .week-number {
+        font-weight: bold;
+        color: #f8fafc;
+    }
+    
+    .week-status {
+        font-size: 1rem;
+        margin: 0.25rem 0;
+    }
+    
+    .week-label {
+        font-size: 0.7rem;
+        color: #94a3b8;
+    }
+    
+    .goals-container, .challenges-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .goal-tag {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .challenge-tag {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    
+    .no-data {
+        color: #94a3b8;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+    
+    .notes-textarea {
+        width: 100%;
+        min-height: 100px;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid #475569;
+        color: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        resize: vertical;
+        font-family: inherit;
+        font-size: 0.9rem;
+    }
+    
+    .notes-textarea:focus {
+        outline: none;
+        border-color: #ea580c;
+        box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    }
+    
+    .notes-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .action-btn.large {
+        padding: 1rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .quiz-data-container {
+        max-width: 100%;
+    }
+    
+    .quiz-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.5);
+        border-radius: 12px;
+        border: 1px solid #334155;
+    }
+    
+    .analysis-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .analysis-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        border: 1px solid #334155;
+    }
+    
+    .analysis-label {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+    
+    .analysis-value {
+        color: #f8fafc;
+        font-weight: 600;
+    }
+    
+    .quiz-responses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .quiz-response-item {
+        padding: 0.75rem;
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 8px;
+        border: 1px solid #334155;
+    }
+    
+    .response-label {
+        color: #ea580c;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .response-value {
+        color: #f8fafc;
+        font-size: 0.9rem;
+    }
+    
+    .quiz-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #334155;
+    }
+    
+    @media (max-width: 768px) {
+        .user-detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .progress-summary {
+            grid-template-columns: 1fr;
+        }
+        
+        .week-progress-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+        
+        .analysis-summary,
+        .quiz-responses-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+`;
+document.head.appendChild(style);
+
 // ==========================================================================
 // EXPORTS
 // ==========================================================================
-export {
-    closeUserModal,
-    currentUser
-};
 
 // Export for window access
 window.userManagement = {
