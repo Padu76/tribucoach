@@ -87,6 +87,27 @@
             background: rgba(255,255,255,0.3);
         }
 
+        /* AI Personalization Badge */
+        .ai-badge {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .ai-badge.visible {
+            display: block;
+            animation: slideInRight 0.3s ease-out;
+        }
+
         /* Main Content */
         .main-content {
             max-width: 1200px;
@@ -720,26 +741,6 @@
             border-color: rgba(255,255,255,0.5);
         }
 
-        .admin-badge {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            display: none;
-        }
-
-        .admin-badge.visible {
-            display: block;
-            animation: slideInRight 0.3s ease-out;
-        }
-
         .completion-actions {
             display: flex;
             justify-content: center;
@@ -837,9 +838,9 @@
     </style>
 </head>
 <body>
-    <!-- Admin Badge -->
-    <div id="adminBadge" class="admin-badge">
-        <span id="adminBadgeText">👑 ADMIN</span>
+    <!-- AI Personalization Badge -->
+    <div id="aiBadge" class="ai-badge">
+        <span id="aiBadgeText">🤖 AI Personalizzato</span>
     </div>
 
     <!-- Header -->
@@ -869,7 +870,7 @@
             <div class="phase-arrow">→</div>
             <div class="phase-step inactive" id="phaseStep2">
                 <span>🤖</span>
-                <span>Fase 2: Approfondimento Coaching AI</span>
+                <span>Fase 2: Coaching AI Personalizzato</span>
             </div>
         </div>
 
@@ -892,10 +893,10 @@
                     </div>
                     <div class="process-step">
                         <div class="step-number">2</div>
-                        <div class="step-title">Approfondimento Coaching AI</div>
+                        <div class="step-title">Coaching AI Personalizzato</div>
                         <div class="step-description">
-                            Attraverso domande potenti personalizzate, faremo emergere nuove consapevolezze 
-                            e definiremo insieme i tuoi obiettivi autentici.
+                            Il mio sistema AI, personalizzato per il tuo profilo lifestyle, 
+                            ti guiderà con domande potenti per far emergere nuove consapevolezze.
                         </div>
                         <div class="step-duration">⏱️ 20-25 minuti</div>
                     </div>
@@ -1043,7 +1044,7 @@
                     <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevSection()" style="display: none;">← Precedente</button>
                     <div>
                         <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextSection()">Continua →</button>
-                        <button type="button" class="btn btn-success" id="completePhase1Btn" onclick="completePhase1()" style="display: none;">✅ Completa e Passa al Coaching AI</button>
+                        <button type="button" class="btn btn-success" id="completePhase1Btn" onclick="completePhase1()" style="display: none;">✅ Passa al Coaching AI</button>
                     </div>
                 </div>
             </form>
@@ -1054,19 +1055,17 @@
             <div class="phase-header">
                 <div class="phase-icon">🤖</div>
                 <div>
-                    <h2 class="phase-title">Fase 2: Approfondimento Coaching con Andrea AI</h2>
-                    <p class="phase-subtitle">Attraverso domande potenti, faremo emergere nuove consapevolezze</p>
+                    <h2 class="phase-title">Fase 2: Coaching AI Personalizzato</h2>
+                    <p class="phase-subtitle">Andrea AI, personalizzato per il tuo profilo, ti guiderà con domande potenti</p>
                 </div>
             </div>
             
             <div class="coaching-intro">
-                <h3>🎯 Il Mio Approccio di Coaching con Te</h3>
+                <h3>🎯 Il Mio Approccio di Coaching Personalizzato</h3>
                 <p>
-                    Ho analizzato le tue 17 risposte e ora voglio accompagnarti in un viaggio di scoperta. 
-                    Attraverso <strong>domande potenti</strong> ti aiuterò a guardare dentro di te, 
-                    far emergere il tuo <strong>potenziale nascosto</strong> e definire chiaramente 
-                    il tuo <strong>stato desiderato</strong>. Non ci sono risposte giuste o sbagliate, 
-                    solo la tua autentica verità.
+                    Ho analizzato il tuo profilo lifestyle e le tue 17 risposte. Il mio sistema AI 
+                    è ora personalizzato per te e adatterà ogni domanda al tuo stile di comunicazione.
+                    Non ci sono risposte giuste o sbagliate, solo la tua autentica verità.
                 </p>
             </div>
             
@@ -1080,15 +1079,15 @@
             
             <div class="chat-status">
                 <div class="status-dot"></div>
-                <span>Andrea è pronto per il coaching profondo con te</span>
+                <span>Andrea AI è pronto per il coaching personalizzato</span>
             </div>
             
             <div class="chat-container" id="chatContainer">
-                <!-- Messages will be added here -->
+                <!-- Messages will be added here by the integration system -->
             </div>
             
             <div class="chat-input">
-                <input type="text" id="chatInput" placeholder="Prenditi il tempo che serve per rispondere ad Andrea...">
+                <input type="text" id="chatInput" placeholder="Condividi i tuoi pensieri con Andrea...">
                 <button class="btn btn-primary" onclick="sendChatMessage()">Invia</button>
             </div>
         </section>
@@ -1097,14 +1096,14 @@
         <section class="completion-section" id="completionSection">
             <h2 class="completion-title">🎉 Sessione di Coaching Completata!</h2>
             <p class="completion-message">
-                Che viaggio incredibile abbiamo fatto insieme! Attraverso il questionario completo e il nostro coaching approfondito, 
+                Che viaggio incredibile abbiamo fatto insieme! Attraverso il questionario completo e il nostro coaching personalizzato, 
                 abbiamo fatto emergere aspetti importanti della tua storia e definito chiaramente i tuoi obiettivi autentici.
             </p>
             
             <div class="homework-section">
-                <h3 class="homework-title">📚 I Tuoi Compiti Personalizzati di Coaching</h3>
+                <h3 class="homework-title">📚 I Tuoi Compiti Personalizzati</h3>
                 <ul class="homework-list" id="personalizedHomework">
-                    <!-- Will be generated based on coaching session -->
+                    <!-- Will be generated by the personalization system -->
                 </ul>
             </div>
 
@@ -1118,24 +1117,24 @@
                         <div class="value-item">
                             <div class="value-icon">🧠</div>
                             <div class="value-title">Settimana 2: Consapevolezza di Sé</div>
-                            <div class="value-description">Esplora le tue motivazioni profonde e identifica i veri driver del cambiamento</div>
+                            <div class="value-description">Esplora le tue motivazioni profonde con AI personalizzato</div>
                         </div>
                         <div class="value-item">
                             <div class="value-icon">🎯</div>
                             <div class="value-title">Coaching Approfondito</div>
-                            <div class="value-description">Sessioni guidate con Andrea per sviluppare la tua intelligenza emotiva</div>
+                            <div class="value-description">Sessioni guidate personalizzate per il tuo profilo</div>
                         </div>
                         <div class="value-item">
                             <div class="value-icon">💎</div>
                             <div class="value-title">Strumenti Esclusivi</div>
-                            <div class="value-description">Esercizi pratici e template personalizzati per la tua crescita</div>
+                            <div class="value-description">Esercizi e template personalizzati per la tua crescita</div>
                         </div>
                     </div>
                     
                     <div class="cta-pricing">
                         <div class="price-header">Sblocca la prossima settimana</div>
                         <div class="price-amount">€50</div>
-                        <div class="price-description">Accesso completo alla Settimana 2 + Materiali Esclusivi</div>
+                        <div class="price-description">Accesso completo alla Settimana 2 + AI Personalizzato</div>
                     </div>
                     
                     <div class="cta-buttons">
@@ -1156,11 +1155,11 @@
         </section>
     </main>
 
-    <!-- Load Auth Guard -->
-    <script src="../api/auth-guard.js"></script>
+    <!-- Load Sistema AI Integrato v2.0 -->
+    <script src="../utils/integrated-ai-system.js"></script>
     
-    <!-- Load Andrea AI Coach System -->
-    <script src="../andrea-ai-coach.js"></script>
+    <!-- Load Script Integrazione Moduli -->
+    <script src="../utils/modules-integration.js"></script>
     
     <script>
         // Session variables
@@ -1171,70 +1170,49 @@
         let currentSection = 1;
         let totalSections = 5;
         let phase1Data = {};
-        let chatHistory = [];
-        let andreaAICoach = null;
-        let userProfile = null;
         let sessionExtended = false;
         let autoSaveInterval;
-        let coachingInsights = [];
-        let authGuard = null;
-
-        // Coaching principles for AI
-        const COACHING_PRINCIPLES = {
-            objectives: [
-                "Comprendere lo stato presente e lo stato desiderato",
-                "Fare chiarezza e connettere con autenticità",
-                "Utilizzare intelligenza emotiva ed intuitiva",
-                "Far emergere nuove consapevolezze",
-                "Definire obiettivi autentici",
-                "Tirare fuori la migliore versione di sé"
-            ],
-            methods: [
-                "Domande potenti che lasciano spazio e tempo",
-                "Ascolto attivo privo di giudizio",
-                "Ricerca del potenziale inespresso",
-                "Sviluppo fiducia reciproca",
-                "Miglioramento performance attraverso azioni concrete"
-            ]
-        };
 
         // Initialize session
         document.addEventListener('DOMContentLoaded', function() {
-            initializeAuthGuard();
             startSessionTimer();
-            loadUserProfile();
             loadSavedSession();
-            initializeAndreaAI();
             startAutoSave();
+            showAIPersonalizationBadge();
         });
 
-        function initializeAuthGuard() {
-            if (window.AuthGuard) {
-                authGuard = new window.AuthGuard();
+        function showAIPersonalizationBadge() {
+            const badge = document.getElementById('aiBadge');
+            const badgeText = document.getElementById('aiBadgeText');
+            
+            // Check for user profile
+            try {
+                const profile = localStorage.getItem('lifestyleQuizResults');
+                if (profile) {
+                    const userData = JSON.parse(profile);
+                    const profileName = userData.profileData?.name || 'AI Personalizzato';
+                    badgeText.textContent = `🤖 ${profileName}`;
+                } else {
+                    badgeText.textContent = '🤖 AI Personalizzato';
+                }
                 
-                // Week-1 is always free, but check user role for admin badge
-                authGuard.getCurrentUser().then(user => {
-                    if (user && user.role) {
-                        showAdminBadge(user.role);
-                    }
-                }).catch(error => {
-                    console.log('No user logged in, Week-1 is free for all');
-                });
+                badge.classList.add('visible');
+            } catch (error) {
+                console.error('Error loading profile for badge:', error);
+                badge.classList.add('visible');
             }
         }
 
-        function showAdminBadge(role) {
-            const badge = document.getElementById('adminBadge');
-            const badgeText = document.getElementById('adminBadgeText');
+        // Wait for module integration to be ready
+        window.addEventListener('moduleIntegrationReady', function(event) {
+            console.log('✅ Module integration ready for week:', event.detail.week);
             
-            if (role === 'admin') {
-                badgeText.textContent = '👑 ADMIN';
-                badge.classList.add('visible');
-            } else if (role === 'beta') {
-                badgeText.textContent = '🧪 BETA';
-                badge.classList.add('visible');
+            // Update UI to show personalization is active
+            const statusElement = document.querySelector('.chat-status span');
+            if (statusElement) {
+                statusElement.textContent = 'Andrea AI è pronto per il coaching personalizzato (Sistema v2.0 attivo)';
             }
-        }
+        });
 
         function startSessionTimer() {
             timerInterval = setInterval(() => {
@@ -1263,18 +1241,6 @@
             }, 1000);
         }
 
-        function loadUserProfile() {
-            try {
-                const savedData = localStorage.getItem('lifestyleQuizResults');
-                if (savedData) {
-                    userProfile = JSON.parse(savedData);
-                    console.log('✅ User profile loaded:', userProfile);
-                }
-            } catch (error) {
-                console.error('❌ Error loading user profile:', error);
-            }
-        }
-
         function loadSavedSession() {
             try {
                 const savedSession = localStorage.getItem('week1SessionInProgress');
@@ -1297,11 +1263,6 @@
                         currentSection = sessionData.currentSection;
                     }
                     
-                    // Restore chat history
-                    if (sessionData.chatHistory) {
-                        chatHistory = sessionData.chatHistory;
-                    }
-                    
                     // Restore current phase
                     if (sessionData.currentPhase) {
                         currentPhase = sessionData.currentPhase;
@@ -1312,7 +1273,6 @@
                             showSection(currentSection);
                         } else if (currentPhase === 'phase2') {
                             startPhase2();
-                            restoreChatHistory();
                         }
                     }
                     
@@ -1320,25 +1280,6 @@
                 }
             } catch (error) {
                 console.error('❌ Error loading saved session:', error);
-            }
-        }
-
-        async function initializeAndreaAI() {
-            try {
-                if (window.AndreaAICoach) {
-                    andreaAICoach = new window.AndreaAICoach();
-                    
-                    const userId = localStorage.getItem('lifestyleUserId') || 'user_' + Date.now();
-                    localStorage.setItem('lifestyleUserId', userId);
-                    
-                    await andreaAICoach.initialize(userId, userProfile || {});
-                    
-                    console.log('🤖 Andrea AI Coach initialized successfully');
-                } else {
-                    console.error('❌ Andrea AI Coach not available');
-                }
-            } catch (error) {
-                console.error('❌ Error initializing Andrea AI:', error);
             }
         }
 
@@ -1354,8 +1295,6 @@
                     currentPhase: currentPhase,
                     currentSection: currentSection,
                     phase1Data: phase1Data,
-                    chatHistory: chatHistory,
-                    coachingInsights: coachingInsights,
                     sessionStartTime: sessionStartTime,
                     lastSaved: new Date().toISOString()
                 };
@@ -1477,236 +1416,10 @@
             // Update phase indicator
             document.getElementById('phaseStep2').className = 'phase-step active';
             
-            // Generate first coaching question based on complete phase 1 data
-            generateFirstCoachingQuestion();
+            // The integrated AI system will handle the first coaching question
+            // through the moduleIntegrator.generatePersonalizedOpeningQuestion()
             
             autoSave();
-        }
-
-        function generateFirstCoachingQuestion() {
-            if (chatHistory.length === 0) {
-                // Analyze the 17 responses and generate a powerful coaching question
-                const firstQuestion = generatePowerfulOpeningQuestion();
-                addChatMessage(firstQuestion, 'coach');
-            } else {
-                // Restore existing chat if resuming
-                restoreChatHistory();
-            }
-        }
-
-        function generatePowerfulOpeningQuestion() {
-            // Analyze key themes from the 17 responses
-            let question = `Ho letto tutte le tue 17 risposte con grande attenzione, e c'è qualcosa di molto autentico che emerge dalla tua storia. `;
-            
-            // Focus on the transformation moment
-            if (phase1Data.changeReason) {
-                question += `Mi ha colpito particolarmente quando hai scritto che ti sei reso conto di voler cambiare: "${phase1Data.changeReason}". `;
-            }
-            
-            // Connect present state with desired future
-            if (phase1Data.currentSituation && phase1Data.dreamGoal) {
-                question += `Vedo che oggi ti descrivi come "${phase1Data.currentSituation}" ma il tuo obiettivo da sogno è "${phase1Data.dreamGoal}". `;
-            }
-            
-            // Ask a powerful coaching question
-            question += `\n\nOra, voglio farti una domanda potente e ti chiedo di prendere tutto il tempo che serve per rispondere dal profondo del tuo cuore: 
-            
-**Se tra un anno dovessi guardare indietro a questo momento, cosa vorresti essere riuscito a scoprire di te stesso che oggi ancora non conosci?** 🤔
-            
-Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
-            
-            return question;
-        }
-
-        function restoreChatHistory() {
-            const chatContainer = document.getElementById('chatContainer');
-            chatContainer.innerHTML = '';
-            
-            chatHistory.forEach(message => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${message.sender}`;
-                messageDiv.innerHTML = `
-                    <div class="message-content">${message.content}</div>
-                    <div class="message-time">${message.time}</div>
-                `;
-                chatContainer.appendChild(messageDiv);
-            });
-            
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        async function sendChatMessage() {
-            const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            // Add user message
-            addChatMessage(message, 'user');
-            input.value = '';
-            
-            // Get AI coaching response
-            try {
-                const coachingResponse = await getCoachingResponse(message);
-                setTimeout(() => {
-                    addChatMessage(coachingResponse, 'coach');
-                }, 1500); // Slightly longer delay for thoughtful coaching
-            } catch (error) {
-                console.error('❌ Error getting coaching response:', error);
-                setTimeout(() => {
-                    addChatMessage("Dammi un momento per riflettere sulla tua risposta... Puoi ripetere?", 'coach');
-                }, 1000);
-            }
-        }
-
-        function addChatMessage(content, sender) {
-            const chatContainer = document.getElementById('chatContainer');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            const now = new Date();
-            const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            
-            messageDiv.innerHTML = `
-                <div class="message-content">${content}</div>
-                <div class="message-time">${time}</div>
-            `;
-            
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-            
-            // Store in history
-            chatHistory.push({ sender, content, time });
-            
-            // Extract insights if it's a user message
-            if (sender === 'user') {
-                extractCoachingInsights(content);
-            }
-            
-            autoSave();
-        }
-
-        async function getCoachingResponse(userMessage) {
-            // Build comprehensive context for coaching
-            const coachingContext = {
-                phase1Data: phase1Data,
-                chatHistory: chatHistory,
-                coachingInsights: coachingInsights,
-                userProfile: userProfile,
-                coachingPrinciples: COACHING_PRINCIPLES
-            };
-            
-            // Try Andrea AI with coaching context
-            if (andreaAICoach) {
-                try {
-                    const response = await andreaAICoach.sendMessage(userMessage, 1);
-                    if (response.success) {
-                        return response.response;
-                    }
-                } catch (error) {
-                    console.error('❌ Andrea AI coaching error:', error);
-                }
-            }
-            
-            // Fallback to sophisticated coaching response
-            return generateCoachingResponse(userMessage, coachingContext);
-        }
-
-        function generateCoachingResponse(userMessage, context) {
-            // Sophisticated coaching responses based on principles
-            const messageCount = context.chatHistory.filter(m => m.sender === 'user').length;
-            
-            // Different coaching approaches based on conversation depth
-            if (messageCount <= 2) {
-                // Early exploration - dig deeper into emotions and motivations
-                return generateExplorationResponse(userMessage, context);
-            } else if (messageCount <= 4) {
-                // Middle - challenge assumptions and explore possibilities
-                return generateChallengeResponse(userMessage, context);
-            } else {
-                // Later - action orientation and commitment
-                return generateActionResponse(userMessage, context);
-            }
-        }
-
-        function generateExplorationResponse(userMessage, context) {
-            const responses = [
-                `Quello che condividi è molto profondo. Sento una grande autenticità nelle tue parole. Quando pensi a questa trasformazione che desideri, cosa senti nel corpo? C'è eccitazione, paura, o qualcos'altro?`,
-                
-                `Ti ringrazio per la tua onestà. Quello che mi dici risuona con la mia esperienza di quando ho iniziato il mio percorso. Se dovessi immaginare la persona che vuoi diventare, cosa farebbe diversamente domani mattina appena sveglio?`,
-                
-                `Interessante... Sento che c'è qualcosa di molto importante in quello che stai dicendo. Se questa parte di te che vuole cambiare potesse parlare, cosa ti direbbe? Che messaggio ha per te?`,
-                
-                `La tua risposta tocca qualcosa di molto vero. Nel mio lavoro ho imparato che spesso le risposte più autentiche arrivano quando ci permettiamo di sentire davvero. Cosa ti sta impedendo di essere già la persona che vuoi diventare?`
-            ];
-            
-            // Personalize based on phase 1 data
-            if (context.phase1Data.mainPain) {
-                return `Quello che condividi risuona profondamente con me. Quando hai scritto che ti fa soffrire "${context.phase1Data.mainPain}", ho sentito una grande verità. Ora, ascoltando le tue parole, mi chiedo: se potessi trasformare questa sofferenza in una forza, come sarebbe? Che superpotere nasconde dentro di sé?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generateChallengeResponse(userMessage, context) {
-            const responses = [
-                `Le tue parole mi fanno riflettere... Sento che hai una consapevolezza molto profonda. Ora voglio farti una domanda che potrebbe sembrare provocatoria: cosa accadrebbe se scoprissi che tutto quello che credi di non saper fare, in realtà lo sai già fare?`,
-                
-                `Quello che dici è molto potente. Mi viene in mente una cosa: spesso ciò che pensiamo sia il nostro limite, in realtà è la porta verso la nostra trasformazione. Se questa situazione che vivi fosse perfetta per insegnarti esattamente quello che devi imparare, cosa ti starebbe insegnando?`,
-                
-                `Sento una forza incredibile nelle tue parole, anche se forse tu non te ne rendi conto. Facciamo un esperimento mentale: se fossi già la versione migliore di te stesso, come vedresti la situazione che stai vivendo ora?`,
-                
-                `Le tue risposte mi mostrano una persona che ha dentro di sé risorse enormi. Mi chiedo: se dovessi dare un consiglio al te stesso di un anno fa, cosa gli diresti? E cosa pensi che il te stesso di un anno nel futuro direbbe al te di oggi?`
-            ];
-            
-            // Challenge based on specific data
-            if (context.phase1Data.pastSuccess) {
-                return `Quando mi hai raccontato del tuo successo passato - "${context.phase1Data.pastSuccess}" - ho visto una persona capace di grandi cose. Ora mi chiedo: quella stessa forza che ti ha permesso di ottenere quel risultato, dov'è ora? È ancora dentro di te, vero? Come potresti riattivarla per questa nuova sfida?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generateActionResponse(userMessage, context) {
-            const responses = [
-                `Sento che stiamo arrivando al cuore di qualcosa di molto importante. Le nostre parole stanno creando chiarezza. Ora voglio spostarci verso l'azione: se dovessi fare UNA cosa domani che ti avvicini a questa versione migliore di te stesso, cosa sarebbe? Qualcosa di piccolo ma significativo.`,
-                
-                `La nostra conversazione mi sta mostrando un potenziale incredibile in te. Ora è il momento di trasformare questa consapevolezza in movimento. Quale piccolo esperimento potresti fare questa settimana per testare questa nuova versione di te stesso?`,
-                
-                `Quello che stiamo scoprendo insieme è oro puro. Sento che sei pronto per il prossimo passo. Se dovessi impegnarti con me stesso qui e ora su UNA cosa che farai diversamente da oggi, cosa sarebbe? Qualcosa che onori questa nuova consapevolezza.`,
-                
-                `Le tue risposte mi stanno confermando quello che pensavo: hai tutto dentro di te per creare questo cambiamento. Ora la domanda è: sei pronto a fidarti di te stesso? Qual è il primo piccolo passo coraggioso che puoi fare?`
-            ];
-            
-            // Action-oriented based on goals
-            if (context.phase1Data.monthGoal) {
-                return `Tutto quello che abbiamo esplorato insieme sta prendendo forma. Ricordi che hai scritto come obiettivo del mese: "${context.phase1Data.monthGoal}". Ora, con tutto quello che abbiamo scoperto, come vedi questo obiettivo? È ancora autentico per te? E se sì, quale piccola azione di oggi può avvicinarti a questo risultato?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function extractCoachingInsights(userMessage) {
-            // Extract key insights from user responses for homework personalization
-            const insights = [];
-            
-            if (userMessage.toLowerCase().includes('paura') || userMessage.toLowerCase().includes('timore')) {
-                insights.push('Lavoro su paure e limitazioni');
-            }
-            
-            if (userMessage.toLowerCase().includes('energia') || userMessage.toLowerCase().includes('forza')) {
-                insights.push('Focus su energie e risorse personali');
-            }
-            
-            if (userMessage.toLowerCase().includes('cambiare') || userMessage.toLowerCase().includes('trasformare')) {
-                insights.push('Motivazione al cambiamento forte');
-            }
-            
-            if (userMessage.toLowerCase().includes('famiglia') || userMessage.toLowerCase().includes('relazioni')) {
-                insights.push('Importanza relazioni e supporto sociale');
-            }
-            
-            coachingInsights.push(...insights);
         }
 
         function show30MinuteWarning() {
@@ -1716,7 +1429,7 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
         function continueSession() {
             sessionExtended = true;
             document.getElementById('timeWarning').classList.remove('active');
-            showMessage('✅ Sessione estesa di 10 minuti. Il nostro coaching continua!', 'success');
+            showMessage('✅ Sessione estesa di 10 minuti. Il coaching continua!', 'success');
         }
 
         function endSession() {
@@ -1729,11 +1442,8 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
             // Save final session data
             const finalSessionData = {
                 phase1Data: phase1Data,
-                chatHistory: chatHistory,
-                coachingInsights: coachingInsights,
                 completedAt: new Date().toISOString(),
-                sessionDuration: Date.now() - sessionStartTime,
-                userProfile: userProfile
+                sessionDuration: Date.now() - sessionStartTime
             };
             
             localStorage.setItem('week1SessionCompleted', JSON.stringify(finalSessionData));
@@ -1746,74 +1456,9 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
             document.getElementById('phase2Section').classList.remove('active');
             document.getElementById('completionSection').classList.add('active');
             
-            // Generate personalized coaching homework
-            generateCoachingHomework();
-            
-            // Show CTA based on user role
-            showFreemiumCTA();
+            // The integrated system will handle personalized homework generation
             
             document.getElementById('completionSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function showFreemiumCTA() {
-            try {
-                // Check if user has admin/beta access
-                if (authGuard) {
-                    const user = await authGuard.getCurrentUser();
-                    if (user && (user.role === 'admin' || user.role === 'beta')) {
-                        // Hide CTA for admin/beta users
-                        document.getElementById('ctaFreemiumSection').style.display = 'none';
-                        return;
-                    }
-                }
-                
-                // Show CTA for regular users
-                document.getElementById('ctaFreemiumSection').style.display = 'block';
-            } catch (error) {
-                // Show CTA by default if can't determine user role
-                document.getElementById('ctaFreemiumSection').style.display = 'block';
-            }
-        }
-
-        function generateCoachingHomework() {
-            const homeworkList = document.getElementById('personalizedHomework');
-            let homework = [];
-            
-            // Base coaching homework
-            homework.push("✅ Pratica 10 minuti di riflessione quotidiana sulle consapevolezze emerse");
-            homework.push("✅ Rileggi le tue risposte del questionario e nota cosa è cambiato");
-            
-            // Personalized based on phase 1 key data
-            if (phase1Data.dreamGoal) {
-                homework.push(`✅ Visualizza ogni mattina il tuo obiettivo da sogno: "${phase1Data.dreamGoal}"`);
-            }
-            
-            if (phase1Data.pastSuccess) {
-                homework.push(`✅ Identifica 3 qualità che ti hanno permesso di ottenere: "${phase1Data.pastSuccess}"`);
-            }
-            
-            if (phase1Data.mainPain) {
-                homework.push(`✅ Trasforma "${phase1Data.mainPain}" in una domanda potente: "Come posso...?"`);
-            }
-            
-            // Based on coaching insights
-            if (coachingInsights.includes('Lavoro su paure e limitazioni')) {
-                homework.push("✅ Scrivi una lettera di incoraggiamento a te stesso per quando hai paura");
-            }
-            
-            if (coachingInsights.includes('Focus su energie e risorse personali')) {
-                homework.push("✅ Crea una 'mappa delle tue energie' e identifica cosa le alimenta");
-            }
-            
-            if (coachingInsights.includes('Motivazione al cambiamento forte')) {
-                homework.push("✅ Fai una piccola azione coraggiosa ogni giorno verso il cambiamento");
-            }
-            
-            // Always add
-            homework.push("✅ Tieni un diario delle scoperte: cosa impari ogni giorno su di te?");
-            
-            // Update homework list
-            homeworkList.innerHTML = homework.map(item => `<li>${item}</li>`).join('');
         }
 
         function updateUserProgress() {
@@ -1834,121 +1479,28 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
         }
 
         function downloadPersonalizedHomework() {
-            const homeworkContent = `
-                PIANO PERSONALIZZATO DI COACHING - SETTIMANA 1
-                
-                Andrea Padoan - Lifestyle Coach
-                
-                Caro/a ${userProfile?.name || 'Amico/a'},
-                
-                Che sessione straordinaria abbiamo vissuto insieme! 
-                Attraverso le tue 17 risposte approfondite e il nostro coaching,
-                sono emersi aspetti autentici e potenti della tua storia.
-                
-                === LA TUA SITUAZIONE ATTUALE ===
-                Situazione: "${phase1Data.currentSituation || 'In fase di riflessione'}"
-                Sfida principale: "${phase1Data.mainPain || 'Da definire insieme'}"
-                Obiettivo da sogno: "${phase1Data.dreamGoal || 'In fase di scoperta'}"
-                
-                === LE TUE RISORSE ===
-                Successo passato: "${phase1Data.pastSuccess || 'Molte risorse da scoprire'}"
-                Strategie per superare ostacoli: "${phase1Data.pastChallenge || 'In via di sviluppo'}"
-                Fonte di gioia: "${phase1Data.mainJoy || 'Da esplorare insieme'}"
-                
-                === COMPITI PERSONALIZZATI ===
-                
-                1. RIFLESSIONE QUOTIDIANA (10 minuti)
-                   - Rileggi le consapevolezze emerse dal nostro coaching
-                   - Domandati: "Cosa sto imparando oggi su me stesso?"
-                   - Annota le tue scoperte in un diario
-                
-                2. CONNESSIONE CON IL TUO OBIETTIVO DA SOGNO
-                   - Visualizza ogni mattina: "${phase1Data.dreamGoal || 'il tuo obiettivo autentico'}"
-                   - Senti nel corpo cosa provi quando lo immagini realizzato
-                   - Chiedi a te stesso: "Cosa posso fare oggi per avvicinarmi?"
-                
-                3. TRASFORMAZIONE DELLE SFIDE IN RISORSE
-                   - Lavora su: "${phase1Data.mainPain || 'le tue sfide principali'}"
-                   - Trasforma in domanda potente: "Come posso trasformare questo in forza?"
-                   - Identifica una piccola azione quotidiana di miglioramento
-                
-                4. ATTIVAZIONE DELLE TUE RISORSE PASSATE
-                   - Rifletti sul tuo successo: "${phase1Data.pastSuccess || 'i tuoi successi passati'}"
-                   - Identifica 3 qualità che ti hanno permesso quel risultato
-                   - Come puoi riattivare quelle qualità oggi?
-                
-                5. MOMENTO DI GIOIA QUOTIDIANO
-                   - Connettiti con: "${phase1Data.mainJoy || 'ciò che ti rende felice'}"
-                   - Dedica almeno 10 minuti al giorno a questa fonte di energia
-                   - Osserva come influenza il resto della tua giornata
-                
-                === INSIGHTS DAL NOSTRO COACHING ===
-                ${coachingInsights.length > 0 ? coachingInsights.map(insight => `• ${insight}`).join('\n                ') : '• Ricorda le consapevolezze emerse dalla nostra conversazione'}
-                
-                === DOMANDE POTENTI PER LA SETTIMANA ===
-                • Se fossi già la migliore versione di me stesso, come agirei oggi?
-                • Cosa mi sta insegnando questa situazione che sto vivendo?
-                • Quale piccolo passo coraggioso posso fare oggi?
-                • Di cosa ho bisogno per fidarmi di più di me stesso?
-                
-                === PROSSIMI PASSI ===
-                La Settimana 2 si può sbloccare per €50.
-                Usa questo tempo per integrare le consapevolezze emerse.
-                Ricorda: il cambiamento autentico inizia da piccoli passi quotidiani.
-                
-                === MESSAGGIO PERSONALE ===
-                ${userProfile?.name || 'Amico/a'}, ho sentito una grande autenticità nelle tue parole.
-                Il percorso che hai iniziato oggi è quello verso la migliore versione di te stesso.
-                Abbi fiducia nel processo e ricorda: hai già dentro di te tutto quello che serve.
-                
-                Il tuo coach,
-                Andrea 🚀
-                
-                P.S. Se durante la settimana emergono riflessioni importanti,
-                annotale nel tuo diario. Le riprenderemo nella Settimana 2.
-            `;
-            
-            const blob = new Blob([homeworkContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Piano_Coaching_Settimana_1_${userProfile?.name || 'Utente'}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+            // This will be handled by the integrated system
+            if (window.moduleIntegrator) {
+                const sessionData = window.moduleIntegrator.exportSessionData();
+                const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Piano_Coaching_Settimana_1_Personalizzato.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
             
             showMessage('📄 Piano di coaching personalizzato scaricato!', 'success');
         }
 
         // FREEMIUM CTA FUNCTIONS
         async function unlockWeek2() {
-            try {
-                // Check if user has admin/beta access
-                if (authGuard) {
-                    const user = await authGuard.getCurrentUser();
-                    if (user && (user.role === 'admin' || user.role === 'beta')) {
-                        // Admin/Beta users get free access
-                        showMessage('🎉 Accesso completo! Settimana 2 sbloccata per il tuo ruolo speciale.', 'success');
-                        setTimeout(() => {
-                            window.location.href = 'week-2.html';
-                        }, 2000);
-                        return;
-                    }
-                }
-                
-                // Regular users need to pay
-                showMessage('🚧 Sistema di pagamento in preparazione! Presto potrai sbloccare la Settimana 2.', 'info');
-                
-                // TODO: Integrate payment system here
-                // For now, show placeholder
-                
-            } catch (error) {
-                console.error('❌ Error unlocking week 2:', error);
-                showMessage('❌ Errore nel sistema. Contatta il supporto.', 'error');
-            }
+            showMessage('🚧 Sistema di pagamento in preparazione! Presto potrai sbloccare la Settimana 2.', 'info');
         }
 
         function learnMore() {
-            showMessage('📚 La Settimana 2 "Consapevolezza di Sé" ti aiuterà a esplorare le tue motivazioni profonde e identificare i veri driver del cambiamento. Include sessioni guidate, esercizi pratici e strumenti esclusivi per la tua crescita personale.', 'info');
+            showMessage('📚 La Settimana 2 includerà coaching AI ancora più personalizzato basato sui tuoi progressi!', 'info');
         }
 
         function showMessage(message, type = 'info') {
@@ -1986,6 +1538,19 @@ Non c'è fretta. Lascia che la risposta emerga naturalmente.`;
                 autoSave();
             }
         });
+
+        // The sendChatMessage function will be overridden by the integration system
+        // This is just a fallback
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            if (!input) return;
+            
+            const message = input.value.trim();
+            if (!message) return;
+            
+            console.log('⚠️ Using fallback chat - Integration system not loaded');
+            showMessage('⚠️ Sistema AI in caricamento...', 'warning');
+        }
 
         // Add slide-in animation style
         const style = document.createElement('style');
