@@ -44,7 +44,7 @@
             font-weight: 300;
         }
 
-        /* === 🎨 SISTEMA AVATAR REALISTICO === */
+        /* === 🎨 SISTEMA AVATAR FOTO === */
         .avatar-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -216,7 +216,7 @@
             font-size: 0.95rem;
         }
 
-        /* === 🎭 AVATAR REALISTICO UTENTE === */
+        /* === 🎭 AVATAR FOTO UTENTE === */
         .user-avatar-card {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(15px);
@@ -269,17 +269,21 @@
             border-color: rgba(255,255,255,0.7);
         }
 
-        .user-avatar-display svg {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-        }
-
-        .user-avatar-display .photo-avatar {
+        .user-avatar-display .photo-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 50%;
+        }
+
+        .user-avatar-display .placeholder-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
         }
 
         .avatar-mode-indicator {
@@ -786,7 +790,7 @@
             <p>Il tuo centro di controllo per il cambiamento</p>
         </header>
 
-        <!-- 🎨 SISTEMA AVATAR REALISTICO -->
+        <!-- 🎨 SISTEMA AVATAR FOTO -->
         <div class="avatar-section">
             <!-- Avatar Andrea con Foto Reale -->
             <div class="andrea-avatar-card">
@@ -799,29 +803,29 @@
                 <div class="andrea-message" id="andreaMessage">
                     <div class="message-icon">👋</div>
                     <div class="message-title">Benvenuto nel tuo percorso!</div>
-                    <div class="message-text">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di creare avatar realistici oppure caricare la tua foto!</div>
+                    <div class="message-text">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di caricare la tua foto personale!</div>
                 </div>
             </div>
 
-            <!-- Avatar Utente Realistico -->
+            <!-- Avatar Utente Foto -->
             <div class="user-avatar-card">
                 <div class="user-avatar-display" id="userAvatarDisplay">
-                    <!-- Avatar will be rendered here by Realistic Avatar System -->
+                    <!-- Avatar will be rendered here by Photo Avatar System -->
                     <div class="loading-avatar">
-                        <div style="font-size: 48px;">⏳</div>
+                        <div style="font-size: 48px;">📸</div>
                         <div style="font-size: 14px; margin-top: 10px;">Caricamento avatar...</div>
                     </div>
                     
                     <!-- Mode indicator -->
-                    <div class="avatar-mode-indicator" id="avatarModeIndicator">👤</div>
+                    <div class="avatar-mode-indicator" id="avatarModeIndicator">📷</div>
                 </div>
                 <div class="user-info">
                     <h3 id="userName">Il Tuo Avatar</h3>
-                    <p class="avatar-name" id="avatarName">Avatar Realistico</p>
+                    <p class="avatar-name" id="avatarName">Avatar Foto</p>
                     <p class="avatar-personality" id="avatarPersonality">Pronto per il cambiamento</p>
                     
                     <button class="customize-btn" id="customizeBtn">
-                        🎨 Personalizza Avatar
+                        📸 Carica Foto
                     </button>
                 </div>
             </div>
@@ -831,8 +835,8 @@
         <div class="user-welcome">
             <h2>👋 Ciao <span id="userNameWelcome">Utente</span>!</h2>
             <div class="user-info-text">
-                <p>Benvenuto nella tua area personale di coaching con sistema avatar realistico</p>
-                <p id="accessInfo">Accesso libero a tutti i contenuti - Avatar realistico attivo</p>
+                <p>Benvenuto nella tua area personale di coaching con sistema avatar foto</p>
+                <p id="accessInfo">Accesso libero a tutti i contenuti - Sistema foto attivo</p>
             </div>
         </div>
 
@@ -899,16 +903,17 @@
         </div>
     </div>
 
-    <!-- JavaScript with Realistic Avatar System -->
+    <!-- JavaScript with Photo Avatar System -->
     <script src="../utils/avatar-system-realistic.js"></script>
     <script src="../api/auth-guard.js"></script>
     
     <script>
-        console.log('🏠 Dashboard con Sistema Avatar Realistico caricata - Inizializzazione...');
+        console.log('🏠 Dashboard con Sistema Avatar Foto caricata - Inizializzazione...');
 
         let currentUserId = 'guest_' + Date.now();
-        let avatarManager = null;
-        let avatarUIBuilder = null;
+        let currentUserName = 'Utente';
+        let photoAvatarManager = null;
+        let photoAvatarUI = null;
 
         // Triple-click admin access
         let clickCount = 0;
@@ -922,12 +927,12 @@
             checkUserRole();
             setupEventListeners();
             setupTripleClickAccess();
-            await setupRealisticAvatarSystem();
+            await setupPhotoAvatarSystem();
         });
 
         async function initializeDashboard() {
             try {
-                console.log('🚀 Inizializzazione dashboard con avatar realistico...');
+                console.log('🚀 Inizializzazione dashboard con avatar foto...');
                 
                 // Setup Andrea photo simulation
                 await setupAndreaPhoto();
@@ -939,53 +944,53 @@
             }
         }
 
-        async function setupRealisticAvatarSystem() {
+        async function setupPhotoAvatarSystem() {
             try {
-                // Check if Realistic Avatar System is available
-                if (typeof window.RealisticAvatarSystem !== 'undefined') {
-                    console.log('🎨 Inizializzazione Sistema Avatar Realistico...');
+                // Check if Photo Avatar System is available
+                if (typeof window.PhotoAvatarSystem !== 'undefined') {
+                    console.log('📸 Inizializzazione Sistema Avatar Foto...');
                     
-                    // Initialize the avatar manager with NEW API
-                    avatarManager = window.RealisticAvatarSystem.init(currentUserId);
+                    // Initialize the avatar manager with Photo API
+                    photoAvatarManager = window.PhotoAvatarSystem.init(currentUserId, currentUserName);
                     
-                    if (avatarManager) {
-                        console.log('✅ Sistema Avatar Realistico attivo');
+                    if (photoAvatarManager) {
+                        console.log('✅ Sistema Avatar Foto attivo');
                         
                         // FORCE immediate avatar display update
                         setTimeout(() => {
                             updateAvatarDisplay();
-                            console.log('🎨 Avatar display forzato');
+                            console.log('📸 Avatar display forzato');
                         }, 100);
                         
                         // Force another update after 500ms to be sure
                         setTimeout(() => {
                             updateAvatarDisplay();
-                            console.log('🎨 Avatar display confermato');
+                            console.log('📸 Avatar display confermato');
                         }, 500);
                         
                     } else {
-                        console.warn('⚠️ Sistema Avatar Realistico non disponibile, fallback al sistema base');
+                        console.warn('⚠️ Sistema Avatar Foto non disponibile, fallback al sistema base');
                         setupBasicAvatarSystem();
                     }
                 } else {
-                    console.warn('⚠️ Sistema Avatar Realistico non trovato, usando sistema base');
+                    console.warn('⚠️ Sistema Avatar Foto non trovato, usando sistema base');
                     setupBasicAvatarSystem();
                 }
                 
             } catch (error) {
-                console.error('❌ Errore setup Sistema Avatar Realistico:', error);
+                console.error('❌ Errore setup Sistema Avatar Foto:', error);
                 setupBasicAvatarSystem();
             }
         }
 
         function setupBasicAvatarSystem() {
             console.log('🔄 Setup sistema avatar base...');
-            // Keep the default SVG avatar that's already in the HTML
+            // Keep the default placeholder that's already in the HTML
         }
 
         function updateAvatarDisplay() {
-            if (!avatarManager) {
-                console.log('❌ Avatar manager non disponibile');
+            if (!photoAvatarManager) {
+                console.log('❌ Photo avatar manager non disponibile');
                 return;
             }
             
@@ -993,28 +998,25 @@
                 const avatarDisplay = document.getElementById('userAvatarDisplay');
                 const modeIndicator = document.getElementById('avatarModeIndicator');
                 
-                console.log('🎨 Aggiornamento avatar display...');
+                console.log('📸 Aggiornamento avatar display...');
                 
                 if (avatarDisplay) {
-                    // Force realistic mode
-                    avatarManager.setMode('realistic');
-                    
-                    // Get avatar HTML using NEW API
-                    const avatarHTML = avatarManager.getDisplayHTML();
-                    console.log('🎨 Avatar HTML generato:', avatarHTML ? 'SUCCESS' : 'FAILED');
+                    // Get avatar HTML using Photo API
+                    const avatarHTML = photoAvatarManager.getDisplayHTML(120);
+                    console.log('📸 Avatar HTML generato:', avatarHTML ? 'SUCCESS' : 'FAILED');
                     
                     if (avatarHTML) {
                         avatarDisplay.innerHTML = avatarHTML;
-                        console.log('✅ Avatar realistico mostrato');
+                        console.log('✅ Avatar foto mostrato');
                     } else {
-                        // Generate fallback realistic avatar
-                        console.log('⚠️ Generazione fallback avatar realistico');
-                        avatarDisplay.innerHTML = generateFallbackRealisticAvatar();
+                        // Generate fallback placeholder
+                        console.log('⚠️ Generazione fallback avatar placeholder');
+                        avatarDisplay.innerHTML = generateFallbackPlaceholder();
                     }
                     
-                    // Update mode indicator - check if element exists
+                    // Update mode indicator
                     if (modeIndicator) {
-                        if (avatarManager.mode === 'photo') {
+                        if (photoAvatarManager.hasPhoto()) {
                             modeIndicator.textContent = '📷';
                         } else {
                             modeIndicator.textContent = '👤';
@@ -1032,82 +1034,52 @@
             }
         }
         
-        function generateFallbackRealisticAvatar() {
+        function generateFallbackPlaceholder() {
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
+            const emojis = ['😊', '🙂', '😄', '😁', '🤗'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+            
             return `
-                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <radialGradient id="fallbackFaceGradient" cx="0.3" cy="0.3" r="0.8">
-                            <stop offset="0%" stop-color="#FFD1C4"/>
-                            <stop offset="60%" stop-color="#FDBCB4"/>
-                            <stop offset="100%" stop-color="#F1A894"/>
-                        </radialGradient>
-                        <linearGradient id="fallbackHairGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#5D4037"/>
-                            <stop offset="50%" stop-color="#3E2723"/>
-                            <stop offset="100%" stop-color="#2C1B18"/>
-                        </linearGradient>
-                    </defs>
-                    
-                    <!-- Sfondo -->
-                    <circle cx="100" cy="100" r="90" fill="#f8f9fa" stroke="#e9ecef" stroke-width="1"/>
-                    
-                    <!-- Collo -->
-                    <ellipse cx="100" cy="175" rx="22" ry="18" fill="url(#fallbackFaceGradient)"/>
-                    
-                    <!-- Viso -->
-                    <ellipse cx="100" cy="110" rx="42" ry="52" fill="url(#fallbackFaceGradient)" stroke="#E8A484" stroke-width="0.5"/>
-                    
-                    <!-- Capelli -->
-                    <path d="M75 85 Q100 70 125 85 L120 95 Q100 80 80 95 Z" fill="url(#fallbackHairGradient)" stroke="#1A0E0A" stroke-width="0.5"/>
-                    
-                    <!-- Sopracciglia -->
-                    <path d="M78 95 Q85 92 92 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    <path d="M108 95 Q115 92 122 95" stroke="#2C1B18" stroke-width="2" fill="none" stroke-linecap="round"/>
-                    
-                    <!-- Occhi -->
-                    <ellipse cx="85" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
-                    <ellipse cx="115" cy="105" rx="8" ry="6" fill="white" stroke="#00000020" stroke-width="0.5"/>
-                    <circle cx="85" cy="105" r="4" fill="#8B4513"/>
-                    <circle cx="115" cy="105" r="4" fill="#8B4513"/>
-                    <circle cx="85" cy="105" r="2" fill="#5D4037"/>
-                    <circle cx="115" cy="105" r="2" fill="#5D4037"/>
-                    <circle cx="86" cy="103" r="1.5" fill="white"/>
-                    <circle cx="116" cy="103" r="1.5" fill="white"/>
-                    
-                    <!-- Ciglia -->
-                    <path d="M77 100 Q85 98 93 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
-                    <path d="M107 100 Q115 98 123 100" stroke="#00000040" stroke-width="1" fill="none" stroke-linecap="round"/>
-                    
-                    <!-- Naso -->
-                    <ellipse cx="100" cy="115" rx="3.5" ry="5" fill="#E8A484" opacity="0.6"/>
-                    <path d="M97 116 L103 116" stroke="#D89A7A" stroke-width="1" opacity="0.7"/>
-                    <ellipse cx="98" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
-                    <ellipse cx="102" cy="117" rx="1" ry="1.5" fill="#D89A7A" opacity="0.4"/>
-                    
-                    <!-- Bocca -->
-                    <path d="M92 130 Q100 138 108 130" stroke="#FF6B9D" stroke-width="4" fill="none" stroke-linecap="round"/>
-                    <path d="M94 131 Q100 136 106 131" stroke="#FFB6C1" stroke-width="2" fill="none" stroke-linecap="round"/>
-                </svg>
+                <div class="placeholder-avatar" style="background: ${color}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                    <div style="font-size: 30px; margin-bottom: 5px;">${emoji}</div>
+                    <div style="color: white; font-weight: bold; font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                        ${currentUserName.charAt(0).toUpperCase()}
+                    </div>
+                </div>
             `;
         }
 
         function updateAvatarInfo() {
-            if (!avatarManager) return;
+            if (!photoAvatarManager) return;
             
             try {
                 const avatarName = document.getElementById('avatarName');
                 const avatarPersonality = document.getElementById('avatarPersonality');
+                const customizeBtn = document.getElementById('customizeBtn');
                 
                 if (avatarName) {
-                    if (avatarManager.mode === 'photo') {
-                        avatarName.textContent = 'Avatar Foto Personale';
+                    if (photoAvatarManager.hasPhoto()) {
+                        avatarName.textContent = 'Foto Personale';
                     } else {
-                        avatarName.textContent = 'Avatar Realistico';
+                        avatarName.textContent = 'Avatar Placeholder';
                     }
                 }
                 
                 if (avatarPersonality) {
-                    avatarPersonality.textContent = 'Personalizzato per te';
+                    if (photoAvatarManager.hasPhoto()) {
+                        avatarPersonality.textContent = 'La tua foto caricata';
+                    } else {
+                        avatarPersonality.textContent = 'Carica una tua foto';
+                    }
+                }
+                
+                if (customizeBtn) {
+                    if (photoAvatarManager.hasPhoto()) {
+                        customizeBtn.innerHTML = '📸 Cambia Foto';
+                    } else {
+                        customizeBtn.innerHTML = '📸 Carica Foto';
+                    }
                 }
             } catch (error) {
                 console.error('❌ Errore aggiornamento info avatar:', error);
@@ -1152,42 +1124,41 @@
             // Avatar builder button
             const customizeBtn = document.getElementById('customizeBtn');
             if (customizeBtn) {
-                customizeBtn.addEventListener('click', openAvatarBuilder);
+                customizeBtn.addEventListener('click', openPhotoAvatarBuilder);
             }
 
             // Avatar display click
             const avatarDisplay = document.getElementById('userAvatarDisplay');
             if (avatarDisplay) {
-                avatarDisplay.addEventListener('click', openAvatarBuilder);
+                avatarDisplay.addEventListener('click', openPhotoAvatarBuilder);
             }
         }
 
-        function openAvatarBuilder() {
-            console.log('🎨 Apertura Avatar Builder Realistico');
+        function openPhotoAvatarBuilder() {
+            console.log('📸 Apertura Photo Avatar Builder');
             
-            if (avatarManager && typeof window.RealisticAvatarSystem !== 'undefined') {
+            if (photoAvatarManager && typeof window.PhotoAvatarSystem !== 'undefined') {
                 // Create UI Builder if not exists
-                if (!avatarUIBuilder) {
-                    // Create a modal container
-                    createAvatarBuilderModal();
+                if (!photoAvatarUI) {
+                    createPhotoAvatarBuilderModal();
                 }
                 
                 // Show the modal
-                const modal = document.getElementById('avatarBuilderModal');
+                const modal = document.getElementById('photoAvatarBuilderModal');
                 if (modal) {
                     modal.style.display = 'flex';
                 }
             } else {
-                showNotification('🚧 Avatar Builder in costruzione...', 'info');
+                showNotification('🚧 Photo Avatar Builder in costruzione...', 'info');
             }
         }
 
-        function createAvatarBuilderModal() {
+        function createPhotoAvatarBuilderModal() {
             // Create modal if not exists
-            if (document.getElementById('avatarBuilderModal')) return;
+            if (document.getElementById('photoAvatarBuilderModal')) return;
             
             const modal = document.createElement('div');
-            modal.id = 'avatarBuilderModal';
+            modal.id = 'photoAvatarBuilderModal';
             modal.style.cssText = `
                 display: none;
                 position: fixed;
@@ -1203,7 +1174,7 @@
             `;
             
             const container = document.createElement('div');
-            container.id = 'avatarBuilderContainer';
+            container.id = 'photoAvatarBuilderContainer';
             container.style.cssText = `
                 background: white;
                 border-radius: 20px;
@@ -1215,7 +1186,7 @@
             `;
             
             container.innerHTML = `
-                <button onclick="closeAvatarBuilder()" style="
+                <button onclick="closePhotoAvatarBuilder()" style="
                     position: absolute;
                     top: 10px;
                     right: 15px;
@@ -1225,30 +1196,30 @@
                     cursor: pointer;
                     color: #999;
                 ">×</button>
-                <h2 style="margin-bottom: 20px; text-align: center;">🎨 Avatar Builder</h2>
-                <div id="avatarBuilderContent"></div>
+                <h2 style="margin-bottom: 20px; text-align: center;">📸 Avatar Foto</h2>
+                <div id="photoAvatarBuilderContent"></div>
             `;
             
             modal.appendChild(container);
             document.body.appendChild(modal);
             
-            // Initialize the UI Builder using NEW API
-            if (window.RealisticAvatarSystem) {
-                avatarUIBuilder = window.RealisticAvatarSystem.createUI('avatarBuilderContent', avatarManager);
+            // Initialize the UI Builder using Photo API
+            if (window.PhotoAvatarSystem) {
+                photoAvatarUI = window.PhotoAvatarSystem.createUI('photoAvatarBuilderContent', photoAvatarManager);
                 // Store reference globally for actions
-                window.avatarUI = avatarUIBuilder;
+                window.photoAvatarUI = photoAvatarUI;
             }
             
             // Close on backdrop click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
-                    closeAvatarBuilder();
+                    closePhotoAvatarBuilder();
                 }
             });
         }
 
-        window.closeAvatarBuilder = function() {
-            const modal = document.getElementById('avatarBuilderModal');
+        window.closePhotoAvatarBuilder = function() {
+            const modal = document.getElementById('photoAvatarBuilderModal');
             if (modal) {
                 modal.style.display = 'none';
             }
@@ -1316,6 +1287,7 @@
                         if (user && user.role) {
                             showUserRole(user);
                             currentUserId = user.id || user.email || currentUserId;
+                            currentUserName = user.name || user.email.split('@')[0] || 'Utente';
                             console.log('✅ Utente riconosciuto:', user.email, 'Ruolo:', user.role);
                         } else {
                             showDefaultUser();
@@ -1340,6 +1312,8 @@
             const email = user.email;
             const name = user.name || email.split('@')[0];
 
+            currentUserName = name;
+            
             const userNameEl = document.getElementById('userName');
             const userNameWelcomeEl = document.getElementById('userNameWelcome');
             
@@ -1374,7 +1348,7 @@
             
             if (userNameEl) userNameEl.textContent = 'Il Tuo Avatar';
             if (userNameWelcomeEl) userNameWelcomeEl.textContent = 'Utente';
-            if (accessInfoEl) accessInfoEl.textContent = 'Accesso libero a tutti i contenuti - Avatar realistico attivo';
+            if (accessInfoEl) accessInfoEl.textContent = 'Accesso libero a tutti i contenuti - Sistema foto attivo';
             
             console.log('👤 Modalità utente standard');
         }
@@ -1416,7 +1390,7 @@
             showNotification('Community LifestyleFitnessCoach! 👥\n\nConnettiti con altri membri del percorso.', 'success');
         };
 
-        console.log('✅ Dashboard con Sistema Avatar Realistico completamente inizializzata!');
+        console.log('✅ Dashboard con Sistema Avatar Foto completamente inizializzata!');
     </script>
 </body>
 </html>
