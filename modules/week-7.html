@@ -18,6 +18,40 @@
             color: #1e293b;
         }
 
+        /* AI Badge */
+        .ai-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .personalization-banner {
+            background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .personalization-banner.active {
+            display: block;
+        }
+
         /* Header */
         .header {
             background: linear-gradient(135deg, #1e293b 0%, #ea580c 100%);
@@ -446,19 +480,6 @@
             font-weight: 600;
             color: #1e293b;
             margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .ba-content {
-            min-height: 120px;
-            border: 2px dashed #e2e8f0;
-            border-radius: 8px;
-            padding: 1rem;
-            font-style: italic;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             text-align: center;
         }
 
@@ -909,11 +930,6 @@
             }
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -970,6 +986,14 @@
     </style>
 </head>
 <body>
+    <!-- AI Badge -->
+    <div class="ai-badge">🤖 AI v2.0 Personalizzato</div>
+    
+    <!-- Personalization Banner -->
+    <div class="personalization-banner" id="personalizationBanner">
+        <span id="personalizationText">🎯 Coaching personalizzato attivo per il tuo profilo</span>
+    </div>
+
     <!-- Header -->
     <header class="header">
         <div class="header-content">
@@ -1003,8 +1027,8 @@
 
         <!-- Welcome Section -->
         <section class="welcome-section fade-in" id="welcomeSection">
-            <h1 class="welcome-title">Benvenuto nella Settimana Finale! 🎉</h1>
-            <p class="welcome-subtitle">Consolidamento e Futuro - Il Culmine del Tuo Viaggio di Trasformazione</p>
+            <h1 class="welcome-title" id="welcomeTitle">Benvenuto nella Settimana Finale! 🎉</h1>
+            <p class="welcome-subtitle" id="welcomeSubtitle">Consolidamento e Futuro - Il Culmine del Tuo Viaggio di Trasformazione</p>
             
             <div class="journey-recap">
                 <h3 class="recap-title">🌟 Il Tuo Straordinario Viaggio di 7 Settimane</h3>
@@ -1092,7 +1116,7 @@
                 <!-- Assessment Trasformazione Personale -->
                 <div class="assessment-section" id="personalTransformation">
                     <h3>🌟 Trasformazione Personale</h3>
-                    <div class="assessment-intro">
+                    <div class="assessment-intro" id="personalTransformationIntro">
                         Confrontiamo dove eri all'inizio del percorso con dove sei ora. 
                         Valuta ogni affermazione su una scala da 1 (per nulla) a 5 (completamente).
                     </div>
@@ -1231,7 +1255,7 @@
                 <!-- Assessment Risultati Concreti -->
                 <div class="assessment-section" id="concreteResults">
                     <h3>🎯 Risultati Concreti Ottenuti</h3>
-                    <div class="assessment-intro">
+                    <div class="assessment-intro" id="concreteResultsIntro">
                         Valutiamo i progressi tangibili e misurabili che hai raggiunto durante questo percorso.
                     </div>
                     
@@ -1354,7 +1378,7 @@
                 <!-- Domande di Riflessione Profonda -->
                 <div class="assessment-section" id="deepReflection">
                     <h3>🤔 Riflessione Profonda</h3>
-                    <div class="assessment-intro">
+                    <div class="assessment-intro" id="deepReflectionIntro">
                         Queste domande ci aiuteranno a comprendere il significato profondo della tua trasformazione.
                     </div>
                     
@@ -1399,7 +1423,7 @@
             
             <div class="coaching-context">
                 <h3>🌟 Il Tuo Profilo di Trasformazione Completato</h3>
-                <p>
+                <p id="coachingContextText">
                     Straordinario! Hai completato un percorso di 7 settimane che ti ha portato 
                     a scoprire chi sei veramente, cosa vuoi davvero e come raggiungerlo. 
                     Ora è il momento di guardare al futuro e creare un piano che mantenga 
@@ -1424,7 +1448,7 @@
             
             <div class="chat-status">
                 <div class="status-dot"></div>
-                <span>Andrea è pronto per creare insieme il tuo futuro straordinario</span>
+                <span id="chatStatusText">Andrea è pronto per creare insieme il tuo futuro straordinario</span>
             </div>
             
             <div class="chat-container" id="chatContainer">
@@ -1494,18 +1518,484 @@
         </section>
     </main>
 
-    <!-- Load Andrea AI Coach System -->
-    <script src="../andrea-ai-coach.js"></script>
-    
     <script>
-        // Session variables
+        // 🤖 SISTEMA AI INTEGRATO v2.0 - Week 7 EMBEDDED
+        // ================================================
+        
+        // === CONFIGURAZIONE PROFILI LIFESTYLE ===
+        const LIFESTYLE_PROFILES_CONFIG = {
+            'stressato_esaurito': {
+                name: 'Stressato Esaurito',
+                emoji: '😰',
+                communication_style: 'Comprensivo, rassicurante, orientato al recupero',
+                language_tone: 'Paziente e supportivo, focus su benessere',
+                priority_focus: ['recupero_energia', 'gestione_stress', 'boundaries'],
+                coaching_approach: 'Recovery-first, step piccolissimi, zero pressione',
+                future_coaching_style: 'Mantenimento sostenibile, piano anti-burnout',
+                maintenance_focus: ['equilibrio', 'auto-cura', 'boundaries'],
+                conversation_starters: [
+                    'Come ti senti ora che hai completato questo percorso?',
+                    'Quali sono i tuoi timori sul mantenere questi progressi?',
+                    'Come possiamo creare un futuro che ti nutra invece di svuotarti?'
+                ],
+                avoid_words: ['veloce', 'intenso', 'massimo', 'spingiti'],
+                preferred_words: ['gentilmente', 'gradualmente', 'sostenibile', 'equilibrio', 'cura']
+            },
+            
+            'procrastinatore_bloccato': {
+                name: 'Procrastinatore Bloccato',
+                emoji: '⏳',
+                communication_style: 'Motivazionale, orientato all\'azione, pratico',
+                language_tone: 'Energico ma paziente, focus su micro-azioni',
+                priority_focus: ['azione_immediata', 'sblocco_mentale', 'momentum'],
+                coaching_approach: 'Action-first, micro-steps, celebration rapida',
+                future_coaching_style: 'Sistema accountability, anti-ricadute',
+                maintenance_focus: ['sistemi_automatici', 'accountability', 'micro-abitudini'],
+                conversation_starters: [
+                    'Che sistemi possiamo creare per evitare di tornare indietro?',
+                    'Come trasformiamo questa nuova energia in qualcosa di automatico?',
+                    'Quale sarà la tua strategia quando la motivazione cala?'
+                ],
+                avoid_words: ['perfetto', 'completo', 'tutto insieme'],
+                preferred_words: ['azione', 'sistema', 'automatico', 'step', 'momentum']
+            },
+            
+            'perfezionista_insoddisfatto': {
+                name: 'Perfezionista Insoddisfatto',
+                emoji: '🎯',
+                communication_style: 'Paziente, orientato al progresso, anti-perfezionismo',
+                language_tone: 'Rassicurante ma diretto, focus su "abbastanza buono"',
+                priority_focus: ['progress_over_perfection', 'self_compassion', 'completion'],
+                coaching_approach: 'Progress-focused, celebrazione micro-vittorie',
+                future_coaching_style: 'Crescita continua vs perfezione, auto-compassione',
+                maintenance_focus: ['progresso_continuo', 'auto_compassione', 'celebrazione_piccoli_successi'],
+                conversation_starters: [
+                    'Come possiamo mantenere questo progresso senza la pressione della perfezione?',
+                    'Cosa ti spaventa di più del futuro che stai creando?',
+                    'Come celebrerai i tuoi successi quotidiani da ora in poi?'
+                ],
+                avoid_words: ['perfetto', 'impeccabile', 'massimo', 'ideale'],
+                preferred_words: ['progresso', 'miglioramento', 'crescita', 'celebrazione', 'abbastanza buono']
+            },
+            
+            'dispersivo_confuso': {
+                name: 'Dispersivo Confuso',
+                emoji: '🤯',
+                communication_style: 'Chiaro, strutturato, orientato al focus',
+                language_tone: 'Diretto e organizzato, focus su priorità',
+                priority_focus: ['chiarezza', 'prioritizzazione', 'focus'],
+                coaching_approach: 'Clarity-first, structure tutto, one-thing-at-time',
+                future_coaching_style: 'Focus mantenimento, strutture semplici',
+                maintenance_focus: ['strutture_semplici', 'priorità_chiare', 'focus_quotidiano'],
+                conversation_starters: [
+                    'Ora che hai chiarezza, come manterrai questo focus nel futuro?',
+                    'Quale sistema ti aiuterà a non disperdere questa energia?',
+                    'Come identificherai la TUA priorità numero 1 ogni giorno?'
+                ],
+                avoid_words: ['tutto', 'contemporaneamente', 'multiplo'],
+                preferred_words: ['focus', 'priorità', 'una cosa', 'chiarezza', 'semplice', 'struttura']
+            },
+            
+            'motivato_inconsistente': {
+                name: 'Motivato Inconsistente',
+                emoji: '🎢',
+                communication_style: 'Energico, orientato ai sistemi, motivazionale',
+                language_tone: 'Entusiasta ma pragmatico, focus su sistemi',
+                priority_focus: ['sistemi', 'consistenza', 'tracking'],
+                coaching_approach: 'System-building, habit-stacking, visual tracking',
+                future_coaching_style: 'Sistemi anti-ricadute, accountability automatico',
+                maintenance_focus: ['sistemi_automatici', 'tracking_visuale', 'accountability'],
+                conversation_starters: [
+                    'Che sistemi creerai per mantenere questa consistenza?',
+                    'Come trasformiamo questi risultati in abitudini automatiche?',
+                    'Quale sarà il tuo piano quando l\'entusiasmo cala?'
+                ],
+                avoid_words: ['quando hai voglia', 'se ti va', 'dipende dalla motivazione'],
+                preferred_words: ['sistema', 'automatico', 'consistente', 'tracking', 'abitudine']
+            },
+            
+            'equilibrato_ottimizzatore': {
+                name: 'Equilibrato Ottimizzatore',
+                emoji: '⚡',
+                communication_style: 'Sofisticato, orientato alla performance, consulenziale',
+                language_tone: 'Professionale e tecnico, focus su ottimizzazione',
+                priority_focus: ['ottimizzazione', 'performance', 'marginal_gains'],
+                coaching_approach: 'Consultative, advanced techniques, data-driven',
+                future_coaching_style: 'Evoluzione continua, next-level optimization',
+                maintenance_focus: ['ottimizzazione_continua', 'marginal_gains', 'performance_tracking'],
+                conversation_starters: [
+                    'Come portiamo questa trasformazione al livello successivo?',
+                    'Dove vedi le maggiori opportunità di ottimizzazione futura?',
+                    'Che marginal gains implementerai per una crescita sostenibile?'
+                ],
+                avoid_words: ['base', 'semplice', 'normale'],
+                preferred_words: ['ottimizza', 'performance', 'avanzato', 'next-level', 'marginal gains']
+            }
+        };
+
+        // === SISTEMA AI INTEGRATO v2.0 PER WEEK 7 ===
+        class Week7AISystem {
+            constructor() {
+                this.userProfile = null;
+                this.isInitialized = false;
+                this.conversationHistory = [];
+                this.assessmentData = {};
+                this.finalResults = {};
+                this.maintenancePlan = {};
+            }
+
+            async initialize() {
+                try {
+                    // Carica profilo utente
+                    await this.loadUserProfile();
+                    
+                    // Personalizza interfaccia
+                    this.personalizeInterface();
+                    
+                    this.isInitialized = true;
+                    console.log('🤖 Week 7 AI System inizializzato per profilo:', this.userProfile.profileType);
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione Week 7 AI:', error);
+                    return false;
+                }
+            }
+
+            async loadUserProfile() {
+                try {
+                    const quizData = localStorage.getItem('lifestyleQuizResults');
+                    if (quizData) {
+                        this.userProfile = JSON.parse(quizData);
+                    } else {
+                        this.userProfile = {
+                            profileType: 'motivato_inconsistente',
+                            name: 'Amico/a',
+                            challenges: [],
+                            scores: {}
+                        };
+                    }
+                } catch (error) {
+                    console.error('❌ Errore caricamento profilo:', error);
+                    this.userProfile = { profileType: 'motivato_inconsistente', name: 'Amico/a' };
+                }
+            }
+
+            personalizeInterface() {
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                if (!config) return;
+
+                // Personalizza banner
+                const banner = document.getElementById('personalizationBanner');
+                const bannerText = document.getElementById('personalizationText');
+                if (banner && bannerText) {
+                    banner.classList.add('active');
+                    bannerText.textContent = `🎯 Coaching finale personalizzato per: ${config.name} ${config.emoji}`;
+                }
+
+                // Personalizza welcome
+                const welcomeTitle = document.getElementById('welcomeTitle');
+                const welcomeSubtitle = document.getElementById('welcomeSubtitle');
+                
+                if (welcomeTitle && this.userProfile.name) {
+                    welcomeTitle.textContent = `Benvenuto/a ${this.userProfile.name} nella Settimana Finale! 🎉`;
+                }
+                
+                if (welcomeSubtitle) {
+                    welcomeSubtitle.textContent = `Consolidamento e Futuro - Personalizzato per ${config.name}`;
+                }
+
+                // Personalizza assessment intro
+                this.personalizeAssessmentIntros(config);
+
+                // Personalizza chat placeholder
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) {
+                    const placeholders = {
+                        'stressato_esaurito': 'Condividi i tuoi pensieri senza fretta, sono qui per te...',
+                        'procrastinatore_bloccato': 'Dimmi cosa hai in mente, anche se non è perfetto...',
+                        'perfezionista_insoddisfatto': 'Non serve la risposta perfetta, dimmi quello che senti...',
+                        'dispersivo_confuso': 'Concentrati su UN pensiero e condividilo...',
+                        'motivato_inconsistente': 'Condividi le tue idee per il futuro...',
+                        'equilibrato_ottimizzatore': 'Condividi la tua visione strategica per il futuro...'
+                    };
+                    
+                    chatInput.placeholder = placeholders[this.userProfile.profileType] || 
+                                           'Condividi i tuoi pensieri con Andrea...';
+                }
+
+                // Personalizza chat status
+                const chatStatus = document.getElementById('chatStatusText');
+                if (chatStatus) {
+                    chatStatus.textContent = `Andrea è pronto per il coaching finale personalizzato (${config.name})`;
+                }
+            }
+
+            personalizeAssessmentIntros(config) {
+                // Personalizza intro assessment personale
+                const personalIntro = document.getElementById('personalTransformationIntro');
+                if (personalIntro) {
+                    personalIntro.innerHTML = `Come ${config.name}, hai vissuto un percorso unico. ${config.communication_style} è stato il mio approccio con te. Ora valutiamo insieme quanto sei cresciuto, considerando le tue caratteristiche specifiche.`;
+                }
+
+                // Personalizza intro risultati concreti
+                const concreteIntro = document.getElementById('concreteResultsIntro');
+                if (concreteIntro) {
+                    concreteIntro.innerHTML = `Per il tuo profilo "${config.name}", i risultati concreti sono particolarmente importanti. Valutiamo i progressi tangibili che hai raggiunto nel tuo percorso personalizzato.`;
+                }
+
+                // Personalizza intro riflessione profonda
+                const deepIntro = document.getElementById('deepReflectionIntro');
+                if (deepIntro) {
+                    deepIntro.innerHTML = `Come ${config.name}, la riflessione profonda ti aiuterà a consolidare questa trasformazione. Queste domande sono calibrate per il tuo modo di processare il cambiamento.`;
+                }
+            }
+
+            async generateFutureCoachingResponse(userMessage) {
+                const config = LIFESTYLE_PROFILES_CONFIG[this.userProfile.profileType];
+                const messageCount = this.conversationHistory.filter(m => m.sender === 'user').length;
+                
+                // Analizza il messaggio per personalizzazione
+                const analysis = this.analyzeUserMessage(userMessage);
+                
+                // Genera risposta basata su fase conversazione e profilo
+                let response;
+                
+                if (messageCount <= 1) {
+                    response = this.generateVisionExplorationResponse(userMessage, config, analysis);
+                } else if (messageCount <= 3) {
+                    response = this.generatePlanningResponse(userMessage, config, analysis);
+                } else {
+                    response = this.generateMaintenanceResponse(userMessage, config, analysis);
+                }
+                
+                // Aggiungi elementi specifici del profilo
+                response = this.addProfileSpecificElements(response, config, analysis);
+                
+                return response;
+            }
+
+            analyzeUserMessage(message) {
+                const analysis = {
+                    sentiment: 'neutral',
+                    topics: [],
+                    concerns: [],
+                    future_focus: false,
+                    maintenance_focus: false
+                };
+
+                const lowerMessage = message.toLowerCase();
+
+                // Analizza sentiment
+                const positiveWords = ['entusiasta', 'motivato', 'pronto', 'eccitato', 'fiducioso'];
+                const negativeWords = ['preoccupato', 'paura', 'difficile', 'impossibile', 'ansia'];
+                
+                if (positiveWords.some(word => lowerMessage.includes(word))) {
+                    analysis.sentiment = 'positive';
+                } else if (negativeWords.some(word => lowerMessage.includes(word))) {
+                    analysis.sentiment = 'negative';
+                }
+
+                // Identifica topics
+                const topicKeywords = {
+                    'futuro': ['futuro', 'domani', 'prossimo', 'obiettivi', 'sogni'],
+                    'mantenimento': ['mantenere', 'continuare', 'non perdere', 'costanza'],
+                    'paure': ['paura', 'preoccupato', 'timore', 'ansia', 'nervoso'],
+                    'motivazione': ['motivazione', 'energia', 'entusiasmo', 'voglia']
+                };
+
+                Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+                    if (keywords.some(keyword => lowerMessage.includes(keyword))) {
+                        analysis.topics.push(topic);
+                    }
+                });
+
+                // Flags speciali
+                analysis.future_focus = analysis.topics.includes('futuro');
+                analysis.maintenance_focus = analysis.topics.includes('mantenimento');
+
+                return analysis;
+            }
+
+            generateVisionExplorationResponse(userMessage, config, analysis) {
+                // Base responses per esplorazione visione futura
+                const baseResponses = {
+                    'stressato_esaurito': [
+                        `${this.userProfile.name}, sento nella tua risposta una nuova serenità che non c'era prima. Quello che hai condiviso mi fa capire quanto sei cresciuto. Ora, immaginando un futuro in cui questa pace interiore sia la tua normalità, come sarebbe una tua giornata ideale? Parlami di un futuro che ti nutre invece di svuotarti.`,
+                        
+                        `È bellissimo vedere come ora riesci a esprimerti con questa chiarezza. Prima del percorso, sentivo tanta tensione nelle tue parole. Ora c'è una calma diversa. Dimmi, se dovessi progettare un futuro dove il benessere viene prima di tutto, cosa includeresti sicuramente?`
+                    ],
+                    
+                    'procrastinatore_bloccato': [
+                        `Wow! Sento che hai davvero sbloccato qualcosa di potente in te. La tua energia è completamente diversa da 7 settimane fa. Ora che hai dimostrato a te stesso di saper agire, quale grande obiettivo vorresti conquistare NEI PROSSIMI 6 MESI? Parliamo di azione concreta!`,
+                        
+                        `Incredibile come ora riesci a parlare con questa determinazione! Prima mi descrivevi la frustrazione di non riuscire a iniziare, ora sento qualcuno che SA di poter realizzare i suoi sogni. Allora, se dovessi scegliere UNA cosa ambiziosa da completare entro fine anno, cosa sarebbe?`
+                    ],
+                    
+                    'perfezionista_insoddisfatto': [
+                        `${this.userProfile.name}, quello che mi colpisce di più è come ora riesci ad apprezzare il tuo progresso invece di focalizzarti solo su quello che manca. Questo cambiamento è straordinario. Ora, immaginando un futuro dove celebri ogni vittoria lungo il cammino, come sarebbe diversa la tua vita?`,
+                        
+                        `Sento una nuova gentilezza verso te stesso nelle tue parole. Prima eri il tuo critico più severo, ora vedo qualcuno che sa riconoscere il proprio valore. Se dovessi creare un futuro basato su questa nuova auto-compassione, cosa includeresti?`
+                    ],
+                    
+                    'dispersivo_confuso': [
+                        `Che differenza incredibile! Prima le tue parole andavano in mille direzioni, ora sento una chiarezza cristallina in quello che dici. Hai davvero trovato il tuo focus. Ora, se dovessi scegliere LA DIREZIONE principale per il tuo futuro, quale sarebbe? Parliamo di quella priorità che ti fa brillare gli occhi.`,
+                        
+                        `${this.userProfile.name}, è bellissimo vedere come ora riesci a essere così preciso e chiaro. Prima sentivo confusione, ora percepisci qualcuno che sa esattamente dove vuole andare. Dimmi, qual è quella UNA cosa che darà significato ai tuoi prossimi anni?`
+                    ],
+                    
+                    'motivato_inconsistente': [
+                        `Fantastico! Sento che non solo hai ritrovato la motivazione, ma ora hai anche gli strumenti per mantenerla. Prima era un'altalena continua, ora percepisci stabilità nella tua energia. Come possiamo trasformare questa nuova consistenza in risultati straordinari? Dimmi la tua visione più ambiziosa!`,
+                        
+                        `${this.userProfile.name}, quello che mi emoziona di più è sentire questa energia COSTANTE nelle tue parole. Prima era a ondate, ora è come un fiume che scorre potente e continuo. Se dovessi canalizzare questa forza verso un obiettivo che ti cambierebbe la vita, quale sarebbe?`
+                    ],
+                    
+                    'equilibrato_ottimizzatore': [
+                        `Eccellente! Sento che hai raggiunto un nuovo livello di consapevolezza e strategia. Il tuo approccio ora è ancora più raffinato e potente. Considerando questa evoluzione, quale sarà il tuo prossimo breakthrough? Parliamo di ottimizzazioni che ti porteranno a risultati straordinari.`,
+                        
+                        `${this.userProfile.name}, è impressionante vedere come hai integrato tutti gli elementi del percorso in una strategia personale così sofisticata. Ora, per portare questa trasformazione al next level, su quale area vedi il maggior potenziale di crescita esponenziale?`
+                    ]
+                };
+
+                const responses = baseResponses[this.userProfile.profileType] || baseResponses['motivato_inconsistente'];
+                let response = responses[Math.floor(Math.random() * responses.length)];
+
+                // Personalizza in base ai risultati assessment
+                if (this.finalResults.overallScore >= 4) {
+                    response += ` Con un punteggio di trasformazione di ${this.finalResults.overallScore}/5, sei davvero pronto per obiettivi ambiziosi!`;
+                }
+
+                return response;
+            }
+
+            generatePlanningResponse(userMessage, config, analysis) {
+                const baseResponses = {
+                    'stressato_esaurito': [
+                        `Perfetto! La tua visione ha una bellezza serena che mi emoziona. Ora, per realizzarla senza stress, dobbiamo creare un piano gentile ma efficace. Se dovessi identificare le 3 abitudini quotidiane che ti porterebbero gradualmente verso questo futuro, quali sarebbero? Ricorda: progresso senza pressione.`,
+                        
+                        `Bellissimo! Sento che hai davvero capito cosa significa creare una vita che ti sostiene. Ora, pensando ai prossimi 6 mesi, quale piccolo cambiamento mensile potresti fare per avvicinarti a questa visione? Parliamo di passi così piccoli da essere irresistibili.`
+                    ],
+                    
+                    'procrastinatore_bloccato': [
+                        `ECCEZIONALE! La tua visione è potente e concreta. Ora trasformiamola in azione immediata. Se dovessi fare una micro-azione OGGI STESSO verso questo futuro, quale sarebbe? E poi dimmi: come possiamo spezzare questo grande obiettivo in step da 15 minuti?`,
+                        
+                        `Incredibile energia! Ora canalizziamola in un piano d'attacco perfetto. Nei PROSSIMI 30 GIORNI, quali 3 azioni specifiche ti avvicinerebbero di più a questa visione? Concentriamoci su cose che puoi iniziare SUBITO.`
+                    ],
+                    
+                    'perfezionista_insoddisfatto': [
+                        `La tua visione è bellissima e, soprattutto, umana e realizzabile. Ora creiamo un piano che celebri ogni progresso lungo il cammino. Se dovessi definire 3 milestone "abbastanza buoni" nei prossimi mesi, quali sarebbero? Ricorda: fatto è meglio che perfetto.`,
+                        
+                        `Straordinario! Ora costruiamo un piano che onori il tuo nuovo rapporto con te stesso. Come possiamo strutturare i prossimi mesi in modo che tu possa celebrare i progressi invece di focalizzarti su quello che manca? Parliamo di vittorie quotidiane.`
+                    ],
+                    
+                    'dispersivo_confuso': [
+                        `Perfetto! La tua visione è chiara e focalizzata. Ora manteniamo questo focus costruendo un piano semplice ma potente. Se dovessi scegliere LA PRIORITÀ ASSOLUTA per i prossimi 90 giorni, quale sarebbe? Una sola cosa, ma fatta eccezionalmente bene.`,
+                        
+                        `Eccellente chiarezza! Ora trasformiamo questa visione in una strategia laser-focused. Come possiamo organizzare i prossimi mesi in modo che ogni giorno tu sappia esattamente qual è la TUA priorità numero 1? Parliamo di struttura semplice ma efficace.`
+                    ],
+                    
+                    'motivato_inconsistente': [
+                        `FANTASTICO! Ora creiamo un sistema che trasformi questa energia in risultati automatici. Come possiamo strutturare i prossimi mesi in modo che il tuo progresso non dipenda dalla motivazione del momento? Parliamo di sistemi a prova di calo motivazionale.`,
+                        
+                        `Potente! Ora dobbiamo costruire l'infrastruttura del successo. Se dovessi creare 3 abitudini automatiche che ti portassero verso questa visione anche nei giorni "no", quali sarebbero? Concentriamoci su sistemi, non su forza di volontà.`
+                    ],
+                    
+                    'equilibrato_ottimizzatore': [
+                        `Strategia eccellente! Ora ottimizziamo l'execution. Considerando i tuoi punti di forza e le risorse disponibili, qual è il percorso più efficiente verso questa visione? Parliamo di marginal gains e ottimizzazioni che amplificano i risultati.`,
+                        
+                        `Visione di alto livello! Ora costruiamo un piano di implementazione sofisticato. Come possiamo leveraggiare al massimo il tuo tempo e le tue competenze per accelerare verso questi risultati? Qual è la tua strategia di ottimizzazione?`
+                    ]
+                };
+
+                const responses = baseResponses[this.userProfile.profileType] || baseResponses['motivato_inconsistente'];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+
+            generateMaintenanceResponse(userMessage, config, analysis) {
+                const baseResponses = {
+                    'stressato_esaurito': [
+                        `Perfetto! Stiamo costruendo qualcosa di sostenibile e nutriente. Ora, per assicurarci che questo benessere duri nel tempo, parliamo delle tue strategie anti-ricadute. Cosa farai quando sentirai di nuovo la pressione accumularsi? Come proteggerai questa pace che hai conquistato?`,
+                        
+                        `Bellissimo piano! Ora voglio assicurarmi che tu abbia tutti gli strumenti per mantenere questo equilibrio. Nei momenti più difficili, qual è la TUA strategia personale per tornare in connessione con te stesso? Come ti prenderai cura di te quando il mondo attorno chiederà troppo?`
+                    ],
+                    
+                    'procrastinatore_bloccato': [
+                        `STRAORDINARIO! Ora creiamo il tuo sistema anti-procrastinazione definitivo. Se tra 6 mesi ti sentissi bloccato di nuovo, quale sarà il tuo piano di emergenza? Come riattiverai questo momentum che hai creato? Parliamo del tuo kit di sblocco personale.`,
+                        
+                        `Incredibile progresso! Ora voglio assicurarmi che tu abbia un sistema a prova di ricadute. Qual è il tuo piano per mantenere l'azione costante anche quando la motivazione scende? Come trasformerai queste nuove abitudini in automatismi?`
+                    ],
+                    
+                    'perfezionista_insoddisfatto': [
+                        `Magnifico! Ora consolidiamo questo nuovo rapporto gentile con te stesso. Come farai a ricordarti di celebrare i progressi quando la tua mente perfezionista si riattiva? Qual è la tua strategia per mantenere viva questa auto-compassione?`,
+                        
+                        `Straordinario! Ora voglio assicurarmi che questo cambiamento sia permanente. Nei momenti in cui sentirai l'impulso del "non è abbastanza buono", quale sarà il tuo mantra personale? Come proteggerai questa nuova gentilezza verso te stesso?`
+                    ],
+                    
+                    'dispersivo_confuso': [
+                        `Eccellente! Ora creiamo il tuo sistema di focus permanente. Come manterrai questa chiarezza quando mille opportunità cercheranno di distrarti? Qual è il tuo piano per rimanere fedele alla TUA priorità numero 1?`,
+                        
+                        `Perfetto! Ora voglio assicurarmi che questo focus sia sostenibile. Che sistema creerai per ricordarti ogni giorno qual è la cosa più importante? Come eviterai di tornare nella dispersione del passato?`
+                    ],
+                    
+                    'motivato_inconsistente': [
+                        `POTENTE! Ora creiamo il sistema che ti rende inarrestabile. Come farai a mantenere questa consistenza per i prossimi 12 mesi? Qual è il tuo piano per i momenti in cui l'energia cala? Parliamo di automatismi che funzionano anche nei giorni "no".`,
+                        
+                        `Fantastico! Ora costruiamo la tua infrastruttura di successo a lungo termine. Che sistemi implementerai per rendere il progresso automatico? Come trasformerai questa nuova energia in abitudini che durano per sempre?`
+                    ],
+                    
+                    'equilibrato_ottimizzatore': [
+                        `Strategia eccellente! Ora ottimizziamo per la sostenibilità a lungo termine. Come evolverà il tuo sistema nei prossimi 12 mesi? Quali metriche monitorerai per assicurarti di rimanere sulla traiettoria di crescita ottimale?`,
+                        
+                        `Implementazione di alto livello! Ora parliamo di evoluzione continua. Come manterrai questo standard di eccellenza mentre continui a crescere? Qual è la tua strategia per il miglioramento incrementale costante?`
+                    ]
+                };
+
+                const responses = baseResponses[this.userProfile.profileType] || baseResponses['motivato_inconsistente'];
+                let response = responses[Math.floor(Math.random() * responses.length)];
+
+                // Aggiungi elementi di chiusura per consolidamento
+                response += `\n\nQuello che abbiamo costruito insieme in queste 7 settimane è straordinario. Sei davvero pronto per questo futuro!`;
+
+                return response;
+            }
+
+            addProfileSpecificElements(response, config, analysis) {
+                // Aggiungi elementi specifici basati sul profilo
+                if (analysis.sentiment === 'negative' && config.preferred_words) {
+                    const encouragement = ` Ricorda: ${config.preferred_words.slice(0, 3).join(', ')} sono le tue parole chiave per il successo.`;
+                    response += encouragement;
+                }
+
+                // Aggiungi riferimenti alle paure/preoccupazioni del profilo
+                if (analysis.topics.includes('paure')) {
+                    const fears = {
+                        'stressato_esaurito': 'È normale avere il timore di tornare indietro. Ma ora hai gli strumenti per riconoscere i segnali prima.',
+                        'procrastinatore_bloccato': 'La paura di rimanere bloccato è comprensibile. Ma guarda quanto hai già dimostrato di saper fare!',
+                        'perfezionista_insoddisfatto': 'Il timore di non essere "abbastanza" è familiare. Ma ora sai che il progresso conta più della perfezione.',
+                        'dispersivo_confuso': 'La preoccupazione di perdere il focus è normale. Ma ora hai chiarezza su cosa conta davvero.',
+                        'motivato_inconsistente': 'Temere il calo di motivazione è comprensibile. Ma ora hai sistemi che funzionano indipendentemente dall\'umore.',
+                        'equilibrato_ottimizzatore': 'La sfida della crescita continua è stimolante per te. Hai gli strumenti per l\'ottimizzazione costante.'
+                    };
+
+                    if (fears[this.userProfile.profileType]) {
+                        response += ` ${fears[this.userProfile.profileType]}`;
+                    }
+                }
+
+                return response;
+            }
+
+            // Altre funzioni di supporto continuano...
+        }
+
+        // === VARIABILI GLOBALI WEEK 7 ===
         let sessionStartTime = Date.now();
         let sessionDuration = 50 * 60 * 1000; // 50 minutes
         let timerInterval;
         let currentPhase = 'welcome';
         let assessmentData = {};
         let chatHistory = [];
-        let andreaAICoach = null;
+        let week7AI = null;
         let userProfile = null;
         let allWeeksData = {};
         let sessionExtended = false;
@@ -1513,16 +2003,30 @@
         let finalResults = {};
         let maintenancePlan = {};
 
-        // Initialize session
-        document.addEventListener('DOMContentLoaded', function() {
+        // === INIZIALIZZAZIONE ===
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🎉 Week-7 Sistema AI v2.0 Integrato - Script caricato!');
+            
+            // Inizializza sistema AI
+            week7AI = new Week7AISystem();
+            const aiInitialized = await week7AI.initialize();
+            
+            if (aiInitialized) {
+                console.log('✅ Sistema AI Week-7 inizializzato con successo!');
+            } else {
+                console.log('⚠️ Sistema AI in modalità fallback');
+            }
+            
+            // Inizializza sessione
             startSessionTimer();
             loadUserProfile();
             loadAllWeeksData();
             loadSavedSession();
-            initializeAndreaAI();
             startAutoSave();
         });
 
+        // === FUNZIONI PRINCIPALI ===
+        
         function startSessionTimer() {
             timerInterval = setInterval(() => {
                 const elapsed = Date.now() - sessionStartTime;
@@ -1667,25 +2171,6 @@
             updateAssessmentProgress();
         }
 
-        async function initializeAndreaAI() {
-            try {
-                if (window.AndreaAICoach) {
-                    andreaAICoach = new window.AndreaAICoach();
-                    
-                    const userId = localStorage.getItem('lifestyleUserId') || 'user_' + Date.now();
-                    localStorage.setItem('lifestyleUserId', userId);
-                    
-                    await andreaAICoach.initialize(userId, userProfile || {});
-                    
-                    console.log('🤖 Andrea AI Coach initialized successfully');
-                } else {
-                    console.error('❌ Andrea AI Coach not available');
-                }
-            } catch (error) {
-                console.error('❌ Error initializing Andrea AI:', error);
-            }
-        }
-
         function startAutoSave() {
             autoSaveInterval = setInterval(() => {
                 autoSave();
@@ -1817,6 +2302,11 @@
                 others: othersTotal
             };
             
+            // Update AI system with results
+            if (week7AI) {
+                week7AI.finalResults = finalResults;
+            }
+            
             // Generate insights
             generateFinalInsights();
         }
@@ -1866,6 +2356,9 @@
             // Display assessment results
             displayAssessmentResults();
             
+            // Personalizza coaching context
+            personalizeCoachingContext();
+            
             // Generate first coaching question
             generateFirstFutureCoachingQuestion();
             
@@ -1875,53 +2368,57 @@
         function displayAssessmentResults() {
             const resultsEl = document.getElementById('assessmentResults');
             if (finalResults.insights && finalResults.insights.length > 0) {
-                resultsEl.innerHTML = finalResults.insights.map(insight => `<li>${insight}</li>`).join('');
+                resultsEl.innerHTML = finalResults.insights.map(insight => `<li>✅ ${insight}</li>`).join('');
             } else {
                 resultsEl.innerHTML = '<li>Risultati personalizzati in caricamento...</li>';
             }
         }
 
+        function personalizeCoachingContext() {
+            const config = LIFESTYLE_PROFILES_CONFIG[userProfile?.profileType];
+            if (!config) return;
+
+            const contextText = document.getElementById('coachingContextText');
+            if (contextText) {
+                contextText.innerHTML = `Straordinario! Come ${config.name}, hai completato un percorso di trasformazione incredibile. ${config.future_coaching_style} sarà il mio approccio per creare insieme il tuo futuro. Sei pronto per portare questa crescita al livello successivo!`;
+            }
+        }
+
         function generateFirstFutureCoachingQuestion() {
             if (chatHistory.length === 0) {
-                const firstQuestion = generatePowerfulFutureQuestion();
+                const firstQuestion = generatePersonalizedOpeningQuestion();
                 addChatMessage(firstQuestion, 'coach');
             } else {
                 restoreChatHistory();
             }
         }
 
-        function generatePowerfulFutureQuestion() {
-            let question = `Incredibile! Hai appena completato un percorso straordinario di 7 settimane che ti ha trasformato profondamente. `;
+        function generatePersonalizedOpeningQuestion() {
+            const config = LIFESTYLE_PROFILES_CONFIG[userProfile?.profileType];
             
-            // Personalize based on assessment results
+            let question = `${userProfile?.name || 'Amico/a'}, che momento incredibile! 🎉\n\n`;
+            
+            // Personalizza per profilo
+            if (config) {
+                question += `Come ${config.name}, hai appena completato una trasformazione che pochi riescono a portare fino in fondo. `;
+            }
+            
+            // Reference specific results
             if (finalResults.overallScore >= 4) {
-                question += `I tuoi risultati sono straordinari - hai ottenuto un punteggio di ${finalResults.overallScore}/5 nella trasformazione complessiva! `;
-            } else if (finalResults.overallScore >= 3) {
-                question += `I tuoi progressi sono eccellenti - hai raggiunto ${finalResults.overallScore}/5 nella trasformazione! `;
+                question += `Con un punteggio di trasformazione di ${finalResults.overallScore}/5, hai dimostrato una crescita straordinaria! `;
             }
             
-            // Reference specific strengths
-            const strengths = [];
-            if (finalResults.confidence >= 4) strengths.push('autostima');
-            if (finalResults.clarity >= 4) strengths.push('chiarezza sui tuoi obiettivi');
-            if (finalResults.habits >= 4) strengths.push('abitudini positive');
-            if (finalResults.potential >= 4) strengths.push('consapevolezza delle tue potenzialità');
-            
-            if (strengths.length > 0) {
-                question += `Hai fatto progressi incredibili in: ${strengths.join(', ')}. `;
-            }
-            
-            // Reference transformation moments
+            // Reference transformation specifics
             if (assessmentData.biggestChange) {
                 question += `Quello che mi ha colpito di più è quando hai scritto che il tuo cambiamento più grande è stato: "${assessmentData.biggestChange}". `;
             }
             
-            // Powerful coaching question for the future
-            question += `\n\nOra voglio farti una domanda che aprirà la porta al tuo futuro straordinario: 
-            
-**Se tra 12 mesi ti guardassi indietro a questo momento, avendo vissuto il miglior anno della tua vita, cosa vorresti essere riuscito a creare, diventare e sperimentare?** 🌟
-            
-Non limitarti. Sogna in grande. Questa è la tua opportunità di progettare un futuro che ti entusiasma davvero.`;
+            // Profile-specific future question
+            if (config && config.conversation_starters && config.conversation_starters.length > 0) {
+                question += `\n\n${config.conversation_starters[0]}`;
+            } else {
+                question += `\n\nOra voglio farti una domanda che aprirà la porta al tuo futuro straordinario: **Se tra 12 mesi ti guardassi indietro a questo momento, avendo vissuto il miglior anno della tua vita, cosa vorresti essere riuscito a creare, diventare e sperimentare?** 🌟`;
+            }
             
             return question;
         }
@@ -1962,7 +2459,8 @@ Non limitarti. Sogna in grande. Questa è la tua opportunità di progettare un f
             } catch (error) {
                 console.error('❌ Error getting coaching response:', error);
                 setTimeout(() => {
-                    addChatMessage("Dammi un momento per riflettere sulla tua visione del futuro... Puoi ripetere?", 'coach');
+                    addChatMessage("Dammi un momento per rifl
+                    eure sulla tua visione del futuro... Puoi ripetere?", 'coach');
                 }, 1000);
             }
         }
@@ -1991,104 +2489,50 @@ Non limitarti. Sogna in grande. Questa è la tua opportunità di progettare un f
                 extractMaintenanceInsights(content);
             }
             
+            // Update conversation history in AI system
+            if (week7AI) {
+                week7AI.conversationHistory = chatHistory;
+            }
+            
             autoSave();
         }
 
         async function getFutureCoachingResponse(userMessage) {
-            // Build comprehensive context for future coaching
-            const coachingContext = {
-                assessmentData: assessmentData,
-                finalResults: finalResults,
-                allWeeksData: allWeeksData,
-                chatHistory: chatHistory,
-                userProfile: userProfile,
-                maintenancePlan: maintenancePlan
-            };
-            
-            // Try Andrea AI with future context
-            if (andreaAICoach) {
+            // Try AI system first
+            if (week7AI && week7AI.isInitialized) {
                 try {
-                    const response = await andreaAICoach.sendMessage(userMessage, 7);
-                    if (response.success) {
-                        return response.response;
-                    }
+                    const response = await week7AI.generateFutureCoachingResponse(userMessage);
+                    return response;
                 } catch (error) {
-                    console.error('❌ Andrea AI future coaching error:', error);
+                    console.error('❌ AI system error:', error);
                 }
             }
             
-            // Fallback to sophisticated future coaching response
-            return generateFutureCoachingResponse(userMessage, coachingContext);
+            // Fallback to basic personalized response
+            return generateBasicFutureResponse(userMessage);
         }
 
-        function generateFutureCoachingResponse(userMessage, context) {
-            const messageCount = context.chatHistory.filter(m => m.sender === 'user').length;
+        function generateBasicFutureResponse(userMessage) {
+            const config = LIFESTYLE_PROFILES_CONFIG[userProfile?.profileType];
+            const messageCount = chatHistory.filter(m => m.sender === 'user').length;
             
-            // Different coaching approaches based on conversation depth
-            if (messageCount <= 2) {
-                return generateVisionExplorationResponse(userMessage, context);
-            } else if (messageCount <= 4) {
-                return generatePlanningResponse(userMessage, context);
-            } else {
-                return generateMaintenanceResponse(userMessage, context);
-            }
-        }
-
-        function generateVisionExplorationResponse(userMessage, context) {
-            const responses = [
-                `Wow! La tua visione è potente e ispirante. Sento l'energia e la passione in quello che condividi. Ora voglio aiutarti a rendere questa visione ancora più concreta. Se dovessi vivere questa visione ogni giorno, come sarebbe una tua giornata tipo? Inizia dalla mattina...`,
-                
-                `Quello che descrivi è straordinario! Vedo che hai una chiarezza incredibile su quello che vuoi creare. La trasformazione che hai vissuto in queste 7 settimane ti ha davvero preparato per questo futuro. Dimmi, quale aspetto di questa visione ti emoziona di più?`,
-                
-                `La tua visione mi dà i brividi! È esattamente il tipo di futuro che una persona trasformata come te può creare. Ora, pensando a tutto quello che hai imparato su te stesso nelle settimane passate, quali delle tue potenzialità saranno fondamentali per realizzare questa visione?`,
-                
-                `Incredibile! Sento che questa visione è profondamente allineata con chi sei diventato. Ora voglio sfidare il tuo pensiero: se questa visione si realizzasse al 100%, che impatto avresti sulle persone attorno a te? Come cambierebbe la vita di chi ami?`
+            const fallbackResponses = {
+                'stressato_esaurito': [
+                    "Ti ascolto con molta attenzione. Quello che condividi ha un valore profondo. Come possiamo trasformare questa visione in qualcosa di sostenibile e nutriente per te?",
+                    "Sento la bellezza di quello che stai creando. Ora, come possiamo assicurarci che questo futuro ti dia energia invece di togliertela?"
+                ],
+                'procrastinatore_bloccato': [
+                    "Wow! L'energia che sento nelle tue parole è incredibile. Ora trasformiamo questa visione in azione concreta. Qual è il primo passo che puoi fare OGGI?",
+                    "Perfetto! Ora canalizziamo questa potenza in un piano d'azione. Come spezziamo questo grande sogno in micro-azioni immediate?"
+                ]
+            };
+            
+            const responses = fallbackResponses[userProfile?.profileType] || [
+                "Quello che condividi è molto potente. Dimmi di più su come vedi il tuo futuro...",
+                "Interessante prospettiva! Come possiamo trasformare questa visione in realtà?"
             ];
             
-            // Personalize based on assessment results
-            if (context.finalResults.clarity >= 4) {
-                return `La chiarezza che hai sviluppato in queste 7 settimane emerge potentemente in questa visione! Con un punteggio di ${context.finalResults.clarity}/5 sulla chiarezza degli obiettivi, sei davvero pronto per il futuro che descrivi. Ora, questa visione che condividi... sento che c'è ancora di più dietro. Se potessi aggiungere un elemento che renderebbe questa visione ancora più significativa per te, cosa sarebbe?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generatePlanningResponse(userMessage, context) {
-            const responses = [
-                `Perfetto! La tua visione sta prendendo forma in modo concreto. Ora passiamo all'azione strategica. Considerando tutto quello che hai imparato su te stesso, sulle tue abitudini e le tue potenzialità, quali sono i 3 pilastri fondamentali su cui costruire questa visione?`,
-                
-                `Straordinario! Vedo che hai una visione chiara e ispirazione. Ora voglio aiutarti a creare un ponte solido tra dove sei oggi e dove vuoi arrivare. Se dovessi identificare il primo grande step nei prossimi 90 giorni, quale sarebbe?`,
-                
-                `La tua visione è potente e realizzabile! Con tutto quello che hai sviluppato in termini di disciplina e nuove abitudini, sei davvero attrezzato per questo viaggio. Ora, pensando agli ostacoli che potresti incontrare, come puoi utilizzare le strategie che hai imparato per superarli?`,
-                
-                `Magnifico! Sento che questa visione non è solo un sogno, ma un piano in fase di costruzione. Ora, per mantenerti sulla strada giusta, che tipo di supporto e accountability ti serviranno? Come puoi assicurarti di non perdere momentum?`
-            ];
-            
-            // Planning based on specific transformations
-            if (context.finalResults.habits >= 4) {
-                return `Eccellente! Le abitudini positive che hai sviluppato (punteggio ${context.finalResults.habits}/5) saranno la tua arma segreta per questa visione. Ora, immaginando i prossimi 12 mesi, quali nuove abitudini specifiche dovrai aggiungere alla tua routine quotidiana per supportare questa crescita?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function generateMaintenanceResponse(userMessage, context) {
-            const responses = [
-                `Perfetto! Stiamo creando qualcosa di straordinario insieme. Ora voglio assicurarmi che tu abbia tutto quello che serve per mantenere questa crescita a lungo termine. Quale sarà il tuo sistema di monitoraggio per restare sulla strada giusta?`,
-                
-                `Straordinario! Vedo un piano solido che sta prendendo forma. Per consolidare tutto questo, come pensi di gestire i momenti difficili? Ogni percorso di crescita ha alti e bassi - quale sarà la tua strategia anti-ricadute?`,
-                
-                `Incredibile! Il tuo futuro non è più un sogno, è un piano d'azione. Ora, per completare questo capolavoro, quali sono le 3 cose che ti impegni a fare ogni settimana per onorare questa visione e mantenere viva la trasformazione?`,
-                
-                `Magnifico! Quello che abbiamo creato insieme è oro puro. Ora, guardando a questo straordinario percorso di 7 settimane e alla visione del futuro, cosa vuoi prometterti? Qual è l'impegno più importante che prendi con te stesso oggi?`
-            ];
-            
-            // Maintenance based on overall transformation
-            if (context.finalResults.overallScore >= 4) {
-                return `Straordinario! Con un punteggio di trasformazione di ${context.finalResults.overallScore}/5, hai dimostrato di essere una persona che mantiene i suoi impegni. Ora, per coronare questo percorso incredibile, se dovessi creare un mantra personale che catturi l'essenza di chi sei diventato e dove stai andando, quale sarebbe?`;
-            }
-            
-            return responses[Math.floor(Math.random() * responses.length)];
+            return responses[messageCount % responses.length];
         }
 
         function extractMaintenanceInsights(userMessage) {
@@ -2278,28 +2722,52 @@ Non limitarti. Sogna in grande. Questa è la tua opportunità di progettare un f
         }
 
         function generateDailyMaintenanceHabits() {
-            const habits = [
+            const config = LIFESTYLE_PROFILES_CONFIG[userProfile?.profileType];
+            const baseHabits = [
                 "10 minuti di riflessione mattutina sui tuoi obiettivi",
                 "Pratica della routine che hai sviluppato nelle 7 settimane",
                 "Celebra un piccolo successo della giornata"
             ];
             
-            // Personalize based on assessment
-            if (finalResults.confidence < 4) {
-                habits.push("Pratica affermazioni positive e auto-compassione");
+            // Personalizza per profilo
+            if (config && config.maintenance_focus) {
+                const profileHabits = {
+                    'stressato_esaurito': [
+                        "Pratica 5 minuti di respirazione profonda",
+                        "Identifica un momento di auto-cura non negoziabile",
+                        "Stabilisci boundaries gentili ma fermi"
+                    ],
+                    'procrastinatore_bloccato': [
+                        "Completa UNA micro-azione verso i tuoi obiettivi",
+                        "Usa timer Pomodoro per mantenere focus",
+                        "Celebra ogni completamento, anche piccolo"
+                    ],
+                    'perfezionista_insoddisfatto': [
+                        "Pratica il 'abbastanza buono' in una cosa",
+                        "Scrivi 3 progressi fatti, anche minimi",
+                        "Pratica auto-compassione invece di auto-critica"
+                    ],
+                    'dispersivo_confuso': [
+                        "Identifica LA priorità del giorno",
+                        "Dedica 25 minuti focus su una sola attività",
+                        "Review serale: cosa ho completato oggi?"
+                    ],
+                    'motivato_inconsistente': [
+                        "Esegui abitudini automatiche indipendentemente dall'umore",
+                        "Traccia visualmente i progressi quotidiani",
+                        "Sistema accountability: condividi progressi"
+                    ],
+                    'equilibrato_ottimizzatore': [
+                        "Identifica un marginal gain da implementare",
+                        "Monitora metriche chiave di performance",
+                        "Ottimizza una routine esistente"
+                    ]
+                };
+                
+                return [...baseHabits, ...profileHabits[userProfile.profileType] || []];
             }
             
-            if (finalResults.stress >= 4) {
-                habits.push("Applica le tecniche di gestione stress apprese");
-            } else {
-                habits.push("Dedica tempo al relax e alla ricarica energetica");
-            }
-            
-            if (assessmentData.futureCommitment) {
-                habits.push(`Lavora sul tuo impegno: "${assessmentData.futureCommitment}"`);
-            }
-            
-            return habits;
+            return baseHabits;
         }
 
         function generateWeeklyReviews() {
@@ -2319,392 +2787,10 @@ Non limitarti. Sogna in grande. Questa è la tua opportunità di progettare un f
                 "Connettiti con persone che supportano la tua crescita"
             ];
             
-            // Personalize based on transformation level
+            // Personalizza per livello trasformazione
             if (finalResults.overallScore >= 4) {
                 goals.push("Mentorizza qualcuno che sta iniziando un percorso simile");
                 goals.push("Sfida te stesso con un obiettivo più ambizioso");
             } else {
                 goals.push("Consolida le abitudini sviluppate finora");
-                goals.push("Richiedi supporto quando ne hai bisogno");
-            }
-            
-            return goals;
-        }
-
-        function generateEmergencyStrategies() {
-            return [
-                "Torna alle tecniche di consapevolezza della Settimana 2",
-                "Rileggi il tuo piano di azione della Settimana 4",
-                "Pratica le strategie anti-sabotaggio della Settimana 5",
-                "Ricorda le tue potenzialità scoperte nella Settimana 6",
-                "Contatta il tuo sistema di supporto",
-                "Ricorda perché hai iniziato questo percorso"
-            ];
-        }
-
-        function updateUserProgress() {
-            try {
-                const progress = JSON.parse(localStorage.getItem('lifestyleProgress') || '{}');
-                progress.completedWeeks = progress.completedWeeks || [];
-                
-                if (!progress.completedWeeks.includes(7)) {
-                    progress.completedWeeks.push(7);
-                    progress.currentWeek = 'completed';
-                    progress.finalScore = finalResults.overallScore || 0;
-                    progress.completionDate = new Date().toISOString();
-                    progress.lastUpdate = new Date().toISOString();
-                    
-                    localStorage.setItem('lifestyleProgress', JSON.stringify(progress));
-                }
-            } catch (error) {
-                console.error('❌ Error updating progress:', error);
-            }
-        }
-
-        function downloadCompletionCertificate() {
-            const certificateContent = `
-                🏆 CERTIFICATO DI COMPLETAMENTO 🏆
-                
-                PERCORSO LIFESTYLE FITNESS COACHING
-                Andrea Padoan - Lifestyle Coach
-                
-                Si certifica che
-                
-                ${userProfile?.name || 'UTENTE STRAORDINARIO'}
-                
-                ha completato con successo il percorso completo di
-                LifestyleFitnessCoach di 7 settimane, ottenendo una 
-                trasformazione personale straordinaria.
-                
-                === RISULTATI OTTENUTI ===
-                
-                Punteggio Trasformazione Complessiva: ${finalResults.overallScore || 0}/5
-                Autostima e Fiducia: ${finalResults.confidence || 0}/5
-                Chiarezza Obiettivi: ${finalResults.clarity || 0}/5
-                Abitudini Positive: ${finalResults.habits || 0}/5
-                Gestione Stress: ${finalResults.stress || 0}/5
-                Consapevolezza Potenzialità: ${finalResults.potential || 0}/5
-                
-                === SETTIMANE COMPLETATE ===
-                
-                ✅ Settimana 1: Incontro Conoscitivo
-                ✅ Settimana 2: Consapevolezza di Sé
-                ✅ Settimana 3: Obiettivi SMART
-                ✅ Settimana 4: Piano di Azione
-                ✅ Settimana 5: Trasformazione Abitudini
-                ✅ Settimana 6: Scopri le Potenzialità
-                ✅ Settimana 7: Consolidamento e Futuro
-                
-                === TRASFORMAZIONE DOCUMENTATA ===
-                
-                PRIMA del percorso:
-                "${assessmentData.beforeMindset || 'Stato iniziale documentato'}"
-                
-                DOPO il percorso:
-                "${assessmentData.afterMindset || 'Trasformazione straordinaria completata'}"
-                
-                Cambiamento più significativo:
-                "${assessmentData.biggestChange || 'Crescita personale straordinaria'}"
-                
-                Momento di maggior orgoglio:
-                "${assessmentData.proudestMoment || 'Superamento di sfide personali'}"
-                
-                Apprendimento più importante:
-                "${assessmentData.biggestLearning || 'Scoperta del proprio potenziale'}"
-                
-                === CERTIFICAZIONE ===
-                
-                Questo certificato attesta il completamento di un percorso
-                di crescita personale strutturato di 7 settimane, con oltre
-                6 ore di coaching personalizzato e oltre 50 ore di lavoro
-                personale dedicato alla trasformazione.
-                
-                La persona certificata ha dimostrato:
-                - Impegno costante nel percorso di crescita
-                - Capacità di trasformazione e miglioramento
-                - Sviluppo di consapevolezza e autostima
-                - Implementazione di abitudini positive
-                - Chiarezza sui propri obiettivi di vita
-                - Riconoscimento e sviluppo delle proprie potenzialità
-                
-                Data di completamento: ${new Date().toLocaleDateString('it-IT')}
-                
-                Andrea Padoan
-                Lifestyle Fitness Coach Certificato
-                
-                "La trasformazione autentica inizia da dentro.
-                Tu hai avuto il coraggio di iniziare e la determinazione
-                di completare. Ora sei pronto per creare il futuro
-                che meriti."
-                
-                🌟 CONGRATULAZIONI PER QUESTO STRAORDINARIO RISULTATO! 🌟
-            `;
-            
-            const blob = new Blob([certificateContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Certificato_Lifestyle_Coaching_${userProfile?.name || 'Completamento'}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showMessage('🏆 Certificato di completamento scaricato! Congratulazioni!', 'success');
-        }
-
-        function downloadMaintenancePlan() {
-            const planContent = `
-                PIANO DI MANTENIMENTO A LUNGO TERMINE
-                LIFESTYLE FITNESS COACHING - SETTIMANA 7
-                
-                Andrea Padoan - Lifestyle Coach
-                
-                Caro/a ${userProfile?.name || 'Straordinario/a Utente'},
-                
-                CONGRATULAZIONI! Hai completato un percorso di trasformazione 
-                straordinario di 7 settimane. Questo piano ti aiuterà a mantenere
-                e amplificare i risultati ottenuti per tutta la vita.
-                
-                === I TUOI RISULTATI STRAORDINARI ===
-                
-                Trasformazione Complessiva: ${finalResults.overallScore || 0}/5
-                - Autostima e Fiducia: ${finalResults.confidence || 0}/5
-                - Chiarezza Obiettivi: ${finalResults.clarity || 0}/5  
-                - Abitudini Positive: ${finalResults.habits || 0}/5
-                - Gestione Stress: ${finalResults.stress || 0}/5
-                - Consapevolezza Potenzialità: ${finalResults.potential || 0}/5
-                
-                === LA TUA TRASFORMAZIONE PRIMA/DOPO ===
-                
-                PRIMA del percorso:
-                Mentalità: "${assessmentData.beforeMindset || 'Stato iniziale'}"
-                Abitudini: "${assessmentData.beforeHabits || 'Abitudini da migliorare'}"
-                Sfide: "${assessmentData.beforeChallenges || 'Ostacoli da superare'}"
-                
-                DOPO il percorso:
-                Mentalità: "${assessmentData.afterMindset || 'Trasformazione completa'}"
-                Abitudini: "${assessmentData.afterHabits || 'Nuove abitudini positive'}"
-                Punti di Forza: "${assessmentData.afterStrengths || 'Nuovi super-poteri'}"
-                
-                === PIANO DI MANTENIMENTO QUOTIDIANO ===
-                
-                🌅 ROUTINE MATTUTINA (15-20 minuti)
-                ${generateDailyMaintenanceHabits().map((habit, i) => `${i + 1}. ${habit}`).join('\n                ')}
-                
-                🌙 ROUTINE SERALE (10 minuti)
-                1. Rifletti su 3 successi della giornata
-                2. Identifica una cosa da migliorare domani
-                3. Rileggi il tuo impegno futuro: "${assessmentData.futureCommitment || 'Continua a crescere'}"
-                4. Pianifica la priorità principale di domani
-                5. Pratica gratitudine per la tua crescita
-                
-                === REVIEWS PERIODICHE ===
-                
-                📊 REVIEW SETTIMANALE (30 minuti ogni domenica)
-                ${generateWeeklyReviews().map((review, i) => `${i + 1}. ${review}`).join('\n                ')}
-                
-                🎯 FOCUS MENSILE (1 ora primo del mese)
-                ${generateMonthlyGoals().map((goal, i) => `${i + 1}. ${goal}`).join('\n                ')}
-                
-                📈 ASSESSMENT TRIMESTRALE (2 ore ogni 3 mesi)
-                1. Ripeti i test di autovalutazione delle 7 settimane
-                2. Confronta i progressi con i risultati precedenti
-                3. Aggiorna i tuoi obiettivi basandoti sulla crescita
-                4. Celebra i traguardi raggiunti
-                5. Identifica nuove aree di crescita
-                
-                === STRATEGIE ANTI-RICADUTE ===
-                
-                🆘 QUANDO TI SENTI DEMOTIVATO:
-                ${generateEmergencyStrategies().map((strategy, i) => `${i + 1}. ${strategy}`).join('\n                ')}
-                
-                🧠 FRASI POTENZIANTI PERSONALIZZATE:
-                - "Ho già dimostrato di saper cambiare completando 7 settimane"
-                - "La mia trasformazione è reale: ${assessmentData.biggestChange || 'sono cresciuto enormemente'}"
-                - "Il mio apprendimento più importante: ${assessmentData.biggestLearning || 'conosco il mio valore'}"
-                - "Il mio momento di orgoglio: ${assessmentData.proudestMoment || 'ho superato me stesso'}"
-                
-                === SISTEMA DI ACCOUNTABILITY ===
-                
-                🤝 SUPPORTO SOCIALE:
-                1. Condividi i tuoi obiettivi con 2-3 persone care
-                2. Programma check-in mensili con un accountability partner
-                3. Unisciti a comunità di crescita personale
-                4. Considera un coaching di mantenimento trimestrale
-                
-                📱 STRUMENTI DIGITALI:
-                1. Usa app per tracking abitudini (consigliato: Streaks, Habitica)
-                2. Calendario con reminder per le tue routine
-                3. Diario digitale per riflessioni quotidiane
-                4. Foto progress per vedere la trasformazione nel tempo
-                
-                === EVOLUZIONE CONTINUA ===
-                
-                🌱 CRESCITA LIVELLO 2 (dopo 6 mesi):
-                1. Definisci obiettivi più ambiziosi basati sui risultati
-                2. Diventa mentor per chi inizia un percorso simile
-                3. Approfondisci le tue potenzialità scoperte
-                4. Considera specializzazioni in aree specifiche
-                
-                🚀 CRESCITA LIVELLO 3 (dopo 1 anno):
-                1. Crea il tuo sistema personalizzato di crescita
-                2. Sviluppa leadership in aree di tua competenza
-                3. Contribuisci alla crescita di altri
-                4. Stabilisci nuovi standard personali di eccellenza
-                
-                === RISORSE DI SUPPORTO ===
-                
-                📚 LETTURE CONSIGLIATE:
-                - "Atomic Habits" di James Clear (per le abitudini)
-                - "Mindset" di Carol Dweck (per la mentalità di crescita)
-                - "The 7 Habits" di Stephen Covey (per l'efficacia personale)
-                - "Flow" di Mihaly Csikszentmihalyi (per la performance)
-                
-                🎧 PODCAST/AUDIO:
-                - "The Life Coach School Podcast"
-                - "The Tim Ferriss Show"
-                - "On Purpose with Jay Shetty"
-                
-                === PIANI DI EMERGENZA ===
-                
-                ⚠️ SE INTERROMPI LE ABITUDINI:
-                1. Non giudicarti: è normale avere battute d'arresto
-                2. Riprendi dalla routine più piccola (5 minuti al giorno)
-                3. Rileggi il tuo "perché" originale della Settimana 1
-                4. Chiedi supporto invece di isolarti
-                5. Ricorda: ogni giorno è un nuovo inizio
-                
-                ⚠️ SE PERDI MOTIVAZIONE:
-                1. Rileggi i tuoi risultati e progressi delle 7 settimane
-                2. Visualizza il futuro che hai descritto nel coaching finale
-                3. Pratica gratitudine per quello che hai già raggiunto
-                4. Connettiti con il tuo sistema di supporto
-                5. Fai qualcosa di piccolo ma significativo oggi stesso
-                
-                ⚠️ SE AFFRONTI STRESS ELEVATO:
-                1. Torna alle tecniche di gestione stress della Settimana 2
-                2. Prioritizza il riposo e l'auto-cura
-                3. Applica la routine mattutina anche se ridotta
-                4. Chiedi aiuto professionale se necessario
-                5. Ricorda: questo è temporaneo, la tua crescita è permanente
-                
-                === IL TUO IMPEGNO CON TE STESSO ===
-                
-                "${assessmentData.futureCommitment || 'Mi impegno a continuare questa crescita straordinaria'}"
-                
-                === MESSAGGIO FINALE ===
-                
-                ${userProfile?.name || 'Straordinario/a'}, quello che hai raggiunto in 7 settimane è 
-                solo l'inizio. Hai dimostrato di avere tutto quello che serve per creare
-                una vita straordinaria. Questo piano di mantenimento non è solo un documento:
-                è il tuo compagno di viaggio verso una versione sempre migliore di te stesso.
-                
-                Ricorda sempre:
-                - Sei più forte di quanto credi
-                - Hai più controllo di quanto pensi  
-                - Meriti tutto il bene che stai creando
-                - La tua trasformazione ispira gli altri
-                - Il meglio deve ancora venire
-                
-                Ogni giorno che applichi questo piano, onori l'impegno che hai preso
-                con te stesso 7 settimane fa. Ogni piccola azione quotidiana costruisce
-                il futuro straordinario che hai visualizzato.
-                
-                Non si tratta di perfezione, ma di progressione.
-                Non si tratta di velocità, ma di costanza.
-                Non si tratta di non cadere mai, ma di rialzarsi sempre.
-                
-                Il tuo coach di trasformazione per sempre,
-                Andrea 🌟
-                
-                P.S. Tieni questo piano sempre a portata di mano. Nei momenti difficili,
-                ricorda che hai già dimostrato di saper trasformare la tua vita.
-                Ora continua a trasformare il mondo attorno a te!
-                
-                === DATA PLAN ===
-                Creato: ${new Date().toLocaleDateString('it-IT')}
-                Valido: Per tutta la vita
-                Prossima revisione: ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString('it-IT')}
-            `;
-            
-            const blob = new Blob([planContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Piano_Mantenimento_Lifestyle_${userProfile?.name || 'Completo'}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showMessage('📋 Piano di mantenimento completo scaricato!', 'success');
-        }
-
-        function accessAdvancedPrograms() {
-            showMessage('🚀 Programmi avanzati in fase di sviluppo! Ti contatteremo presto per opportunità esclusive.', 'info');
-            
-            // Store interest for advanced programs
-            try {
-                const advancedInterest = {
-                    userId: localStorage.getItem('lifestyleUserId'),
-                    completionDate: new Date().toISOString(),
-                    finalScore: finalResults.overallScore,
-                    interestExpressed: new Date().toISOString()
-                };
-                localStorage.setItem('advancedProgramsInterest', JSON.stringify(advancedInterest));
-            } catch (error) {
-                console.error('❌ Error storing advanced programs interest:', error);
-            }
-        }
-
-        function showMessage(message, type = 'info') {
-            const colors = {
-                success: '#16a34a',
-                warning: '#f59e0b',
-                info: '#3b82f6',
-                error: '#ef4444'
-            };
-            
-            const notification = document.createElement('div');
-            notification.innerHTML = `
-                <div style="position: fixed; top: 20px; right: 20px; background: ${colors[type]}; color: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 1000; max-width: 400px; animation: slideIn 0.3s ease-out;">
-                    ${message}
-                </div>
-            `;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        // Handle Enter key in chat
-        document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-
-        // Handle page unload
-        window.addEventListener('beforeunload', function() {
-            if (currentPhase !== 'completed') {
-                autoSave();
-            }
-        });
-
-        // Add slide-in animation style
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-</html>
+                goals.push("Richi
