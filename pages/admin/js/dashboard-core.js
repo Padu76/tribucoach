@@ -28,6 +28,7 @@ export let dashboardState = {
         score: '',
         search: ''
     },
+    sessionsFilter: 'today', // NUOVO: Filtro sessioni
     isLoading: false,
     lastRefresh: null
 };
@@ -74,6 +75,12 @@ function setupEventListeners() {
     if (activityFilter) activityFilter.addEventListener('change', handleFiltersChange);
     if (scoreFilter) scoreFilter.addEventListener('change', handleFiltersChange);
     if (searchFilter) searchFilter.addEventListener('input', debounce(handleFiltersChange, 300));
+    
+    // NUOVO: Sessions filter
+    const sessionsFilterSelect = document.getElementById('sessionsFilter');
+    if (sessionsFilterSelect) {
+        sessionsFilterSelect.addEventListener('change', handleSessionsFilterChange);
+    }
     
     // Select all checkbox
     const selectAllCheckbox = document.getElementById('selectAll');
@@ -176,6 +183,14 @@ function handleFiltersChange() {
     
     // Update table
     updateUsersTable();
+}
+
+/**
+ * NUOVO: Handle sessions filter change
+ */
+function handleSessionsFilterChange(event) {
+    dashboardState.sessionsFilter = event.target.value;
+    updateSessionsList();
 }
 
 /**
@@ -715,51 +730,195 @@ function updateAvatarAnalytics() {
     `;
 }
 
+/**
+ * MODIFICATA: Update sessions list con filtri
+ */
 function updateSessionsList() {
     const container = document.getElementById('sessionsList');
     if (!container) return;
     
-    const sessions = firebaseData.allSessions
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 10);
+    // Filtra sessioni in base al filtro selezionato
+    const filteredSessions = getFilteredSessions();
     
-    if (sessions.length === 0) {
+    // Crea header con filtri se non esiste
+    ensureSessionsHeader();
+    
+    // Aggiorna counter
+    updateSessionsCounter(filteredSessions.length);
+    
+    if (filteredSessions.length === 0) {
         container.innerHTML = `
-            <div class="no-data">
+            <div class="no-data sessions-no-data">
                 <div class="no-data-icon">📋</div>
                 <h3>Nessuna Sessione</h3>
-                <p>Le sessioni di coaching appariranno qui.</p>
+                <p>Non ci sono sessioni per il periodo selezionato.</p>
+                <button class="action-btn secondary" onclick="window.dashboardCore.changeSessionsFilter('all')">
+                    📅 Mostra Tutte
+                </button>
             </div>
         `;
         return;
     }
     
-    container.innerHTML = sessions.map(session => {
+    container.innerHTML = filteredSessions.map(session => {
         const user = firebaseData.allUsers.find(u => u.id === session.userId || u.email === session.userId);
         const userName = user ? user.name : session.userId || 'Utente sconosciuto';
         const duration = formatDuration(session.duration || 0);
         const timestamp = formatDateTime(session.timestamp);
         
+        // Status indicator per sessione
+        const statusClass = session.completed ? 'completed' : 'in-progress';
+        const statusIcon = session.completed ? '✅' : '⏳';
+        
         return `
             <div class="session-item">
                 <div class="session-info">
-                    <div class="session-user">👤 ${userName}</div>
+                    <div class="session-user">
+                        <span class="session-avatar">${getUserInitials(userName)}</span>
+                        <span class="session-name">${userName}</span>
+                        <span class="session-status ${statusClass}">${statusIcon}</span>
+                    </div>
                     <div class="session-details">
-                        <span>📝 ${session.sessionType || 'Sessione'}</span>
-                        <span>⏱️ ${duration}</span>
-                        <span>💬 ${session.aiResponsesGenerated || 0} AI responses</span>
-                        <span>📊 ${session.source || 'unknown'}</span>
+                        <span class="session-detail">📝 ${session.sessionType || 'Sessione'}</span>
+                        <span class="session-detail">⏱️ ${duration}</span>
+                        <span class="session-detail">💬 ${session.aiResponsesGenerated || 0} AI</span>
+                        <span class="session-detail">📊 ${session.source || 'unknown'}</span>
                     </div>
                 </div>
                 <div class="session-meta">
                     <span class="session-date">${timestamp}</span>
-                    <button class="action-btn" onclick="showSessionDetails('${session.id}')">
+                    <button class="action-btn session-details-btn" onclick="showSessionDetails('${session.id}')" title="Vedi dettagli sessione">
                         👁️ Dettagli
                     </button>
                 </div>
             </div>
         `;
     }).join('');
+}
+
+/**
+ * NUOVA: Filtra sessioni in base al filtro selezionato
+ */
+function getFilteredSessions() {
+    const sessions = [...firebaseData.allSessions].sort((a, b) => b.timestamp - a.timestamp);
+    const now = new Date();
+    
+    switch (dashboardState.sessionsFilter) {
+        case 'today':
+            return sessions.filter(session => {
+                const sessionDate = new Date(session.timestamp);
+                return sessionDate.toDateString() === now.toDateString();
+            });
+            
+        case 'week':
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return sessions.filter(session => 
+                new Date(session.timestamp) >= weekAgo
+            );
+            
+        case 'month':
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return sessions.filter(session => 
+                new Date(session.timestamp) >= monthAgo
+            );
+            
+        case 'all':
+            return sessions.slice(0, 50); // Limite per performance
+            
+        default:
+            return sessions.filter(session => {
+                const sessionDate = new Date(session.timestamp);
+                return sessionDate.toDateString() === now.toDateString();
+            });
+    }
+}
+
+/**
+ * NUOVA: Assicura che l'header con filtri esista
+ */
+function ensureSessionsHeader() {
+    const sessionsSection = document.querySelector('.sessions-section');
+    if (!sessionsSection) return;
+    
+    let header = sessionsSection.querySelector('.sessions-header');
+    if (!header) {
+        header = document.createElement('div');
+        header.className = 'sessions-header';
+        header.innerHTML = `
+            <div class="sessions-title-row">
+                <h3 class="section-title">📋 Sessioni Recenti</h3>
+                <div class="sessions-controls">
+                    <select id="sessionsFilter" class="sessions-filter">
+                        <option value="today">📅 Oggi</option>
+                        <option value="week">📅 Ultima Settimana</option>
+                        <option value="month">📅 Ultimo Mese</option>
+                        <option value="all">📅 Tutte</option>
+                    </select>
+                    <span class="sessions-count" id="sessionsCount">0 sessioni</span>
+                </div>
+            </div>
+        `;
+        
+        // Inserisci all'inizio della sezione
+        const sessionsList = document.getElementById('sessionsList');
+        if (sessionsList) {
+            sessionsSection.insertBefore(header, sessionsList);
+        }
+        
+        // Setup event listener per il nuovo filtro
+        const newFilter = header.querySelector('#sessionsFilter');
+        if (newFilter) {
+            newFilter.value = dashboardState.sessionsFilter;
+            newFilter.addEventListener('change', handleSessionsFilterChange);
+        }
+    }
+}
+
+/**
+ * NUOVA: Aggiorna counter sessioni
+ */
+function updateSessionsCounter(count) {
+    const counter = document.getElementById('sessionsCount');
+    if (counter) {
+        const filterText = getFilterDisplayText(dashboardState.sessionsFilter);
+        counter.textContent = `${count} ${filterText}`;
+    }
+}
+
+/**
+ * NUOVA: Ottieni testo display per filtro
+ */
+function getFilterDisplayText(filter) {
+    const texts = {
+        'today': 'oggi',
+        'week': 'questa settimana', 
+        'month': 'questo mese',
+        'all': 'totali'
+    };
+    return `sessioni ${texts[filter] || 'filtrate'}`;
+}
+
+/**
+ * NUOVA: Cambia filtro sessioni (esposta pubblicamente)
+ */
+export function changeSessionsFilter(filter) {
+    dashboardState.sessionsFilter = filter;
+    
+    // Aggiorna select se esiste
+    const filterSelect = document.getElementById('sessionsFilter');
+    if (filterSelect) {
+        filterSelect.value = filter;
+    }
+    
+    updateSessionsList();
+}
+
+/**
+ * NUOVA: Ottieni iniziali utente per avatar mini
+ */
+function getUserInitials(name) {
+    if (!name) return '??';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 }
 
 /**
@@ -1081,7 +1240,7 @@ function debounce(func, wait) {
 }
 
 // ==========================================================================
-// ANIMATION STYLES
+// ANIMATION STYLES + NUOVI STILI SESSIONI
 // ==========================================================================
 const style = document.createElement('style');
 style.textContent = `
@@ -1123,6 +1282,203 @@ style.textContent = `
         font-weight: bold;
         font-size: 0.9rem;
     }
+
+    /* NUOVI STILI PER SESSIONI */
+    .sessions-header {
+        margin-bottom: 1rem;
+    }
+    
+    .sessions-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .sessions-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .sessions-filter {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid #475569;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .sessions-filter:focus {
+        outline: none;
+        border-color: #ea580c;
+        box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2);
+    }
+    
+    .sessions-count {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .session-item {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid #334155;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .session-item:hover {
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #475569;
+        transform: translateY(-1px);
+    }
+    
+    .session-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .session-user {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .session-avatar {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #ea580c, #f97316);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .session-name {
+        color: white;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .session-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .session-status.completed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    
+    .session-status.in-progress {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fde047;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+    
+    .session-details {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .session-detail {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .session-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .session-date {
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+    
+    .session-details-btn {
+        background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+        color: white !important;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .session-details-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+    
+    .sessions-no-data {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .sessions-no-data .no-data-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .sessions-no-data h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .sessions-no-data p {
+        color: #94a3b8;
+        margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .sessions-title-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .sessions-controls {
+            justify-content: space-between;
+        }
+        
+        .session-details {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .session-meta {
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: stretch;
+        }
+    }
 `;
 document.head.appendChild(style);
 
@@ -1134,6 +1490,7 @@ document.head.appendChild(style);
 window.dashboardCore = {
     initializeDashboardCore,
     toggleUserSelection,
+    changeSessionsFilter,
     dashboardState
 };
 
