@@ -831,7 +831,7 @@
                     <p id="hubSubtitle">Il tuo percorso di trasformazione personalizzato con Andrea Padoan</p>
                 </div>
                 <div class="header-actions">
-                    <a href="../user-dashboard.html" class="back-to-dashboard-btn">
+                    <a href="../pages/user-dashboard.html" class="back-to-dashboard-btn">
                         ← Torna alla Dashboard
                     </a>
                 </div>
@@ -1577,4 +1577,296 @@
 
                 const personalization = weekConfig.personalization[this.userProfile.profileType] || weekConfig.description;
                 
-                let statusText = '▶️ Disponibile
+                let statusText = '▶️ Disponibile';
+                let statusClass = '';
+                let buttonText = '🚀 Inizia Settimana';
+                let buttonClass = '';
+                
+                if (isCompleted) {
+                    statusText = '✅ Completata';
+                    statusClass = 'completed';
+                    buttonText = '📖 Rivedi Settimana';
+                    buttonClass = 'completed';
+                } else if (isRecommended) {
+                    statusText = '⭐ Consigliata';
+                    statusClass = 'recommended';
+                    buttonText = '🎯 Inizia Ora';
+                }
+                
+                card.innerHTML = `
+                    <div class="week-header">
+                        <div class="week-number">Settimana ${weekNum}</div>
+                        <div class="week-status ${statusClass}">${statusText}</div>
+                    </div>
+                    <h3 class="week-title">${weekConfig.title}</h3>
+                    <p class="week-description">${weekConfig.description}</p>
+                    <div class="week-personalization">${personalization}</div>
+                    <button class="week-button ${buttonClass}" onclick="navigateToWeek(${weekNum})">
+                        ${buttonText}
+                    </button>
+                `;
+                
+                return card;
+            }
+
+            personalizeCTAs(config) {
+                const startBtn = document.getElementById('startCoachingBtn');
+                const finalCtaBtn = document.getElementById('finalCtaBtn');
+                
+                if (startBtn) {
+                    if (completedWeeks.length > 0) {
+                        startBtn.textContent = '🚀 Continua il Tuo Percorso';
+                    } else {
+                        startBtn.textContent = '🚀 Inizia il Tuo Percorso';
+                    }
+                }
+                
+                if (finalCtaBtn) {
+                    finalCtaBtn.textContent = `✨ ${config.cta_text}`;
+                }
+            }
+
+            calculateOverallScore() {
+                if (!this.userProfile.scores) return 50;
+                
+                const scores = Object.values(this.userProfile.scores);
+                const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                return Math.round(avg * 20); // Convert 1-5 to percentage
+            }
+
+            loadFallbackData() {
+                console.log('⚠️ Caricamento dati fallback...');
+                this.userProfile = {
+                    profileType: 'motivato_inconsistente',
+                    name: 'Utente',
+                    challenges: ['consistency', 'focus'],
+                    scores: { wellbeing: 3, health: 3, professional: 3, social: 3 }
+                };
+                this.progressData = {
+                    completedWeeks: [],
+                    currentWeek: 1,
+                    totalSessions: 0,
+                    totalHours: 0,
+                    transformationScore: 0,
+                    streakDays: 0
+                };
+            }
+        }
+
+        // === FUNZIONI GLOBALI MANCANTI - FIX DEGLI ERRORI ===
+        
+        /**
+         * Funzione per iniziare/continuare il percorso di coaching
+         */
+        function startCoachingJourney() {
+            console.log('🚀 Avvio percorso di coaching...');
+            
+            // Determina la prossima settimana da fare
+            let nextWeek = 1;
+            
+            if (hubAI && hubAI.userProfile) {
+                const config = LIFESTYLE_PROFILES_CONFIG[hubAI.userProfile.profileType];
+                
+                // Se ci sono settimane completate, trova la prossima
+                if (completedWeeks.length > 0) {
+                    // Prima controlla le settimane consigliate per il profilo
+                    for (const recommendedWeek of config.recommended_weeks) {
+                        if (!completedWeeks.includes(recommendedWeek)) {
+                            nextWeek = recommendedWeek;
+                            break;
+                        }
+                    }
+                    
+                    // Se tutte le consigliate sono fatte, prendi la prossima sequenziale
+                    if (nextWeek === 1) {
+                        for (let i = 1; i <= 7; i++) {
+                            if (!completedWeeks.includes(i)) {
+                                nextWeek = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Salva stato attuale
+            saveProgressState();
+            
+            // Naviga alla settimana appropriata
+            navigateToWeek(nextWeek);
+        }
+        
+        /**
+         * Funzione per rifare il test lifestyle
+         */
+        function retakeQuiz() {
+            console.log('🔄 Ritorno al quiz lifestyle...');
+            
+            // Mostra conferma
+            const confirmRetake = confirm(
+                '⚠️ Rifare il test resetterà il tuo profilo attuale.\n\n' +
+                'I tuoi progressi nelle settimane saranno mantenuti, ma il profilo sarà aggiornato.\n\n' +
+                'Vuoi continuare?'
+            );
+            
+            if (confirmRetake) {
+                // Salva progressi attuali
+                saveProgressState();
+                
+                // Naviga al quiz
+                window.location.href = '../pages/lifestyle-quiz.html';
+            }
+        }
+        
+        /**
+         * Funzione per navigare a una settimana specifica
+         */
+        function navigateToWeek(weekNumber) {
+            console.log(`📚 Navigazione a settimana ${weekNumber}...`);
+            
+            // Salva la settimana corrente
+            localStorage.setItem('currentWeek', weekNumber);
+            
+            // Salva dati profilo per la settimana
+            if (hubAI && hubAI.userProfile) {
+                localStorage.setItem('weekUserProfile', JSON.stringify(hubAI.userProfile));
+            }
+            
+            // URL della settimana
+            const weekUrl = `week-${weekNumber}.html`;
+            
+            // Naviga alla pagina della settimana
+            window.location.href = weekUrl;
+        }
+        
+        /**
+         * Salva lo stato del progresso
+         */
+        function saveProgressState() {
+            const progressState = {
+                completedWeeks: completedWeeks,
+                currentWeek: hubAI?.progressData?.currentWeek || 1,
+                totalSessions: hubAI?.progressData?.totalSessions || 0,
+                totalHours: hubAI?.progressData?.totalHours || 0,
+                transformationScore: hubAI?.progressData?.transformationScore || 0,
+                streakDays: hubAI?.progressData?.streakDays || 0,
+                lastAccess: new Date().toISOString()
+            };
+            
+            localStorage.setItem('lifestyleProgress', JSON.stringify(progressState));
+            console.log('💾 Stato progresso salvato:', progressState);
+        }
+        
+        /**
+         * Mostra notifica toast
+         */
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                max-width: 350px;
+            `;
+            
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                    notification.style.color = 'white';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                    notification.style.color = 'white';
+                    break;
+                case 'warning':
+                    notification.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                    notification.style.color = 'white';
+                    break;
+                default:
+                    notification.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                    notification.style.color = 'white';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // === INIZIALIZZAZIONE AL CARICAMENTO PAGINA ===
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🏁 Inizializzazione Module Hub AI v2.0...');
+            
+            try {
+                // Crea istanza del sistema AI
+                hubAI = new ModuleHubAI();
+                
+                // Inizializza
+                const success = await hubAI.initialize();
+                
+                if (success) {
+                    console.log('✅ Hub AI inizializzato con successo!');
+                    showNotification('🤖 Sistema AI personalizzato attivato!', 'success');
+                } else {
+                    console.warn('⚠️ Hub AI inizializzato con dati fallback');
+                    showNotification('⚠️ Alcuni dati non disponibili, uso configurazione base', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore critico inizializzazione:', error);
+                showNotification('❌ Errore caricamento sistema AI', 'error');
+                
+                // Carica interfaccia base senza personalizzazione
+                document.getElementById('profileName').textContent = 'Profilo Standard';
+                document.getElementById('profileDescription').textContent = 'Sistema AI in modalità base';
+            }
+        });
+        
+        // === ANIMAZIONI CSS PERSONALIZZATE ===
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            
+            .week-module {
+                cursor: pointer;
+                user-select: none;
+            }
+            
+            .week-module:active {
+                transform: scale(0.98);
+            }
+            
+            .achievement-badges {
+                animation: fadeIn 0.5s ease;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        console.log('✅ Module Hub AI v2.0 - Sistema completamente caricato e funzionante!');
+    </script>
+</body>
+</html>
