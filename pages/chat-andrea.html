@@ -39,6 +39,80 @@
             align-items: center;
             gap: 15px;
             position: relative;
+            min-height: 110px;
+        }
+
+        /* === FIX POSIZIONE PULSANTI - NON COPRONO PIÙ LA FOTO === */
+        .header-buttons {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .header-buttons > * {
+            pointer-events: all;
+        }
+
+        .chat-history-btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .chat-history-btn:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .back-btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        /* Container principale header con padding per i pulsanti */
+        .header-main-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 35px;
+            width: 100%;
         }
 
         /* Foto Reale Andrea nell'Header */
@@ -54,6 +128,7 @@
             animation: avatarPulse 3s ease-in-out infinite;
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .andrea-avatar.loading::before {
@@ -91,6 +166,10 @@
             50% { opacity: 0.7; }
         }
 
+        .header-info {
+            flex: 1;
+        }
+
         .header-info h2 {
             margin: 0;
             font-size: 1.6rem;
@@ -123,9 +202,6 @@
         }
 
         .user-avatar-mini {
-            position: absolute;
-            top: 20px;
-            right: 80px;
             width: 45px;
             height: 45px;
             border-radius: 50%;
@@ -137,32 +213,13 @@
             border: 3px solid rgba(255,255,255,0.4);
             box-shadow: 0 3px 12px rgba(0,0,0,0.3);
             animation: userAvatarFloat 4s ease-in-out infinite;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         @keyframes userAvatarFloat {
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-3px); }
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .back-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-1px);
         }
 
         /* === MESSAGGI CON FOTO REALE === */
@@ -443,26 +500,6 @@
             transform: none !important;
         }
 
-        /* === CONVERSAZIONI SALVATE === */
-        .chat-history-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
-        }
-
-        .chat-history-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-
         /* === NOTIFICHE === */
         .notification {
             position: fixed;
@@ -512,12 +549,29 @@
                 border-radius: 15px;
             }
             
+            .chat-header {
+                padding: 15px;
+                min-height: 100px;
+            }
+            
+            .header-buttons {
+                padding: 0 15px;
+            }
+            
+            .chat-history-btn, .back-btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+            
+            .header-main-content {
+                margin-top: 30px;
+            }
+            
             .message-content {
                 max-width: 85%;
             }
 
             .user-avatar-mini {
-                right: 70px;
                 width: 40px;
                 height: 40px;
                 font-size: 1.1rem;
@@ -542,22 +596,47 @@
                 text-align: left;
             }
         }
+        
+        @media (max-width: 480px) {
+            .chat-history-btn, .back-btn {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+            
+            .header-info h2 {
+                font-size: 1.3rem;
+            }
+            
+            .header-info p {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <!-- Header Avanzato con Foto Reale -->
+        <!-- Header Avanzato con Foto Reale - FIX POSIZIONI -->
         <div class="chat-header">
-            <button class="chat-history-btn" onclick="toggleChatHistory()">📋 Cronologia</button>
-            <div class="user-avatar-mini" id="userAvatarMini">💪</div>
-            <a href="user-dashboard.html" class="back-btn">← Dashboard</a>
+            <!-- Pulsanti posizionati in alto senza coprire il contenuto -->
+            <div class="header-buttons">
+                <button class="chat-history-btn" onclick="toggleChatHistory()">
+                    <strong>📋 Cronologia</strong>
+                </button>
+                <a href="user-dashboard.html" class="back-btn">
+                    <strong>← Dashboard</strong>
+                </a>
+            </div>
             
-            <div class="andrea-avatar loading" id="andreaAvatarHeader"></div>
-            <div class="header-info">
-                <h2>Andrea Padoan</h2>
-                <p>Lifestyle Coach • <span id="coachStatus">Online ora</span></p>
-                <div class="coaching-style" id="coachingStyle">Stile: Bilanciato e olistico</div>
-                <div class="photo-info" id="photoInfo">📸 Caricamento foto...</div>
+            <!-- Contenuto principale dell'header con padding per i pulsanti -->
+            <div class="header-main-content">
+                <div class="andrea-avatar loading" id="andreaAvatarHeader"></div>
+                <div class="header-info">
+                    <h2>Andrea Padoan</h2>
+                    <p>Lifestyle Coach • <span id="coachStatus">Online ora</span></p>
+                    <div class="coaching-style" id="coachingStyle">Stile: Bilanciato e olistico</div>
+                    <div class="photo-info" id="photoInfo">📸 Caricamento foto...</div>
+                </div>
+                <div class="user-avatar-mini" id="userAvatarMini">💪</div>
             </div>
         </div>
 
