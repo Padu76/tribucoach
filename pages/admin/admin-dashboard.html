@@ -83,9 +83,41 @@
             background: rgba(239, 68, 68, 0.9);
         }
 
+        .admin-session-indicator.unified {
+            background: rgba(99, 102, 241, 0.9);
+        }
+
         @keyframes fadeInSession {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Session manager integration indicator */
+        .session-manager-indicator {
+            position: fixed;
+            top: 110px;
+            right: 20px;
+            background: rgba(99, 102, 241, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            z-index: 9998;
+            display: none;
+            animation: fadeInSession 0.5s ease-out;
+        }
+
+        .session-manager-indicator.show {
+            display: block;
+        }
+
+        .session-manager-indicator.integrated {
+            background: rgba(16, 185, 129, 0.9);
+        }
+
+        .session-manager-indicator.standalone {
+            background: rgba(245, 158, 11, 0.9);
         }
 
         /* Logout success notification */
@@ -382,6 +414,13 @@
                 padding: 4px 8px;
             }
 
+            .session-manager-indicator {
+                top: 90px;
+                right: 15px;
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+
             .email-automation-btn {
                 padding: 8px 12px;
                 font-size: 12px;
@@ -410,10 +449,15 @@
         👑 Admin Sessione Attiva
     </div>
 
+    <!-- 🔗 SESSION MANAGER INTEGRATION INDICATOR -->
+    <div class="session-manager-indicator" id="sessionManagerIndicator">
+        🔗 Session Manager
+    </div>
+
     <!-- 🚫 NO ACCESS OVERLAY -->
     <div class="no-access-overlay" id="noAccessOverlay">
         <div class="no-access-content">
-            <h2>🔐 Accesso Negato</h2>
+            <h2>🔒 Accesso Negato</h2>
             <p>
                 Devi essere autenticato come amministratore per accedere a questa dashboard.<br>
                 Effettua il login tramite il sistema di accesso nascosto.
@@ -429,6 +473,9 @@
         <span>👋</span>
         <span>Logout effettuato con successo!</span>
     </div>
+
+    <!-- Unified Session Manager -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
 
     <!-- Status Connection -->
     <div class="connection-status" id="connectionStatus">🔄 Inizializzazione Dashboard...</div>
@@ -797,7 +844,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Modulare + Sistema Logout + SESSION DETAILS FIX + EMAIL AUTOMATION -->
+    <!-- JavaScript Modulare + Sistema Logout + SESSION DETAILS FIX + EMAIL AUTOMATION + UNIFIED SESSION MANAGER -->
     <script type="module">
         // Import tutti i moduli + SESSION DETAILS
         import { initializeFirebaseAdmin, loadAllFirebaseData } from './js/firebase-admin.js';
@@ -806,22 +853,114 @@
         // 🆕 AGGIUNGIAMO L'IMPORT DI SESSION-DETAILS
         import './js/session-details.js';
 
-        // 🔐 ADMIN SESSION MANAGEMENT
+        // 🔐 ADMIN SESSION MANAGEMENT WITH UNIFIED SESSION MANAGER INTEGRATION
         const ADMIN_SESSION_KEY = 'admin_session_tribucoach';
+        let sessionManagerInstance = null;
+        let sessionManagerIntegrated = false;
 
-        // Check admin session on page load
+        // Wait for unified session manager to be available
+        async function waitForSessionManager() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            
+            return new Promise((resolve) => {
+                const checkSessionManager = () => {
+                    attempts++;
+                    
+                    if (window.sessionManager || window.tribucoachSession) {
+                        sessionManagerInstance = window.sessionManager || window.tribucoachSession;
+                        sessionManagerIntegrated = true;
+                        console.log('✅ Session Manager integrato nella admin dashboard');
+                        showSessionManagerIndicator('integrated');
+                        resolve(true);
+                        return;
+                    }
+                    
+                    if (attempts >= maxAttempts) {
+                        console.log('⚠️ Session Manager non trovato, modalità standalone admin');
+                        showSessionManagerIndicator('standalone');
+                        resolve(false);
+                        return;
+                    }
+                    
+                    setTimeout(checkSessionManager, 100);
+                };
+                
+                checkSessionManager();
+            });
+        }
+
+        function showSessionManagerIndicator(mode) {
+            const indicator = document.getElementById('sessionManagerIndicator');
+            if (indicator) {
+                indicator.classList.add('show');
+                indicator.classList.add(mode);
+                
+                if (mode === 'integrated') {
+                    indicator.textContent = '🔗 Session Manager Integrato';
+                } else {
+                    indicator.textContent = '⚠️ Modalità Standalone';
+                }
+                
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 4000);
+            }
+        }
+
+        // Enhanced admin session check with unified session manager integration
         function checkAdminSession() {
             try {
-                const sessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+                // Check traditional admin session
+                const adminSessionData = localStorage.getItem(ADMIN_SESSION_KEY);
+                let hasAdminSession = false;
                 
-                if (sessionData) {
-                    const session = JSON.parse(sessionData);
+                if (adminSessionData) {
+                    const session = JSON.parse(adminSessionData);
                     
                     if (session.username && session.timestamp) {
-                        console.log('✅ Sessione admin valida:', session.username);
-                        showAdminUI();
-                        return true;
+                        console.log('✅ Sessione admin tradizionale valida:', session.username);
+                        hasAdminSession = true;
                     }
+                }
+                
+                // Check unified session manager if available
+                let hasUnifiedSession = false;
+                if (sessionManagerIntegrated && sessionManagerInstance) {
+                    const currentUser = sessionManagerInstance.user;
+                    const userData = sessionManagerInstance.userData;
+                    
+                    if (currentUser && userData?.isAdmin) {
+                        console.log('✅ Sessione admin via Session Manager:', currentUser.email);
+                        hasUnifiedSession = true;
+                        
+                        // Sync admin session if only unified session exists
+                        if (!hasAdminSession) {
+                            const adminSession = {
+                                username: currentUser.email,
+                                timestamp: Date.now(),
+                                source: 'session_manager',
+                                userId: currentUser.uid
+                            };
+                            localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(adminSession));
+                            console.log('🔄 Sincronizzata sessione admin da Session Manager');
+                        }
+                    }
+                }
+                
+                const hasValidSession = hasAdminSession || hasUnifiedSession;
+                
+                if (hasValidSession) {
+                    console.log('✅ Accesso admin autorizzato');
+                    showAdminUI();
+                    
+                    // Mark user as admin in session manager if not already
+                    if (sessionManagerIntegrated && sessionManagerInstance && !hasUnifiedSession) {
+                        sessionManagerInstance.updateUserData({ isAdmin: true });
+                        console.log('🔐 Flag admin aggiunto al Session Manager');
+                    }
+                    
+                    return true;
                 }
                 
                 console.log('❌ Nessuna sessione admin valida');
@@ -847,9 +986,17 @@
             if (sessionIndicator) {
                 sessionIndicator.classList.add('show');
                 
+                // Enhanced indicator based on integration status
+                if (sessionManagerIntegrated) {
+                    sessionIndicator.classList.add('unified');
+                    sessionIndicator.textContent = '👑 Admin + Session Manager';
+                } else {
+                    sessionIndicator.textContent = '👑 Admin Sessione Attiva';
+                }
+                
                 setTimeout(() => {
                     sessionIndicator.classList.remove('show');
-                }, 3000);
+                }, 5000);
             }
             
             // Hide no-access overlay
@@ -872,18 +1019,18 @@
             }
         }
 
-        // Setup logout functionality
+        // Setup logout functionality with session manager integration
         function setupAdminLogout() {
             const logoutBtn = document.getElementById('adminLogoutBtn');
             
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
-                console.log('🔐 Sistema logout floating configurato');
+                console.log('🔐 Sistema logout floating configurato con integrazione');
             }
         }
 
         async function handleAdminLogout() {
-            console.log('🚪 Avvio logout admin...');
+            console.log('🚪 Avvio logout admin unificato...');
             
             const logoutBtn = document.getElementById('adminLogoutBtn');
             
@@ -896,11 +1043,26 @@
             try {
                 // Clear admin session
                 localStorage.removeItem(ADMIN_SESSION_KEY);
+                console.log('✅ Sessione admin tradizionale rimossa');
+                
+                // Clear session manager if integrated
+                if (sessionManagerIntegrated && sessionManagerInstance) {
+                    // Remove admin flag
+                    const userData = sessionManagerInstance.userData;
+                    if (userData) {
+                        delete userData.isAdmin;
+                        sessionManagerInstance.updateUserData(userData);
+                    }
+                    
+                    // Optionally logout from session manager too
+                    await sessionManagerInstance.logout();
+                    console.log('✅ Logout dal Session Manager completato');
+                }
                 
                 // Show success notification
                 showLogoutSuccessNotification();
                 
-                console.log('✅ Logout admin completato');
+                console.log('✅ Logout admin unificato completato');
                 
                 // Redirect after delay
                 setTimeout(() => {
@@ -1053,6 +1215,15 @@
                     console.log('- Email inviate oggi: 247');
                     console.log('- Sequenze attive: 23');
                     console.log('- Ultimo trigger: Quiz completato da Marco Bianchi');
+                    
+                    // Show session manager integration in logs
+                    if (sessionManagerIntegrated) {
+                        console.log('- Session Manager: Integrato ✅');
+                        console.log('- Utenti loggati tracciati: Sì');
+                    } else {
+                        console.log('- Session Manager: Standalone ⚠️');
+                    }
+                    
                     alert('📋 Log visualizzati nella console del browser');
                 });
             }
@@ -1067,6 +1238,7 @@
                         clickRate: '18.7%',
                         conversions: 23,
                         exportedAt: new Date().toISOString(),
+                        sessionManagerIntegrated: sessionManagerIntegrated,
                         profileDistribution: {
                             stressato_esaurito: 45,
                             procrastinatore_bloccato: 32,
@@ -1106,18 +1278,20 @@
             document.getElementById('emailConversions').textContent = conversions;
         }
 
-        // Function to integrate with quiz (this will be called from quiz completion)
+        // Enhanced function to integrate with quiz (this will be called from quiz completion)
         window.triggerEmailAutomationFromQuiz = async function(quizResults) {
             console.log('🎯 Quiz completed, triggering email automation:', quizResults);
             
             try {
-                // Prepare email data
+                // Enhanced email data with session manager integration
                 const emailData = {
                     nome: quizResults.nome || quizResults.name || 'Utente',
                     email: quizResults.email || 'andrea.padoan@gmail.com',
                     email_type: 'welcome',
                     dashboard_url: 'https://tribucoach.vercel.app/pages/user-dashboard.html',
-                    whatsapp: `https://wa.me/393123456789?text=Ciao%20Andrea,%20sono%20${quizResults.nome || 'un%20utente'}%20interessato%20al%20percorso%20coaching`
+                    whatsapp: `https://wa.me/393123456789?text=Ciao%20Andrea,%20sono%20${quizResults.nome || 'un%20utente'}%20interessato%20al%20percorso%20coaching`,
+                    sessionManagerIntegrated: sessionManagerIntegrated,
+                    userAuthenticated: quizResults.isAuthenticatedUser || false
                 };
                 
                 // Send welcome email
@@ -1128,6 +1302,18 @@
                 );
                 
                 console.log('✅ Email welcome inviata automaticamente:', result);
+                
+                // Track in session manager if available
+                if (sessionManagerIntegrated && sessionManagerInstance) {
+                    sessionManagerInstance.updateUserData({
+                        lastEmailAutomation: {
+                            type: 'welcome',
+                            sentAt: new Date().toISOString(),
+                            quizProfile: quizResults.profileType
+                        }
+                    });
+                    console.log('📧 Email automation tracciata nel Session Manager');
+                }
                 
                 // Update email stats to reflect new activity
                 updateEmailStats();
@@ -1174,11 +1360,15 @@
             window.location.href = '../user-dashboard.html';
         };
 
-        // Inizializzazione completa
+        // Enhanced initialization with unified session manager integration
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🚀 Inizializzazione Admin Dashboard con Email Automation...');
+            console.log('🚀 Inizializzazione Admin Dashboard con Session Manager Integration...');
             
-            // STEP 0: Check admin session first
+            // STEP 0: Wait for and integrate session manager
+            console.log('🔗 Step 0: Integrazione Session Manager...');
+            await waitForSessionManager();
+            
+            // STEP 1: Check admin session with integration
             const hasValidSession = checkAdminSession();
             
             if (!hasValidSession) {
@@ -1186,7 +1376,7 @@
                 return; // Don't initialize dashboard if no valid session
             }
             
-            // Setup logout system
+            // Setup logout system with integration
             setupAdminLogout();
             
             // Setup email automation
@@ -1196,29 +1386,29 @@
             initializeEmailJS();
             
             try {
-                // STEP 1: Inizializza Firebase
-                console.log('🔥 Step 1: Inizializzazione Firebase...');
+                // STEP 2: Inizializza Firebase
+                console.log('🔥 Step 2: Inizializzazione Firebase...');
                 initializeFirebaseAdmin();
                 
-                // STEP 2: Aspetta Firebase, poi inizializza Core
+                // STEP 3: Aspetta Firebase, poi inizializza Core
                 setTimeout(() => {
-                    console.log('⚡ Step 2: Inizializzazione Dashboard Core...');
+                    console.log('⚡ Step 3: Inizializzazione Dashboard Core...');
                     initializeDashboardCore();
                     
-                    // STEP 3: Inizializza User Management
-                    console.log('👥 Step 3: Inizializzazione User Management...');
+                    // STEP 4: Inizializza User Management
+                    console.log('👥 Step 4: Inizializzazione User Management...');
                     initializeUserManagement();
                     
-                    // 🆕 STEP 4: Session Details è già importato come modulo
-                    console.log('📋 Step 4: Session Details module caricato');
+                    // 🆕 STEP 5: Session Details è già importato come modulo
+                    console.log('📋 Step 5: Session Details module caricato');
                     
-                    // STEP 5: Forza caricamento dati (BACKUP)
+                    // STEP 6: Forza caricamento dati (BACKUP)
                     setTimeout(() => {
-                        console.log('🔄 Step 5: Caricamento dati automatico...');
+                        console.log('🔄 Step 6: Caricamento dati automatico...');
                         loadAllFirebaseData();
                     }, 3000);
                     
-                    console.log('✅ Tutti i moduli inizializzati + Email Automation!');
+                    console.log('✅ Tutti i moduli inizializzati con Session Manager Integration!');
                 }, 1000);
                 
             } catch (error) {
@@ -1282,7 +1472,7 @@
             }
         });
 
-        console.log('🎯 Admin Dashboard HTML caricato con Email Automation - Verificando sessione admin...');
+        console.log('🎯 Admin Dashboard HTML caricato con Session Manager Integration - Verificando sessione...');
     </script>
 </body>
 </html>
