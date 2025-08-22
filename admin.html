@@ -189,20 +189,20 @@
     </div>
 
     <script>
-        // Configurazione admin
+        // Configurazione admin - VERSIONE CORRETTA CON admin@tribu.com
         const ADMIN_CONFIG = {
             adminEmails: [
+                'admin@tribu.com',              // ✅ EMAIL PRINCIPALE
                 'andrea@tribucoach.com',
                 'admin@tribucoach.com',
-                'padoan@tribucoach.com',
-                'demo@tribucoach.com' // Per testing
+                'padoan@tribucoach.com'
             ],
             adminDashboardUrl: './pages/admin/admin-dashboard.html',
             loginUrl: './pages/login.html',
             homeUrl: './pages/admin/admin-dashboard.html',
             userDashboardUrl: './pages/user-dashboard.html',
             timeout: 6000,
-            debug: true // Sempre attivo per debug
+            debug: true
         };
 
         // Stato admin
@@ -232,9 +232,9 @@
         async function initAdminAccess() {
             try {
                 updateStatus('🔍 Inizializzazione sistema admin...', 'status');
-                updateDebug('=== ADMIN ACCESS INIT ===');
+                updateDebug('=== ADMIN ACCESS INIT FINALE ===');
                 updateDebug(`URL: ${window.location.href}`);
-                updateDebug(`Debug mode: ${ADMIN_CONFIG.debug}`);
+                updateDebug(`Admin emails configurate: ${ADMIN_CONFIG.adminEmails.join(', ')}`);
 
                 // Timeout di sicurezza
                 const timeoutId = setTimeout(() => {
@@ -258,7 +258,7 @@
 
                 // Gestisci risultato
                 if (!authResult.isAuthenticated) {
-                    updateStatus('🔐 Autenticazione richiesta', 'login');
+                    updateStatus('🔑 Autenticazione richiesta', 'login');
                     updateDebug('User not authenticated - redirecting to login');
                     setTimeout(() => redirectToLogin(), 2000);
                     return;
@@ -267,6 +267,7 @@
                 if (!authResult.isAdmin) {
                     updateStatus('❌ Accesso admin negato - utente non autorizzato', 'error');
                     updateDebug(`User ${authResult.user?.email} is not admin`);
+                    updateDebug(`User email check: ${authResult.user?.email} in [${ADMIN_CONFIG.adminEmails.join(', ')}]`);
                     setTimeout(() => redirectToUserDashboard(), 3000);
                     return;
                 }
@@ -303,16 +304,16 @@
             updateDebug('Dependencies loading completed');
         }
 
-        // Carica session manager
+        // Carica session manager - PATH CORRETTI PER js/
         async function loadSessionManager() {
             try {
                 updateDebug('Attempting to load session manager...');
 
-                // Possibili path per session manager
+                // Path corretti per la cartella js/
                 const sessionManagerPaths = [
-                    './utils/unified-session-manager.js',
-                    '/utils/unified-session-manager.js',
-                    'utils/unified-session-manager.js'
+                    './js/unified-session-manager.js',
+                    '/js/unified-session-manager.js',
+                    'js/unified-session-manager.js'
                 ];
 
                 for (const path of sessionManagerPaths) {
@@ -536,7 +537,7 @@
             }
         }
 
-        // Verifica se utente è admin
+        // Verifica se utente è admin - VERSIONE CORRETTA
         function isAdminUser(user) {
             if (!user || !user.email) {
                 updateDebug('isAdminUser: No user or email provided');
@@ -546,8 +547,14 @@
             const email = user.email.toLowerCase();
             const isAdmin = ADMIN_CONFIG.adminEmails.includes(email);
             
-            updateDebug(`Admin check for ${email}: ${isAdmin ? 'YES' : 'NO'}`);
-            updateDebug(`Admin emails: ${ADMIN_CONFIG.adminEmails.join(', ')}`);
+            updateDebug(`Admin check for ${email}: ${isAdmin ? 'YES ✅' : 'NO ❌'}`);
+            updateDebug(`Admin emails configured: ${ADMIN_CONFIG.adminEmails.join(', ')}`);
+            
+            // Verifica extra per admin@tribu.com
+            if (email === 'admin@tribu.com') {
+                updateDebug('✅ ADMIN@TRIBU.COM RICONOSCIUTO COME ADMIN');
+                return true;
+            }
             
             return isAdmin;
         }
@@ -625,6 +632,7 @@
         };
         
         console.log('🔧 Admin Access debug available at window.adminAccess');
+        console.log('✅ ADMIN EMAILS:', ADMIN_CONFIG.adminEmails);
     </script>
 </body>
 </html>
