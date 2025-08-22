@@ -232,49 +232,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        .demo-credentials {
-            background: rgba(26, 26, 26, 0.5);
-            border: 1px solid #444;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 25px;
-        }
-
-        .demo-credentials h3 {
-            color: #ff9933;
-            font-size: 1rem;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .demo-user {
-            background: rgba(255, 102, 0, 0.1);
-            border: 1px solid rgba(255, 102, 0, 0.3);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .demo-user:hover {
-            background: rgba(255, 102, 0, 0.2);
-            transform: translateX(4px);
-        }
-
-        .demo-user .user-info {
-            font-size: 0.85rem;
-            color: #ff9933;
-            font-weight: 600;
-        }
-
-        .demo-user .user-creds {
-            font-size: 0.75rem;
-            color: #ccc;
-            margin-top: 4px;
-            font-family: monospace;
-        }
-
         .links {
             text-align: center;
             margin-top: 25px;
@@ -325,6 +282,12 @@
         .system-status.show {
             display: block;
             animation: fadeInUp 0.5s ease-out;
+        }
+
+        .system-status.error {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: rgba(244, 67, 54, 0.3);
+            color: #f44336;
         }
 
         @keyframes fadeInUp {
@@ -405,21 +368,6 @@
             </button>
         </form>
 
-        <!-- Credenziali demo -->
-        <div class="demo-credentials">
-            <h3>🎭 Account Demo Disponibili</h3>
-            
-            <div class="demo-user" onclick="fillDemoCredentials('demo@tribucoach.com', 'demo123')">
-                <div class="user-info">👤 Demo User</div>
-                <div class="user-creds">demo@tribucoach.com / demo123</div>
-            </div>
-            
-            <div class="demo-user" onclick="fillDemoCredentials('andrea@tribucoach.com', 'coach123')">
-                <div class="user-info">👪 Andrea Padoan (Coach)</div>
-                <div class="user-creds">andrea@tribucoach.com / coach123</div>
-            </div>
-        </div>
-
         <div class="links">
             <a href="forgot-password.html">🔄 Password dimenticata?</a> |
             <a href="register.html">📝 Registrati</a> |
@@ -428,7 +376,7 @@
     </div>
 
     <script>
-        // 🚀 LOGIN PAGE CON SESSIONE PERSISTENTE UNIFICATA E FALLBACK ROBUSTO
+        // 🚀 LOGIN PAGE - SOLO FIREBASE AUTH REALE
         
         class LoginPage {
             constructor() {
@@ -444,7 +392,6 @@
                 this.systemMessage = document.getElementById('systemMessage');
                 
                 this.sessionManager = null;
-                this.fallbackMode = false;
                 
                 this.init();
             }
@@ -453,8 +400,12 @@
                 console.log('🔍 Inizializzazione Login Page...');
                 this.showSystemStatus('🔧 Caricamento sistema di autenticazione...');
                 
-                // Carica session manager con fallback
-                await this.loadSessionManager();
+                // Carica session manager - OBBLIGATORIO
+                const loaded = await this.loadSessionManager();
+                if (!loaded) {
+                    this.showSystemError('❌ Errore caricamento sistema. Contatta il supporto.');
+                    return;
+                }
                 
                 // Controlla se c'è già una sessione valida
                 await this.checkExistingSession();
@@ -479,8 +430,7 @@
                     const sessionManagerPaths = [
                         '../utils/unified-session-manager.js',
                         '/utils/unified-session-manager.js',
-                        'utils/unified-session-manager.js',
-                        '../api/unified-session-manager.js' // Vecchio path come fallback
+                        'utils/unified-session-manager.js'
                     ];
 
                     for (const path of sessionManagerPaths) {
@@ -500,6 +450,12 @@
                             if (this.sessionManager) {
                                 console.log(`✅ Session Manager caricato da: ${path}`);
                                 this.showSystemStatus('✅ Session Manager collegato');
+                                
+                                // Verifica che le funzioni siano disponibili
+                                if (!window.loginUser || !window.getCurrentUser || !window.isUserAuthenticated) {
+                                    throw new Error('Funzioni di autenticazione non disponibili');
+                                }
+                                
                                 return true;
                             }
 
@@ -509,17 +465,11 @@
                     }
 
                     // Se arriviamo qui, session manager non trovato
-                    console.warn('⚠️ Session Manager non trovato - modalità fallback');
-                    this.fallbackMode = true;
-                    this.showSystemStatus('⚠️ Modalità fallback attiva');
-                    this.setupFallbackAuth();
-                    
+                    console.error('❌ Session Manager non trovato in nessun path');
                     return false;
 
                 } catch (error) {
                     console.error('❌ Errore caricamento session manager:', error);
-                    this.fallbackMode = true;
-                    this.setupFallbackAuth();
                     return false;
                 }
             }
@@ -537,7 +487,7 @@
                     document.head.appendChild(script);
                     
                     // Timeout
-                    setTimeout(() => reject(new Error(`Timeout loading: ${src}`)), 3000);
+                    setTimeout(() => reject(new Error(`Timeout loading: ${src}`)), 5000);
                 });
             }
 
@@ -546,85 +496,10 @@
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
-            // Setup autenticazione fallback
-            setupFallbackAuth() {
-                console.log('🔧 Setup fallback authentication...');
-                
-                // Crea funzioni globali fallback
-                window.loginUser = this.fallbackLogin.bind(this);
-                window.getCurrentUser = this.fallbackGetCurrentUser.bind(this);
-                window.isUserAuthenticated = this.fallbackIsAuthenticated.bind(this);
-                window.logoutUser = this.fallbackLogout.bind(this);
-                
-                console.log('✅ Fallback authentication ready');
-            }
-
-            // Metodi fallback
-            async fallbackLogin(email, password, rememberMe = true) {
-                console.log('🔧 Fallback login:', email);
-                
-                // Credenziali demo hardcoded
-                const demoUsers = {
-                    'demo@tribucoach.com': { password: 'demo123', name: 'Demo User', isAdmin: false },
-                    'andrea@tribucoach.com': { password: 'coach123', name: 'Andrea Padoan', isAdmin: true }
-                };
-
-                await this.sleep(500); // Simula delay
-
-                const user = demoUsers[email.toLowerCase()];
-                if (user && user.password === password) {
-                    const userData = {
-                        uid: `fallback_${Date.now()}`,
-                        email: email,
-                        displayName: user.name,
-                        isAdmin: user.isAdmin,
-                        loginTime: Date.now()
-                    };
-
-                    // Salva in localStorage
-                    const storageKey = rememberMe ? 'tribucoach_user' : 'tribucoach_session';
-                    if (rememberMe) {
-                        localStorage.setItem(storageKey, JSON.stringify(userData));
-                    } else {
-                        sessionStorage.setItem(storageKey, JSON.stringify(userData));
-                    }
-
-                    return { success: true, user: userData };
-                } else {
-                    return { success: false, error: 'Credenziali non valide' };
-                }
-            }
-
-            fallbackGetCurrentUser() {
-                try {
-                    const stored = localStorage.getItem('tribucoach_user') || 
-                                  sessionStorage.getItem('tribucoach_session');
-                    return stored ? JSON.parse(stored) : null;
-                } catch {
-                    return null;
-                }
-            }
-
-            fallbackIsAuthenticated() {
-                return !!this.fallbackGetCurrentUser();
-            }
-
-            fallbackLogout() {
-                localStorage.removeItem('tribucoach_user');
-                sessionStorage.removeItem('tribucoach_session');
-                return { success: true };
-            }
-
             async checkExistingSession() {
                 try {
-                    const isAuthenticated = this.sessionManager ? 
-                                          this.sessionManager.isAuthenticated : 
-                                          (window.isUserAuthenticated ? window.isUserAuthenticated() : false);
-
-                    if (isAuthenticated) {
-                        const user = this.sessionManager ? 
-                                    this.sessionManager.user : 
-                                    (window.getCurrentUser ? window.getCurrentUser() : null);
+                    if (this.sessionManager && this.sessionManager.isAuthenticated) {
+                        const user = this.sessionManager.user;
                         
                         if (user) {
                             console.log('✅ Sessione esistente trovata:', user.email);
@@ -677,24 +552,24 @@
                     return;
                 }
 
+                // Verifica che il sistema sia pronto
+                if (!window.loginUser) {
+                    this.showError('❌ Sistema di autenticazione non disponibile');
+                    return;
+                }
+
                 this.setLoading(true);
                 this.hideMessages();
 
                 try {
                     console.log('🔐 Tentativo login:', email, rememberMe ? '(persistente)' : '(temporanea)');
                     
-                    // Usa session manager o fallback
-                    const loginFunc = window.loginUser;
-                    if (!loginFunc) {
-                        throw new Error('Sistema di autenticazione non disponibile');
-                    }
-                    
-                    const result = await loginFunc(email, password, rememberMe);
+                    const result = await window.loginUser(email, password, rememberMe);
                     
                     if (result.success) {
                         console.log('✅ Login riuscito:', result.user.email);
                         
-                        // Salva last email
+                        // Salva last email se remember me
                         if (rememberMe) {
                             localStorage.setItem('lastEmail', email);
                         }
@@ -756,7 +631,15 @@
 
             showSystemStatus(message) {
                 this.systemMessage.textContent = message;
-                this.systemStatus.classList.add('show');
+                this.systemStatus.className = 'system-status show';
+            }
+
+            showSystemError(message) {
+                this.systemMessage.textContent = message;
+                this.systemStatus.className = 'system-status error show';
+                
+                // Disabilita form se errore critico
+                this.setLoading(true);
             }
 
             hideSystemStatus() {
@@ -819,18 +702,6 @@
                 }
             }
         }
-
-        // 🎭 FUNZIONI GLOBALI PER DEMO CREDENTIALS
-        window.fillDemoCredentials = (email, password) => {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
-            document.getElementById('rememberMe').checked = true;
-            
-            // Auto-submit dopo breve delay
-            setTimeout(() => {
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-            }, 500);
-        };
 
         // 🚀 INIZIALIZZAZIONE
         document.addEventListener('DOMContentLoaded', () => {
