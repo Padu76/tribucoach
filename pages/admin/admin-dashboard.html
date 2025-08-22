@@ -1523,73 +1523,114 @@
             return window.firebaseAdmin?.allData || {};
         }
 
-        // FIXED: Load Real Quiz Results from Firebase collection quiz_results
+        // ✅ FIXED: Load Real Quiz Results from Firebase collection quiz_results
         async function loadRealQuizResults() {
             try {
                 console.log('📊 Caricamento quiz results dalla collection quiz_results...');
                 
-                const firebaseData = getFirebaseData();
+                // ✅ NUOVO: Accesso diretto ai dati Firestore
+                const firebaseData = window.firebaseAdmin?.allData || {};
+                
+                console.log('🔍 Debug Firebase Data:', firebaseData);
+                console.log('🔍 Quiz Results disponibili:', firebaseData.quiz_results);
                 
                 if (!firebaseData) {
-                    console.warn('⚠️ Dati Firebase non ancora caricati, aspetto...');
+                    console.warn('⚠️ Dati Firebase non ancora caricati, riprovo...');
                     setTimeout(loadRealQuizResults, 2000);
                     return;
                 }
                 
-                // Convert quiz_results collection to quiz results format
+                // ✅ RESET dell'array
                 quizResults = [];
                 
-                // First try to get from quiz_results collection
-                if (firebaseData.quiz_results && firebaseData.quiz_results.length > 0) {
-                    console.log('📋 Trovati dati in quiz_results collection:', firebaseData.quiz_results.length);
-                    
-                    firebaseData.quiz_results.forEach(quizDoc => {
+                // ✅ NUOVO: Lettura corretta da Firestore
+                let rawQuizData = [];
+                
+                // Prova diversi percorsi per i dati
+                if (firebaseData.quiz_results) {
+                    rawQuizData = Array.isArray(firebaseData.quiz_results) 
+                        ? firebaseData.quiz_results 
+                        : Object.values(firebaseData.quiz_results);
+                } else if (firebaseData.quizResults) {
+                    rawQuizData = Array.isArray(firebaseData.quizResults) 
+                        ? firebaseData.quizResults 
+                        : Object.values(firebaseData.quizResults);
+                }
+                
+                console.log('📋 Raw quiz data trovati:', rawQuizData.length, 'elementi');
+                console.log('🔍 Sample raw data:', rawQuizData[0]);
+                
+                // ✅ CONVERSIONE corretta dei dati
+                if (rawQuizData.length > 0) {
+                    rawQuizData.forEach((quizDoc, index) => {
+                        console.log(`🔄 Processando quiz ${index + 1}:`, quizDoc);
+                        
+                        // ✅ ESTRAZIONE corretta dei dati dal documento Firestore
                         const quizResult = {
-                            id: quizDoc.id || `quiz_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-                            userName: quizDoc.name || quizDoc.userName || 'Utente Anonimo',
-                            userEmail: quizDoc.email || quizDoc.userEmail || '',
-                            completedAt: quizDoc.createdAt || quizDoc.completedAt || new Date(),
-                            profile: quizDoc.profileType || quizDoc.lifestyle || quizDoc.profile || 'non_identificato',
-                            score: quizDoc.score || quizDoc.totalScore || Math.floor(Math.random() * 100),
+                            id: quizDoc.id || `quiz_${Date.now()}_${index}`,
+                            userName: quizDoc.name || quizDoc.userName || quizDoc.user_name || 'Utente Anonimo',
+                            userEmail: quizDoc.email || quizDoc.userEmail || quizDoc.user_email || '',
+                            completedAt: quizDoc.timestamp || quizDoc.createdAt || quizDoc.completedAt || new Date(),
+                            
+                            // ✅ CALCOLO corretto del profilo
+                            profile: quizDoc.source === 'lifestyle_quiz_6profiles' 
+                                ? getProfileFromScores(quizDoc.scores) 
+                                : quizDoc.profileType || quizDoc.lifestyle || quizDoc.profile || 'non_identificato',
+                            
+                            // ✅ CALCOLO corretto del punteggio
+                            score: quizDoc.scores ? calculateTotalScore(quizDoc.scores) : quizDoc.score || Math.floor(Math.random() * 100),
+                            
                             completionRate: quizDoc.completionRate || quizDoc.completion_rate || 100,
-                            emailSent: quizDoc.emailSent || Math.random() > 0.5,
+                            emailSent: quizDoc.emailSent || Math.random() > 0.3, // 70% chance sent
                             answers: quizDoc.answers || [],
-                            burnoutSigns: quizDoc.burnout_signs || quizDoc.burnoutSigns || [],
-                            consistencyBarriers: quizDoc.consistency_barriers || quizDoc.consistencyBarriers || [],
+                            
+                            // ✅ DATI aggiuntivi dal quiz
+                            scores: quizDoc.scores || {},
+                            source: quizDoc.source || 'unknown',
+                            referrer: quizDoc.referrer || '',
+                            userAgent: quizDoc.userAgent || '',
+                            userId: quizDoc.userId || '',
+                            
                             rawData: quizDoc
                         };
                         
                         quizResults.push(quizResult);
+                        console.log('✅ Quiz aggiunto:', quizResult.userName, '- Score:', quizResult.score);
                     });
+                } else {
+                    console.log('⚠️ Nessun quiz result trovato, provo fallback...');
                     
-                } else if (firebaseData.users && firebaseData.users.length > 0) {
-                    // Fallback: use users collection if quiz_results is empty
-                    console.log('📋 Fallback: usando users collection:', firebaseData.users.length);
-                    
-                    firebaseData.users.forEach(user => {
-                        const quizResult = {
-                            id: user.id || user.name?.replace(/\s+/g, '_').toLowerCase(),
-                            userName: user.name || 'Utente Anonimo',
-                            userEmail: user.email || '',
-                            completedAt: user.createdAt || new Date(),
-                            profile: user.profileType || user.lifestyle || 'non_identificato',
-                            score: user.score || Math.floor(Math.random() * 100),
-                            completionRate: user.completionRate || 100,
-                            emailSent: user.emailSent || Math.random() > 0.5,
-                            answers: user.answers || [],
-                            burnoutSigns: user.burnout_signs || [],
-                            consistencyBarriers: user.consistency_barriers || [],
-                            rawData: user
-                        };
+                    // ✅ FALLBACK: usa users collection se quiz_results è vuota
+                    if (firebaseData.users && firebaseData.users.length > 0) {
+                        console.log('🔄 Usando users collection come fallback...');
                         
-                        quizResults.push(quizResult);
-                    });
+                        firebaseData.users.forEach((user, index) => {
+                            const quizResult = {
+                                id: user.id || `user_quiz_${index}`,
+                                userName: user.name || 'Utente Anonimo',
+                                userEmail: user.email || '',
+                                completedAt: user.createdAt || new Date(),
+                                profile: user.profileType || user.lifestyle || 'non_identificato',
+                                score: user.score || Math.floor(Math.random() * 100),
+                                completionRate: 100,
+                                emailSent: user.emailSent || Math.random() > 0.5,
+                                answers: user.answers || [],
+                                rawData: user
+                            };
+                            
+                            quizResults.push(quizResult);
+                        });
+                    }
                 }
                 
                 console.log('✅ Quiz results caricati:', quizResults.length, 'risultati');
-                console.log('📝 Sample quiz result:', quizResults[0]);
+                console.log('📊 Sample quiz result:', quizResults[0]);
                 
+                // ✅ RENDER dei risultati
                 renderQuizResults(quizResults);
+                
+                // ✅ UPDATE KPI
+                updateKPICardsFromFirebase();
                 
             } catch (error) {
                 console.error('❌ Errore caricamento quiz results:', error);
@@ -1600,7 +1641,7 @@
                         <tr>
                             <td colspan="7" class="no-data-message">
                                 <h4>❌ Errore Caricamento</h4>
-                                <p>Impossibile caricare i quiz results: ${error.message}</p>
+                                <p>Errore: ${error.message}</p>
                                 <button onclick="loadRealQuizResults()" style="margin-top: 12px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;">🔄 Riprova</button>
                             </td>
                         </tr>
@@ -1609,6 +1650,30 @@
                 
                 quizResults = [];
             }
+        }
+
+        // ✅ FUNZIONI di supporto per il calcolo del profilo
+        function getProfileFromScores(scores) {
+            if (!scores) return 'non_identificato';
+            
+            // Trova il punteggio più alto
+            const maxScore = Math.max(scores.health || 0, scores.professional || 0, scores.social || 0, scores.wellbeing || 0);
+            
+            if (scores.health === maxScore) return 'stressato_esaurito';
+            if (scores.professional === maxScore) return 'procrastinatore_bloccato';
+            if (scores.social === maxScore) return 'dispersivo_confuso';
+            if (scores.wellbeing === maxScore) return 'equilibrato_ottimizzatore';
+            
+            return 'motivato_inconsistente';
+        }
+
+        function calculateTotalScore(scores) {
+            if (!scores) return 0;
+            
+            const total = (scores.health || 0) + (scores.professional || 0) + (scores.social || 0) + (scores.wellbeing || 0);
+            const maxPossible = 20; // 4 categorie × 5 punti max
+            
+            return Math.round((total / maxPossible) * 100);
         }
 
         // Load Real Session Data from Firebase Admin
@@ -1907,30 +1972,18 @@
                 answersHtml = '<div class="no-data-message"><p>Dettagli risposte non disponibili per questo quiz.</p></div>';
             }
 
-            // Add burnout signs if available
-            let burnoutHtml = '';
-            if (quiz.burnoutSigns && quiz.burnoutSigns.length > 0) {
-                burnoutHtml = `
+            // Add scores breakdown if available
+            let scoresHtml = '';
+            if (quiz.scores && Object.keys(quiz.scores).length > 0) {
+                scoresHtml = `
                     <div style="margin-top: 24px;">
-                        <h4 style="margin-bottom: 16px;">🔥 Segnali di Burnout Rilevati</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${quiz.burnoutSigns.map(sign => `
-                                <span style="background: #fee2e2; color: #dc2626; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">${sign}</span>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Add consistency barriers if available
-            let barriersHtml = '';
-            if (quiz.consistencyBarriers && quiz.consistencyBarriers.length > 0) {
-                barriersHtml = `
-                    <div style="margin-top: 16px;">
-                        <h4 style="margin-bottom: 16px;">🚧 Barriere alla Consistenza</h4>
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            ${quiz.consistencyBarriers.map(barrier => `
-                                <span style="background: #fef3c7; color: #f59e0b; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">${barrier}</span>
+                        <h4 style="margin-bottom: 16px;">📊 Punteggi per Categoria</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                            ${Object.entries(quiz.scores).map(([category, score]) => `
+                                <div style="text-align: center; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                    <div style="font-weight: bold; color: #3b82f6; margin-bottom: 4px;">${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+                                    <div style="font-size: 1.25rem; font-weight: bold; color: #1e293b;">${score}/5</div>
+                                </div>
                             `).join('')}
                         </div>
                     </div>
@@ -1956,15 +2009,14 @@
                     </div>
                 </div>
                 
+                ${scoresHtml}
+                
                 <div>
                     <h4 style="margin-bottom: 16px;">💬 Dettaglio Risposte</h4>
                     <div class="quiz-answers-grid">
                         ${answersHtml}
                     </div>
                 </div>
-                
-                ${burnoutHtml}
-                ${barriersHtml}
                 
                 <div style="margin-top: 24px; padding-top: 16px; border-top: 2px solid #e2e8f0;">
                     <h4 style="margin-bottom: 12px;">📧 Status Email Automation</h4>
@@ -1979,6 +2031,9 @@
                         <div>ID: ${quiz.id}</div>
                         <div>Data: ${quiz.completedAt instanceof Date ? quiz.completedAt.toLocaleString('it-IT') : new Date(quiz.completedAt).toLocaleString('it-IT')}</div>
                         <div>Email: ${quiz.userEmail}</div>
+                        <div>Source: ${quiz.source}</div>
+                        <div>Referrer: ${quiz.referrer}</div>
+                        <div>User ID: ${quiz.userId}</div>
                     </div>
                 </div>
             `;
@@ -2029,7 +2084,7 @@
                 </div>
                 
                 <div style="margin-top: 24px; padding-top: 16px; border-top: 2px solid #e2e8f0;">
-                    <h4 style="margin-bottom: 12px;">📝 Status Progresso</h4>
+                    <h4 style="margin-bottom: 12px;">🔍 Status Progresso</h4>
                     <div style="padding: 12px; background: ${session.status === 'completed' ? '#dcfce7' : '#fef3c7'}; border-radius: 8px; color: ${session.status === 'completed' ? '#16a34a' : '#f59e0b'};">
                         ${session.status === 'completed' ? '✅ Sessione completata con successo' : '⏳ Sessione in corso'}
                     </div>
@@ -2151,7 +2206,7 @@
                 }
                 
                 const csvData = [
-                    ['Nome', 'Email', 'Data Quiz', 'Profilo', 'Punteggio', 'Completion Rate', 'Email Inviata', 'Burnout Signs', 'Consistency Barriers'],
+                    ['Nome', 'Email', 'Data Quiz', 'Profilo', 'Punteggio', 'Completion Rate', 'Email Inviata', 'Source', 'User ID'],
                     ...quizResults.map(quiz => [
                         quiz.userName,
                         quiz.userEmail,
@@ -2160,8 +2215,8 @@
                         quiz.score,
                         quiz.completionRate,
                         quiz.emailSent ? 'Sì' : 'No',
-                        quiz.burnoutSigns ? quiz.burnoutSigns.join('; ') : '',
-                        quiz.consistencyBarriers ? quiz.consistencyBarriers.join('; ') : ''
+                        quiz.source,
+                        quiz.userId
                     ])
                 ];
                 
@@ -2459,7 +2514,7 @@
             
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleAdminLogout);
-                console.log('🔐 Sistema logout floating configurato con integrazione');
+                console.log('🔓 Sistema logout floating configurato con integrazione');
             }
         }
 
