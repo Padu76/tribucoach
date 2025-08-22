@@ -13,12 +13,12 @@ class UnifiedSessionManager {
         this.dashboardData = {};
         this.authListeners = [];
         
-        console.log('Unified Session Manager inizializzato');
+        console.log('✅ Unified Session Manager inizializzato');
         this.init();
     }
 
     async init() {
-        console.log('Inizializzazione sessione unificata...');
+        console.log('🚀 Inizializzazione sessione unificata...');
         
         // 1. Recupera sessione esistente
         await this.loadExistingSession();
@@ -32,7 +32,7 @@ class UnifiedSessionManager {
         // 4. Setup auto-save
         this.setupAutoSave();
         
-        console.log('Sessione unificata pronta:', {
+        console.log('✅ Sessione unificata pronta:', {
             user: this.currentUser ? this.currentUser.email : 'nessuno',
             sessionValid: !!this.sessionData.isValid,
             dataLoaded: Object.keys(this.dashboardData).length
@@ -59,7 +59,7 @@ class UnifiedSessionManager {
                     this.sessionData.isValid = true;
                     this.sessionData.lastActivity = Date.now();
                     
-                    console.log('Sessione ripristinata:', {
+                    console.log('🔄 Sessione ripristinata:', {
                         user: this.currentUser.email,
                         age: Math.round(sessionAge / (1000 * 60 * 60)) + ' ore',
                         valid: true
@@ -69,7 +69,7 @@ class UnifiedSessionManager {
                     this.updateAuthState(this.currentUser);
                     return true;
                 } else {
-                    console.log('Sessione scaduta, cleanup...');
+                    console.log('⏰ Sessione scaduta, cleanup...');
                     this.clearSession();
                 }
             }
@@ -78,14 +78,14 @@ class UnifiedSessionManager {
             const tempSession = sessionStorage.getItem(this.sessionKey);
             if (tempSession) {
                 const tempData = JSON.parse(tempSession);
-                console.log('Fallback sessione temporanea:', tempData);
+                console.log('📝 Fallback sessione temporanea:', tempData);
                 this.sessionData = tempData;
                 this.sessionData.isValid = true;
                 return true;
             }
             
         } catch (error) {
-            console.error('Errore caricamento sessione:', error);
+            console.error('❌ Errore caricamento sessione:', error);
             this.clearSession();
         }
         
@@ -98,7 +98,7 @@ class UnifiedSessionManager {
             const savedData = localStorage.getItem(this.dataKey);
             if (savedData) {
                 this.dashboardData = JSON.parse(savedData);
-                console.log('Dati dashboard ripristinati:', Object.keys(this.dashboardData));
+                console.log('📊 Dati dashboard ripristinati:', Object.keys(this.dashboardData));
                 
                 // Verifica eta dati
                 if (this.dashboardData.lastUpdate) {
@@ -106,13 +106,13 @@ class UnifiedSessionManager {
                     const maxDataAge = 24 * 60 * 60 * 1000; // 24 ore
                     
                     if (dataAge > maxDataAge) {
-                        console.log('Dati dashboard obsoleti, refresh necessario');
+                        console.log('🔄 Dati dashboard obsoleti, refresh necessario');
                         this.dashboardData.needsRefresh = true;
                     }
                 }
             }
         } catch (error) {
-            console.error('Errore caricamento dati dashboard:', error);
+            console.error('❌ Errore caricamento dati dashboard:', error);
             this.dashboardData = {};
         }
     }
@@ -137,7 +137,7 @@ class UnifiedSessionManager {
 
     // LOGIN UNIFICATO
     async login(email, password, rememberMe = true) {
-        console.log('Login tentativo:', email, rememberMe ? '(persistente)' : '(sessione)');
+        console.log('🔑 Login tentativo:', email, rememberMe ? '(persistente)' : '(sessione)');
         
         try {
             // Autenticazione con credenziali reali
@@ -162,7 +162,7 @@ class UnifiedSessionManager {
                 // Carica dati utente
                 await this.loadUserData();
                 
-                console.log('Login completato:', user.email);
+                console.log('✅ Login completato:', user.email);
                 return { success: true, user: user };
                 
             } else {
@@ -170,14 +170,14 @@ class UnifiedSessionManager {
             }
             
         } catch (error) {
-            console.error('Errore login:', error);
+            console.error('❌ Errore login:', error);
             return { success: false, error: error.message };
         }
     }
 
     // LOGOUT UNIFICATO
     async logout() {
-        console.log('Logout in corso...');
+        console.log('🚪 Logout in corso...');
         
         try {
             // Salva dati importanti prima del logout
@@ -193,11 +193,11 @@ class UnifiedSessionManager {
             // Notifica listeners
             this.notifyAuthListeners(null);
             
-            console.log('Logout completato');
+            console.log('✅ Logout completato');
             return { success: true };
             
         } catch (error) {
-            console.error('Errore logout:', error);
+            console.error('❌ Errore logout:', error);
             return { success: false, error: error.message };
         }
     }
@@ -216,16 +216,16 @@ class UnifiedSessionManager {
                     isAuthenticated: true,
                     lastLogin: Date.now()
                 }));
-                console.log('Sessione salvata (permanente)');
+                console.log('💾 Sessione salvata (permanente)');
             } else {
                 // Salva solo in sessionStorage (temporanea)
                 sessionStorage.setItem(this.sessionKey, sessionStr);
                 sessionStorage.setItem(this.userKey, userStr);
-                console.log('Sessione salvata (temporanea)');
+                console.log('💾 Sessione salvata (temporanea)');
             }
             
         } catch (error) {
-            console.error('Errore salvataggio sessione:', error);
+            console.error('❌ Errore salvataggio sessione:', error);
         }
     }
 
@@ -236,10 +236,10 @@ class UnifiedSessionManager {
             this.dashboardData.userId = this.currentUser?.uid || null;
             
             localStorage.setItem(this.dataKey, JSON.stringify(this.dashboardData));
-            console.log('Dati dashboard salvati');
+            console.log('💾 Dati dashboard salvati');
             
         } catch (error) {
-            console.error('Errore salvataggio dati dashboard:', error);
+            console.error('❌ Errore salvataggio dati dashboard:', error);
         }
     }
 
@@ -254,7 +254,7 @@ class UnifiedSessionManager {
         this.currentUser = null;
         this.sessionData = { isValid: false };
         
-        console.log('Sessione pulita');
+        console.log('🧹 Sessione pulita');
     }
 
     // AUTO-SAVE PERIODICO
@@ -274,7 +274,7 @@ class UnifiedSessionManager {
             }
         }, 2 * 60 * 1000);
         
-        console.log('Auto-save attivato');
+        console.log('⏰ Auto-save attivato');
     }
 
     // CARICAMENTO DATI UTENTE
@@ -282,7 +282,7 @@ class UnifiedSessionManager {
         if (!this.currentUser) return;
         
         try {
-            console.log('Caricamento dati utente...');
+            console.log('📊 Caricamento dati utente...');
             
             // Caricamento dati specifici utente
             const userData = {
@@ -308,10 +308,10 @@ class UnifiedSessionManager {
             // Merge con dati esistenti
             this.dashboardData = { ...this.dashboardData, ...userData };
             
-            console.log('Dati utente caricati');
+            console.log('✅ Dati utente caricati');
             
         } catch (error) {
-            console.error('Errore caricamento dati utente:', error);
+            console.error('❌ Errore caricamento dati utente:', error);
         }
     }
 
@@ -390,7 +390,7 @@ class UnifiedSessionManager {
 
     // REFRESH DATI DASHBOARD
     async refreshDashboardData() {
-        console.log('Refresh dati dashboard...');
+        console.log('🔄 Refresh dati dashboard...');
         
         try {
             // Qui chiameresti le tue API Firebase
@@ -411,10 +411,10 @@ class UnifiedSessionManager {
             // Notifica componenti del refresh
             this.notifyDataRefresh();
             
-            console.log('Dati dashboard aggiornati');
+            console.log('✅ Dati dashboard aggiornati');
             
         } catch (error) {
-            console.error('Errore refresh dashboard:', error);
+            console.error('❌ Errore refresh dashboard:', error);
         }
     }
 
@@ -443,17 +443,17 @@ class UnifiedSessionManager {
                 });
             }
             
-            console.log('Stato UI ripristinato');
+            console.log('🎨 Stato UI ripristinato');
             
         } catch (error) {
-            console.error('Errore ripristino UI:', error);
+            console.error('❌ Errore ripristino UI:', error);
         }
     }
 
     // Aggiorna auth state
     updateAuthState(user) {
         // Placeholder per compatibilita
-        console.log('Auth state aggiornato per:', user?.email);
+        console.log('🔐 Auth state aggiornato per:', user?.email);
     }
 
     // GESTIONE LISTENERS
@@ -477,7 +477,7 @@ class UnifiedSessionManager {
             try {
                 callback(user);
             } catch (error) {
-                console.error('Errore in auth listener:', error);
+                console.error('❌ Errore in auth listener:', error);
             }
         });
     }
@@ -536,8 +536,7 @@ class UnifiedSessionManager {
 // INIZIALIZZAZIONE GLOBALE
 const sessionManager = new UnifiedSessionManager();
 
-// EXPORT PER COMPATIBILITA
-export { sessionManager };
+// ❌ RIMOSSO EXPORT PROBLEMATICO - USARE SOLO WINDOW
 
 // RENDI DISPONIBILE GLOBALMENTE
 window.sessionManager = sessionManager;
@@ -553,15 +552,15 @@ window.updateUserData = (data) => sessionManager.updateUserData(data);
 
 // AUTO-RESTORE AL CARICAMENTO PAGINA
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('TribuCoach Session Manager pronto!');
-    console.log('Utente corrente:', sessionManager.user?.email || 'nessuno');
-    console.log('Autenticato:', sessionManager.isAuthenticated);
+    console.log('🎉 TribuCoach Session Manager pronto!');
+    console.log('👤 Utente corrente:', sessionManager.user?.email || 'nessuno');
+    console.log('🔐 Autenticato:', sessionManager.isAuthenticated);
     
     // Se utente loggato, mostra info
     if (sessionManager.isAuthenticated) {
         const sessionAge = Math.round(sessionManager.getSessionAge() / (1000 * 60));
-        console.log(`Sessione attiva da ${sessionAge} minuti`);
+        console.log(`⏰ Sessione attiva da ${sessionAge} minuti`);
     }
 });
 
-console.log('Unified Session Manager caricato - Persistenza dati garantita!');
+console.log('✅ Unified Session Manager caricato - Persistenza dati garantita!');
