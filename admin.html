@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TribuCoach Admin Access</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .admin-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .admin-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        .admin-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .status-message {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            border-left: 4px solid #fbbf24;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            border-left-color: #ef4444;
+        }
+
+        .success-message {
+            background: rgba(34, 197, 94, 0.2);
+            border-left-color: #22c55e;
+        }
+
+        .login-prompt {
+            background: rgba(59, 130, 246, 0.2);
+            border-left-color: #3b82f6;
+        }
+
+        .redirect-button {
+            background: linear-gradient(45deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .redirect-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .debug-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff00;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 300px;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 480px) {
+            .admin-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .admin-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-icon">🛡️</div>
+        <h1 class="admin-title">TribuCoach Admin</h1>
+        <p class="admin-subtitle">Verifica credenziali amministratore...</p>
+        
+        <div class="loading-spinner"></div>
+        
+        <div id="statusMessage" class="status-message">
+            🔍 Controllo autenticazione in corso...
+        </div>
+    </div>
+
+    <div id="debugInfo" class="debug-info" style="display: none;">
+        <div>🔧 Debug Admin Access</div>
+        <div id="debugContent"></div>
+    </div>
+
+    <!-- Import Firebase e Session Manager -->
+    <script type="module">
+        // Configurazione admin
+        const ADMIN_CONFIG = {
+            adminEmails: [
+                'andrea@tribucoach.com',
+                'admin@tribucoach.com',
+                'padoan@tribucoach.com'
+            ],
+            adminDashboardUrl: '/pages/admin/admin-dashboard.html',
+            loginUrl: '/login.html',
+            homeUrl: '/dashboard.html',
+            timeout: 5000,
+            debug: window.location.hostname === 'localhost'
+        };
+
+        // Stato admin
+        let adminState = {
+            isAuthenticated: false,
+            isAdmin: false,
+            user: null,
+            sessionManager: null,
+            checked: false
+        };
+
+        // Elementi DOM
+        const statusMessage = document.getElementById('statusMessage');
+        const debugInfo = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+
+        // Inizializzazione
+        async function initAdminAccess() {
+            try {
+                updateStatus('🔍 Inizializzazione sistema admin...', 'status');
+                
+                // Mostra debug in development
+                if (ADMIN_CONFIG.debug) {
+                    debugInfo.style.display = 'block';
+                    updateDebug('Admin access initialized');
+                }
+
+                // Timeout di sicurezza
+                const timeoutId = setTimeout(() => {
+                    if (!adminState.checked) {
+                        updateStatus('⏰ Timeout verifica - redirect al login', 'error');
+                        setTimeout(() => redirectToLogin(), 2000);
+                    }
+                }, ADMIN_CONFIG.timeout);
+
+                // Inizializza session manager
+                await initSessionManager();
+
+                // Controlla autenticazione
+                const authResult = await checkAuthentication();
+
+                // Clear timeout se completato
+                clearTimeout(timeoutId);
+                adminState.checked = true;
+
+                if (!authResult.isAuthenticated) {
+                    updateStatus('🔐 Autenticazione richiesta', 'login');
+                    setTimeout(() => redirectToLogin(), 2000);
+                    return;
+                }
+
+                if (!authResult.isAdmin) {
+                    updateStatus('❌ Accesso admin negato - utente non autorizzato', 'error');
+                    setTimeout(() => redirectToHome(), 3000);
+                    return;
+                }
+
+                // Successo - redirect a admin dashboard
+                updateStatus('✅ Accesso admin autorizzato - reindirizzamento...', 'success');
+                setTimeout(() => redirectToAdminDashboard(), 1500);
+
+            } catch (error) {
+                console.error('❌ Errore init admin access:', error);
+                updateStatus('❌ Errore sistema - riprova più tardi', 'error');
+                updateDebug(`Error: ${error.message}`);
+                setTimeout(() => redirectToLogin(), 3000);
+            }
+        }
+
+        // Inizializza session manager
+        async function initSessionManager() {
+            try {
+                updateDebug('Looking for session manager...');
+
+                // Attendi che session manager sia disponibile
+                let attempts = 0;
+                const maxAttempts = 20; // 2 secondi max
+
+                while (!window.sessionManager && !window.tribucoachSession && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+
+                adminState.sessionManager = window.sessionManager || window.tribucoachSession;
+
+                if (adminState.sessionManager) {
+                    updateStatus('🔗 Session Manager collegato', 'status');
+                    updateDebug('Session Manager found and connected');
+                } else {
+                    updateStatus('⚠️ Session Manager non trovato - usando Firebase Auth', 'status');
+                    updateDebug('Session Manager not found, fallback to Firebase');
+                }
+
+            } catch (error) {
+                console.error('❌ Errore init session manager:', error);
+                updateDebug(`Session Manager error: ${error.message}`);
+            }
+        }
+
+        // Controlla autenticazione
+        async function checkAuthentication() {
+            try {
+                updateStatus('🔍 Verifica credenziali...', 'status');
+
+                // Prova con session manager prima
+                if (adminState.sessionManager && adminState.sessionManager.isAuthenticated) {
+                    const user = adminState.sessionManager.user;
+                    updateDebug(`Session Manager user: ${user?.email}`);
+                    
+                    return {
+                        isAuthenticated: true,
+                        isAdmin: isAdminUser(user),
+                        user: user
+                    };
+                }
+
+                // Fallback Firebase Auth
+                updateDebug('Fallback to Firebase Auth...');
+                
+                // Simula check Firebase (sostituisci con vera implementazione)
+                const firebaseUser = await checkFirebaseAuth();
+                
+                if (firebaseUser) {
+                    updateDebug(`Firebase user: ${firebaseUser.email}`);
+                    return {
+                        isAuthenticated: true,
+                        isAdmin: isAdminUser(firebaseUser),
+                        user: firebaseUser
+                    };
+                }
+
+                updateDebug('No authenticated user found');
+                return {
+                    isAuthenticated: false,
+                    isAdmin: false,
+                    user: null
+                };
+
+            } catch (error) {
+                console.error('❌ Errore check auth:', error);
+                updateDebug(`Auth check error: ${error.message}`);
+                return {
+                    isAuthenticated: false,
+                    isAdmin: false,
+                    user: null
+                };
+            }
+        }
+
+        // Check Firebase Auth (placeholder - sostituisci con vera implementazione)
+        async function checkFirebaseAuth() {
+            try {
+                // Qui dovresti importare e usare Firebase Auth
+                // Per ora simuliamo con localStorage
+                const savedUser = localStorage.getItem('tribucoach_user');
+                if (savedUser) {
+                    return JSON.parse(savedUser);
+                }
+                return null;
+            } catch (error) {
+                console.error('❌ Firebase auth error:', error);
+                return null;
+            }
+        }
+
+        // Verifica se utente è admin
+        function isAdminUser(user) {
+            if (!user || !user.email) return false;
+            
+            const isAdmin = ADMIN_CONFIG.adminEmails.includes(user.email.toLowerCase());
+            updateDebug(`Admin check for ${user.email}: ${isAdmin}`);
+            
+            return isAdmin;
+        }
+
+        // Update status message
+        function updateStatus(message, type = 'status') {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}-message`;
+            
+            console.log(`📊 Admin Status: ${message}`);
+        }
+
+        // Update debug info
+        function updateDebug(message) {
+            if (ADMIN_CONFIG.debug) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                console.log(`🔧 Admin Debug: ${message}`);
+            }
+        }
+
+        // Redirect functions
+        function redirectToAdminDashboard() {
+            updateDebug('Redirecting to admin dashboard...');
+            window.location.href = ADMIN_CONFIG.adminDashboardUrl;
+        }
+
+        function redirectToLogin() {
+            updateDebug('Redirecting to login...');
+            // Salva redirect URL per dopo il login
+            sessionStorage.setItem('auth_redirect_url', '/admin');
+            window.location.href = ADMIN_CONFIG.loginUrl;
+        }
+
+        function redirectToHome() {
+            updateDebug('Redirecting to home dashboard...');
+            window.location.href = ADMIN_CONFIG.homeUrl;
+        }
+
+        // Gestione errori globali
+        window.addEventListener('error', (event) => {
+            console.error('❌ Global error:', event.error);
+            updateDebug(`Global error: ${event.error?.message || 'Unknown error'}`);
+        });
+
+        // Gestione promesse rejettate
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('❌ Unhandled promise rejection:', event.reason);
+            updateDebug(`Promise rejection: ${event.reason?.message || 'Unknown rejection'}`);
+        });
+
+        // Auto-inizializzazione
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAdminAccess);
+        } else {
+            initAdminAccess();
+        }
+
+        // Export per debug
+        if (ADMIN_CONFIG.debug) {
+            window.adminAccess = {
+                state: adminState,
+                config: ADMIN_CONFIG,
+                init: initAdminAccess,
+                checkAuth: checkAuthentication,
+                isAdmin: isAdminUser
+            };
+            console.log('🔧 Admin Access debug available at window.adminAccess');
+        }
+
+    </script>
+
+    <!-- Load Session Manager se disponibile -->
+    <script src="/utils/unified-session-manager.js" onerror="console.warn('Session Manager not loaded')"></script>
+    
+    <!-- Load Firebase Config se disponibile -->
+    <script type="module" src="/api/firebase-config.js" onerror="console.warn('Firebase Config not loaded')"></script>
+</body>
+</html>
