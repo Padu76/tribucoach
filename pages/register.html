@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrati - LifestyleFitnessCoach</title>
+    <title>Registrati - TribuCoach</title>
+
+    <!-- Import Session Manager PRIMA di tutto -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -20,6 +24,54 @@
             justify-content: center;
             padding: 20px;
             color: #333;
+        }
+
+        /* Loading overlay per controllo auth esistente */
+        .auth-check-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+        }
+
+        .auth-check-loading.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .register-container {
@@ -220,9 +272,11 @@
             transition: all 0.3s ease;
             margin-bottom: 20px;
             box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .register-btn:hover {
+        .register-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
@@ -235,6 +289,26 @@
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .btn-loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .register-btn.loading .btn-loading-spinner {
+            display: inline-block;
+        }
+
+        .register-btn.loading .btn-text {
+            opacity: 0.7;
         }
 
         .divider {
@@ -334,40 +408,80 @@
             display: none;
         }
 
-        .loading-spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid transparent;
-            border-top: 2px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-
-        /* ROLE INDICATOR */
+        /* ROLE INDICATOR MIGLIORATO */
         .role-indicator {
             background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
             color: white;
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 0.8rem;
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 8px;
             display: none;
+            animation: slideInDown 0.3s ease-out;
         }
 
         .role-indicator.admin {
             background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
         }
 
         .role-indicator.beta {
             background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Already logged in info */
+        .already-logged {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #065f46;
+        }
+
+        .already-logged h3 {
+            color: #047857;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .already-logged p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .already-logged .user-info {
+            background: rgba(16, 185, 129, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .dashboard-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .dashboard-btn:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
         }
 
         @media (max-width: 480px) {
@@ -392,21 +506,42 @@
     </style>
 </head>
 <body>
+    <!-- Loading overlay per controllo auth esistente -->
+    <div id="authCheckLoading" class="auth-check-loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">🔐 Controllo Sessione Esistente</div>
+        <div class="loading-subtext">Verifica se sei già registrato...</div>
+    </div>
+
     <div class="register-container">
         <!-- Logo Section -->
         <div class="logo-section">
-            <div class="logo">LifestyleFitnessCoach</div>
+            <div class="logo">🏆 TribuCoach</div>
             <div class="subtitle">Il tuo percorso di trasformazione</div>
         </div>
 
+        <!-- Already logged in info (nascosto di default) -->
+        <div id="alreadyLoggedInfo" class="already-logged" style="display: none;">
+            <h3>✅ Hai già un account attivo!</h3>
+            <div class="user-info" id="currentUserInfo">
+                👤 Utente: <span id="currentUserName">-</span><br>
+                📧 Email: <span id="currentUserEmail">-</span>
+            </div>
+            <p>Sei già registrato e la tua sessione è attiva. Vuoi continuare con questo account o registrarne uno nuovo?</p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="user-dashboard.html" class="dashboard-btn">🏠 Vai alla Dashboard</a>
+                <button onclick="logoutAndRegister()" class="login-btn">🔄 Registra Nuovo Account</button>
+            </div>
+        </div>
+
         <!-- Welcome Text -->
-        <div class="welcome-text">
+        <div class="welcome-text" id="welcomeText">
             <h1>🚀 Inizia Gratis</h1>
             <p>Crea il tuo account e accedi subito al percorso di coaching personalizzato</p>
         </div>
 
         <!-- Benefits -->
-        <div class="benefits-list">
+        <div class="benefits-list" id="benefitsList">
             <h3>🎁 Cosa ottieni gratuitamente:</h3>
             <ul>
                 <li>Accesso completo al percorso 7 settimane</li>
@@ -485,6 +620,7 @@
                         placeholder="Crea una password sicura"
                         required
                         minlength="6"
+                        oninput="checkPasswordStrength()"
                     >
                     <button type="button" class="password-toggle" onclick="togglePassword('password')">
                         👁️
@@ -527,306 +663,416 @@
                 </label>
             </div>
 
+            <div class="checkbox-group">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe">
+                    <strong>Ricordami</strong> - Mantieni la sessione attiva per accessi futuri
+                </label>
+            </div>
+
             <button type="submit" id="registerButton" class="register-btn">
-                <div class="loading-spinner" id="loadingSpinner"></div>
-                🎉 Crea Account Gratuito
+                <span class="btn-loading-spinner"></span>
+                <span class="btn-text">🎉 Crea Account Gratuito</span>
             </button>
         </form>
 
         <!-- Divider -->
-        <div class="divider">
+        <div class="divider" id="dividerSection">
             <span>oppure</span>
         </div>
 
         <!-- Login Section -->
-        <div class="login-section">
+        <div class="login-section" id="loginSection">
             <p>Hai già un account?</p>
             <a href="login.html" class="login-btn">Accedi</a>
         </div>
 
         <!-- Back Home -->
         <div class="back-home">
-            <a href="index.html">← Torna alla Homepage</a>
+            <a href="../index.html">← Torna alla Homepage</a>
         </div>
     </div>
 
     <script type="module">
-        // Import Firebase Auth
-        import { auth, db } from './firebase-config.js';
-        import { 
-            createUserWithEmailAndPassword,
-            updateProfile,
-            sendEmailVerification,
-            onAuthStateChanged
-        } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-        import {
-            collection,
-            addDoc,
-            serverTimestamp
-        } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
-
-        // Elements
-        const registerForm = document.getElementById('registerForm');
-        const registerButton = document.getElementById('registerButton');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const passwordInput = document.getElementById('password');
-        const passwordStrength = document.getElementById('passwordStrength');
-
-        // Check if user is already logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log('✅ Utente già loggato:', user.email);
-                showSuccess('Sei già registrato! Reindirizzamento...');
-                setTimeout(() => {
-                    window.location.href = 'user-dashboard.html';
-                }, 1500);
-            }
-        });
-
-        // Password strength checker
-        passwordInput.addEventListener('input', checkPasswordStrength);
-
-        function checkPasswordStrength() {
-            const password = passwordInput.value;
-            const strength = calculatePasswordStrength(password);
-            
-            passwordStrength.textContent = strength.text;
-            passwordStrength.className = `password-strength ${strength.class}`;
-        }
-
-        function calculatePasswordStrength(password) {
-            if (password.length === 0) {
-                return { text: '', class: '' };
-            }
-            
-            let score = 0;
-            
-            // Length
-            if (password.length >= 8) score += 25;
-            else if (password.length >= 6) score += 10;
-            
-            // Contains lowercase
-            if (/[a-z]/.test(password)) score += 25;
-            
-            // Contains uppercase
-            if (/[A-Z]/.test(password)) score += 25;
-            
-            // Contains numbers
-            if (/\d/.test(password)) score += 25;
-            
-            // Contains special characters
-            if (/[^A-Za-z0-9]/.test(password)) score += 25;
-            
-            if (score < 50) {
-                return { text: '❌ Password debole', class: 'strength-weak' };
-            } else if (score < 80) {
-                return { text: '⚠️ Password media', class: 'strength-medium' };
-            } else {
-                return { text: '✅ Password forte', class: 'strength-strong' };
-            }
-        }
-
-        // Registration Form Handler
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(registerForm);
-            const firstName = formData.get('firstName').trim();
-            const lastName = formData.get('lastName').trim();
-            const email = formData.get('email').trim();
-            const phone = formData.get('phone').trim();
-            const password = formData.get('password');
-            const confirmPassword = formData.get('confirmPassword');
-            const acceptTerms = formData.get('acceptTerms');
-            const acceptMarketing = formData.get('acceptMarketing');
-
-            // Validation
-            if (!firstName || !lastName || !email || !password) {
-                showError('Compila tutti i campi obbligatori');
-                return;
+        // 🚀 REGISTRAZIONE CON SESSION MANAGER UNIFICATO
+        
+        class UnifiedRegistration {
+            constructor() {
+                this.isReady = false;
+                this.currentUser = null;
+                this.init();
             }
 
-            if (password !== confirmPassword) {
-                showError('Le password non corrispondono');
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('La password deve essere di almeno 6 caratteri');
-                return;
-            }
-
-            if (!acceptTerms) {
-                showError('Devi accettare i Termini di Servizio');
-                return;
-            }
-
-            // Show loading
-            setLoading(true);
-            hideMessages();
-
-            try {
-                // Create user account
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                console.log('✅ Account created:', user.email);
-
-                // Update user profile
-                await updateProfile(user, {
-                    displayName: `${firstName} ${lastName}`
-                });
-
-                // DETERMINE USER ROLE
-                const userRole = determineUserRole(email);
-                console.log('🔑 User role detected:', userRole);
-
-                // Save user data to Firestore WITH ROLE
-                const userData = {
-                    uid: user.uid,
-                    firstName: firstName,
-                    lastName: lastName,
-                    email: email,
-                    phone: phone || null,
-                    role: userRole, // ✅ ADD ROLE HERE
-                    acceptMarketing: !!acceptMarketing,
-                    registrationDate: serverTimestamp(),
-                    source: 'website_registration',
-                    status: 'active',
-                    profileCompleted: false
-                };
-
-                await addDoc(collection(db, 'users'), userData);
-
-                // Create lead entry
-                const leadData = {
-                    name: `${firstName} ${lastName}`,
-                    email: email,
-                    phone: phone || null,
-                    role: userRole, // ✅ ADD ROLE TO LEAD TOO
-                    source: 'website_registration',
-                    status: 'new',
-                    leadScore: userRole === 'admin' ? 100 : userRole === 'beta' ? 90 : 50,
-                    userId: user.uid,
-                    timestamp: serverTimestamp()
-                };
-
-                await addDoc(collection(db, 'leads'), leadData);
-
-                // Send email verification
+            async init() {
+                console.log('🚀 Inizializzazione registrazione unificata...');
+                
                 try {
-                    await sendEmailVerification(user);
-                    console.log('✅ Email verification sent');
-                } catch (emailError) {
-                    console.warn('⚠️ Email verification failed:', emailError);
+                    // 1. Aspetta Session Manager
+                    await this.waitForSessionManager();
+                    
+                    // 2. Verifica se utente già loggato
+                    await this.checkExistingAuth();
+                    
+                    // 3. Setup form se non loggato
+                    if (!this.currentUser) {
+                        this.setupRegistrationForm();
+                    }
+                    
+                    // 4. Nascondi loading
+                    this.hideAuthLoading();
+                    
+                    this.isReady = true;
+                    console.log('✅ Registrazione unificata pronta');
+                    
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione registrazione:', error);
+                    this.handleInitError(error);
+                }
+            }
+
+            async waitForSessionManager() {
+                console.log('⏳ Aspetto Session Manager...');
+                
+                let attempts = 0;
+                while (!window.sessionManager && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
                 }
 
-                // Save user session WITH ROLE
-                localStorage.setItem('userSession', JSON.stringify({
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    role: userRole, // ✅ SAVE ROLE IN SESSION
-                    registrationTime: new Date().toISOString()
-                }));
+                if (!window.sessionManager) {
+                    throw new Error('Session Manager non disponibile');
+                }
 
-                // Show success and redirect
-                let successMsg = '🎉 Account creato con successo! Benvenuto in LifestyleFitnessCoach!';
-                if (userRole === 'admin') {
-                    successMsg = '👑 Account ADMIN creato! Accesso completo sbloccato!';
-                } else if (userRole === 'beta') {
-                    successMsg = '🧪 Account BETA TESTER creato! Accesso completo per testing!';
+                console.log('✅ Session Manager pronto');
+            }
+
+            async checkExistingAuth() {
+                console.log('🔐 Controllo autenticazione esistente...');
+                
+                try {
+                    const isAuthenticated = window.isUserAuthenticated ? window.isUserAuthenticated() : false;
+                    
+                    if (isAuthenticated) {
+                        this.currentUser = window.getCurrentUser();
+                        console.log('✅ Utente già autenticato:', this.currentUser.email);
+                        this.showAlreadyLoggedInfo();
+                        return true;
+                    } else {
+                        console.log('👤 Nessun utente autenticato - mostra form registrazione');
+                        return false;
+                    }
+                } catch (error) {
+                    console.error('❌ Errore controllo auth:', error);
+                    return false;
+                }
+            }
+
+            showAlreadyLoggedInfo() {
+                // Nascondi form di registrazione
+                document.getElementById('welcomeText').style.display = 'none';
+                document.getElementById('benefitsList').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('dividerSection').style.display = 'none';
+                document.getElementById('loginSection').style.display = 'none';
+                
+                // Mostra info utente esistente
+                const alreadyLoggedInfo = document.getElementById('alreadyLoggedInfo');
+                const currentUserName = document.getElementById('currentUserName');
+                const currentUserEmail = document.getElementById('currentUserEmail');
+                
+                if (alreadyLoggedInfo && this.currentUser) {
+                    alreadyLoggedInfo.style.display = 'block';
+                    
+                    if (currentUserName) {
+                        currentUserName.textContent = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                    }
+                    if (currentUserEmail) {
+                        currentUserEmail.textContent = this.currentUser.email;
+                    }
+                }
+            }
+
+            setupRegistrationForm() {
+                console.log('📝 Setup form registrazione...');
+                
+                const registerForm = document.getElementById('registerForm');
+                if (registerForm) {
+                    registerForm.addEventListener('submit', this.handleRegistration.bind(this));
+                }
+            }
+
+            async handleRegistration(e) {
+                e.preventDefault();
+                
+                console.log('📝 Inizio registrazione...');
+                
+                const formData = new FormData(e.target);
+                const userData = {
+                    firstName: formData.get('firstName').trim(),
+                    lastName: formData.get('lastName').trim(),
+                    email: formData.get('email').trim(),
+                    phone: formData.get('phone').trim(),
+                    password: formData.get('password'),
+                    confirmPassword: formData.get('confirmPassword'),
+                    acceptTerms: formData.get('acceptTerms'),
+                    acceptMarketing: formData.get('acceptMarketing'),
+                    rememberMe: formData.get('rememberMe')
+                };
+
+                // Validazione
+                if (!this.validateForm(userData)) {
+                    return;
+                }
+
+                // Show loading
+                this.setLoading(true);
+                this.hideMessages();
+
+                try {
+                    // Determina ruolo utente
+                    const userRole = this.determineUserRole(userData.email);
+                    console.log('🔑 Ruolo rilevato:', userRole);
+
+                    // **USA SESSION MANAGER per registrazione**
+                    const registrationResult = await this.registerWithSessionManager(userData, userRole);
+                    
+                    if (registrationResult.success) {
+                        console.log('✅ Registrazione completata:', registrationResult.user.email);
+                        
+                        // Mostra successo personalizzato per ruolo
+                        let successMsg = '🎉 Account creato con successo! Benvenuto in TribuCoach!';
+                        if (userRole === 'admin') {
+                            successMsg = '👑 Account ADMIN creato! Accesso completo sbloccato!';
+                        } else if (userRole === 'beta') {
+                            successMsg = '🧪 Account BETA TESTER creato! Accesso completo per testing!';
+                        }
+                        
+                        this.showSuccess(successMsg);
+                        
+                        // Redirect basato su ruolo
+                        setTimeout(() => {
+                            const redirectUrl = this.getRedirectUrl(userRole);
+                            window.location.href = redirectUrl;
+                        }, 2000);
+                        
+                    } else {
+                        throw new Error(registrationResult.error || 'Errore durante la registrazione');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore registrazione:', error);
+                    this.showError(this.getErrorMessage(error));
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+
+            async registerWithSessionManager(userData, userRole) {
+                try {
+                    // Simula registrazione usando il session manager
+                    // In una vera implementazione, chiameresti la tua API di registrazione
+                    
+                    // Per ora, crea un mock user per testing
+                    const mockUser = {
+                        uid: 'user_' + Date.now(),
+                        email: userData.email,
+                        displayName: `${userData.firstName} ${userData.lastName}`,
+                        role: userRole,
+                        emailVerified: true,
+                        metadata: {
+                            creationTime: new Date().toISOString(),
+                            lastSignInTime: new Date().toISOString()
+                        }
+                    };
+
+                    // Usa il session manager per login immediato
+                    const loginResult = await window.loginUser(
+                        userData.email, 
+                        userData.password, 
+                        userData.rememberMe
+                    );
+
+                    if (loginResult.success) {
+                        // Salva dati aggiuntivi utente
+                        window.updateUserData({
+                            registration: {
+                                firstName: userData.firstName,
+                                lastName: userData.lastName,
+                                phone: userData.phone,
+                                role: userRole,
+                                acceptMarketing: !!userData.acceptMarketing,
+                                registrationDate: new Date().toISOString(),
+                                source: 'website_registration'
+                            }
+                        });
+
+                        return { success: true, user: loginResult.user };
+                    } else {
+                        return { success: false, error: loginResult.error };
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore registrazione con session manager:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+
+            validateForm(userData) {
+                // Validazione campi obbligatori
+                if (!userData.firstName || !userData.lastName || !userData.email || !userData.password) {
+                    this.showError('Compila tutti i campi obbligatori');
+                    return false;
+                }
+
+                // Validazione email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(userData.email)) {
+                    this.showError('Email non valida');
+                    return false;
+                }
+
+                // Validazione password
+                if (userData.password !== userData.confirmPassword) {
+                    this.showError('Le password non corrispondono');
+                    return false;
+                }
+
+                if (userData.password.length < 6) {
+                    this.showError('La password deve essere di almeno 6 caratteri');
+                    return false;
+                }
+
+                // Validazione termini
+                if (!userData.acceptTerms) {
+                    this.showError('Devi accettare i Termini di Servizio');
+                    return false;
+                }
+
+                return true;
+            }
+
+            determineUserRole(email) {
+                const emailLower = email.toLowerCase();
+                
+                // Admin roles
+                if (emailLower.includes('admin') || emailLower === 'andrea@tribucoach.com') {
+                    return 'admin';
                 }
                 
-                showSuccess(successMsg);
+                // Beta tester roles
+                if (emailLower.includes('beta') || emailLower.includes('test')) {
+                    return 'beta';
+                }
                 
-                setTimeout(() => {
-                    // Admin/Beta go to dashboard, users go to quiz
-                    const redirectUrl = (userRole === 'admin' || userRole === 'beta') 
-                        ? 'user-dashboard.html' 
-                        : 'lifestyle-quiz.html';
-                    window.location.href = redirectUrl;
-                }, 2000);
+                // Regular user
+                return 'user';
+            }
 
+            getRedirectUrl(userRole) {
+                // Admin/Beta vanno alla user dashboard, users al quiz
+                if (userRole === 'admin' || userRole === 'beta') {
+                    return 'user-dashboard.html';
+                } else {
+                    return 'lifestyle-quiz.html';
+                }
+            }
+
+            getErrorMessage(error) {
+                if (typeof error === 'string') return error;
+                
+                // Mapping errori comuni
+                const errorMessages = {
+                    'Email already in use': 'Questa email è già registrata. Prova ad accedere invece.',
+                    'Invalid email': 'Email non valida.',
+                    'Weak password': 'Password troppo debole. Usa almeno 6 caratteri.',
+                    'Network error': 'Errore di connessione. Verifica la tua connessione internet.'
+                };
+                
+                return errorMessages[error.message] || `Errore: ${error.message}`;
+            }
+
+            hideAuthLoading() {
+                const authLoading = document.getElementById('authCheckLoading');
+                if (authLoading) {
+                    authLoading.classList.add('hidden');
+                }
+            }
+
+            setLoading(loading) {
+                const registerButton = document.getElementById('registerButton');
+                if (registerButton) {
+                    registerButton.disabled = loading;
+                    registerButton.classList.toggle('loading', loading);
+                }
+            }
+
+            showError(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                const successMessage = document.getElementById('successMessage');
+                
+                if (errorMessage) {
+                    errorMessage.textContent = message;
+                    errorMessage.style.display = 'block';
+                }
+                if (successMessage) {
+                    successMessage.style.display = 'none';
+                }
+            }
+
+            showSuccess(message) {
+                const errorMessage = document.getElementById('errorMessage');
+                const successMessage = document.getElementById('successMessage');
+                
+                if (successMessage) {
+                    successMessage.textContent = message;
+                    successMessage.style.display = 'block';
+                }
+                if (errorMessage) {
+                    errorMessage.style.display = 'none';
+                }
+            }
+
+            hideMessages() {
+                const errorMessage = document.getElementById('errorMessage');
+                const successMessage = document.getElementById('successMessage');
+                
+                if (errorMessage) errorMessage.style.display = 'none';
+                if (successMessage) successMessage.style.display = 'none';
+            }
+
+            handleInitError(error) {
+                console.error('❌ Errore critico inizializzazione:', error);
+                this.hideAuthLoading();
+                this.showError('Errore inizializzazione sistema. Ricarica la pagina.');
+            }
+        }
+
+        // Funzioni globali per logout e HTML
+        window.logoutAndRegister = async function() {
+            console.log('🔄 Logout per nuova registrazione...');
+            
+            try {
+                if (window.logoutUser) {
+                    await window.logoutUser();
+                    console.log('✅ Logout completato, ricarico pagina...');
+                    window.location.reload();
+                } else {
+                    throw new Error('Funzione logout non disponibile');
+                }
             } catch (error) {
-                console.error('❌ Registration error:', error);
-                
-                let errorMsg = 'Errore durante la registrazione';
-                
-                switch (error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMsg = 'Questa email è già registrata. Prova ad accedere invece.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMsg = 'Email non valida.';
-                        break;
-                    case 'auth/weak-password':
-                        errorMsg = 'Password troppo debole. Usa almeno 6 caratteri.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMsg = 'Errore di connessione. Verifica la tua connessione internet.';
-                        break;
-                    default:
-                        errorMsg = `Errore: ${error.message}`;
-                }
-                
-                showError(errorMsg);
-            } finally {
-                setLoading(false);
+                console.error('❌ Errore logout:', error);
+                alert('Errore durante il logout. Ricarica la pagina manualmente.');
             }
+        };
+
+        // 🚀 INIZIALIZZAZIONE
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Registrazione con Session Manager - Avvio...');
+            window.registration = new UnifiedRegistration();
         });
-
-        // ✅ ROLE DETECTION FUNCTION
-        function determineUserRole(email) {
-            const emailLower = email.toLowerCase();
-            
-            // Admin roles
-            if (emailLower.includes('admin') || emailLower === 'andrea@tribucoach.com') {
-                return 'admin';
-            }
-            
-            // Beta tester roles
-            if (emailLower.includes('beta') || emailLower.includes('test')) {
-                return 'beta';
-            }
-            
-            // Regular user
-            return 'user';
-        }
-
-        // Utility Functions
-        function setLoading(loading) {
-            registerButton.disabled = loading;
-            loadingSpinner.style.display = loading ? 'inline-block' : 'none';
-            registerButton.style.opacity = loading ? '0.7' : '1';
-        }
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
-
-        function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-        }
-
-        // Make functions global for HTML onclick
-        window.determineUserRole = determineUserRole;
-
-        // Initialize
-        console.log('📝 Registration page with roles loaded');
     </script>
 
+    <!-- Funzioni utility JavaScript -->
     <script>
         // Toggle Password Visibility
         function togglePassword(inputId) {
@@ -842,7 +1088,7 @@
             }
         }
 
-        // ✅ CHECK EMAIL ROLE IN REAL-TIME
+        // Check Email Role in Real-Time
         function checkEmailRole() {
             const email = document.getElementById('email').value.toLowerCase();
             const roleIndicator = document.getElementById('roleIndicator');
@@ -873,6 +1119,50 @@
             roleIndicator.className = `role-indicator ${roleClass}`;
             roleIndicator.style.display = 'block';
         }
+
+        // Password Strength Checker
+        function checkPasswordStrength() {
+            const passwordInput = document.getElementById('password');
+            const passwordStrength = document.getElementById('passwordStrength');
+            const password = passwordInput.value;
+            
+            if (password.length === 0) {
+                passwordStrength.textContent = '';
+                passwordStrength.className = 'password-strength';
+                return;
+            }
+            
+            let score = 0;
+            
+            // Length
+            if (password.length >= 8) score += 25;
+            else if (password.length >= 6) score += 10;
+            
+            // Contains lowercase
+            if (/[a-z]/.test(password)) score += 25;
+            
+            // Contains uppercase
+            if (/[A-Z]/.test(password)) score += 25;
+            
+            // Contains numbers
+            if (/\d/.test(password)) score += 25;
+            
+            // Contains special characters
+            if (/[^A-Za-z0-9]/.test(password)) score += 25;
+            
+            if (score < 50) {
+                passwordStrength.textContent = '❌ Password debole';
+                passwordStrength.className = 'password-strength strength-weak';
+            } else if (score < 80) {
+                passwordStrength.textContent = '⚠️ Password media';
+                passwordStrength.className = 'password-strength strength-medium';
+            } else {
+                passwordStrength.textContent = '✅ Password forte';
+                passwordStrength.className = 'password-strength strength-strong';
+            }
+        }
+
+        console.log('✅ Registrazione con Sistema Sessione Unificato caricata!');
     </script>
 </body>
 </html>
