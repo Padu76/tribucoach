@@ -346,6 +346,19 @@ class UnifiedSessionManager {
                 }
             },
             {
+                uid: 'admin-tribucoach-002',
+                email: 'admin@tribucoach.com',
+                password: 'admin123',
+                displayName: 'Admin TribuCoach Alt',
+                emailVerified: true,
+                isAdmin: true,
+                role: 'admin',
+                metadata: {
+                    creationTime: '2024-01-01T09:00:00Z',
+                    lastSignInTime: new Date().toISOString()
+                }
+            },
+            {
                 uid: 'demo-user-001',
                 email: 'demo@tribucoach.com',
                 password: 'demo123',
