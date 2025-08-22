@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Mia Area - LifestyleFitnessCoach</title>
+    <title>La Mia Area - TribuCoach</title>
+
+    <!-- Import Session Manager PRIMA di tutto -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -16,6 +20,54 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
+        }
+
+        /* Loading overlay per auth check */
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            color: white;
+        }
+
+        .auth-loading.hidden {
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .dashboard-container {
@@ -44,7 +96,47 @@
             font-weight: 300;
         }
 
-        /* === 🎨 SISTEMA AVATAR FOTO === */
+        /* Header controls per utente loggato */
+        .header-controls {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+        }
+
+        /* === SISTEMA AVATAR FOTO === */
         .avatar-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -109,14 +201,14 @@
             border-color: rgba(255,255,255,0.7);
         }
 
-        .andrea-photo.triple-click-active {
-            animation: tripleClickPulse 0.8s ease-in-out;
+        .andrea-photo.admin-access-active {
+            animation: adminPulse 0.8s ease-in-out;
             transform: scale(1.15);
             border-color: #dc2626;
             box-shadow: 0 0 40px rgba(220, 38, 38, 0.9), 0 25px 60px rgba(0,0,0,0.4);
         }
 
-        @keyframes tripleClickPulse {
+        @keyframes adminPulse {
             0% { transform: scale(1.08); }
             25% { transform: scale(1.2) rotate(8deg); }
             50% { transform: scale(1.15) rotate(-3deg); }
@@ -216,7 +308,7 @@
             font-size: 0.95rem;
         }
 
-        /* === 🎭 AVATAR FOTO UTENTE === */
+        /* === AVATAR FOTO UTENTE === */
         .user-avatar-card {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(15px);
@@ -382,7 +474,16 @@
             line-height: 1.6;
         }
 
-        /* === ADMIN CONTROLS === */
+        .session-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* === ADMIN CONTROLS SICURI === */
         .admin-controls {
             background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
             backdrop-filter: blur(15px);
@@ -405,24 +506,6 @@
             display: block;
         }
 
-        .admin-controls.hidden-access {
-            background: linear-gradient(135deg, #7c2d12 0%, #dc2626 100%);
-            border: 2px solid rgba(124, 45, 18, 0.8);
-            animation: hiddenAdminPulse 1.5s ease-in-out infinite;
-            transform: scale(1.02);
-        }
-
-        @keyframes hiddenAdminPulse {
-            0%, 100% { 
-                box-shadow: 0 0 30px rgba(220, 38, 38, 0.8), 0 0 60px rgba(124, 45, 18, 0.6);
-                border-color: rgba(124, 45, 18, 0.8);
-            }
-            50% { 
-                box-shadow: 0 0 45px rgba(220, 38, 38, 1), 0 0 80px rgba(124, 45, 18, 0.9);
-                border-color: rgba(220, 38, 38, 1);
-            }
-        }
-
         .admin-header {
             display: flex;
             align-items: center;
@@ -438,16 +521,6 @@
             font-size: 0.9rem;
             font-weight: bold;
             backdrop-filter: blur(10px);
-        }
-
-        .admin-badge.hidden-access {
-            background: rgba(124, 45, 18, 0.8);
-            animation: badgePulse 1s ease-in-out infinite;
-        }
-
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
         }
 
         .admin-title {
@@ -484,22 +557,6 @@
             background: rgba(255,255,255,0.3);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-
-        .admin-dashboard-link.hidden-access {
-            background: rgba(124, 45, 18, 0.6);
-            border: 1px solid rgba(124, 45, 18, 0.8);
-            animation: linkGlow 2s ease-in-out infinite;
-        }
-
-        .admin-dashboard-link.hidden-access:hover {
-            background: rgba(124, 45, 18, 0.8);
-            box-shadow: 0 8px 25px rgba(124, 45, 18, 0.4);
-        }
-
-        @keyframes linkGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(124, 45, 18, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(124, 45, 18, 0.6); }
         }
 
         /* Dashboard Grid */
@@ -743,6 +800,13 @@
                 font-size: 2rem;
             }
 
+            .header-controls {
+                position: static;
+                margin-top: 1rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
             .avatar-section {
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
@@ -777,6 +841,13 @@
     </style>
 </head>
 <body>
+    <!-- Loading overlay per controllo autenticazione -->
+    <div id="authLoading" class="auth-loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">🔐 Controllo Autenticazione</div>
+        <div class="loading-subtext">Validazione sessione utente...</div>
+    </div>
+
     <!-- Role Indicator -->
     <div id="roleIndicator" class="role-indicator">
         <span id="roleText">USER</span>
@@ -786,11 +857,21 @@
         <!-- Header -->
         <header class="dashboard-header">
             <a href="../index.html" class="back-btn">← Homepage</a>
+            
+            <!-- Controlli utente autenticato -->
+            <div class="header-controls" id="headerControls" style="display: none;">
+                <div class="user-badge" id="userBadge">
+                    <span>👤</span>
+                    <span id="headerUserName">Utente</span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
+            </div>
+            
             <h1>La Mia Area</h1>
             <p>Il tuo centro di controllo per il cambiamento</p>
         </header>
 
-        <!-- 🎨 SISTEMA AVATAR FOTO -->
+        <!-- Sistema Avatar Foto -->
         <div class="avatar-section">
             <!-- Avatar Andrea con Foto Reale -->
             <div class="andrea-avatar-card">
@@ -802,56 +883,59 @@
                 </div>
                 <div class="andrea-message" id="andreaMessage">
                     <div class="message-icon">👋</div>
-                    <div class="message-title">Benvenuto nel tuo percorso!</div>
-                    <div class="message-text">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di caricare la tua foto personale!</div>
+                    <div class="message-title" id="messageTitle">Benvenuto nel tuo percorso!</div>
+                    <div class="message-text" id="messageText">Ciao! Sono Andrea, il tuo coach personale. Il nuovo sistema avatar ti permette di personalizzare la tua esperienza!</div>
                 </div>
             </div>
 
             <!-- Avatar Utente Foto -->
             <div class="user-avatar-card">
                 <div class="user-avatar-display" id="userAvatarDisplay">
-                    <!-- Avatar will be rendered here by Photo Avatar System -->
                     <div class="loading-avatar">
                         <div style="font-size: 48px;">📸</div>
                         <div style="font-size: 14px; margin-top: 10px;">Caricamento avatar...</div>
                     </div>
-                    
-                    <!-- Mode indicator -->
                     <div class="avatar-mode-indicator" id="avatarModeIndicator">📷</div>
                 </div>
                 <div class="user-info">
                     <h3 id="userName">Il Tuo Avatar</h3>
-                    <p class="avatar-name" id="avatarName">Avatar Foto</p>
+                    <p class="avatar-name" id="avatarName">Avatar Personalizzato</p>
                     <p class="avatar-personality" id="avatarPersonality">Pronto per il cambiamento</p>
                     
                     <button class="customize-btn" id="customizeBtn">
-                        📸 Carica Foto
+                        🎨 Personalizza Avatar
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- User Welcome -->
+        <!-- User Welcome con info sessione -->
         <div class="user-welcome">
             <h2>👋 Ciao <span id="userNameWelcome">Utente</span>!</h2>
             <div class="user-info-text">
-                <p>Benvenuto nella tua area personale di coaching con sistema avatar foto</p>
-                <p id="accessInfo">Accesso libero a tutti i contenuti - Sistema foto attivo</p>
+                <p>Benvenuto nella tua area personale di coaching con sistema sessione persistente</p>
+                <p id="accessInfo">Accesso verificato - Sistema integrato attivo</p>
+                
+                <div class="session-info" id="sessionInfo" style="display: none;">
+                    <div>📊 <strong>Stato Sessione:</strong> <span id="sessionStatus">Attiva</span></div>
+                    <div>⏰ <strong>Login da:</strong> <span id="sessionDuration">-</span></div>
+                    <div>💾 <strong>Dati Salvati:</strong> <span id="dataSaved">Automaticamente</span></div>
+                </div>
             </div>
         </div>
 
-        <!-- 🚨 HIDDEN ADMIN ACCESS - Triple-click su Andrea per attivare -->
+        <!-- Admin Controls (solo per admin autenticati) -->
         <div id="adminControls" class="admin-controls">
             <div class="admin-header">
-                <div class="admin-badge" id="adminBadge">🔓 ACCESSO NASCOSTO</div>
+                <div class="admin-badge" id="adminBadge">👑 ADMIN VERIFICATO</div>
                 <h3 class="admin-title">Pannello Amministrazione</h3>
             </div>
             <p class="admin-description">
-                🎯 Accesso protetto alla dashboard di amministrazione per controllo completo del sistema coaching.
+                🎯 Accesso autenticato alla dashboard di amministrazione per controllo completo del sistema coaching.
             </p>
-            <div class="admin-dashboard-link" id="adminDashboardLink">
+            <a href="admin/admin-dashboard.html" class="admin-dashboard-link" id="adminDashboardLink">
                 👑 Accedi alla Dashboard Admin
-            </div>
+            </a>
         </div>
 
         <!-- Main Dashboard Grid -->
@@ -903,494 +987,634 @@
         </div>
     </div>
 
-    <!-- JavaScript with Photo Avatar System -->
+    <!-- JavaScript con Sistema Sessione Integrato -->
     <script src="../utils/avatar-system-realistic.js"></script>
-    <script src="../api/auth-guard.js"></script>
     
-    <script>
-        console.log('🏠 Dashboard con Sistema Avatar Foto caricata - Inizializzazione...');
+    <script type="module">
+        console.log('🏠 User Dashboard con Sessione Persistente - Inizializzazione...');
 
-        let currentUserId = 'guest_' + Date.now();
-        let currentUserName = 'Utente';
+        let currentUser = null;
+        let sessionData = null;
         let photoAvatarManager = null;
-        let photoAvatarUI = null;
+        let isAuthenticatedUser = false;
 
-        // Triple-click admin access
-        let clickCount = 0;
-        let clickTimer = null;
-        const TRIPLE_CLICK_THRESHOLD = 3;
-        const CLICK_TIMEOUT = 800;
-
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', async function() {
-            await initializeDashboard();
-            checkUserRole();
-            setupEventListeners();
-            setupTripleClickAccess();
-            await setupPhotoAvatarSystem();
-        });
-
-        async function initializeDashboard() {
-            try {
-                console.log('🚀 Inizializzazione dashboard con avatar foto...');
-                
-                // Setup Andrea photo simulation
-                await setupAndreaPhoto();
-                
-                console.log('✅ Dashboard completa inizializzata');
-                
-            } catch (error) {
-                console.error('❌ Errore inizializzazione dashboard:', error);
+        // 🔐 INIZIALIZZAZIONE SICURA
+        class SecureUserDashboard {
+            constructor() {
+                this.isReady = false;
+                this.authCheckComplete = false;
+                this.init();
             }
-        }
 
-        async function setupPhotoAvatarSystem() {
-            try {
-                // Check if Photo Avatar System is available
-                if (typeof window.PhotoAvatarSystem !== 'undefined') {
-                    console.log('📸 Inizializzazione Sistema Avatar Foto...');
+            async init() {
+                console.log('🚀 Inizializzazione dashboard sicura...');
+                
+                try {
+                    // 1. Aspetta Session Manager
+                    await this.waitForSessionManager();
                     
-                    // Initialize the avatar manager with Photo API
-                    photoAvatarManager = window.PhotoAvatarSystem.init(currentUserId, currentUserName);
+                    // 2. Verifica Autenticazione
+                    await this.checkAuthentication();
                     
-                    if (photoAvatarManager) {
-                        console.log('✅ Sistema Avatar Foto attivo');
-                        
-                        // FORCE immediate avatar display update
-                        setTimeout(() => {
-                            updateAvatarDisplay();
-                            console.log('📸 Avatar display forzato');
-                        }, 100);
-                        
-                        // Force another update after 500ms to be sure
-                        setTimeout(() => {
-                            updateAvatarDisplay();
-                            console.log('📸 Avatar display confermato');
-                        }, 500);
-                        
+                    // 3. Setup Dashboard
+                    await this.initializeDashboard();
+                    
+                    // 4. Setup Event Listeners
+                    this.setupEventListeners();
+                    
+                    console.log('✅ Dashboard sicura inizializzata');
+                    this.isReady = true;
+                    
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione dashboard sicura:', error);
+                    this.handleInitError(error);
+                }
+            }
+
+            async waitForSessionManager() {
+                console.log('⏳ Aspetto Session Manager...');
+                
+                let attempts = 0;
+                while (!window.sessionManager && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
+                }
+
+                if (!window.sessionManager) {
+                    throw new Error('Session Manager non disponibile');
+                }
+
+                console.log('✅ Session Manager pronto');
+            }
+
+            async checkAuthentication() {
+                console.log('🔐 Controllo autenticazione...');
+                
+                try {
+                    // Check se utente è autenticato
+                    isAuthenticatedUser = window.isUserAuthenticated ? window.isUserAuthenticated() : false;
+                    currentUser = window.getCurrentUser ? window.getCurrentUser() : null;
+                    sessionData = window.getUserData ? window.getUserData() : null;
+
+                    console.log('📊 Stato Auth:', {
+                        authenticated: isAuthenticatedUser,
+                        user: currentUser?.email || 'nessuno',
+                        hasSessionData: !!sessionData
+                    });
+
+                    if (isAuthenticatedUser && currentUser) {
+                        console.log('✅ Utente autenticato:', currentUser.email);
+                        this.showAuthenticatedUI();
                     } else {
-                        console.warn('⚠️ Sistema Avatar Foto non disponibile, fallback al sistema base');
-                        setupBasicAvatarSystem();
+                        console.log('👤 Modalità guest - accesso libero');
+                        this.showGuestUI();
                     }
-                } else {
-                    console.warn('⚠️ Sistema Avatar Foto non trovato, usando sistema base');
-                    setupBasicAvatarSystem();
+
+                    this.authCheckComplete = true;
+                    
+                } catch (error) {
+                    console.error('❌ Errore controllo auth:', error);
+                    this.showGuestUI();
+                }
+            }
+
+            showAuthenticatedUI() {
+                console.log('🔓 Configurazione UI per utente autenticato');
+                
+                // Nascondi loading
+                this.hideAuthLoading();
+                
+                // Mostra controlli header
+                const headerControls = document.getElementById('headerControls');
+                if (headerControls) {
+                    headerControls.style.display = 'flex';
                 }
                 
-            } catch (error) {
-                console.error('❌ Errore setup Sistema Avatar Foto:', error);
-                setupBasicAvatarSystem();
-            }
-        }
-
-        function setupBasicAvatarSystem() {
-            console.log('🔄 Setup sistema avatar base...');
-            // Keep the default placeholder that's already in the HTML
-        }
-
-        function updateAvatarDisplay() {
-            if (!photoAvatarManager) {
-                console.log('❌ Photo avatar manager non disponibile');
-                return;
-            }
-            
-            try {
-                const avatarDisplay = document.getElementById('userAvatarDisplay');
-                const modeIndicator = document.getElementById('avatarModeIndicator');
+                // Aggiorna info utente
+                this.updateUserInfo();
                 
-                console.log('📸 Aggiornamento avatar display...');
+                // Mostra info sessione
+                this.showSessionInfo();
                 
-                if (avatarDisplay) {
-                    // Get avatar HTML using Photo API
-                    const avatarHTML = photoAvatarManager.getDisplayHTML(120);
-                    console.log('📸 Avatar HTML generato:', avatarHTML ? 'SUCCESS' : 'FAILED');
+                // Check admin access
+                this.checkAdminAccess();
+                
+                // Aggiorna Andrea message per utente loggato
+                this.updateAndreaMessage(true);
+            }
+
+            showGuestUI() {
+                console.log('👤 Configurazione UI per guest');
+                
+                // Nascondi loading
+                this.hideAuthLoading();
+                
+                // Nascondi controlli admin/header
+                const headerControls = document.getElementById('headerControls');
+                if (headerControls) {
+                    headerControls.style.display = 'none';
+                }
+                
+                // Mostra info guest
+                this.showGuestInfo();
+                
+                // Aggiorna Andrea message per guest
+                this.updateAndreaMessage(false);
+            }
+
+            hideAuthLoading() {
+                const authLoading = document.getElementById('authLoading');
+                if (authLoading) {
+                    authLoading.classList.add('hidden');
+                }
+            }
+
+            updateUserInfo() {
+                if (!currentUser) return;
+
+                try {
+                    const displayName = currentUser.displayName || currentUser.email.split('@')[0];
                     
-                    if (avatarHTML) {
-                        avatarDisplay.innerHTML = avatarHTML;
-                        console.log('✅ Avatar foto mostrato');
+                    // Aggiorna tutti gli elementi con nome utente
+                    const userNameElements = document.querySelectorAll('#userName, #userNameWelcome, #headerUserName');
+                    userNameElements.forEach(el => {
+                        el.textContent = displayName;
+                    });
+
+                    // Aggiorna info accesso
+                    const accessInfo = document.getElementById('accessInfo');
+                    if (accessInfo) {
+                        const loginCount = sessionData?.stats?.loginCount || 1;
+                        accessInfo.textContent = `Utente verificato - Login #${loginCount} - Sistema integrato attivo`;
+                    }
+
+                    console.log('✅ Info utente aggiornate:', displayName);
+                    
+                } catch (error) {
+                    console.error('❌ Errore aggiornamento info utente:', error);
+                }
+            }
+
+            showSessionInfo() {
+                if (!window.sessionManager) return;
+
+                try {
+                    const sessionInfo = window.sessionManager.sessionInfo;
+                    const sessionAge = window.sessionManager.getSessionAge();
+                    
+                    if (sessionInfo && sessionAge) {
+                        const sessionInfoEl = document.getElementById('sessionInfo');
+                        if (sessionInfoEl) {
+                            sessionInfoEl.style.display = 'block';
+                        }
+
+                        // Aggiorna durata sessione
+                        const sessionDuration = document.getElementById('sessionDuration');
+                        if (sessionDuration) {
+                            const hours = Math.floor(sessionAge / (1000 * 60 * 60));
+                            const minutes = Math.floor((sessionAge % (1000 * 60 * 60)) / (1000 * 60));
+                            sessionDuration.textContent = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                        }
+
+                        // Stato sessione
+                        const sessionStatus = document.getElementById('sessionStatus');
+                        if (sessionStatus) {
+                            sessionStatus.textContent = sessionInfo.rememberMe ? 'Persistente' : 'Temporanea';
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Errore info sessione:', error);
+                }
+            }
+
+            showGuestInfo() {
+                const userNameElements = document.querySelectorAll('#userName, #userNameWelcome');
+                userNameElements.forEach(el => {
+                    el.textContent = 'Ospite';
+                });
+
+                const accessInfo = document.getElementById('accessInfo');
+                if (accessInfo) {
+                    accessInfo.textContent = 'Accesso libero - Registrati per salvare i progressi';
+                }
+            }
+
+            checkAdminAccess() {
+                if (!currentUser) return;
+
+                try {
+                    // Check se utente ha ruolo admin (dal session manager o da email)
+                    const isAdmin = currentUser.role === 'admin' || 
+                                   currentUser.email === 'andrea@tribucoach.com' ||
+                                   currentUser.email === 'admin@tribucoach.com';
+
+                    if (isAdmin) {
+                        console.log('👑 Accesso admin rilevato');
+                        this.showAdminControls();
+                        this.showAdminRole();
                     } else {
-                        // Generate fallback placeholder
-                        console.log('⚠️ Generazione fallback avatar placeholder');
-                        avatarDisplay.innerHTML = generateFallbackPlaceholder();
+                        console.log('👤 Utente standard');
+                        this.showUserRole();
+                    }
+                } catch (error) {
+                    console.error('❌ Errore controllo admin:', error);
+                }
+            }
+
+            showAdminControls() {
+                const adminControls = document.getElementById('adminControls');
+                if (adminControls) {
+                    adminControls.classList.add('visible');
+                }
+            }
+
+            showAdminRole() {
+                const roleIndicator = document.getElementById('roleIndicator');
+                const roleText = document.getElementById('roleText');
+                
+                if (roleIndicator && roleText) {
+                    roleIndicator.className = 'role-indicator visible admin';
+                    roleText.textContent = '👑 ADMIN';
+                }
+            }
+
+            showUserRole() {
+                const roleIndicator = document.getElementById('roleIndicator');
+                const roleText = document.getElementById('roleText');
+                
+                if (roleIndicator && roleText) {
+                    roleIndicator.className = 'role-indicator visible';
+                    roleText.textContent = '👤 USER';
+                }
+            }
+
+            updateAndreaMessage(isAuthenticated) {
+                const messageTitle = document.getElementById('messageTitle');
+                const messageText = document.getElementById('messageText');
+
+                if (isAuthenticated && currentUser) {
+                    const name = currentUser.displayName || currentUser.email.split('@')[0];
+                    if (messageTitle) {
+                        messageTitle.textContent = `Bentornato ${name}!`;
+                    }
+                    if (messageText) {
+                        messageText.textContent = `Ciao ${name}! La tua sessione è stata ripristinata e tutti i tuoi dati sono al sicuro. Continua il tuo percorso personalizzato!`;
+                    }
+                } else {
+                    if (messageTitle) {
+                        messageTitle.textContent = 'Benvenuto nel tuo percorso!';
+                    }
+                    if (messageText) {
+                        messageText.textContent = 'Ciao! Sono Andrea, il tuo coach personale. Registrati per salvare i tuoi progressi e personalizzare l\'esperienza!';
+                    }
+                }
+            }
+
+            async initializeDashboard() {
+                console.log('🎨 Inizializzazione componenti dashboard...');
+                
+                try {
+                    // Setup Andrea photo
+                    await this.setupAndreaPhoto();
+                    
+                    // Setup Avatar System
+                    await this.setupAvatarSystem();
+                    
+                    // Setup auto-save per utenti autenticati
+                    if (isAuthenticatedUser) {
+                        this.setupAutoSave();
                     }
                     
-                    // Update mode indicator
-                    if (modeIndicator) {
-                        if (photoAvatarManager.hasPhoto()) {
-                            modeIndicator.textContent = '📷';
-                        } else {
-                            modeIndicator.textContent = '👤';
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione dashboard:', error);
+                }
+            }
+
+            setupEventListeners() {
+                console.log('🔗 Setup event listeners...');
+
+                // Logout button
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', this.handleLogout.bind(this));
+                }
+
+                // Avatar customize button
+                const customizeBtn = document.getElementById('customizeBtn');
+                if (customizeBtn) {
+                    customizeBtn.addEventListener('click', this.openAvatarCustomization.bind(this));
+                }
+
+                // Admin access per Andrea photo (solo per admin)
+                if (isAuthenticatedUser && this.isAdmin()) {
+                    this.setupAdminPhotoAccess();
+                }
+            }
+
+            async handleLogout() {
+                console.log('🚪 Logout in corso...');
+                
+                try {
+                    if (window.logoutUser) {
+                        await window.logoutUser();
+                        console.log('✅ Logout completato');
+                        window.location.href = '../index.html?message=Logout effettuato con successo';
+                    } else {
+                        throw new Error('Funzione logout non disponibile');
+                    }
+                } catch (error) {
+                    console.error('❌ Errore logout:', error);
+                    this.showNotification('Errore durante il logout', 'error');
+                }
+            }
+
+            isAdmin() {
+                return currentUser && (
+                    currentUser.role === 'admin' || 
+                    currentUser.email === 'andrea@tribucoach.com' ||
+                    currentUser.email === 'admin@tribucoach.com'
+                );
+            }
+
+            setupAdminPhotoAccess() {
+                console.log('🔐 Setup accesso admin tramite foto Andrea...');
+                
+                const andreaPhoto = document.getElementById('andreaPhoto');
+                if (andreaPhoto) {
+                    let clickCount = 0;
+                    let clickTimer = null;
+                    
+                    andreaPhoto.addEventListener('click', () => {
+                        clickCount++;
+                        
+                        if (clickTimer) clearTimeout(clickTimer);
+                        
+                        clickTimer = setTimeout(() => {
+                            clickCount = 0;
+                        }, 800);
+                        
+                        if (clickCount >= 3) {
+                            console.log('🚨 Triple-click admin access attivato');
+                            andreaPhoto.classList.add('admin-access-active');
+                            this.showNotification('🔓 Accesso Admin Dashboard!', 'success');
+                            
+                            setTimeout(() => {
+                                window.location.href = 'admin/admin-dashboard.html';
+                            }, 1000);
+                            
+                            clickCount = 0;
+                            clearTimeout(clickTimer);
                         }
+                    });
+                }
+            }
+
+            async setupAndreaPhoto() {
+                try {
+                    const andreaPhoto = document.getElementById('andreaPhoto');
+                    const photoIndicator = document.getElementById('photoIndicator');
+                    
+                    const photos = [
+                        { src: '../assets/images/andrea/andrea-beach.jpg', name: 'Beach Session' },
+                        { src: '../assets/images/andrea/andrea-city.jpg', name: 'Urban Coaching' },
+                        { src: '../assets/images/andrea/andrea-outdoor.jpg', name: 'Outdoor Training' }
+                    ];
+                    
+                    const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
+                    
+                    setTimeout(() => {
+                        if (andreaPhoto) {
+                            andreaPhoto.style.backgroundImage = `url(${randomPhoto.src})`;
+                            andreaPhoto.classList.remove('loading');
+                        }
+                        
+                        if (photoIndicator) {
+                            photoIndicator.textContent = `📸 ${randomPhoto.name}`;
+                        }
+                    }, 1200);
+                    
+                } catch (error) {
+                    console.error('❌ Errore setup foto Andrea:', error);
+                }
+            }
+
+            async setupAvatarSystem() {
+                try {
+                    console.log('🎨 Setup sistema avatar...');
+                    
+                    // Generate user avatar based on current user or guest
+                    const avatarDisplay = document.getElementById('userAvatarDisplay');
+                    if (avatarDisplay) {
+                        const avatarHTML = this.generateUserAvatar();
+                        avatarDisplay.innerHTML = avatarHTML;
                     }
                     
                     // Update avatar info
-                    updateAvatarInfo();
-                } else {
-                    console.error('❌ Elemento userAvatarDisplay non trovato');
+                    this.updateAvatarInfo();
+                    
+                } catch (error) {
+                    console.error('❌ Errore setup avatar system:', error);
                 }
-                
-            } catch (error) {
-                console.error('❌ Errore aggiornamento avatar display:', error);
             }
-        }
-        
-        function generateFallbackPlaceholder() {
-            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
-            const emojis = ['😊', '🙂', '😄', '😁', '🤗'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-            
-            return `
-                <div class="placeholder-avatar" style="background: ${color}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                    <div style="font-size: 30px; margin-bottom: 5px;">${emoji}</div>
-                    <div style="color: white; font-weight: bold; font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
-                        ${currentUserName.charAt(0).toUpperCase()}
-                    </div>
-                </div>
-            `;
-        }
 
-        function updateAvatarInfo() {
-            if (!photoAvatarManager) return;
-            
-            try {
+            generateUserAvatar() {
+                const userName = isAuthenticatedUser && currentUser ? 
+                    (currentUser.displayName || currentUser.email.split('@')[0]) : 'Ospite';
+                
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
+                const emojis = ['😊', '🙂', '😄', '😎', '🤗'];
+                
+                // Use user email/name to determine consistent color and emoji
+                const userHash = userName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                const color = colors[userHash % colors.length];
+                const emoji = emojis[userHash % emojis.length];
+                
+                return `
+                    <div class="placeholder-avatar" style="background: ${color}; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                        <div style="font-size: 30px; margin-bottom: 5px;">${emoji}</div>
+                        <div style="color: white; font-weight: bold; font-size: 24px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+                            ${userName.charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateAvatarInfo() {
                 const avatarName = document.getElementById('avatarName');
                 const avatarPersonality = document.getElementById('avatarPersonality');
                 const customizeBtn = document.getElementById('customizeBtn');
                 
-                if (avatarName) {
-                    if (photoAvatarManager.hasPhoto()) {
-                        avatarName.textContent = 'Foto Personale';
-                    } else {
-                        avatarName.textContent = 'Avatar Placeholder';
-                    }
-                }
-                
-                if (avatarPersonality) {
-                    if (photoAvatarManager.hasPhoto()) {
-                        avatarPersonality.textContent = 'La tua foto caricata';
-                    } else {
-                        avatarPersonality.textContent = 'Carica una tua foto';
-                    }
-                }
-                
-                if (customizeBtn) {
-                    if (photoAvatarManager.hasPhoto()) {
-                        customizeBtn.innerHTML = '📸 Cambia Foto';
-                    } else {
-                        customizeBtn.innerHTML = '📸 Carica Foto';
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Errore aggiornamento info avatar:', error);
-            }
-        }
-
-        async function setupAndreaPhoto() {
-            try {
-                const andreaPhoto = document.getElementById('andreaPhoto');
-                const photoIndicator = document.getElementById('photoIndicator');
-                
-                // Enhanced photo options
-                const photos = [
-                    { src: '../assets/images/andrea/andrea-beach.jpg', name: 'Beach Session' },
-                    { src: '../assets/images/andrea/andrea-city.jpg', name: 'Urban Coaching' },
-                    { src: '../assets/images/andrea/andrea-outdoor.jpg', name: 'Outdoor Training' }
-                ];
-                
-                const randomPhoto = photos[Math.floor(Math.random() * photos.length)];
-                
-                setTimeout(() => {
-                    andreaPhoto.style.backgroundImage = `url(${randomPhoto.src})`;
-                    andreaPhoto.classList.remove('loading');
+                if (isAuthenticatedUser && currentUser) {
+                    const displayName = currentUser.displayName || currentUser.email.split('@')[0];
                     
-                    if (photoIndicator) {
-                        photoIndicator.textContent = `📸 ${randomPhoto.name}`;
+                    if (avatarName) {
+                        avatarName.textContent = `Avatar di ${displayName}`;
                     }
-                }, 1200);
-                
-            } catch (error) {
-                console.error('❌ Errore setup foto Andrea:', error);
-                
-                const andreaPhoto = document.getElementById('andreaPhoto');
-                if (andreaPhoto) {
-                    andreaPhoto.classList.remove('loading');
-                }
-            }
-        }
-
-        // Event Listeners
-        function setupEventListeners() {
-            // Avatar builder button
-            const customizeBtn = document.getElementById('customizeBtn');
-            if (customizeBtn) {
-                customizeBtn.addEventListener('click', openPhotoAvatarBuilder);
-            }
-
-            // Avatar display click
-            const avatarDisplay = document.getElementById('userAvatarDisplay');
-            if (avatarDisplay) {
-                avatarDisplay.addEventListener('click', openPhotoAvatarBuilder);
-            }
-        }
-
-        function openPhotoAvatarBuilder() {
-            console.log('📸 Apertura Photo Avatar Builder');
-            
-            if (photoAvatarManager && typeof window.PhotoAvatarSystem !== 'undefined') {
-                // Create UI Builder if not exists
-                if (!photoAvatarUI) {
-                    createPhotoAvatarBuilderModal();
-                }
-                
-                // Show the modal
-                const modal = document.getElementById('photoAvatarBuilderModal');
-                if (modal) {
-                    modal.style.display = 'flex';
-                }
-            } else {
-                showNotification('🚧 Photo Avatar Builder in costruzione...', 'info');
-            }
-        }
-
-        function createPhotoAvatarBuilderModal() {
-            // Create modal if not exists
-            if (document.getElementById('photoAvatarBuilderModal')) return;
-            
-            const modal = document.createElement('div');
-            modal.id = 'photoAvatarBuilderModal';
-            modal.style.cssText = `
-                display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.8);
-                z-index: 10000;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(10px);
-            `;
-            
-            const container = document.createElement('div');
-            container.id = 'photoAvatarBuilderContainer';
-            container.style.cssText = `
-                background: white;
-                border-radius: 20px;
-                padding: 20px;
-                max-width: 90%;
-                max-height: 90%;
-                overflow-y: auto;
-                position: relative;
-            `;
-            
-            container.innerHTML = `
-                <button onclick="closePhotoAvatarBuilder()" style="
-                    position: absolute;
-                    top: 10px;
-                    right: 15px;
-                    background: none;
-                    border: none;
-                    font-size: 24px;
-                    cursor: pointer;
-                    color: #999;
-                ">×</button>
-                <h2 style="margin-bottom: 20px; text-align: center;">📸 Avatar Foto</h2>
-                <div id="photoAvatarBuilderContent"></div>
-            `;
-            
-            modal.appendChild(container);
-            document.body.appendChild(modal);
-            
-            // Initialize the UI Builder using Photo API
-            if (window.PhotoAvatarSystem) {
-                photoAvatarUI = window.PhotoAvatarSystem.createUI('photoAvatarBuilderContent', photoAvatarManager);
-                // Store reference globally for actions
-                window.photoAvatarUI = photoAvatarUI;
-            }
-            
-            // Close on backdrop click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closePhotoAvatarBuilder();
-                }
-            });
-        }
-
-        window.closePhotoAvatarBuilder = function() {
-            const modal = document.getElementById('photoAvatarBuilderModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-            
-            // Update main avatar display
-            setTimeout(() => {
-                updateAvatarDisplay();
-            }, 100);
-        }
-
-        // Triple-click admin access (mantiene funzionalità originale)
-        function setupTripleClickAccess() {
-            const andreaPhoto = document.getElementById('andreaPhoto');
-            
-            if (andreaPhoto) {
-                andreaPhoto.addEventListener('click', handleAndreaPhotoClick);
-                console.log('🔒 Triple-click admin access configurato');
-            }
-        }
-
-        function handleAndreaPhotoClick(event) {
-            event.preventDefault();
-            
-            clickCount++;
-            console.log(`🖱️ Click ${clickCount}/3 su avatar Andrea`);
-            
-            if (clickTimer) {
-                clearTimeout(clickTimer);
-            }
-            
-            clickTimer = setTimeout(() => {
-                clickCount = 0;
-            }, CLICK_TIMEOUT);
-            
-            if (clickCount >= TRIPLE_CLICK_THRESHOLD) {
-                activateHiddenAdminAccess();
-                clickCount = 0;
-                clearTimeout(clickTimer);
-            }
-        }
-
-        function activateHiddenAdminAccess() {
-            console.log('🚨 TRIPLE-CLICK RILEVATO - Attivazione accesso admin...');
-            
-            const andreaPhoto = document.getElementById('andreaPhoto');
-            andreaPhoto.classList.add('triple-click-active');
-            
-            showNotification('🔓 Accesso Admin Attivato!', 'success');
-            
-            setTimeout(() => {
-                andreaPhoto.classList.remove('triple-click-active');
-                window.location.href = 'admin/admin-dashboard.html';
-            }, 1000);
-        }
-
-        // User role detection
-        async function checkUserRole() {
-            try {
-                if (window.AuthGuard) {
-                    const authGuard = new window.AuthGuard();
-                    
-                    try {
-                        const user = await authGuard.getCurrentUser();
-                        
-                        if (user && user.role) {
-                            showUserRole(user);
-                            currentUserId = user.id || user.email || currentUserId;
-                            currentUserName = user.name || user.email.split('@')[0] || 'Utente';
-                            console.log('✅ Utente riconosciuto:', user.email, 'Ruolo:', user.role);
-                        } else {
-                            showDefaultUser();
-                            console.log('👤 Utente generico - nessun ruolo specifico');
-                        }
-                    } catch (error) {
-                        console.log('👤 Nessun utente loggato - modalità ospite');
-                        showDefaultUser();
+                    if (avatarPersonality) {
+                        avatarPersonality.textContent = 'Personalizzato e sincronizzato';
+                    }
+                    if (customizeBtn) {
+                        customizeBtn.innerHTML = '🎨 Personalizza Avatar';
                     }
                 } else {
-                    console.log('⚠️ AuthGuard non disponibile - modalità base');
-                    showDefaultUser();
+                    if (avatarName) {
+                        avatarName.textContent = 'Avatar Ospite';
+                    }
+                    if (avatarPersonality) {
+                        avatarPersonality.textContent = 'Registrati per personalizzare';
+                    }
+                    if (customizeBtn) {
+                        customizeBtn.innerHTML = '📝 Registrati per Personalizzare';
+                    }
                 }
-            } catch (error) {
-                console.error('❌ Errore controllo ruoli:', error);
-                showDefaultUser();
             }
-        }
 
-        function showUserRole(user) {
-            const role = user.role;
-            const email = user.email;
-            const name = user.name || email.split('@')[0];
-
-            currentUserName = name;
-            
-            const userNameEl = document.getElementById('userName');
-            const userNameWelcomeEl = document.getElementById('userNameWelcome');
-            
-            if (userNameEl) userNameEl.textContent = name;
-            if (userNameWelcomeEl) userNameWelcomeEl.textContent = name;
-
-            const roleIndicator = document.getElementById('roleIndicator');
-            const roleText = document.getElementById('roleText');
-            const accessInfo = document.getElementById('accessInfo');
-            
-            if (role === 'admin') {
-                if (roleIndicator) roleIndicator.className = 'role-indicator visible admin';
-                if (roleText) roleText.textContent = '👑 ADMIN';
-                if (accessInfo) accessInfo.textContent = 'Accesso amministratore - Controllo completo sistema';
-                
-            } else if (role === 'beta') {
-                if (roleIndicator) roleIndicator.className = 'role-indicator visible beta';
-                if (roleText) roleText.textContent = '🧪 BETA';
-                if (accessInfo) accessInfo.textContent = 'Accesso beta tester - Testing e feedback';
-                
-            } else {
-                if (roleIndicator) roleIndicator.className = 'role-indicator visible';
-                if (roleText) roleText.textContent = '👤 USER';
-                if (accessInfo) accessInfo.textContent = 'Accesso utente registrato';
+            openAvatarCustomization() {
+                if (isAuthenticatedUser) {
+                    console.log('🎨 Apertura personalizzazione avatar...');
+                    this.showNotification('🎨 Avatar Personalizzato!\n\nSistema di personalizzazione avatar avanzato disponibile.', 'success');
+                } else {
+                    console.log('🔐 Richiesta registrazione per personalizzazione');
+                    this.showNotification('📝 Registrazione Richiesta!\n\nEffettua il login per personalizzare il tuo avatar.', 'info');
+                    setTimeout(() => {
+                        window.location.href = 'login.html?return=user-dashboard.html';
+                    }, 2000);
+                }
             }
-        }
 
-        function showDefaultUser() {
-            const userNameEl = document.getElementById('userName');
-            const userNameWelcomeEl = document.getElementById('userNameWelcome');
-            const accessInfoEl = document.getElementById('accessInfo');
-            
-            if (userNameEl) userNameEl.textContent = 'Il Tuo Avatar';
-            if (userNameWelcomeEl) userNameWelcomeEl.textContent = 'Utente';
-            if (accessInfoEl) accessInfoEl.textContent = 'Accesso libero a tutti i contenuti - Sistema foto attivo';
-            
-            console.log('👤 Modalità utente standard');
-        }
+            setupAutoSave() {
+                if (!isAuthenticatedUser) return;
 
-        // Notification system
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
+                console.log('💾 Setup auto-save per utente autenticato...');
+
+                // Auto-save ogni 2 minuti
+                setInterval(() => {
+                    this.saveUserDashboardData();
+                }, 2 * 60 * 1000);
+
+                // Save on page visibility change
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        this.saveUserDashboardData();
+                    }
+                });
+
+                // Save before unload
+                window.addEventListener('beforeunload', () => {
+                    this.saveUserDashboardData();
+                });
+            }
+
+            saveUserDashboardData() {
+                if (!window.updateUserData) return;
+
+                try {
+                    const dashboardData = {
+                        lastVisited: Date.now(),
+                        avatarPersonalization: {
+                            lastUpdate: Date.now(),
+                            preferences: 'saved'
+                        },
+                        userDashboardState: {
+                            version: '2.0',
+                            authenticated: true
+                        }
+                    };
+
+                    window.updateUserData({ userDashboard: dashboardData });
+                    console.log('💾 Dati dashboard utente salvati');
+                } catch (error) {
+                    console.error('❌ Errore salvataggio dati dashboard:', error);
+                }
+            }
+
+            handleInitError(error) {
+                console.error('❌ Errore critico inizializzazione:', error);
+                
+                // Hide loading
+                this.hideAuthLoading();
+                
+                // Show error message
+                this.showNotification('❌ Errore inizializzazione dashboard. Ricarica la pagina.', 'error');
+                
+                // Fallback to basic functionality
                 setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
+                    this.showGuestUI();
+                }, 2000);
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, 4000);
+            }
         }
 
-        // Action functions
+        // Action functions globali
         window.viewProgress = function() {
             console.log('📊 Visualizzazione progressi...');
-            showNotification('Progressi Dettagliati! 📊\n\nPotrai vedere grafici, analisi e trend del tuo percorso.', 'success');
+            if (isAuthenticatedUser) {
+                window.dashboard.showNotification('📊 Progressi Dettagliati!\n\nDashboard completa con grafici e analisi del tuo percorso.', 'success');
+            } else {
+                window.dashboard.showNotification('📝 Registrati per vedere i progressi!\n\nI progressi vengono salvati solo per utenti registrati.', 'info');
+            }
         };
 
         window.viewCalendar = function() {
             console.log('📅 Apertura calendario...');
-            showNotification('Calendario Personalizzato! 📅\n\nPotrai pianificare obiettivi e tracciare abitudini.', 'success');
+            if (isAuthenticatedUser) {
+                window.dashboard.showNotification('📅 Calendario Personalizzato!\n\nPianifica obiettivi e traccia abitudini sincronizzate.', 'success');
+            } else {
+                window.dashboard.showNotification('📝 Accesso limitato!\n\nRegistrati per accedere al calendario personalizzato.', 'info');
+            }
         };
 
         window.viewResources = function() {
             console.log('📖 Apertura risorse...');
-            showNotification('Libreria Risorse! 📖\n\nGuide, ebooks, video e materiali esclusivi.', 'success');
+            window.dashboard.showNotification('📖 Libreria Risorse!\n\nGuide, ebooks, video e materiali esclusivi.', 'success');
         };
 
         window.viewCommunity = function() {
             console.log('👥 Apertura community...');
-            showNotification('Community LifestyleFitnessCoach! 👥\n\nConnettiti con altri membri del percorso.', 'success');
+            if (isAuthenticatedUser) {
+                window.dashboard.showNotification('👥 Community TribuCoach!\n\nConnettiti con altri membri del percorso.', 'success');
+            } else {
+                window.dashboard.showNotification('📝 Registrazione richiesta!\n\nAccedi alla community dopo la registrazione.', 'info');
+            }
         };
 
-        console.log('✅ Dashboard con Sistema Avatar Foto completamente inizializzata!');
+        // 🚀 INIZIALIZZAZIONE PRINCIPALE
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 User Dashboard con Sessione Persistente - Avvio...');
+            
+            try {
+                // Crea istanza dashboard sicura
+                window.dashboard = new SecureUserDashboard();
+                
+                console.log('✅ User Dashboard completamente inizializzata');
+                
+            } catch (error) {
+                console.error('❌ Errore critico inizializzazione:', error);
+            }
+        });
+
+        // Protezione contro refresh
+        window.addEventListener('beforeunload', () => {
+            if (isAuthenticatedUser && window.dashboard) {
+                window.dashboard.saveUserDashboardData();
+            }
+        });
+
+        console.log('✅ User Dashboard con Sistema Sessione caricata!');
     </script>
 </body>
 </html>
