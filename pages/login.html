@@ -310,6 +310,23 @@
             animation: fadeInUp 0.5s ease-out;
         }
 
+        .system-status {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #3b82f6;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none;
+        }
+
+        .system-status.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -345,6 +362,11 @@
             <p>Accedi alla tua dashboard personale</p>
         </div>
 
+        <!-- Status sistema -->
+        <div id="systemStatus" class="system-status">
+            <div id="systemMessage">🔧 Inizializzazione sistema...</div>
+        </div>
+
         <!-- Status sessione precedente -->
         <div id="sessionStatus" class="session-status">
             <div id="sessionMessage"></div>
@@ -364,7 +386,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password">🔐 Password</label>
+                <label for="password">🔒 Password</label>
                 <input type="password" id="password" name="password" class="form-input" 
                        placeholder="Inserisci la tua password" required>
             </div>
@@ -393,7 +415,7 @@
             </div>
             
             <div class="demo-user" onclick="fillDemoCredentials('andrea@tribucoach.com', 'coach123')">
-                <div class="user-info">💪 Andrea Padoan (Coach)</div>
+                <div class="user-info">👪 Andrea Padoan (Coach)</div>
                 <div class="user-creds">andrea@tribucoach.com / coach123</div>
             </div>
         </div>
@@ -401,15 +423,12 @@
         <div class="links">
             <a href="forgot-password.html">🔄 Password dimenticata?</a> |
             <a href="register.html">📝 Registrati</a> |
-            <a href="index.html">🏠 Homepage</a>
+            <a href="../index.html">🏠 Homepage</a>
         </div>
     </div>
 
-    <!-- Import Session Manager -->
-    <script type="module" src="../api/unified-session-manager.js"></script>
-    
-    <script type="module">
-        // 🚀 LOGIN PAGE CON SESSIONE PERSISTENTE UNIFICATA
+    <script>
+        // 🚀 LOGIN PAGE CON SESSIONE PERSISTENTE UNIFICATA E FALLBACK ROBUSTO
         
         class LoginPage {
             constructor() {
@@ -421,15 +440,21 @@
                 this.sessionStatus = document.getElementById('sessionStatus');
                 this.sessionMessage = document.getElementById('sessionMessage');
                 this.autoLoginInfo = document.getElementById('autoLoginInfo');
+                this.systemStatus = document.getElementById('systemStatus');
+                this.systemMessage = document.getElementById('systemMessage');
+                
+                this.sessionManager = null;
+                this.fallbackMode = false;
                 
                 this.init();
             }
 
             async init() {
-                console.log('🔐 Inizializzazione Login Page...');
+                console.log('🔍 Inizializzazione Login Page...');
+                this.showSystemStatus('🔧 Caricamento sistema di autenticazione...');
                 
-                // Aspetta che il session manager sia pronto
-                await this.waitForSessionManager();
+                // Carica session manager con fallback
+                await this.loadSessionManager();
                 
                 // Controlla se c'è già una sessione valida
                 await this.checkExistingSession();
@@ -440,39 +465,178 @@
                 // Mostra info sessione precedente se presente
                 this.showPreviousSessionInfo();
                 
+                // Nasconde status sistema dopo init
+                setTimeout(() => this.hideSystemStatus(), 2000);
+                
                 console.log('✅ Login Page pronta');
             }
 
-            async waitForSessionManager() {
-                let attempts = 0;
-                while (!window.sessionManager && attempts < 50) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
-                }
-                
-                if (!window.sessionManager) {
-                    console.error('❌ Session Manager non trovato');
-                    this.showError('Errore sistema di autenticazione');
+            async loadSessionManager() {
+                try {
+                    this.showSystemStatus('📦 Caricamento Session Manager...');
+                    
+                    // Possibili path per session manager
+                    const sessionManagerPaths = [
+                        '../utils/unified-session-manager.js',
+                        '/utils/unified-session-manager.js',
+                        'utils/unified-session-manager.js',
+                        '../api/unified-session-manager.js' // Vecchio path come fallback
+                    ];
+
+                    for (const path of sessionManagerPaths) {
+                        try {
+                            console.log(`🔍 Tentativo caricamento da: ${path}`);
+                            await this.loadScript(path);
+                            
+                            // Attendi che sia disponibile
+                            let attempts = 0;
+                            while (!window.sessionManager && !window.tribucoachSession && attempts < 30) {
+                                await this.sleep(100);
+                                attempts++;
+                            }
+
+                            this.sessionManager = window.sessionManager || window.tribucoachSession;
+                            
+                            if (this.sessionManager) {
+                                console.log(`✅ Session Manager caricato da: ${path}`);
+                                this.showSystemStatus('✅ Session Manager collegato');
+                                return true;
+                            }
+
+                        } catch (scriptError) {
+                            console.warn(`❌ Fallito caricamento da ${path}:`, scriptError.message);
+                        }
+                    }
+
+                    // Se arriviamo qui, session manager non trovato
+                    console.warn('⚠️ Session Manager non trovato - modalità fallback');
+                    this.fallbackMode = true;
+                    this.showSystemStatus('⚠️ Modalità fallback attiva');
+                    this.setupFallbackAuth();
+                    
+                    return false;
+
+                } catch (error) {
+                    console.error('❌ Errore caricamento session manager:', error);
+                    this.fallbackMode = true;
+                    this.setupFallbackAuth();
                     return false;
                 }
+            }
+
+            // Utility per caricare script
+            loadScript(src) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.type = 'module';
+                    
+                    script.onload = () => resolve();
+                    script.onerror = () => reject(new Error(`Failed to load: ${src}`));
+                    
+                    document.head.appendChild(script);
+                    
+                    // Timeout
+                    setTimeout(() => reject(new Error(`Timeout loading: ${src}`)), 3000);
+                });
+            }
+
+            // Sleep utility
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Setup autenticazione fallback
+            setupFallbackAuth() {
+                console.log('🔧 Setup fallback authentication...');
                 
-                return true;
+                // Crea funzioni globali fallback
+                window.loginUser = this.fallbackLogin.bind(this);
+                window.getCurrentUser = this.fallbackGetCurrentUser.bind(this);
+                window.isUserAuthenticated = this.fallbackIsAuthenticated.bind(this);
+                window.logoutUser = this.fallbackLogout.bind(this);
+                
+                console.log('✅ Fallback authentication ready');
+            }
+
+            // Metodi fallback
+            async fallbackLogin(email, password, rememberMe = true) {
+                console.log('🔧 Fallback login:', email);
+                
+                // Credenziali demo hardcoded
+                const demoUsers = {
+                    'demo@tribucoach.com': { password: 'demo123', name: 'Demo User', isAdmin: false },
+                    'andrea@tribucoach.com': { password: 'coach123', name: 'Andrea Padoan', isAdmin: true }
+                };
+
+                await this.sleep(500); // Simula delay
+
+                const user = demoUsers[email.toLowerCase()];
+                if (user && user.password === password) {
+                    const userData = {
+                        uid: `fallback_${Date.now()}`,
+                        email: email,
+                        displayName: user.name,
+                        isAdmin: user.isAdmin,
+                        loginTime: Date.now()
+                    };
+
+                    // Salva in localStorage
+                    const storageKey = rememberMe ? 'tribucoach_user' : 'tribucoach_session';
+                    if (rememberMe) {
+                        localStorage.setItem(storageKey, JSON.stringify(userData));
+                    } else {
+                        sessionStorage.setItem(storageKey, JSON.stringify(userData));
+                    }
+
+                    return { success: true, user: userData };
+                } else {
+                    return { success: false, error: 'Credenziali non valide' };
+                }
+            }
+
+            fallbackGetCurrentUser() {
+                try {
+                    const stored = localStorage.getItem('tribucoach_user') || 
+                                  sessionStorage.getItem('tribucoach_session');
+                    return stored ? JSON.parse(stored) : null;
+                } catch {
+                    return null;
+                }
+            }
+
+            fallbackIsAuthenticated() {
+                return !!this.fallbackGetCurrentUser();
+            }
+
+            fallbackLogout() {
+                localStorage.removeItem('tribucoach_user');
+                sessionStorage.removeItem('tribucoach_session');
+                return { success: true };
             }
 
             async checkExistingSession() {
                 try {
-                    if (window.isUserAuthenticated && window.isUserAuthenticated()) {
-                        const user = window.getCurrentUser();
-                        console.log('✅ Sessione esistente trovata:', user.email);
+                    const isAuthenticated = this.sessionManager ? 
+                                          this.sessionManager.isAuthenticated : 
+                                          (window.isUserAuthenticated ? window.isUserAuthenticated() : false);
+
+                    if (isAuthenticated) {
+                        const user = this.sessionManager ? 
+                                    this.sessionManager.user : 
+                                    (window.getCurrentUser ? window.getCurrentUser() : null);
                         
-                        this.showAutoLoginInfo();
-                        
-                        // Auto-redirect dopo 2 secondi
-                        setTimeout(() => {
-                            this.redirectToDashboard();
-                        }, 2000);
-                        
-                        return true;
+                        if (user) {
+                            console.log('✅ Sessione esistente trovata:', user.email);
+                            this.showAutoLoginInfo();
+                            
+                            // Auto-redirect dopo 2 secondi
+                            setTimeout(() => {
+                                this.redirectToDashboard();
+                            }, 2000);
+                            
+                            return true;
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Errore controllo sessione:', error);
@@ -491,7 +655,7 @@
                 // Enter key sui campi
                 [this.emailInput, this.passwordInput].forEach(input => {
                     input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' && !this.loginBtn.disabled) {
                             this.handleLogin();
                         }
                     });
@@ -519,8 +683,13 @@
                 try {
                     console.log('🔐 Tentativo login:', email, rememberMe ? '(persistente)' : '(temporanea)');
                     
-                    // Usa il session manager unificato
-                    const result = await window.loginUser(email, password, rememberMe);
+                    // Usa session manager o fallback
+                    const loginFunc = window.loginUser;
+                    if (!loginFunc) {
+                        throw new Error('Sistema di autenticazione non disponibile');
+                    }
+                    
+                    const result = await loginFunc(email, password, rememberMe);
                     
                     if (result.success) {
                         console.log('✅ Login riuscito:', result.user.email);
@@ -551,18 +720,47 @@
             }
 
             redirectToDashboard() {
-                // Determina la pagina di destinazione
-                const urlParams = new URLSearchParams(window.location.search);
-                const returnUrl = urlParams.get('return') || 'dashboard.html';
+                // Controlla se c'è un redirect specifico salvato
+                const savedRedirect = sessionStorage.getItem('auth_redirect_url') || 
+                                    sessionStorage.getItem('redirectAfterLogin');
                 
-                console.log('🚀 Redirect a:', returnUrl);
-                window.location.href = returnUrl;
+                if (savedRedirect) {
+                    console.log('🚀 Redirect salvato a:', savedRedirect);
+                    sessionStorage.removeItem('auth_redirect_url');
+                    sessionStorage.removeItem('redirectAfterLogin');
+                    window.location.href = savedRedirect;
+                    return;
+                }
+
+                // URL params
+                const urlParams = new URLSearchParams(window.location.search);
+                const returnUrl = urlParams.get('return');
+                
+                if (returnUrl) {
+                    console.log('🚀 Redirect URL param a:', returnUrl);
+                    window.location.href = returnUrl;
+                    return;
+                }
+
+                // Default: dashboard
+                const defaultUrl = 'dashboard.html';
+                console.log('🚀 Redirect default a:', defaultUrl);
+                window.location.href = defaultUrl;
             }
 
             showAutoLoginInfo() {
                 this.autoLoginInfo.classList.add('show');
                 this.loginForm.style.opacity = '0.5';
                 this.loginBtn.disabled = true;
+            }
+
+            showSystemStatus(message) {
+                this.systemMessage.textContent = message;
+                this.systemStatus.classList.add('show');
+            }
+
+            hideSystemStatus() {
+                this.systemStatus.classList.remove('show');
             }
 
             showSuccess(message) {
@@ -606,7 +804,7 @@
 
             showPreviousSessionInfo() {
                 try {
-                    const sessionInfo = window.sessionManager?.sessionInfo;
+                    const sessionInfo = this.sessionManager?.sessionInfo;
                     if (sessionInfo && sessionInfo.lastActivity) {
                         const lastActivity = new Date(sessionInfo.lastActivity);
                         const timeDiff = Date.now() - sessionInfo.lastActivity;
