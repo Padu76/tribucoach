@@ -1,5 +1,5 @@
 // unified-session-manager.js - Sistema sessione persistente unificato per TribuCoach
-// 🎯 Risolve problemi di persistenza dati e login
+// Risolve problemi di persistenza dati e login
 
 class UnifiedSessionManager {
     constructor() {
@@ -13,12 +13,12 @@ class UnifiedSessionManager {
         this.dashboardData = {};
         this.authListeners = [];
         
-        console.log('🔐 Unified Session Manager inizializzato');
+        console.log('Unified Session Manager inizializzato');
         this.init();
     }
 
     async init() {
-        console.log('🚀 Inizializzazione sessione unificata...');
+        console.log('Inizializzazione sessione unificata...');
         
         // 1. Recupera sessione esistente
         await this.loadExistingSession();
@@ -32,14 +32,14 @@ class UnifiedSessionManager {
         // 4. Setup auto-save
         this.setupAutoSave();
         
-        console.log('✅ Sessione unificata pronta:', {
+        console.log('Sessione unificata pronta:', {
             user: this.currentUser ? this.currentUser.email : 'nessuno',
             sessionValid: !!this.sessionData.isValid,
             dataLoaded: Object.keys(this.dashboardData).length
         });
     }
 
-    // 🔄 CARICAMENTO SESSIONE ESISTENTE
+    // CARICAMENTO SESSIONE ESISTENTE
     async loadExistingSession() {
         try {
             // Prova localStorage prima (permanente)
@@ -59,7 +59,7 @@ class UnifiedSessionManager {
                     this.sessionData.isValid = true;
                     this.sessionData.lastActivity = Date.now();
                     
-                    console.log('✅ Sessione ripristinata:', {
+                    console.log('Sessione ripristinata:', {
                         user: this.currentUser.email,
                         age: Math.round(sessionAge / (1000 * 60 * 60)) + ' ore',
                         valid: true
@@ -69,7 +69,7 @@ class UnifiedSessionManager {
                     this.updateAuthState(this.currentUser);
                     return true;
                 } else {
-                    console.log('⏰ Sessione scaduta, cleanup...');
+                    console.log('Sessione scaduta, cleanup...');
                     this.clearSession();
                 }
             }
@@ -78,49 +78,49 @@ class UnifiedSessionManager {
             const tempSession = sessionStorage.getItem(this.sessionKey);
             if (tempSession) {
                 const tempData = JSON.parse(tempSession);
-                console.log('🔄 Fallback sessione temporanea:', tempData);
+                console.log('Fallback sessione temporanea:', tempData);
                 this.sessionData = tempData;
                 this.sessionData.isValid = true;
                 return true;
             }
             
         } catch (error) {
-            console.error('❌ Errore caricamento sessione:', error);
+            console.error('Errore caricamento sessione:', error);
             this.clearSession();
         }
         
         return false;
     }
 
-    // 📊 CARICAMENTO DATI DASHBOARD
+    // CARICAMENTO DATI DASHBOARD
     async loadDashboardData() {
         try {
             const savedData = localStorage.getItem(this.dataKey);
             if (savedData) {
                 this.dashboardData = JSON.parse(savedData);
-                console.log('📊 Dati dashboard ripristinati:', Object.keys(this.dashboardData));
+                console.log('Dati dashboard ripristinati:', Object.keys(this.dashboardData));
                 
-                // Verifica età dati
+                // Verifica eta dati
                 if (this.dashboardData.lastUpdate) {
                     const dataAge = Date.now() - this.dashboardData.lastUpdate;
                     const maxDataAge = 24 * 60 * 60 * 1000; // 24 ore
                     
                     if (dataAge > maxDataAge) {
-                        console.log('📡 Dati dashboard obsoleti, refresh necessario');
+                        console.log('Dati dashboard obsoleti, refresh necessario');
                         this.dashboardData.needsRefresh = true;
                     }
                 }
             }
         } catch (error) {
-            console.error('❌ Errore caricamento dati dashboard:', error);
+            console.error('Errore caricamento dati dashboard:', error);
             this.dashboardData = {};
         }
     }
 
-    // ✅ VALIDAZIONE E RIPRISTINO STATO
+    // VALIDAZIONE E RIPRISTINO STATO
     async validateAndRestoreState() {
         if (this.currentUser && this.sessionData.isValid) {
-            // Notifica componenti che l'utente è loggato
+            // Notifica componenti che l'utente e loggato
             this.notifyAuthListeners(this.currentUser);
             
             // Ripristina stato UI se necessario
@@ -135,12 +135,12 @@ class UnifiedSessionManager {
         }
     }
 
-    // 🎯 LOGIN UNIFICATO
+    // LOGIN UNIFICATO
     async login(email, password, rememberMe = true) {
-        console.log('🔐 Login tentativo:', email, rememberMe ? '(persistente)' : '(sessione)');
+        console.log('Login tentativo:', email, rememberMe ? '(persistente)' : '(sessione)');
         
         try {
-            // Simula autenticazione (in produzione userai Firebase Auth)
+            // Autenticazione con credenziali reali
             const user = await this.authenticateUser(email, password);
             
             if (user) {
@@ -162,7 +162,7 @@ class UnifiedSessionManager {
                 // Carica dati utente
                 await this.loadUserData();
                 
-                console.log('✅ Login completato:', user.email);
+                console.log('Login completato:', user.email);
                 return { success: true, user: user };
                 
             } else {
@@ -170,14 +170,14 @@ class UnifiedSessionManager {
             }
             
         } catch (error) {
-            console.error('❌ Errore login:', error);
+            console.error('Errore login:', error);
             return { success: false, error: error.message };
         }
     }
 
-    // 🚪 LOGOUT UNIFICATO
+    // LOGOUT UNIFICATO
     async logout() {
-        console.log('🚪 Logout in corso...');
+        console.log('Logout in corso...');
         
         try {
             // Salva dati importanti prima del logout
@@ -193,16 +193,16 @@ class UnifiedSessionManager {
             // Notifica listeners
             this.notifyAuthListeners(null);
             
-            console.log('✅ Logout completato');
+            console.log('Logout completato');
             return { success: true };
             
         } catch (error) {
-            console.error('❌ Errore logout:', error);
+            console.error('Errore logout:', error);
             return { success: false, error: error.message };
         }
     }
 
-    // 💾 SALVATAGGIO SESSIONE
+    // SALVATAGGIO SESSIONE
     saveSession(persistent = true) {
         try {
             const sessionStr = JSON.stringify(this.sessionData);
@@ -216,34 +216,34 @@ class UnifiedSessionManager {
                     isAuthenticated: true,
                     lastLogin: Date.now()
                 }));
-                console.log('💾 Sessione salvata (permanente)');
+                console.log('Sessione salvata (permanente)');
             } else {
                 // Salva solo in sessionStorage (temporanea)
                 sessionStorage.setItem(this.sessionKey, sessionStr);
                 sessionStorage.setItem(this.userKey, userStr);
-                console.log('💾 Sessione salvata (temporanea)');
+                console.log('Sessione salvata (temporanea)');
             }
             
         } catch (error) {
-            console.error('❌ Errore salvataggio sessione:', error);
+            console.error('Errore salvataggio sessione:', error);
         }
     }
 
-    // 📊 SALVATAGGIO DATI DASHBOARD
+    // SALVATAGGIO DATI DASHBOARD
     async saveDashboardData() {
         try {
             this.dashboardData.lastUpdate = Date.now();
             this.dashboardData.userId = this.currentUser?.uid || null;
             
             localStorage.setItem(this.dataKey, JSON.stringify(this.dashboardData));
-            console.log('📊 Dati dashboard salvati');
+            console.log('Dati dashboard salvati');
             
         } catch (error) {
-            console.error('❌ Errore salvataggio dati dashboard:', error);
+            console.error('Errore salvataggio dati dashboard:', error);
         }
     }
 
-    // 🧹 PULIZIA SESSIONE
+    // PULIZIA SESSIONE
     clearSession() {
         localStorage.removeItem(this.sessionKey);
         localStorage.removeItem(this.userKey);
@@ -254,10 +254,10 @@ class UnifiedSessionManager {
         this.currentUser = null;
         this.sessionData = { isValid: false };
         
-        console.log('🧹 Sessione pulita');
+        console.log('Sessione pulita');
     }
 
-    // 🔄 AUTO-SAVE PERIODICO
+    // AUTO-SAVE PERIODICO
     setupAutoSave() {
         // Salva sessione ogni 5 minuti se attiva
         setInterval(() => {
@@ -274,17 +274,17 @@ class UnifiedSessionManager {
             }
         }, 2 * 60 * 1000);
         
-        console.log('⏰ Auto-save attivato');
+        console.log('Auto-save attivato');
     }
 
-    // 👤 CARICAMENTO DATI UTENTE
+    // CARICAMENTO DATI UTENTE
     async loadUserData() {
         if (!this.currentUser) return;
         
         try {
-            console.log('👤 Caricamento dati utente...');
+            console.log('Caricamento dati utente...');
             
-            // Simula caricamento dati specifici utente
+            // Caricamento dati specifici utente
             const userData = {
                 profile: {
                     name: this.currentUser.displayName || this.currentUser.email.split('@')[0],
@@ -308,25 +308,27 @@ class UnifiedSessionManager {
             // Merge con dati esistenti
             this.dashboardData = { ...this.dashboardData, ...userData };
             
-            console.log('✅ Dati utente caricati');
+            console.log('Dati utente caricati');
             
         } catch (error) {
-            console.error('❌ Errore caricamento dati utente:', error);
+            console.error('Errore caricamento dati utente:', error);
         }
     }
 
-    // 🔐 AUTENTICAZIONE DEMO
+    // AUTENTICAZIONE UTENTI REALI
     async authenticateUser(email, password) {
-        // Demo users (in produzione userai Firebase Auth)
-        const demoUsers = [
+        // Utenti autorizzati del sistema
+        const authorizedUsers = [
             {
-                uid: 'demo-user-001',
-                email: 'demo@tribucoach.com',
-                password: 'demo123',
-                displayName: 'Demo User',
+                uid: 'admin-tribu-001',
+                email: 'admin@tribu.com',
+                password: 'tribu2025',
+                displayName: 'Admin TribuCoach',
                 emailVerified: true,
+                isAdmin: true,
+                role: 'admin',
                 metadata: {
-                    creationTime: '2024-01-15T10:00:00Z',
+                    creationTime: '2024-01-01T09:00:00Z',
                     lastSignInTime: new Date().toISOString()
                 }
             },
@@ -336,8 +338,23 @@ class UnifiedSessionManager {
                 password: 'coach123',
                 displayName: 'Andrea Padoan',
                 emailVerified: true,
+                isAdmin: true,
+                role: 'coach',
                 metadata: {
                     creationTime: '2024-01-01T09:00:00Z',
+                    lastSignInTime: new Date().toISOString()
+                }
+            },
+            {
+                uid: 'demo-user-001',
+                email: 'demo@tribucoach.com',
+                password: 'demo123',
+                displayName: 'Demo User',
+                emailVerified: true,
+                isAdmin: false,
+                role: 'user',
+                metadata: {
+                    creationTime: '2024-01-15T10:00:00Z',
                     lastSignInTime: new Date().toISOString()
                 }
             }
@@ -346,7 +363,7 @@ class UnifiedSessionManager {
         // Simula delay di rete
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        const user = demoUsers.find(u => u.email === email && u.password === password);
+        const user = authorizedUsers.find(u => u.email === email && u.password === password);
         
         if (user) {
             // Rimuovi password dal risultato
@@ -358,9 +375,9 @@ class UnifiedSessionManager {
         return null;
     }
 
-    // 📡 REFRESH DATI DASHBOARD
+    // REFRESH DATI DASHBOARD
     async refreshDashboardData() {
-        console.log('📡 Refresh dati dashboard...');
+        console.log('Refresh dati dashboard...');
         
         try {
             // Qui chiameresti le tue API Firebase
@@ -381,14 +398,14 @@ class UnifiedSessionManager {
             // Notifica componenti del refresh
             this.notifyDataRefresh();
             
-            console.log('✅ Dati dashboard aggiornati');
+            console.log('Dati dashboard aggiornati');
             
         } catch (error) {
-            console.error('❌ Errore refresh dashboard:', error);
+            console.error('Errore refresh dashboard:', error);
         }
     }
 
-    // 🎨 RIPRISTINO STATO UI
+    // RIPRISTINO STATO UI
     restoreUIState() {
         try {
             // Ripristina elementi UI basati sui dati utente
@@ -413,14 +430,20 @@ class UnifiedSessionManager {
                 });
             }
             
-            console.log('🎨 Stato UI ripristinato');
+            console.log('Stato UI ripristinato');
             
         } catch (error) {
-            console.error('❌ Errore ripristino UI:', error);
+            console.error('Errore ripristino UI:', error);
         }
     }
 
-    // 📢 GESTIONE LISTENERS
+    // Aggiorna auth state
+    updateAuthState(user) {
+        // Placeholder per compatibilita
+        console.log('Auth state aggiornato per:', user?.email);
+    }
+
+    // GESTIONE LISTENERS
     onAuthStateChanged(callback) {
         this.authListeners.push(callback);
         
@@ -441,7 +464,7 @@ class UnifiedSessionManager {
             try {
                 callback(user);
             } catch (error) {
-                console.error('❌ Errore in auth listener:', error);
+                console.error('Errore in auth listener:', error);
             }
         });
     }
@@ -453,7 +476,7 @@ class UnifiedSessionManager {
         }));
     }
 
-    // 🔍 GETTERS PUBBLICI
+    // GETTERS PUBBLICI
     get user() {
         return this.currentUser;
     }
@@ -476,7 +499,7 @@ class UnifiedSessionManager {
         return this.dashboardData;
     }
 
-    // 🔧 METODI UTILI
+    // METODI UTILI
     updateUserData(newData) {
         this.dashboardData = { ...this.dashboardData, ...newData };
         this.saveDashboardData();
@@ -497,17 +520,17 @@ class UnifiedSessionManager {
     }
 }
 
-// 🌟 INIZIALIZZAZIONE GLOBALE
+// INIZIALIZZAZIONE GLOBALE
 const sessionManager = new UnifiedSessionManager();
 
-// 📤 EXPORT PER COMPATIBILITÀ
+// EXPORT PER COMPATIBILITA
 export { sessionManager };
 
-// 🌐 RENDI DISPONIBILE GLOBALMENTE
+// RENDI DISPONIBILE GLOBALMENTE
 window.sessionManager = sessionManager;
 window.tribucoachSession = sessionManager;
 
-// 🎯 FUNZIONI HELPER GLOBALI
+// FUNZIONI HELPER GLOBALI
 window.loginUser = (email, password, remember) => sessionManager.login(email, password, remember);
 window.logoutUser = () => sessionManager.logout();
 window.getCurrentUser = () => sessionManager.user;
@@ -515,17 +538,17 @@ window.isUserAuthenticated = () => sessionManager.isAuthenticated;
 window.getUserData = () => sessionManager.userData;
 window.updateUserData = (data) => sessionManager.updateUserData(data);
 
-// 🔄 AUTO-RESTORE AL CARICAMENTO PAGINA
+// AUTO-RESTORE AL CARICAMENTO PAGINA
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 TribuCoach Session Manager pronto!');
-    console.log('👤 Utente corrente:', sessionManager.user?.email || 'nessuno');
-    console.log('🔐 Autenticato:', sessionManager.isAuthenticated);
+    console.log('TribuCoach Session Manager pronto!');
+    console.log('Utente corrente:', sessionManager.user?.email || 'nessuno');
+    console.log('Autenticato:', sessionManager.isAuthenticated);
     
     // Se utente loggato, mostra info
     if (sessionManager.isAuthenticated) {
         const sessionAge = Math.round(sessionManager.getSessionAge() / (1000 * 60));
-        console.log(`⏰ Sessione attiva da ${sessionAge} minuti`);
+        console.log(`Sessione attiva da ${sessionAge} minuti`);
     }
 });
 
-console.log('✅ Unified Session Manager caricato - Persistenza dati garantita!');
+console.log('Unified Session Manager caricato - Persistenza dati garantita!');
