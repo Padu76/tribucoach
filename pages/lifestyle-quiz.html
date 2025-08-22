@@ -49,6 +49,18 @@
             opacity: 0.9;
         }
 
+        .user-welcome {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            border-left: 4px solid #fff;
+        }
+
+        .user-welcome.hidden {
+            display: none;
+        }
+
         .content {
             padding: 20px;
         }
@@ -705,6 +717,26 @@
             transform: translateY(-1px);
         }
 
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(30, 41, 59, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
         /* RESPONSIVE BREAKPOINTS */
         
         /* Small phones: up to 380px */
@@ -1046,6 +1078,11 @@
     </style>
 </head>
 <body>
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div>🔄 Caricamento sessione...</div>
+    </div>
+
     <div class="container">
         <div class="quiz-card">
             <div id="quiz-container">
@@ -1053,6 +1090,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Unified Session Manager -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -1158,6 +1198,9 @@
                 this.profile = null;
                 this.container = document.getElementById('quiz-container');
                 this.showingContactForm = false;
+                this.isAuthenticated = false;
+                this.currentUser = null;
+                this.userDataPreloaded = false;
                 
                 this.questions = [
                     // === STRESS/BURNOUT QUESTIONS (5) ===
@@ -1309,7 +1352,7 @@
                             { value: 'unclear', label: 'Non so da dove iniziare', emoji: '🤔' },
                             { value: 'failure', label: 'Paura di fallire', emoji: '😰' },
                             { value: 'distractions', label: 'Troppe distrazioni', emoji: '📱' },
-                            { value: 'no_mood', label: 'Non sono dell\'umore giusto', emoji: '😑' }
+                            { value: 'no_mood', label: 'Non sono dell\'umore giusto', emoji: '😒' }
                         ]
                     },
 
@@ -1572,7 +1615,7 @@
                         type: 'scale',
                         category: 'advanced_interest',
                         options: [
-                            { value: 1, label: 'Per niente', emoji: '😑' },
+                            { value: 1, label: 'Per niente', emoji: '😒' },
                             { value: 2, label: 'Poco', emoji: '😐' },
                             { value: 3, label: 'Moderatamente', emoji: '🙂' },
                             { value: 4, label: 'Molto', emoji: '😊' },
@@ -1626,7 +1669,7 @@
                         type: 'scale',
                         category: 'readiness',
                         options: [
-                            { value: 1, label: 'Per niente pronto', emoji: '😑' },
+                            { value: 1, label: 'Per niente pronto', emoji: '😒' },
                             { value: 2, label: 'Un po\' scettico', emoji: '🤔' },
                             { value: 3, label: 'Curioso di provare', emoji: '😊' },
                             { value: 4, label: 'Molto motivato', emoji: '💪' },
@@ -1654,13 +1697,115 @@
                 this.init();
             }
 
-            init() {
-                this.render();
+            async init() {
+                console.log('🎯 Lifestyle Quiz con Session Manager - Inizializzazione...');
+                
+                // Hide loading overlay after short delay
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                }, 1500);
+                
+                // Wait for session manager to be ready
+                this.waitForSessionManager();
+            }
+
+            async waitForSessionManager() {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max
+                
+                const checkSessionManager = () => {
+                    attempts++;
+                    
+                    if (window.sessionManager || window.tribucoachSession) {
+                        console.log('✅ Session Manager trovato, integrazione...');
+                        this.integrateWithSessionManager();
+                        this.render();
+                        return;
+                    }
+                    
+                    if (attempts >= maxAttempts) {
+                        console.log('⚠️ Session Manager non trovato, modalità standalone');
+                        this.render();
+                        return;
+                    }
+                    
+                    setTimeout(checkSessionManager, 100);
+                };
+                
+                checkSessionManager();
+            }
+
+            integrateWithSessionManager() {
+                try {
+                    const sessionManager = window.sessionManager || window.tribucoachSession;
+                    
+                    if (sessionManager) {
+                        this.isAuthenticated = sessionManager.isAuthenticated;
+                        this.currentUser = sessionManager.user;
+                        
+                        console.log('🔗 Integrazione completata:', {
+                            authenticated: this.isAuthenticated,
+                            user: this.currentUser?.email || 'guest'
+                        });
+                        
+                        // Pre-load user data if authenticated
+                        if (this.isAuthenticated && this.currentUser) {
+                            this.preloadUserData();
+                        }
+                        
+                        // Listen for auth changes
+                        sessionManager.onAuthStateChanged((user) => {
+                            this.currentUser = user;
+                            this.isAuthenticated = !!user;
+                            console.log('👤 Auth state changed:', user?.email || 'logged out');
+                        });
+                    }
+                } catch (error) {
+                    console.error('❌ Errore integrazione session manager:', error);
+                }
+            }
+
+            preloadUserData() {
+                try {
+                    if (this.currentUser) {
+                        // Pre-fill contact form with user data
+                        this.contactData.name = this.currentUser.displayName || 
+                                               this.currentUser.email?.split('@')[0] || '';
+                        this.contactData.email = this.currentUser.email || '';
+                        
+                        this.userDataPreloaded = true;
+                        console.log('📋 Dati utente pre-caricati:', this.contactData);
+                    }
+                } catch (error) {
+                    console.error('❌ Errore pre-caricamento dati:', error);
+                }
             }
 
             handleAnswer(questionId, value) {
                 this.answers[questionId] = value;
+                
+                // Auto-save to session manager if available
+                this.autoSaveToSession();
+                
                 this.render();
+            }
+
+            autoSaveToSession() {
+                try {
+                    const sessionManager = window.sessionManager || window.tribucoachSession;
+                    if (sessionManager && this.isAuthenticated) {
+                        const quizData = {
+                            lifestyleQuizAnswers: this.answers,
+                            lifestyleQuizProgress: this.currentStep,
+                            lifestyleQuizTimestamp: Date.now()
+                        };
+                        
+                        sessionManager.updateUserData(quizData);
+                        console.log('💾 Auto-save quiz progress:', this.currentStep);
+                    }
+                } catch (error) {
+                    console.error('❌ Errore auto-save:', error);
+                }
             }
 
             handleNext() {
@@ -1701,10 +1846,11 @@
 
                 // Save contact data
                 this.contactData = {
+                    ...this.contactData, // Keep pre-loaded data
                     name: name,
                     phone: phone,
                     gender: gender,
-                    email: document.getElementById('contactEmail').value.trim(),
+                    email: document.getElementById('contactEmail').value.trim() || this.contactData.email,
                     city: document.getElementById('contactCity').value.trim(),
                     privacyConsent: privacy
                 };
@@ -1742,7 +1888,12 @@
                         readinessLevel: this.answers.change_readiness || 3
                     },
                     challenges: this.answers.main_challenges || [],
-                    personalizedAnalysis: this.generatePersonalizedAnalysis(profileType, profileData)
+                    personalizedAnalysis: this.generatePersonalizedAnalysis(profileType, profileData),
+                    
+                    // Add session data
+                    userId: this.isAuthenticated ? this.currentUser?.uid : null,
+                    userEmail: this.isAuthenticated ? this.currentUser?.email : null,
+                    isAuthenticatedUser: this.isAuthenticated
                 };
                 
                 this.render();
@@ -1894,7 +2045,7 @@
             }
 
             generatePersonalizedAnalysis(profileType, profileData) {
-                const name = this.contactData.name || 'Amico/a';
+                const name = this.contactData.name || this.currentUser?.displayName || 'Amico/a';
                 const challenges = this.answers.main_challenges || [];
                 const stress = this.answers.stress_level || 3;
                 const readiness = this.answers.change_readiness || 3;
@@ -2026,11 +2177,18 @@
 
             renderContactForm() {
                 const progress = 95;
+                const userName = this.currentUser?.displayName || this.currentUser?.email?.split('@')[0] || '';
+                const userEmail = this.currentUser?.email || '';
                 
                 this.container.innerHTML = `
                     <div class="header">
                         <h1>👤 I Tuoi Dati</h1>
                         <p>Ultimi dettagli per personalizzare il tuo percorso</p>
+                        ${this.isAuthenticated ? `
+                            <div class="user-welcome">
+                                <div>👋 Ciao ${userName}! Alcuni dati sono già precompilati</div>
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <div class="content">
@@ -2061,7 +2219,8 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label required" for="contactName">Nome</label>
-                                    <input type="text" id="contactName" class="form-input" placeholder="Il tuo nome" required>
+                                    <input type="text" id="contactName" class="form-input" placeholder="Il tuo nome" 
+                                           value="${userName}" required>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label required" for="contactPhone">Telefono</label>
@@ -2080,8 +2239,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" for="contactEmail">Email (opzionale)</label>
-                                    <input type="email" id="contactEmail" class="form-input" placeholder="tua@email.com">
+                                    <label class="form-label" for="contactEmail">Email ${this.isAuthenticated ? '(dal tuo account)' : '(opzionale)'}</label>
+                                    <input type="email" id="contactEmail" class="form-input" placeholder="tua@email.com"
+                                           value="${userEmail}" ${this.isAuthenticated ? 'readonly' : ''}>
                                 </div>
                             </div>
                             
@@ -2216,7 +2376,7 @@
                         
                         <div class="profile-section">
                             <div class="profile-card primary">
-                                <h3>📝 Analisi Dettagliata del Tuo Profilo</h3>
+                                <h3>🔍 Analisi Dettagliata del Tuo Profilo</h3>
                                 <div class="profile-description" style="line-height: 1.8; font-size: 1rem;">
                                     ${this.profile.personalizedAnalysis}
                                 </div>
@@ -2241,11 +2401,17 @@
                 const progress = ((this.currentStep + 1) / this.questions.length) * 100;
                 const canProceed = this.answers[currentQuestion.id] !== undefined;
                 const isLastStep = this.currentStep === this.questions.length - 1;
+                const userName = this.currentUser?.displayName || this.currentUser?.email?.split('@')[0] || '';
 
                 this.container.innerHTML = `
                     <div class="header">
                         <h1>🎯 Lifestyle Assessment</h1>
                         <p>Scopri il tuo profilo personalizzato in 25 domande</p>
+                        ${this.isAuthenticated ? `
+                            <div class="user-welcome">
+                                <div>👋 Ciao ${userName}! Le tue risposte vengono salvate automaticamente</div>
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <div class="content">
@@ -2383,11 +2549,30 @@
                 // Save to localStorage as backup
                 localStorage.setItem('lifestyleQuizResults', JSON.stringify(quiz.profile));
                 
+                // Save to session manager if available
+                const sessionManager = window.sessionManager || window.tribucoachSession;
+                if (sessionManager) {
+                    console.log('💾 Salvando profilo su session manager...');
+                    
+                    const profileData = {
+                        lifestyleProfile: quiz.profile,
+                        lifestyleQuizCompleted: true,
+                        lifestyleQuizCompletedAt: new Date().toISOString()
+                    };
+                    
+                    sessionManager.updateUserData(profileData);
+                    console.log('✅ Profilo salvato su session manager');
+                }
+                
                 // Save to Firebase
                 saveToFirebase(quiz.profile);
                 
-                // Redirect to user dashboard
-                window.location.href = 'user-dashboard.html';
+                // Redirect intelligently based on auth state
+                if (quiz.isAuthenticated) {
+                    window.location.href = 'user-dashboard.html';
+                } else {
+                    window.location.href = 'user-dashboard.html';
+                }
             }
         }
         
@@ -2403,15 +2588,16 @@
                 }
                 
                 // Generate user ID
-                const userId = generateUserId();
+                const userId = profileData.userId || generateUserId();
                 
                 // Prepare data for Firebase
                 const firebaseData = {
                     ...profileData,
                     userId: userId,
                     timestamp: window.firebaseServerTimestamp(),
-                    source: 'lifestyle_quiz_6profiles',
-                    version: '2.0',
+                    source: 'lifestyle_quiz_6profiles_unified',
+                    version: '2.1',
+                    sessionManagerIntegrated: true,
                     
                     // Convert answers to serializable format
                     answers: quiz.answers,
@@ -2443,7 +2629,7 @@
                         phone: profileData.phone || '',
                         gender: profileData.gender || '',
                         city: profileData.city || '',
-                        source: 'lifestyle_quiz_6profiles',
+                        source: 'lifestyle_quiz_6profiles_unified',
                         leadScore: calculateLeadScore(profileData),
                         status: 'new',
                         
@@ -2455,6 +2641,10 @@
                         challenges: profileData.challenges,
                         scores: profileData.scores,
                         
+                        // Session manager integration data
+                        isAuthenticatedUser: profileData.isAuthenticatedUser,
+                        sessionManagerUserId: profileData.userId,
+                        
                         timestamp: window.firebaseServerTimestamp()
                     }
                 );
@@ -2463,7 +2653,7 @@
                 
             } catch (error) {
                 console.error('❌ Errore salvataggio Firebase:', error);
-                // Continue anyway, data is in localStorage
+                // Continue anyway, data is in localStorage and session manager
             }
         }
         
@@ -2501,6 +2691,11 @@
                 const avgScore = Object.values(profileData.scores).reduce((a, b) => a + b, 0) / Object.keys(profileData.scores).length;
                 if (avgScore < 3) score += 10;
                 else if (avgScore < 4) score += 5;
+            }
+            
+            // Bonus for authenticated users (5 points)
+            if (profileData.isAuthenticatedUser) {
+                score += 5;
             }
             
             return Math.min(Math.max(score, 0), 100);
