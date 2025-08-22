@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Accedi - LifestyleFitnessCoach</title>
+    <title>TribuCoach - Login</title>
+    
     <style>
         * {
             margin: 0;
@@ -13,254 +14,217 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #fff;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #333;
+            padding: 20px;
         }
 
         .login-container {
-            background: white;
+            background: linear-gradient(135deg, #2a2a2a 0%, #333333 100%);
+            padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            border: 1px solid #404040;
             width: 100%;
-            max-width: 420px;
-            margin: 1rem;
+            max-width: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6600, #ff9933, #ff6600);
         }
 
         .login-header {
-            background: linear-gradient(135deg, #ff6b35, #f39c12);
-            color: white;
             text-align: center;
-            padding: 2.5rem 1.5rem;
-            position: relative;
+            margin-bottom: 30px;
         }
 
         .login-header h1 {
-            font-size: 1.8rem;
+            color: #ff6600;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
             font-weight: 700;
-            margin-bottom: 0.5rem;
         }
 
         .login-header p {
-            opacity: 0.9;
+            color: #ccc;
             font-size: 1rem;
+            opacity: 0.9;
         }
 
-        .login-form {
-            padding: 2rem;
-        }
-
-        .welcome-back {
-            background: linear-gradient(45deg, #ff6b35, #f39c12);
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
+        .session-status {
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid rgba(255, 102, 0, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
             text-align: center;
             font-size: 0.9rem;
+            color: #ff9933;
+            display: none;
         }
 
-        .welcome-back h3 {
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
+        .session-status.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .session-status.success {
+            background: rgba(76, 175, 80, 0.1);
+            border-color: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .session-status.error {
+            background: rgba(244, 67, 54, 0.1);
+            border-color: rgba(244, 67, 54, 0.3);
+            color: #f44336;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            color: #ff9933;
             font-weight: 600;
-            color: #2c3e50;
+            margin-bottom: 8px;
             font-size: 0.9rem;
         }
 
-        .form-control {
+        .form-input {
             width: 100%;
-            padding: 0.75rem 1rem;
-            border: 2px solid #e1e8ed;
-            border-radius: 10px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #333, #404040);
+            border: 2px solid #555;
+            border-radius: 12px;
+            color: #fff;
             font-size: 1rem;
+            font-weight: 500;
             transition: all 0.3s ease;
-            background: #f8f9fa;
-        }
-
-        .form-control:focus {
             outline: none;
-            border-color: #ff6b35;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
         }
 
-        .password-container {
-            position: relative;
+        .form-input:focus {
+            border-color: #ff6600;
+            box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+            background: linear-gradient(135deg, #2a2a2a, #333);
+            transform: scale(1.02);
         }
 
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: #666;
-            transition: color 0.3s ease;
-        }
-
-        .password-toggle:hover {
-            color: #ff6b35;
-        }
-
-        .remember-forgot {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+        .form-input::placeholder {
+            color: #999;
+            font-style: italic;
         }
 
         .remember-me {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            margin-bottom: 25px;
         }
 
         .remember-me input[type="checkbox"] {
-            transform: scale(1.2);
-        }
-
-        .forgot-link {
-            color: #ff6b35;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-link:hover {
-            color: #f39c12;
-            text-decoration: underline;
-        }
-
-        .login-btn {
-            width: 100%;
-            background: linear-gradient(45deg, #ff6b35, #f39c12);
-            color: white;
-            border: none;
-            padding: 0.875rem 1rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 1rem;
-        }
-
-        .login-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
-        }
-
-        .login-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .error-message {
-            background: #fff5f5;
-            color: #e53e3e;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            border-left: 4px solid #e53e3e;
             display: none;
         }
 
-        .success-message {
-            background: #f0fff4;
-            color: #38a169;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            border-left: 4px solid #38a169;
-            display: none;
-        }
-
-        .divider {
-            margin: 1.5rem 0;
-            text-align: center;
-            position: relative;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e1e8ed;
-        }
-
-        .divider span {
-            background: white;
-            padding: 0 1rem;
-        }
-
-        .form-links {
-            text-align: center;
-        }
-
-        .form-links a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: color 0.3s ease;
-        }
-
-        .form-links a:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-
-        .register-link {
-            text-align: center;
-            padding: 1.5rem;
-            background: #f8f9fa;
-            border-top: 1px solid #e1e8ed;
-        }
-
-        .register-link a {
-            color: #27ae60;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .register-link a:hover {
-            color: #2ecc71;
-            text-decoration: underline;
-        }
-
-        .loading-spinner {
+        .remember-me .checkbox-custom {
             width: 20px;
             height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
+            background: linear-gradient(135deg, #333, #555);
+            border: 2px solid #666;
+            border-radius: 6px;
+            margin-right: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .remember-me input[type="checkbox"]:checked + .checkbox-custom {
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            border-color: #ff6600;
+        }
+
+        .remember-me input[type="checkbox"]:checked + .checkbox-custom::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .remember-me label {
+            color: #ccc;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .login-button {
+            width: 100%;
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255, 102, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ff8533, #ffaa66);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(255, 102, 0, 0.4);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-button .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .login-button.loading .loading {
+            display: inline-block;
+        }
+
+        .login-button.loading .button-text {
+            opacity: 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-top: 2px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -268,296 +232,421 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Responsive */
+        .demo-credentials {
+            background: rgba(26, 26, 26, 0.5);
+            border: 1px solid #444;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+
+        .demo-credentials h3 {
+            color: #ff9933;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .demo-user {
+            background: rgba(255, 102, 0, 0.1);
+            border: 1px solid rgba(255, 102, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-user:hover {
+            background: rgba(255, 102, 0, 0.2);
+            transform: translateX(4px);
+        }
+
+        .demo-user .user-info {
+            font-size: 0.85rem;
+            color: #ff9933;
+            font-weight: 600;
+        }
+
+        .demo-user .user-creds {
+            font-size: 0.75rem;
+            color: #ccc;
+            margin-top: 4px;
+            font-family: monospace;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #444;
+        }
+
+        .links a {
+            color: #ff9933;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: #ffcc66;
+        }
+
+        .auto-login-info {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none;
+        }
+
+        .auto-login-info.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* RESPONSIVE */
         @media (max-width: 480px) {
             .login-container {
-                margin: 0.5rem;
-            }
-            
-            .login-header {
-                padding: 2rem 1rem;
-            }
-            
-            .login-form {
-                padding: 1.5rem;
+                padding: 30px 25px;
+                margin: 10px;
             }
 
-            .remember-forgot {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: flex-start;
+            .login-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .form-input {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+            }
+
+            .login-button {
+                padding: 14px 20px;
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <!-- Header -->
         <div class="login-header">
-            <h1>🏠 Bentornato!</h1>
-            <p>Accedi al tuo account per continuare il percorso di coaching personalizzato</p>
+            <h1>🏆 TribuCoach</h1>
+            <p>Accedi alla tua dashboard personale</p>
         </div>
 
-        <!-- Login Form -->
-        <div class="login-form">
-            <!-- Welcome Back -->
-            <div class="welcome-back">
-                <h3>✨ Il Tuo Percorso Ti Aspetta</h3>
-                <p>Accedi per continuare la tua trasformazione con Andrea</p>
+        <!-- Status sessione precedente -->
+        <div id="sessionStatus" class="session-status">
+            <div id="sessionMessage"></div>
+        </div>
+
+        <!-- Info auto-login -->
+        <div id="autoLoginInfo" class="auto-login-info">
+            ✅ Sessione valida trovata. Accesso automatico in corso...
+        </div>
+
+        <!-- Form di login -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">📧 Email</label>
+                <input type="email" id="email" name="email" class="form-input" 
+                       placeholder="Inserisci la tua email" required>
             </div>
 
-            <!-- Error/Success Messages -->
-            <div id="errorMessage" class="error-message"></div>
-            <div id="successMessage" class="success-message"></div>
-
-            <!-- Login Form -->
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" class="form-control" placeholder="La tua email registrata" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-container">
-                        <input type="password" id="password" class="form-control" placeholder="La tua password" required>
-                        <button type="button" class="password-toggle" id="togglePassword">👁️</button>
-                    </div>
-                </div>
-
-                <div class="remember-forgot">
-                    <div class="remember-me">
-                        <input type="checkbox" id="rememberMe">
-                        <label for="rememberMe">Ricordami</label>
-                    </div>
-                    <a href="forgot-password.html" class="forgot-link">Password dimenticata?</a>
-                </div>
-
-                <button type="submit" id="loginBtn" class="login-btn">
-                    Accedi al Tuo Account
-                </button>
-            </form>
-
-            <div class="divider">
-                <span>oppure</span>
+            <div class="form-group">
+                <label for="password">🔐 Password</label>
+                <input type="password" id="password" name="password" class="form-input" 
+                       placeholder="Inserisci la tua password" required>
             </div>
 
-            <div class="form-links">
-                <a href="../index.html">← Torna alla Homepage</a>
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe" checked>
+                <div class="checkbox-custom"></div>
+                <label for="rememberMe">Ricordami (sessione persistente)</label>
+            </div>
+
+            <button type="submit" id="loginBtn" class="login-button">
+                <span class="button-text">🚀 Accedi alla Dashboard</span>
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </button>
+        </form>
+
+        <!-- Credenziali demo -->
+        <div class="demo-credentials">
+            <h3>🎭 Account Demo Disponibili</h3>
+            
+            <div class="demo-user" onclick="fillDemoCredentials('demo@tribucoach.com', 'demo123')">
+                <div class="user-info">👤 Demo User</div>
+                <div class="user-creds">demo@tribucoach.com / demo123</div>
+            </div>
+            
+            <div class="demo-user" onclick="fillDemoCredentials('andrea@tribucoach.com', 'coach123')">
+                <div class="user-info">💪 Andrea Padoan (Coach)</div>
+                <div class="user-creds">andrea@tribucoach.com / coach123</div>
             </div>
         </div>
 
-        <!-- Register Link -->
-        <div class="register-link">
-            <p>Non hai ancora un account? <a href="register.html">Registrati Gratis</a></p>
+        <div class="links">
+            <a href="forgot-password.html">🔄 Password dimenticata?</a> |
+            <a href="register.html">📝 Registrati</a> |
+            <a href="index.html">🏠 Homepage</a>
         </div>
     </div>
 
+    <!-- Import Session Manager -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
+    
     <script type="module">
-        // Import Firebase Auth
-        import { auth } from '../api/firebase-config.js';
-        import { 
-            signInWithEmailAndPassword,
-            onAuthStateChanged,
-            setPersistence,
-            browserSessionPersistence,
-            browserLocalPersistence
-        } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
-
-        console.log('🔐 Login page loaded - Production Firebase');
-
-        // Form elements
-        const loginForm = document.getElementById('loginForm');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const rememberMeCheckbox = document.getElementById('rememberMe');
-        const loginBtn = document.getElementById('loginBtn');
-        const togglePasswordBtn = document.getElementById('togglePassword');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-
-        // Check if user is already logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log('✅ Utente già loggato:', user.email);
-                showSuccess('Sei già connesso! Benvenuto ' + (user.displayName || user.email));
-                setTimeout(() => {
-                    window.location.href = 'user-dashboard.html';
-                }, 1500);
-            }
-        });
-
-        // Password toggle
-        togglePasswordBtn.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.textContent = type === 'password' ? '👁️' : '🙈';
-        });
-
-        // Handle form submission
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
-            const rememberMe = rememberMeCheckbox.checked;
-
-            if (!email || !password) {
-                showError('Inserisci email e password per continuare.');
-                return;
+        // 🚀 LOGIN PAGE CON SESSIONE PERSISTENTE UNIFICATA
+        
+        class LoginPage {
+            constructor() {
+                this.loginForm = document.getElementById('loginForm');
+                this.emailInput = document.getElementById('email');
+                this.passwordInput = document.getElementById('password');
+                this.rememberMeCheckbox = document.getElementById('rememberMe');
+                this.loginBtn = document.getElementById('loginBtn');
+                this.sessionStatus = document.getElementById('sessionStatus');
+                this.sessionMessage = document.getElementById('sessionMessage');
+                this.autoLoginInfo = document.getElementById('autoLoginInfo');
+                
+                this.init();
             }
 
-            // Show loading state
-            showLoading(true);
-            hideMessages();
+            async init() {
+                console.log('🔐 Inizializzazione Login Page...');
+                
+                // Aspetta che il session manager sia pronto
+                await this.waitForSessionManager();
+                
+                // Controlla se c'è già una sessione valida
+                await this.checkExistingSession();
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Mostra info sessione precedente se presente
+                this.showPreviousSessionInfo();
+                
+                console.log('✅ Login Page pronta');
+            }
 
-            try {
-                console.log('🔐 Tentativo login Firebase:', email);
-                
-                // Set persistence based on "Remember Me"
-                const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
-                await setPersistence(auth, persistence);
-                
-                // Attempt login with Firebase
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                console.log('✅ Login Firebase successful:', user.email);
-                
-                // Save user session
-                const sessionData = {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    loginTime: new Date().toISOString(),
-                    rememberMe: rememberMe
-                };
-
-                if (rememberMe) {
-                    localStorage.setItem('userSession', JSON.stringify(sessionData));
-                } else {
-                    sessionStorage.setItem('userSession', JSON.stringify(sessionData));
+            async waitForSessionManager() {
+                let attempts = 0;
+                while (!window.sessionManager && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
                 }
                 
-                // Show success message
-                const welcomeName = user.displayName ? user.displayName.split(' ')[0] : 'utente';
-                showSuccess(`Benvenuto ${welcomeName}! Accesso effettuato con successo.`);
+                if (!window.sessionManager) {
+                    console.error('❌ Session Manager non trovato');
+                    this.showError('Errore sistema di autenticazione');
+                    return false;
+                }
                 
-                // Handle post-login redirect
-                const redirectPath = new URLSearchParams(window.location.search).get('redirect') || 
-                                   sessionStorage.getItem('redirectAfterLogin');
-                
-                let targetUrl = 'user-dashboard.html';
-                
-                if (redirectPath) {
-                    // Clean and validate redirect path
-                    if (redirectPath.includes('modules/') || 
-                        redirectPath.includes('lifestyle-quiz.html') ||
-                        redirectPath.includes('user-dashboard.html')) {
-                        targetUrl = redirectPath;
+                return true;
+            }
+
+            async checkExistingSession() {
+                try {
+                    if (window.isUserAuthenticated && window.isUserAuthenticated()) {
+                        const user = window.getCurrentUser();
+                        console.log('✅ Sessione esistente trovata:', user.email);
+                        
+                        this.showAutoLoginInfo();
+                        
+                        // Auto-redirect dopo 2 secondi
+                        setTimeout(() => {
+                            this.redirectToDashboard();
+                        }, 2000);
+                        
+                        return true;
                     }
-                    sessionStorage.removeItem('redirectAfterLogin');
+                } catch (error) {
+                    console.error('❌ Errore controllo sessione:', error);
                 }
                 
-                console.log('🔄 Redirect a:', targetUrl);
-                
-                // Redirect after short delay
-                setTimeout(() => {
-                    window.location.href = targetUrl;
-                }, 1500);
-                
-            } catch (error) {
-                console.error('❌ Login Firebase error:', error);
-                
-                let errorMsg = 'Errore durante il login. Riprova.';
-                
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        errorMsg = 'Account non trovato. Verifica l\'email o registrati.';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMsg = 'Password non corretta. Riprova o reimposta la password.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMsg = 'Indirizzo email non valido.';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMsg = 'Account disabilitato. Contatta il supporto.';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMsg = 'Troppi tentativi di accesso. Riprova più tardi.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMsg = 'Errore di connessione. Verifica la tua connessione internet.';
-                        break;
-                    case 'auth/invalid-credential':
-                        errorMsg = 'Credenziali non valide. Verifica email e password.';
-                        break;
-                    default:
-                        if (error.message.includes('Firebase')) {
-                            errorMsg = 'Errore di configurazione Firebase. Passaggio ad Airtable...';
-                            setTimeout(() => {
-                                console.log('🔄 Fallback ad Airtable necessario');
-                                // Qui implementeremo il fallback ad Airtable
-                            }, 2000);
-                        } else {
-                            errorMsg = `Errore: ${error.message}`;
+                return false;
+            }
+
+            setupEventListeners() {
+                // Submit form
+                this.loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.handleLogin();
+                });
+
+                // Enter key sui campi
+                [this.emailInput, this.passwordInput].forEach(input => {
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            this.handleLogin();
                         }
-                }
+                    });
+                });
+
+                // Auto-fill last email
+                this.loadLastEmail();
+            }
+
+            async handleLogin() {
+                if (this.loginBtn.disabled) return;
                 
-                showError(errorMsg);
-                showLoading(false);
+                const email = this.emailInput.value.trim();
+                const password = this.passwordInput.value;
+                const rememberMe = this.rememberMeCheckbox.checked;
+
+                if (!email || !password) {
+                    this.showError('📧 Email e password sono obbligatori');
+                    return;
+                }
+
+                this.setLoading(true);
+                this.hideMessages();
+
+                try {
+                    console.log('🔐 Tentativo login:', email, rememberMe ? '(persistente)' : '(temporanea)');
+                    
+                    // Usa il session manager unificato
+                    const result = await window.loginUser(email, password, rememberMe);
+                    
+                    if (result.success) {
+                        console.log('✅ Login riuscito:', result.user.email);
+                        
+                        // Salva last email
+                        if (rememberMe) {
+                            localStorage.setItem('lastEmail', email);
+                        }
+                        
+                        this.showSuccess(`✅ Benvenuto, ${result.user.displayName || result.user.email}!`);
+                        
+                        // Redirect dopo 1 secondo
+                        setTimeout(() => {
+                            this.redirectToDashboard();
+                        }, 1000);
+                        
+                    } else {
+                        console.error('❌ Login fallito:', result.error);
+                        this.showError(`❌ ${result.error || 'Credenziali non valide'}`);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore login:', error);
+                    this.showError('❌ Errore durante il login. Riprova.');
+                } finally {
+                    this.setLoading(false);
+                }
             }
+
+            redirectToDashboard() {
+                // Determina la pagina di destinazione
+                const urlParams = new URLSearchParams(window.location.search);
+                const returnUrl = urlParams.get('return') || 'dashboard.html';
+                
+                console.log('🚀 Redirect a:', returnUrl);
+                window.location.href = returnUrl;
+            }
+
+            showAutoLoginInfo() {
+                this.autoLoginInfo.classList.add('show');
+                this.loginForm.style.opacity = '0.5';
+                this.loginBtn.disabled = true;
+            }
+
+            showSuccess(message) {
+                this.sessionMessage.textContent = message;
+                this.sessionStatus.className = 'session-status success show';
+            }
+
+            showError(message) {
+                this.sessionMessage.textContent = message;
+                this.sessionStatus.className = 'session-status error show';
+            }
+
+            showInfo(message) {
+                this.sessionMessage.textContent = message;
+                this.sessionStatus.className = 'session-status show';
+            }
+
+            hideMessages() {
+                this.sessionStatus.classList.remove('show');
+                this.autoLoginInfo.classList.remove('show');
+            }
+
+            setLoading(loading) {
+                this.loginBtn.disabled = loading;
+                this.loginBtn.classList.toggle('loading', loading);
+                
+                [this.emailInput, this.passwordInput, this.rememberMeCheckbox].forEach(input => {
+                    input.disabled = loading;
+                });
+            }
+
+            loadLastEmail() {
+                const lastEmail = localStorage.getItem('lastEmail');
+                if (lastEmail) {
+                    this.emailInput.value = lastEmail;
+                    this.passwordInput.focus();
+                } else {
+                    this.emailInput.focus();
+                }
+            }
+
+            showPreviousSessionInfo() {
+                try {
+                    const sessionInfo = window.sessionManager?.sessionInfo;
+                    if (sessionInfo && sessionInfo.lastActivity) {
+                        const lastActivity = new Date(sessionInfo.lastActivity);
+                        const timeDiff = Date.now() - sessionInfo.lastActivity;
+                        const hoursAgo = Math.round(timeDiff / (1000 * 60 * 60));
+                        
+                        if (hoursAgo < 24) {
+                            this.showInfo(`💡 Ultima sessione: ${hoursAgo} ore fa`);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Errore info sessione precedente:', error);
+                }
+            }
+        }
+
+        // 🎭 FUNZIONI GLOBALI PER DEMO CREDENTIALS
+        window.fillDemoCredentials = (email, password) => {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+            document.getElementById('rememberMe').checked = true;
+            
+            // Auto-submit dopo breve delay
+            setTimeout(() => {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }, 500);
+        };
+
+        // 🚀 INIZIALIZZAZIONE
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Login Page caricata');
+            new LoginPage();
         });
 
-        // Handle saved login message
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedMessage = sessionStorage.getItem('loginMessage');
-            if (savedMessage) {
-                showError(savedMessage);
-                sessionStorage.removeItem('loginMessage');
-            }
-
-            // Handle redirect parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectMessage = urlParams.get('message');
-            if (redirectMessage === 'auth_required') {
-                showError('Devi effettuare l\'accesso per accedere a questa pagina.');
+        // 🔄 GESTIONE REFRESH E BACK BUTTON
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                // Pagina caricata dalla cache, ricontrolla sessione
+                window.location.reload();
             }
         });
-
-        // Utility functions
-        function showLoading(loading) {
-            if (loading) {
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<span class="loading-spinner"></span>Accesso in corso...';
-            } else {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Accedi al Tuo Account';
-            }
-        }
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
-
-        function hideMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-        }
-
-        // Auto-focus email field
-        emailInput.focus();
-
-        console.log('🚀 Sistema login Firebase production pronto');
     </script>
 </body>
 </html>
