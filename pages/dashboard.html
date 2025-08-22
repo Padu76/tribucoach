@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TribuCoach Dashboard - Business Intelligence</title>
 
-    <!-- Import Session Manager PRIMA di tutto -->
-    <script type="module" src="../api/unified-session-manager.js"></script>
+    <!-- Import Session Manager PRIMA di tutto - PATH CORRETTO -->
+    <script type="module" src="../js/unified-session-manager.js"></script>
 
     <!-- Firebase SDK v9 -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
         import { getFirestore, collection, getDocs, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
-        // 🔐 CONTROLLO AUTENTICAZIONE AVANZATO CON SESSION MANAGER
+        // 🔍 CONTROLLO AUTENTICAZIONE AVANZATO CON SESSION MANAGER
         let authCheckComplete = false;
         let currentUser = null;
         let sessionData = null;
@@ -52,7 +52,7 @@
             currentUser = window.getCurrentUser();
             sessionData = window.getUserData();
 
-            console.log('🔐 Auth check via Session Manager:', {
+            console.log('🔍 Auth check via Session Manager:', {
                 authenticated: isAuth,
                 user: currentUser?.email || 'nessuno',
                 sessionAge: sessionManagerInstance?.getSessionAge() || 0,
@@ -478,7 +478,7 @@
             console.log('✅ Estensione sessione configurata');
         }
 
-        // 🔐 TRIPLE-CLICK ADMIN ACCESS SYSTEM
+        // 🔍 TRIPLE-CLICK ADMIN ACCESS SYSTEM
         function setupAdminAccess() {
             const headerTitle = document.querySelector('.header h1');
             if (!headerTitle) return;
@@ -499,19 +499,19 @@
                     clickCount = 0;
                     
                     // Triple-click rilevato
-                    console.log('🔐 Triple-click rilevato, accesso admin...');
+                    console.log('🔍 Triple-click rilevato, accesso admin...');
                     promptAdminAccess();
                 }
             });
 
-            console.log('🔐 Sistema accesso admin configurato (triple-click su titolo)');
+            console.log('🔍 Sistema accesso admin configurato (triple-click su titolo)');
         }
 
         function promptAdminAccess() {
-            const username = prompt('🔐 Accesso Admin\nUsername:');
+            const username = prompt('🔍 Accesso Admin\nUsername:');
             if (!username) return;
 
-            const password = prompt('🔐 Accesso Admin\nPassword:');
+            const password = prompt('🔍 Accesso Admin\nPassword:');
             if (!password) return;
 
             if (username === 'admin' && password === 'tribucoach2024') {
@@ -833,6 +833,12 @@
             console.log('✅ Funzionalità dashboard configurate');
         }
 
+        // Funzione di caricamento dati placeholder
+        async function loadDashboardData() {
+            console.log('📊 Loading dashboard data...');
+            await loadFirebaseData();
+        }
+
         // 🚀 INIZIALIZZAZIONE PRINCIPALE MIGLIORATA
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 Dashboard TribuCoach - Inizializzazione completa con Session Manager...');
@@ -1108,6 +1114,18 @@
             color: #fff;
             font-size: 2rem;
             font-weight: bold;
+        }
+
+        .metrics-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .dashboard-content {
+            padding: 20px;
         }
     </style>
 </head>
