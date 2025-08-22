@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifestyleFitnessCoach - La Soluzione Completa per il Tuo Cambiamento</title>
+    <title>TribuCoach - La Soluzione Completa per il Tuo Cambiamento</title>
+
+    <!-- Import Session Manager per controllo auth -->
+    <script type="module" src="api/unified-session-manager.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -24,7 +28,7 @@
             padding: 0 20px;
         }
 
-        /* Header */
+        /* Header con auth integration */
         header {
             background: #000;
             color: white;
@@ -65,7 +69,50 @@
             color: #ff6b35;
         }
 
-        /* Dashboard Link Button */
+        /* Auth section in nav */
+        .nav-auth {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 107, 53, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .user-info.visible {
+            display: flex;
+        }
+
+        .user-name {
+            color: #ff9933;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-role {
+            background: rgba(255, 107, 53, 0.3);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .user-role.admin {
+            background: rgba(220, 38, 38, 0.8);
+        }
+
+        .user-role.beta {
+            background: rgba(124, 58, 237, 0.8);
+        }
+
         .dashboard-btn {
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             color: white;
@@ -84,6 +131,64 @@
         .dashboard-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(255,107,53,0.4);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .auth-buttons.hidden {
+            display: none;
+        }
+
+        .login-btn, .register-btn {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .login-btn {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+        }
+
+        .login-btn:hover {
+            background: white;
+            color: #000;
+        }
+
+        .register-btn {
+            background: linear-gradient(45deg, #ff6b35, #f39c12);
+            color: white;
+        }
+
+        .register-btn:hover {
+            background: linear-gradient(45deg, #f39c12, #ff6b35);
+            transform: translateY(-1px);
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.8);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: translateY(-1px);
         }
 
         /* Hero Section */
@@ -180,7 +285,7 @@
             color: #2c3e50;
         }
 
-        /* User Status Banner */
+        /* User Status Banner - DINAMICO */
         .user-status {
             background: linear-gradient(45deg, #ff6b35, #f39c12);
             color: white;
@@ -188,7 +293,26 @@
             text-align: center;
             margin-top: 80px;
             box-shadow: 0 3px 15px rgba(255,107,53,0.2);
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .user-status.visible {
             display: block;
+        }
+
+        .user-status.authenticated {
+            background: linear-gradient(45deg, #16a34a, #22c55e);
+        }
+
+        .user-status.admin {
+            background: linear-gradient(45deg, #dc2626, #ef4444);
+            animation: adminGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes adminGlow {
+            from { box-shadow: 0 3px 15px rgba(220, 38, 38, 0.3); }
+            to { box-shadow: 0 6px 25px rgba(220, 38, 38, 0.6); }
         }
 
         .user-status h3 {
@@ -220,6 +344,51 @@
         .continue-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .continue-btn.authenticated {
+            color: #16a34a;
+        }
+
+        .continue-btn.admin {
+            color: #dc2626;
+        }
+
+        /* Welcome back section per utenti autenticati */
+        .welcome-back {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 80px;
+            box-shadow: 0 4px 20px rgba(22, 163, 74, 0.3);
+            display: none;
+        }
+
+        .welcome-back.visible {
+            display: block;
+        }
+
+        .welcome-back.admin {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            box-shadow: 0 4px 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .welcome-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .session-info {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
         }
 
         /* Problem Section */
@@ -325,7 +494,7 @@
             font-weight: bold;
         }
 
-        /* Andrea Padoan Section - NUOVA SEZIONE PERSONALE */
+        /* Andrea Padoan Section */
         .andrea-section {
             padding: 80px 0;
             background: white;
@@ -562,6 +731,15 @@
                 display: none;
             }
 
+            .nav-auth {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .user-info {
+                order: -1;
+            }
+
             .cta-primary,
             .cta-secondary {
                 display: block;
@@ -575,6 +753,11 @@
 
             .andrea-story {
                 padding: 2rem;
+            }
+
+            .welcome-info {
+                flex-direction: column;
+                gap: 10px;
             }
         }
 
@@ -601,13 +784,19 @@
         .whatsapp-btn:hover {
             transform: scale(1.1);
         }
+
+        /* Loading state */
+        .loading-auth {
+            opacity: 0.7;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
-    <!-- Header -->
+    <!-- Header con Auth Integration -->
     <header>
         <nav class="container">
-            <div class="logo">LifestyleFitnessCoach</div>
+            <div class="logo">🏆 TribuCoach</div>
             <ul class="nav-links">
                 <li><a href="#problema">Il Problema</a></li>
                 <li><a href="#soluzione">La Soluzione</a></li>
@@ -615,17 +804,56 @@
                 <li><a href="pages/chi-sono.html">Chi Sono</a></li>
                 <li><a href="pages/lifestyle-coaching.html">Lifestyle Coaching</a></li>
                 <li><a href="#inizia">Inizia Gratis</a></li>
-                <li><a href="pages/user-dashboard.html" class="dashboard-btn">🏠 La Mia Area</a></li>
             </ul>
+            
+            <!-- Auth section dinamica -->
+            <div class="nav-auth" id="navAuth">
+                <!-- User info (se loggato) -->
+                <div class="user-info" id="userInfo">
+                    <span class="user-name" id="userNameDisplay">-</span>
+                    <span class="user-role" id="userRoleDisplay">USER</span>
+                </div>
+                
+                <!-- Dashboard button (sempre visibile) -->
+                <a href="pages/user-dashboard.html" class="dashboard-btn" id="dashboardBtn">
+                    🏠 La Mia Area
+                </a>
+                
+                <!-- Auth buttons (se non loggato) -->
+                <div class="auth-buttons" id="authButtons">
+                    <a href="pages/login.html" class="login-btn">Accedi</a>
+                    <a href="pages/register.html" class="register-btn">Registrati</a>
+                </div>
+                
+                <!-- Logout button (se loggato) -->
+                <button class="logout-btn" id="logoutBtn" style="display: none;">🚪 Logout</button>
+            </div>
         </nav>
     </header>
 
-    <!-- User Status Banner (always visible now) -->
+    <!-- Welcome Back Banner (per utenti autenticati) -->
+    <section class="welcome-back" id="welcomeBack">
+        <div class="container">
+            <h3>👋 Bentornato, <span id="welcomeUserName">Utente</span>!</h3>
+            <div class="welcome-info">
+                <div class="session-info" id="sessionDuration">Sessione attiva</div>
+                <div class="session-info" id="lastActivity">Ultimo accesso</div>
+            </div>
+            <p>La tua sessione è stata ripristinata. Continua il tuo percorso!</p>
+            <a href="pages/user-dashboard.html" class="continue-btn" id="welcomeContinueBtn">
+                🎯 Continua il Percorso
+            </a>
+        </div>
+    </section>
+
+    <!-- User Status Banner (per utenti guest) -->
     <section class="user-status" id="userStatus">
         <div class="container">
-            <h3">👋 Benvenuto nel tuo percorso!</h3>
-            <p>Accesso libero a tutti i contenuti di coaching. Inizia quando vuoi!</p>
-            <a href="pages/user-dashboard.html" class="continue-btn">🚀 Vai alla Dashboard</a>
+            <h3 id="statusTitle">👋 Benvenuto nel tuo percorso!</h3>
+            <p id="statusMessage">Accesso libero a tutti i contenuti di coaching. Inizia quando vuoi!</p>
+            <a href="pages/user-dashboard.html" class="continue-btn" id="statusContinueBtn">
+                🚀 Vai alla Dashboard
+            </a>
         </div>
     </section>
 
@@ -694,7 +922,7 @@
                     </ul>
                 </div>
                 <div class="pillar-card">
-                    <div class="pillar-icon">🍎</div>
+                    <div class="pillar-icon">🎯</div>
                     <h3 class="pillar-title">Alimentazione Consapevole</h3>
                     <ul class="pillar-list">
                         <li>Rapporto sano con il cibo</li>
@@ -717,7 +945,7 @@
         </div>
     </section>
 
-    <!-- Andrea Padoan Section - COMPLETAMENTE RINNOVATA -->
+    <!-- Andrea Padoan Section -->
     <section class="andrea-section" id="andrea">
         <div class="container">
             <div class="andrea-container">
@@ -772,7 +1000,7 @@
                         <li>Compiti pratici per iniziare subito</li>
                         <li>Accesso al coach Andrea tramite chat</li>
                     </ul>
-                    <a href="pages/lifestyle-quiz.html" class="cta-white">Fai il Test Gratuito</a>
+                    <a href="pages/lifestyle-quiz.html" class="cta-white" id="quizCTA">Fai il Test Gratuito</a>
                     <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
                         Nessuna carta di credito richiesta
                     </p>
@@ -784,37 +1012,391 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-            <p>&copy; 2025 LifestyleFitnessCoach by Andrea Padoan. Tutti i diritti riservati.</p>
+            <p>&copy; 2025 TribuCoach by Andrea Padoan. Tutti i diritti riservati.</p>
         </div>
     </footer>
 
     <!-- WhatsApp Button -->
     <a href="https://wa.me/393478881515" class="whatsapp-btn" target="_blank">📱</a>
 
-    <script>
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+    <script type="module">
+        // 🚀 HOMEPAGE CON AUTH INTEGRATION UNIFICATA
+        
+        class AuthenticatedHomepage {
+            constructor() {
+                this.currentUser = null;
+                this.sessionData = null;
+                this.isAuthenticatedUser = false;
+                this.init();
+            }
+
+            async init() {
+                console.log('🏠 Inizializzazione homepage con auth...');
+                
+                try {
+                    // 1. Aspetta Session Manager
+                    await this.waitForSessionManager();
+                    
+                    // 2. Check stato autenticazione
+                    await this.checkAuthState();
+                    
+                    // 3. Update UI basata su auth state
+                    this.updateUIForAuthState();
+                    
+                    // 4. Setup event listeners
+                    this.setupEventListeners();
+                    
+                    console.log('✅ Homepage con auth inizializzata');
+                    
+                } catch (error) {
+                    console.error('❌ Errore inizializzazione homepage auth:', error);
+                    this.showGuestUI();
                 }
-            });
+            }
+
+            async waitForSessionManager() {
+                console.log('⏳ Aspetto Session Manager...');
+                
+                let attempts = 0;
+                while (!window.sessionManager && attempts < 100) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    attempts++;
+                }
+
+                if (!window.sessionManager) {
+                    console.warn('⚠️ Session Manager non disponibile, modalità base');
+                    return false;
+                }
+
+                console.log('✅ Session Manager trovato');
+                return true;
+            }
+
+            async checkAuthState() {
+                try {
+                    if (window.isUserAuthenticated && window.getCurrentUser) {
+                        this.isAuthenticatedUser = window.isUserAuthenticated();
+                        this.currentUser = window.getCurrentUser();
+                        this.sessionData = window.getUserData ? window.getUserData() : null;
+
+                        console.log('🔐 Stato Auth:', {
+                            authenticated: this.isAuthenticatedUser,
+                            user: this.currentUser?.email || 'nessuno',
+                            role: this.currentUser?.role || 'user'
+                        });
+                    }
+                } catch (error) {
+                    console.error('❌ Errore check auth state:', error);
+                    this.isAuthenticatedUser = false;
+                }
+            }
+
+            updateUIForAuthState() {
+                if (this.isAuthenticatedUser && this.currentUser) {
+                    console.log('👤 Configurazione UI per utente autenticato');
+                    this.showAuthenticatedUI();
+                } else {
+                    console.log('👥 Configurazione UI per guest');
+                    this.showGuestUI();
+                }
+            }
+
+            showAuthenticatedUI() {
+                // 1. Aggiorna nav con info utente
+                this.updateNavAuth();
+                
+                // 2. Mostra welcome back banner
+                this.showWelcomeBackBanner();
+                
+                // 3. Nascondi user status normale
+                this.hideGuestBanner();
+                
+                // 4. Personalizza CTA in base al ruolo
+                this.personalizeCallToActions();
+            }
+
+            showGuestUI() {
+                // 1. Mostra auth buttons in nav
+                this.showAuthButtons();
+                
+                // 2. Mostra user status banner
+                this.showGuestBanner();
+                
+                // 3. Nascondi welcome back banner
+                this.hideWelcomeBackBanner();
+                
+                // 4. CTA di default
+                this.setDefaultCallToActions();
+            }
+
+            updateNavAuth() {
+                const userInfo = document.getElementById('userInfo');
+                const userNameDisplay = document.getElementById('userNameDisplay');
+                const userRoleDisplay = document.getElementById('userRoleDisplay');
+                const authButtons = document.getElementById('authButtons');
+                const logoutBtn = document.getElementById('logoutBtn');
+
+                if (userInfo && this.currentUser) {
+                    userInfo.classList.add('visible');
+                    
+                    if (userNameDisplay) {
+                        const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                        userNameDisplay.textContent = displayName;
+                    }
+                    
+                    if (userRoleDisplay) {
+                        const role = this.currentUser.role || 'user';
+                        userRoleDisplay.textContent = role.toUpperCase();
+                        userRoleDisplay.className = `user-role ${role}`;
+                    }
+                }
+
+                if (authButtons) {
+                    authButtons.classList.add('hidden');
+                }
+
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'block';
+                }
+            }
+
+            showAuthButtons() {
+                const userInfo = document.getElementById('userInfo');
+                const authButtons = document.getElementById('authButtons');
+                const logoutBtn = document.getElementById('logoutBtn');
+
+                if (userInfo) {
+                    userInfo.classList.remove('visible');
+                }
+
+                if (authButtons) {
+                    authButtons.classList.remove('hidden');
+                }
+
+                if (logoutBtn) {
+                    logoutBtn.style.display = 'none';
+                }
+            }
+
+            showWelcomeBackBanner() {
+                const welcomeBack = document.getElementById('welcomeBack');
+                const welcomeUserName = document.getElementById('welcomeUserName');
+                const sessionDuration = document.getElementById('sessionDuration');
+                const lastActivity = document.getElementById('lastActivity');
+                const welcomeContinueBtn = document.getElementById('welcomeContinueBtn');
+
+                if (welcomeBack && this.currentUser) {
+                    welcomeBack.classList.add('visible');
+                    
+                    // Check se admin per styling speciale
+                    if (this.currentUser.role === 'admin') {
+                        welcomeBack.classList.add('admin');
+                        if (welcomeContinueBtn) {
+                            welcomeContinueBtn.classList.add('admin');
+                        }
+                    }
+
+                    // Aggiorna nome utente
+                    if (welcomeUserName) {
+                        const displayName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                        welcomeUserName.textContent = displayName;
+                    }
+
+                    // Aggiorna info sessione
+                    if (window.sessionManager) {
+                        const sessionAge = window.sessionManager.getSessionAge();
+                        const sessionInfo = window.sessionManager.sessionInfo;
+                        
+                        if (sessionDuration && sessionAge) {
+                            const hours = Math.floor(sessionAge / (1000 * 60 * 60));
+                            const minutes = Math.floor((sessionAge % (1000 * 60 * 60)) / (1000 * 60));
+                            sessionDuration.textContent = hours > 0 ? `Sessione: ${hours}h ${minutes}m` : `Sessione: ${minutes}m`;
+                        }
+
+                        if (lastActivity && sessionInfo?.lastActivity) {
+                            const lastTime = new Date(sessionInfo.lastActivity);
+                            lastActivity.textContent = `Ultimo: ${lastTime.toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}`;
+                        }
+                    }
+                }
+            }
+
+            hideWelcomeBackBanner() {
+                const welcomeBack = document.getElementById('welcomeBack');
+                if (welcomeBack) {
+                    welcomeBack.classList.remove('visible');
+                }
+            }
+
+            showGuestBanner() {
+                const userStatus = document.getElementById('userStatus');
+                if (userStatus) {
+                    userStatus.classList.add('visible');
+                }
+            }
+
+            hideGuestBanner() {
+                const userStatus = document.getElementById('userStatus');
+                if (userStatus) {
+                    userStatus.classList.remove('visible');
+                }
+            }
+
+            personalizeCallToActions() {
+                if (!this.currentUser) return;
+
+                const quizCTA = document.getElementById('quizCTA');
+                const role = this.currentUser.role || 'user';
+
+                // Personalizza CTA quiz in base al ruolo
+                if (quizCTA) {
+                    if (role === 'admin') {
+                        quizCTA.textContent = '👑 Accesso Admin Completo';
+                        quizCTA.href = 'pages/admin/admin-dashboard.html';
+                    } else if (role === 'beta') {
+                        quizCTA.textContent = '🧪 Area Beta Tester';
+                        quizCTA.href = 'pages/user-dashboard.html';
+                    } else {
+                        quizCTA.textContent = '🎯 Continua il Tuo Quiz';
+                        // Mantiene href originale per users normali
+                    }
+                }
+            }
+
+            setDefaultCallToActions() {
+                const quizCTA = document.getElementById('quizCTA');
+                if (quizCTA) {
+                    quizCTA.textContent = 'Fai il Test Gratuito';
+                    quizCTA.href = 'pages/lifestyle-quiz.html';
+                }
+            }
+
+            setupEventListeners() {
+                // Logout button
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', this.handleLogout.bind(this));
+                }
+
+                // Dashboard button enhancement
+                const dashboardBtn = document.getElementById('dashboardBtn');
+                if (dashboardBtn && this.currentUser?.role === 'admin') {
+                    dashboardBtn.innerHTML = '👑 Dashboard Admin';
+                }
+
+                // Smooth scrolling (mantiene funzionalità originale)
+                this.setupSmoothScrolling();
+                
+                // Header scroll effect (mantiene funzionalità originale)
+                this.setupHeaderScrollEffect();
+            }
+
+            async handleLogout() {
+                console.log('🚪 Logout dalla homepage...');
+                
+                try {
+                    if (window.logoutUser) {
+                        await window.logoutUser();
+                        console.log('✅ Logout completato, aggiorno UI...');
+                        
+                        // Reset auth state
+                        this.isAuthenticatedUser = false;
+                        this.currentUser = null;
+                        this.sessionData = null;
+                        
+                        // Update UI per guest
+                        this.showGuestUI();
+                        
+                        // Show success message
+                        this.showNotification('👋 Logout effettuato con successo!', 'success');
+                        
+                    } else {
+                        throw new Error('Funzione logout non disponibile');
+                    }
+                } catch (error) {
+                    console.error('❌ Errore logout:', error);
+                    this.showNotification('❌ Errore durante il logout', 'error');
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                // Simple notification system
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 100px;
+                    right: 20px;
+                    background: ${type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : '#ff6b35'};
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    z-index: 10000;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    font-weight: 600;
+                    animation: slideInRight 0.3s ease-out;
+                `;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.style.animation = 'slideOutRight 0.3s ease-in';
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 300);
+                    }
+                }, 4000);
+            }
+
+            setupSmoothScrolling() {
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+            }
+
+            setupHeaderScrollEffect() {
+                window.addEventListener('scroll', function() {
+                    const header = document.querySelector('header');
+                    if (window.scrollY > 100) {
+                        header.style.background = 'rgba(0,0,0,0.95)';
+                    } else {
+                        header.style.background = '#000';
+                    }
+                });
+            }
+        }
+
+        // 🚀 INIZIALIZZAZIONE
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Homepage TribuCoach con Auth Integration - Avvio...');
+            window.authenticatedHomepage = new AuthenticatedHomepage();
         });
 
-        // Header scroll effect
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(0,0,0,0.95)';
-            } else {
-                header.style.background = '#000';
+        // CSS animation per notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
             }
-        });
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
