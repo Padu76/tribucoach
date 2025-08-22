@@ -222,6 +222,72 @@
             50% { transform: translateY(-3px); }
         }
 
+        /* === LOADING SCREEN === */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 1000;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        /* === GUEST MODE BANNER === */
+        .guest-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .guest-banner a {
+            color: white;
+            text-decoration: underline;
+            font-weight: bold;
+        }
+
         /* === MESSAGGI CON FOTO REALE === */
         .messages-container {
             flex: 1;
@@ -614,7 +680,19 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Caricando Chat Andrea...</div>
+        <div class="loading-subtext">Verificando autenticazione e caricando dati personalizzati</div>
+    </div>
+
     <div class="chat-container">
+        <!-- Guest Banner (se non autenticato) -->
+        <div class="guest-banner hidden" id="guestBanner">
+            🎯 <strong>Modalità Guest Attiva</strong> - <a href="login.html">Accedi</a> per salvare le conversazioni e personalizzare l'esperienza
+        </div>
+
         <!-- Header Avanzato con Foto Reale - FIX POSIZIONI -->
         <div class="chat-header">
             <!-- Pulsanti posizionati in alto senza coprire il contenuto -->
@@ -622,7 +700,7 @@
                 <button class="chat-history-btn" onclick="toggleChatHistory()">
                     <strong>📋 Cronologia</strong>
                 </button>
-                <a href="user-dashboard.html" class="back-btn">
+                <a href="user-dashboard.html" class="back-btn" id="backButton">
                     <strong>← Dashboard</strong>
                 </a>
             </div>
@@ -688,7 +766,10 @@ Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.
     <!-- Notification Container -->
     <div id="notification" class="notification"></div>
 
-    <!-- Load Sistemi -->
+    <!-- Load Sistema Sessione Unificato -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
+    
+    <!-- Load Sistemi Esistenti -->
     <script src="../api/firebase-lifestyle-integration.js" type="module"></script>
     <script src="../utils/avatar-system.js" type="module"></script>
     <script src="../utils/andrea-photo-system.js" type="module"></script>
@@ -708,13 +789,15 @@ Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.
             initializeAndreaPhotoSystem 
         } from '../utils/andrea-photo-system.js';
 
-        // === CONFIGURAZIONE CHAT ===
-        let currentUserId = 'guest_' + Date.now();
+        // === CONFIGURAZIONE CHAT CON SESSION MANAGER ===
+        let currentUser = null;
+        let isAuthenticated = false;
         let userAvatar = null;
         let photoManager = null;
         let messages = [];
         let isTyping = false;
         let chatHistory = [];
+        let sessionManager = null;
 
         // Messaggi personalizzati per ogni avatar
         const AVATAR_QUICK_REPLIES = {
@@ -779,14 +862,20 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
 - "Sono stato anche io uno come te... che premeva il pulsante OFF ogni sera"
 - "Il vero cambiamento parte dalle abitudini quotidiane"`;
 
-        // === INIZIALIZZAZIONE ===
+        // === INIZIALIZZAZIONE CON AUTH CHECK ===
         document.addEventListener('DOMContentLoaded', async function() {
-            await initializeChat();
+            await initializeChatWithAuth();
         });
 
-        async function initializeChat() {
+        async function initializeChatWithAuth() {
             try {
-                console.log('🚀 Inizializzazione chat con foto reali...');
+                console.log('🚀 Inizializzazione chat con controllo autenticazione...');
+                
+                // Attendi che il session manager sia pronto
+                await waitForSessionManager();
+                
+                // Check authentication state
+                await checkAuthenticationState();
                 
                 // Initialize photo system
                 photoManager = await initializeAndreaPhotoSystem();
@@ -794,8 +883,8 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
                 // Setup Andrea photos
                 await setupAndreaRealPhotos();
                 
-                // Carica avatar utente
-                await loadUserAvatar();
+                // Carica avatar e dati utente
+                await loadUserData();
                 
                 // Setup UI personalizzata
                 setupPersonalizedUI();
@@ -803,17 +892,120 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
                 // Setup initial message time
                 document.getElementById('firstMessageTime').textContent = new Date().toLocaleTimeString();
                 
-                // Carica cronologia se esistente
+                // Carica cronologia
                 await loadChatHistory();
                 
                 // Setup event listeners
                 setupEventListeners();
                 
-                console.log('✅ Chat con foto reali inizializzata');
+                // Hide loading screen
+                hideLoadingScreen();
+                
+                console.log('✅ Chat con autenticazione inizializzata');
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione chat:', error);
+                hideLoadingScreen();
                 showNotification('Errore inizializzazione chat', 'error');
+            }
+        }
+
+        async function waitForSessionManager() {
+            return new Promise((resolve) => {
+                const checkSessionManager = () => {
+                    if (window.sessionManager) {
+                        sessionManager = window.sessionManager;
+                        resolve();
+                    } else {
+                        setTimeout(checkSessionManager, 100);
+                    }
+                };
+                checkSessionManager();
+            });
+        }
+
+        async function checkAuthenticationState() {
+            try {
+                isAuthenticated = window.isUserAuthenticated();
+                currentUser = window.getCurrentUser();
+                
+                console.log('🔐 Stato autenticazione:', {
+                    authenticated: isAuthenticated,
+                    user: currentUser?.email || 'guest'
+                });
+                
+                if (isAuthenticated && currentUser) {
+                    console.log(`👤 Utente autenticato: ${currentUser.displayName || currentUser.email}`);
+                    setupAuthenticatedMode();
+                } else {
+                    console.log('👥 Modalità guest attiva');
+                    setupGuestMode();
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore controllo autenticazione:', error);
+                setupGuestMode();
+            }
+        }
+
+        function setupAuthenticatedMode() {
+            // Hide guest banner se presente
+            const guestBanner = document.getElementById('guestBanner');
+            guestBanner.classList.add('hidden');
+            
+            // Update header with user info
+            const coachStatus = document.getElementById('coachStatus');
+            coachStatus.textContent = `Chat con ${currentUser.displayName || currentUser.email.split('@')[0]}`;
+        }
+
+        function setupGuestMode() {
+            // Show guest banner
+            const guestBanner = document.getElementById('guestBanner');
+            guestBanner.classList.remove('hidden');
+            
+            // Update back button for guest
+            const backButton = document.getElementById('backButton');
+            backButton.href = 'index.html';
+            backButton.innerHTML = '<strong>← Home</strong>';
+        }
+
+        async function loadUserData() {
+            try {
+                if (isAuthenticated && currentUser) {
+                    // Carica dati utente dal session manager
+                    const userData = window.getUserData();
+                    
+                    // Cerca avatar salvato nei dati utente
+                    if (userData && userData.avatar) {
+                        userAvatar = EXTENDED_AVATAR_DATA[userData.avatar] || EXTENDED_AVATAR_DATA['avatar_1'];
+                        console.log('✅ Avatar utente da sessione:', userAvatar.name);
+                    } else {
+                        // Fallback al sistema esistente
+                        await loadUserAvatarFallback();
+                    }
+                } else {
+                    // Guest mode - avatar default
+                    userAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
+                    console.log('👥 Avatar guest:', userAvatar.name);
+                }
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento dati utente:', error);
+                userAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
+            }
+        }
+
+        async function loadUserAvatarFallback() {
+            try {
+                const userId = currentUser?.uid || 'guest_' + Date.now();
+                const avatar = await getUserAvatar(userId);
+                userAvatar = avatar && avatar.preset ? avatar.preset : EXTENDED_AVATAR_DATA['avatar_1'];
+                
+                console.log('✅ Avatar utente (fallback):', userAvatar.name);
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento avatar fallback:', error);
+                userAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
             }
         }
 
@@ -866,19 +1058,6 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
             }
         }
 
-        async function loadUserAvatar() {
-            try {
-                const avatar = await getUserAvatar(currentUserId);
-                userAvatar = avatar && avatar.preset ? avatar.preset : EXTENDED_AVATAR_DATA['avatar_1'];
-                
-                console.log('✅ Avatar utente caricato:', userAvatar.name);
-                
-            } catch (error) {
-                console.error('❌ Errore caricamento avatar:', error);
-                userAvatar = EXTENDED_AVATAR_DATA['avatar_1'];
-            }
-        }
-
         function setupPersonalizedUI() {
             if (!userAvatar) return;
             
@@ -919,11 +1098,26 @@ Dopo oltre 12 anni in ruoli manageriali nel Marketing e nelle Vendite, hai vissu
 
         function personalizeWelcomeMessage() {
             const welcomeMessage = document.getElementById('welcomeMessage');
-            const personalizedMessage = `Ciao! Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
+            
+            let greeting = 'Ciao!';
+            let personalizedIntro = '';
+            
+            if (isAuthenticated && currentUser) {
+                const firstName = currentUser.displayName ? 
+                    currentUser.displayName.split(' ')[0] : 
+                    currentUser.email.split('@')[0];
+                
+                greeting = `Ciao ${firstName}!`;
+                personalizedIntro = `\n\nVedo che hai scelto l'avatar "${userAvatar.name}" - perfetto! Questo mi dice che apprezzi ${userAvatar.personality.toLowerCase()}. 
 
-Vedo che hai scelto l'avatar "${userAvatar.name}" - perfetto! Questo mi dice che apprezzi ${userAvatar.personality.toLowerCase()}. 
+Adatterò il mio approccio di coaching al tuo stile: useremo un metodo ${COACHING_STYLES[userAvatar.id].toLowerCase()}.`;
+            } else {
+                personalizedIntro = `\n\nSei in modalità guest - per salvare le nostre conversazioni e avere un'esperienza completamente personalizzata, ti consiglio di registrarti!`;
+            }
 
-Adatterò il mio approccio di coaching al tuo stile: useremo un metodo ${COACHING_STYLES[userAvatar.id].toLowerCase()}.
+            const personalizedMessage = `${greeting} Sono Andrea Padoan, il tuo Lifestyle Coach. 👋
+
+Ho aiutato centinaia di persone a trasformare la loro vita partendo dal mindset.${personalizedIntro}
 
 Dimmi, cosa ti ha portato qui oggi?`;
             
@@ -956,6 +1150,18 @@ Dimmi, cosa ti ha portato qui oggi?`;
                     sendMessage();
                 }
             });
+
+            // Auto-save per utenti autenticati
+            if (isAuthenticated) {
+                setInterval(() => {
+                    saveChatToSession();
+                }, 30000); // Ogni 30 secondi
+            }
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
         }
 
         // === GESTIONE MESSAGGI ===
@@ -1128,11 +1334,20 @@ Dimmi, cosa ti ha portato qui oggi?`;
                 
                 showNotification('Messaggio ricevuto', 'success');
                 
+                // Extend session per utenti autenticati
+                if (isAuthenticated && sessionManager) {
+                    sessionManager.extendSession();
+                }
+                
             } catch (error) {
                 console.error('Errore nella chat:', error);
                 hideTypingIndicator();
                 
-                const errorMessage = `Mi dispiace, c'è stato un problema tecnico. Riprova tra un momento. 
+                const userName = isAuthenticated && currentUser ? 
+                    (currentUser.displayName?.split(' ')[0] || currentUser.email.split('@')[0]) : 
+                    'amico';
+                
+                const errorMessage = `Mi dispiace ${userName}, c'è stato un problema tecnico. Riprova tra un momento. 
 
 Nel frattempo, ricorda: ogni ostacolo è un'opportunità per crescere! 💪
 
@@ -1149,6 +1364,14 @@ Come persona ${userAvatar.personality.toLowerCase()}, sono sicuro che supererai 
         }
 
         function generatePersonalizedPrompt() {
+            const userName = isAuthenticated && currentUser ? 
+                (currentUser.displayName || currentUser.email.split('@')[0]) : 
+                'ospite';
+            
+            const userInfo = isAuthenticated ? 
+                `L'utente si chiama ${userName} ed è autenticato nel sistema.` : 
+                `L'utente è in modalità guest (non registrato).`;
+            
             const avatarInfo = userAvatar ? `
 L'utente ha scelto l'avatar "${userAvatar.name}" che rappresenta una personalità ${userAvatar.personality.toLowerCase()} con caratteristiche: ${userAvatar.traits.join(', ')}.
 
@@ -1163,6 +1386,8 @@ ESEMPIO: Se parli con un "Guerriero", sii più diretto e orientato ai risultati.
 
             return `${ANDREA_BASE_PROMPT}
 
+${userInfo}
+
 ${avatarInfo}
 
 ## IL TUO STILE COMUNICATIVO:
@@ -1171,14 +1396,19 @@ ${avatarInfo}
 - Orientato all'azione
 - Motivazionale
 - Personalizzato per l'avatar dell'utente
+- Chiama l'utente per nome quando appropriato (${userName})
 
 Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera comprensione per le sfide della persona e adattandoti al suo stile di personalità.`;
         }
 
-        // === CRONOLOGIA CHAT ===
+        // === CRONOLOGIA CHAT PERSISTENTE ===
         async function loadChatHistory() {
             try {
-                const saved = localStorage.getItem(`chat_${currentUserId}`);
+                const storageKey = isAuthenticated && currentUser ? 
+                    `chat_${currentUser.uid}` : 
+                    `chat_guest_${Date.now()}`;
+                
+                const saved = localStorage.getItem(storageKey);
                 if (saved) {
                     chatHistory = JSON.parse(saved);
                     console.log(`📋 Cronologia caricata: ${chatHistory.length} messaggi`);
@@ -1190,11 +1420,17 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
 
         function saveChatMessage(message) {
             try {
+                const storageKey = isAuthenticated && currentUser ? 
+                    `chat_${currentUser.uid}` : 
+                    `chat_guest_${Date.now()}`;
+                
                 chatHistory.push({
                     ...message,
                     timestamp: new Date().toISOString(),
                     avatarUsed: userAvatar?.id,
-                    photoUsed: photoManager?.getCurrentPhotoInfo()?.id
+                    photoUsed: photoManager?.getCurrentPhotoInfo()?.id,
+                    userAuthenticated: isAuthenticated,
+                    userId: currentUser?.uid || 'guest'
                 });
                 
                 // Keep only last 100 messages
@@ -1202,9 +1438,32 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
                     chatHistory = chatHistory.slice(-100);
                 }
                 
-                localStorage.setItem(`chat_${currentUserId}`, JSON.stringify(chatHistory));
+                localStorage.setItem(storageKey, JSON.stringify(chatHistory));
+                
+                // Auto-save per utenti autenticati
+                if (isAuthenticated) {
+                    saveChatToSession();
+                }
             } catch (error) {
                 console.error('❌ Errore salvataggio messaggio:', error);
+            }
+        }
+
+        function saveChatToSession() {
+            if (!isAuthenticated || !sessionManager) return;
+            
+            try {
+                const chatData = {
+                    chatHistory: chatHistory,
+                    lastChatUpdate: new Date().toISOString(),
+                    totalMessages: chatHistory.length,
+                    avatarUsed: userAvatar?.id
+                };
+                
+                window.updateUserData({ chatAndrea: chatData });
+                console.log('💾 Chat salvata nel session manager');
+            } catch (error) {
+                console.error('❌ Errore salvataggio chat in sessione:', error);
             }
         }
 
@@ -1215,13 +1474,21 @@ Rispondi sempre in italiano, con tono caldo ma professionale, mostrando vera com
             }
             
             const photoInfo = photoManager?.getCurrentPhotoInfo();
-            const summary = `Cronologia Chat 📋
+            const userName = isAuthenticated && currentUser ? 
+                (currentUser.displayName || currentUser.email) : 
+                'Utente Guest';
             
+            const summary = `Cronologia Chat Andrea 📋
+            
+Utente: ${userName}
+Status: ${isAuthenticated ? '🔐 Autenticato' : '👥 Guest'}
 Messaggi totali: ${chatHistory.length}
 Avatar utilizzato: ${userAvatar?.name || 'Non definito'}
 Foto Andrea: ${photoInfo?.name || 'Non definita'}
-Prima conversazione: ${new Date(chatHistory[0]?.timestamp).toLocaleDateString()}
-Ultima attività: ${new Date(chatHistory[chatHistory.length - 1]?.timestamp).toLocaleDateString()}`;
+Prima conversazione: ${chatHistory[0]?.timestamp ? new Date(chatHistory[0].timestamp).toLocaleDateString() : 'N/A'}
+Ultima attività: ${chatHistory[chatHistory.length - 1]?.timestamp ? new Date(chatHistory[chatHistory.length - 1].timestamp).toLocaleDateString() : 'N/A'}
+
+${isAuthenticated ? '✅ Le conversazioni sono salvate permanentemente' : '⚠️ Modalità guest - conversazioni temporanee'}`;
             
             alert(summary);
         };
@@ -1242,7 +1509,7 @@ Ultima attività: ${new Date(chatHistory[chatHistory.length - 1]?.timestamp).toL
         window.sendMessage = sendMessage;
         window.selectQuickReply = selectQuickReply;
         
-        console.log('🎯 Chat Andrea con Foto Reali caricata completamente!');
+        console.log('🎯 Chat Andrea con Session Manager Unificato caricata completamente!');
     </script>
 </body>
 </html>
