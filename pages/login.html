@@ -400,11 +400,14 @@
                 console.log('🔍 Inizializzazione Login Page...');
                 this.showSystemStatus('🔧 Caricamento sistema di autenticazione...');
                 
-                // Carica session manager - OBBLIGATORIO
+                // Carica session manager - CON GESTIONE ERRORI
                 const loaded = await this.loadSessionManager();
                 if (!loaded) {
-                    this.showSystemError('❌ Errore caricamento sistema. Contatta il supporto.');
-                    return;
+                    this.showSystemError('⚠️ Sistema auth non disponibile. Puoi comunque provare il login.');
+                    // NON bloccare, permettere comunque di usare il form
+                    setTimeout(() => {
+                        this.enableFormFallback();
+                    }, 3000);
                 }
                 
                 // Controlla se c'è già una sessione valida
@@ -554,8 +557,24 @@
 
                 // Verifica che il sistema sia pronto
                 if (!window.loginUser) {
-                    this.showError('❌ Sistema di autenticazione non disponibile');
-                    return;
+                    // Prova Firebase Auth diretto se session manager non c'è
+                    this.showError('⚠️ Tentativo login diretto...');
+                    
+                    try {
+                        const result = await this.directFirebaseLogin(email, password, rememberMe);
+                        
+                        if (result.success) {
+                            this.showSuccess(`✅ Login riuscito: ${result.user.email}`);
+                            setTimeout(() => this.redirectToDashboard(), 1000);
+                            return;
+                        } else {
+                            this.showError(`❌ ${result.error}`);
+                            return;
+                        }
+                    } catch (directError) {
+                        this.showError('❌ Sistema di autenticazione non disponibile');
+                        return;
+                    }
                 }
 
                 this.setLoading(true);
@@ -638,8 +657,21 @@
                 this.systemMessage.textContent = message;
                 this.systemStatus.className = 'system-status error show';
                 
-                // Disabilita form se errore critico
-                this.setLoading(true);
+                // NON disabilitare più il form automaticamente
+                console.warn('Sistema auth error:', message);
+            }
+
+            enableFormFallback() {
+                console.log('🔧 Abilitazione form fallback...');
+                this.hideSystemStatus();
+                this.setLoading(false);
+                this.showInfo('⚠️ Sistema ridotto - inserisci comunque le credenziali');
+                
+                // Abilita il form anche senza session manager
+                this.emailInput.disabled = false;
+                this.passwordInput.disabled = false;
+                this.rememberMeCheckbox.disabled = false;
+                this.loginBtn.disabled = false;
             }
 
             hideSystemStatus() {
@@ -682,6 +714,30 @@
                     this.passwordInput.focus();
                 } else {
                     this.emailInput.focus();
+                }
+            }
+
+            // Metodo fallback per login diretto (senza session manager)
+            async directFirebaseLogin(email, password, rememberMe) {
+                console.log('🔧 Tentativo login Firebase diretto:', email);
+                
+                try {
+                    // Simula una chiamata Firebase Auth
+                    // In produzione sostituisci con vera integrazione Firebase
+                    await this.sleep(1000);
+                    
+                    // Per ora restituisce errore, ma la struttura è pronta
+                    return {
+                        success: false,
+                        error: 'Login diretto non implementato - contatta il supporto'
+                    };
+                    
+                } catch (error) {
+                    console.error('❌ Errore login diretto:', error);
+                    return {
+                        success: false,
+                        error: 'Errore autenticazione diretta'
+                    };
                 }
             }
 
