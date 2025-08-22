@@ -20,6 +20,51 @@
             padding: 20px;
         }
 
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner-big {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(234, 88, 12, 0.3);
+            border-top: 4px solid #ea580c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .loading-text {
+            color: #cbd5e1;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .loading-subtext {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 400px;
+        }
+
         /* AI Badge */
         .ai-badge {
             position: fixed;
@@ -41,8 +86,30 @@
             50% { opacity: 0.8; }
         }
 
-        .personalization-banner {
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Auth Check Banner */
+        .auth-banner {
             background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .auth-banner.active {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .personalization-banner {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             padding: 1rem;
             text-align: center;
@@ -54,11 +121,23 @@
 
         .personalization-banner.active {
             display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .hub-container {
             max-width: 1200px;
             margin: 0 auto;
+            opacity: 0;
+            display: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .hub-container.ready {
             opacity: 1;
             display: block;
         }
@@ -141,6 +220,21 @@
         .user-welcome p {
             opacity: 0.9;
             font-size: 1rem;
+        }
+
+        .session-info-banner {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .session-info-banner.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
         }
 
         /* Progress Overview */
@@ -765,11 +859,6 @@
             animation: spin 1s linear infinite;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .hub-header h1 {
@@ -814,15 +903,32 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner-big"></div>
+        <div class="loading-text">Caricando Hub Coaching AI...</div>
+        <div class="loading-subtext">Verificando autenticazione e caricando dati personalizzati</div>
+    </div>
+
     <!-- AI Badge -->
     <div class="ai-badge">🤖 AI v2.0 Hub Integrato</div>
     
+    <!-- Auth Banner -->
+    <div class="auth-banner" id="authBanner">
+        <span id="authText">🔐 Accesso autorizzato per utente autenticato</span>
+    </div>
+
     <!-- Personalization Banner -->
     <div class="personalization-banner" id="personalizationBanner">
         <span id="personalizationText">🎯 Hub personalizzato attivo per il tuo profilo</span>
     </div>
 
-    <div class="hub-container">
+    <!-- Session Info Banner -->
+    <div class="session-info-banner" id="sessionInfoBanner">
+        <strong>💾 Sessione Unificata Attiva:</strong> <span id="sessionInfoText">Dati sincronizzati automaticamente</span>
+    </div>
+
+    <div class="hub-container" id="hubContainer">
         
         <div class="hub-header">
             <div class="header-content">
@@ -1000,9 +1106,15 @@
 
     </div>
 
+    <!-- Load Sistema Sessione Unificato -->
+    <script type="module" src="../api/unified-session-manager.js"></script>
+    
+    <!-- Load Auth Guard -->
+    <script type="module" src="../api/auth-guard.js"></script>
+
     <script>
-        // 🤖 SISTEMA AI INTEGRATO v2.0 - MODULE HUB
-        // ==========================================
+        // 🤖 SISTEMA AI INTEGRATO v2.0 - MODULE HUB CON SESSION MANAGER
+        // ================================================================
         
         // === CONFIGURAZIONE PROFILI LIFESTYLE ===
         const LIFESTYLE_PROFILES_CONFIG = {
@@ -1169,15 +1281,21 @@
         };
 
         // === VARIABILI GLOBALI ===
+        let sessionManager = null;
+        let currentUser = null;
+        let isAuthenticated = false;
         let userProfile = null;
         let progressData = null;
         let completedWeeks = [];
         let hubAI = null;
         let isInitialized = false;
 
-        // === CLASSE SISTEMA AI HUB ===
+        // === CLASSE SISTEMA AI HUB CON SESSION MANAGER ===
         class ModuleHubAI {
             constructor() {
+                this.sessionManager = null;
+                this.currentUser = null;
+                this.isAuthenticated = false;
                 this.userProfile = null;
                 this.progressData = null;
                 this.isInitialized = false;
@@ -1185,23 +1303,32 @@
 
             async initialize() {
                 try {
-                    // Carica dati utente
+                    // 1. Wait for session manager
+                    await this.waitForSessionManager();
+                    
+                    // 2. Check authentication
+                    await this.checkAuthentication();
+                    
+                    // 3. Load user data
                     await this.loadUserData();
                     
-                    // Personalizza interfaccia
+                    // 4. Personalizza interfaccia
                     this.personalizeInterface();
                     
-                    // Carica progress
+                    // 5. Carica progress
                     this.loadProgressData();
                     
-                    // Genera raccomandazioni
+                    // 6. Genera raccomandazioni
                     this.generateRecommendations();
                     
-                    // Popola moduli
+                    // 7. Popola moduli
                     this.populateModules();
                     
+                    // 8. Setup auto-save
+                    this.setupAutoSave();
+                    
                     this.isInitialized = true;
-                    console.log('🤖 Hub AI Sistema inizializzato');
+                    console.log('🤖 Hub AI Sistema inizializzato con Session Manager');
                     
                     return true;
                 } catch (error) {
@@ -1211,33 +1338,131 @@
                 }
             }
 
-            async loadUserData() {
-                // Carica profilo lifestyle
-                const quizData = localStorage.getItem('lifestyleQuizResults');
-                if (quizData) {
-                    this.userProfile = JSON.parse(quizData);
-                } else {
-                    this.userProfile = {
-                        profileType: 'motivato_inconsistente',
-                        name: 'Utente',
-                        challenges: [],
-                        scores: { wellbeing: 3, health: 3, professional: 4, social: 2 }
+            async waitForSessionManager() {
+                return new Promise((resolve) => {
+                    const checkSessionManager = () => {
+                        if (window.sessionManager && window.isUserAuthenticated) {
+                            this.sessionManager = window.sessionManager;
+                            resolve();
+                        } else {
+                            setTimeout(checkSessionManager, 100);
+                        }
                     };
-                }
+                    checkSessionManager();
+                });
+            }
 
-                // Carica progress generale
-                const progressData = localStorage.getItem('lifestyleProgress');
-                if (progressData) {
-                    this.progressData = JSON.parse(progressData);
-                } else {
-                    this.progressData = {
-                        completedWeeks: [],
-                        currentWeek: 1,
-                        totalSessions: 0,
-                        totalHours: 0,
-                        transformationScore: 0,
-                        streakDays: 0
-                    };
+            async checkAuthentication() {
+                try {
+                    this.isAuthenticated = window.isUserAuthenticated();
+                    this.currentUser = window.getCurrentUser();
+                    
+                    console.log('🔐 Auth state check:', {
+                        authenticated: this.isAuthenticated,
+                        user: this.currentUser?.email || 'none'
+                    });
+                    
+                    if (!this.isAuthenticated || !this.currentUser) {
+                        // Redirect to login if not authenticated
+                        console.log('🚫 User not authenticated, redirecting to login');
+                        window.location.href = '../pages/login.html';
+                        throw new Error('Authentication required');
+                    }
+                    
+                    // Show auth banner
+                    this.showAuthBanner();
+                    
+                } catch (error) {
+                    console.error('❌ Auth check failed:', error);
+                    throw error;
+                }
+            }
+
+            showAuthBanner() {
+                const authBanner = document.getElementById('authBanner');
+                const authText = document.getElementById('authText');
+                
+                if (authBanner && authText && this.currentUser) {
+                    const userName = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                    authText.textContent = `🔐 Accesso autorizzato per ${userName}`;
+                    authBanner.classList.add('active');
+                }
+            }
+
+            async loadUserData() {
+                try {
+                    // Carica dati dal session manager
+                    const userData = window.getUserData();
+                    
+                    console.log('📊 User data from session manager:', userData);
+                    
+                    // Carica profilo lifestyle dal session manager o localStorage
+                    if (userData && userData.lifestyleProfile) {
+                        this.userProfile = userData.lifestyleProfile;
+                    } else {
+                        // Fallback a localStorage
+                        const quizData = localStorage.getItem('lifestyleQuizResults');
+                        if (quizData) {
+                            this.userProfile = JSON.parse(quizData);
+                            // Salva nel session manager per future volte
+                            this.sessionManager.updateUserData({ lifestyleProfile: this.userProfile });
+                        }
+                    }
+                    
+                    // Se ancora non c'è profilo, usa default
+                    if (!this.userProfile) {
+                        this.userProfile = {
+                            profileType: 'motivato_inconsistente',
+                            name: this.currentUser.displayName || this.currentUser.email.split('@')[0],
+                            challenges: [],
+                            scores: { wellbeing: 3, health: 3, professional: 4, social: 2 }
+                        };
+                        
+                        // Salva nel session manager
+                        this.sessionManager.updateUserData({ lifestyleProfile: this.userProfile });
+                    }
+                    
+                    // Ensure name is from current user
+                    this.userProfile.name = this.currentUser.displayName || this.currentUser.email.split('@')[0];
+                    
+                    // Carica progress dal session manager
+                    if (userData && userData.moduleHubProgress) {
+                        this.progressData = userData.moduleHubProgress;
+                    } else {
+                        // Fallback a localStorage
+                        const progressData = localStorage.getItem('lifestyleProgress');
+                        if (progressData) {
+                            this.progressData = JSON.parse(progressData);
+                        }
+                    }
+                    
+                    // Default progress se non esiste
+                    if (!this.progressData) {
+                        this.progressData = {
+                            completedWeeks: [],
+                            currentWeek: 1,
+                            totalSessions: 0,
+                            totalHours: 0,
+                            transformationScore: 0,
+                            streakDays: 0,
+                            lastAccess: new Date().toISOString()
+                        };
+                    }
+                    
+                    // Update last access
+                    this.progressData.lastAccess = new Date().toISOString();
+                    
+                    // Save updated data back to session manager
+                    this.sessionManager.updateUserData({ 
+                        lifestyleProfile: this.userProfile,
+                        moduleHubProgress: this.progressData
+                    });
+                    
+                    console.log('✅ User data loaded and synced with session manager');
+                    
+                } catch (error) {
+                    console.error('❌ Error loading user data:', error);
+                    throw error;
                 }
             }
 
@@ -1248,6 +1473,9 @@
                     return;
                 }
 
+                // Session info banner
+                this.showSessionInfoBanner();
+                
                 // Banner personalizzazione
                 const banner = document.getElementById('personalizationBanner');
                 const bannerText = document.getElementById('personalizationText');
@@ -1275,7 +1503,7 @@
                 }
 
                 if (welcomeSubtitle) {
-                    welcomeSubtitle.textContent = `Coaching AI personalizzato per ${config.name} • Trasformazione adattiva`;
+                    welcomeSubtitle.textContent = `Coaching AI personalizzato per ${config.name} • Trasformazione adattiva • Session Manager Integrato`;
                 }
 
                 // Profilo display
@@ -1287,7 +1515,20 @@
                 // Progress subtitle
                 const progressSubtitle = document.getElementById('progressSubtitle');
                 if (progressSubtitle) {
-                    progressSubtitle.textContent = `Il tuo progresso come ${config.name}`;
+                    progressSubtitle.textContent = `Il tuo progresso come ${config.name} - Dati sincronizzati automaticamente`;
+                }
+            }
+
+            showSessionInfoBanner() {
+                const sessionBanner = document.getElementById('sessionInfoBanner');
+                const sessionText = document.getElementById('sessionInfoText');
+                
+                if (sessionBanner && sessionText && this.sessionManager) {
+                    const sessionInfo = this.sessionManager.sessionInfo;
+                    const sessionAge = Math.round((Date.now() - sessionInfo.loginTime) / (1000 * 60));
+                    
+                    sessionText.textContent = `Sessione attiva da ${sessionAge} minuti • Dati sincronizzati automaticamente`;
+                    sessionBanner.classList.add('show');
                 }
             }
 
@@ -1303,7 +1544,7 @@
                 }
 
                 if (profileName) {
-                    profileName.textContent = config.name;
+                    profileName.textContent = `${this.userProfile.name} - ${config.name}`;
                 }
 
                 if (profileDescription) {
@@ -1311,7 +1552,7 @@
                 }
 
                 if (profileDetailedDescription) {
-                    profileDetailedDescription.textContent = config.coaching_approach;
+                    profileDetailedDescription.textContent = `${config.coaching_approach} • Dati sincronizzati con Session Manager`;
                 }
 
                 if (leadScore) {
@@ -1329,10 +1570,10 @@
                 const situationSummary = document.getElementById('situationSummary');
                 if (situationSummary) {
                     situationSummary.innerHTML = `
-                        <p><strong>Ciao ${this.userProfile.name}!</strong> Ho analizzato il tuo profilo con il Sistema AI v2.0 e voglio condividere alcune riflessioni personalizzate.</p>
+                        <p><strong>Ciao ${this.userProfile.name}!</strong> Ho analizzato il tuo profilo con il Sistema AI v2.0 integrato con Session Manager e voglio condividere alcune riflessioni personalizzate.</p>
                         <p><strong>Il tuo profilo:</strong> ${config.name} ${config.emoji}</p>
                         <p>${config.description}</p>
-                        <div class="highlight-box info">Il Sistema AI ha calibrato tutto il percorso sul tuo profilo comportamentale unico!</div>
+                        <div class="highlight-box info">Il Sistema AI ha calibrato tutto il percorso sui tuoi dati reali sincronizzati automaticamente!</div>
                     `;
                 }
 
@@ -1353,11 +1594,11 @@
                 const coachingHighlight = document.getElementById('coachingHighlight');
 
                 if (coachingApproachText) {
-                    coachingApproachText.textContent = `Con il Sistema AI v2.0, il mio approccio con te sarà: ${config.coaching_approach}. Ogni interazione è calibrata per il tuo modo unico di apprendere e crescere.`;
+                    coachingApproachText.textContent = `Con il Sistema AI v2.0 integrato con Session Manager, il mio approccio con te sarà: ${config.coaching_approach}. Ogni interazione è calibrata sui tuoi dati reali e sincronizzata automaticamente.`;
                 }
 
                 if (coachingHighlight) {
-                    coachingHighlight.innerHTML = `<strong>Per il tuo profilo "${config.name}":</strong> ${config.cta_text}`;
+                    coachingHighlight.innerHTML = `<strong>Per il tuo profilo "${config.name}":</strong> ${config.cta_text} • I tuoi progressi sono tracciati e salvati automaticamente nel sistema unificato.`;
                 }
 
                 // Update wellness scores
@@ -1397,14 +1638,15 @@
             }
 
             loadProgressData() {
-                // Carica dati completamento settimane
-                completedWeeks = [];
-                let totalHours = 0;
-                let transformationScore = 0;
+                // Carica dati completamento settimane dal session manager e localStorage
+                completedWeeks = this.progressData.completedWeeks || [];
+                let totalHours = this.progressData.totalHours || 0;
+                let transformationScore = this.progressData.transformationScore || 0;
 
+                // Sincronizza con localStorage per backward compatibility
                 for (let i = 1; i <= 7; i++) {
                     const weekData = localStorage.getItem(`week${i}SessionCompleted`);
-                    if (weekData) {
+                    if (weekData && !completedWeeks.includes(i)) {
                         completedWeeks.push(i);
                         totalHours += 0.75; // 45 min per sessione
                     }
@@ -1412,10 +1654,18 @@
 
                 // Carica score finale se completato
                 const finalData = localStorage.getItem('lifestyleCoachingCompleted');
-                if (finalData) {
+                if (finalData && !transformationScore) {
                     const final = JSON.parse(finalData);
                     transformationScore = Math.round(final.finalScore * 20) || 0; // Convert to percentage
                 }
+
+                // Update progress data
+                this.progressData.completedWeeks = completedWeeks;
+                this.progressData.totalHours = totalHours;
+                this.progressData.transformationScore = transformationScore;
+
+                // Save back to session manager
+                this.sessionManager.updateUserData({ moduleHubProgress: this.progressData });
 
                 // Update progress display
                 this.updateProgressDisplay(completedWeeks.length, totalHours, transformationScore);
@@ -1437,11 +1687,11 @@
                 // Update completion text
                 const completionText = document.getElementById('completionText');
                 if (completed === 0) {
-                    completionText.textContent = 'Inizia il tuo percorso di trasformazione personalizzato';
+                    completionText.textContent = `Inizia il tuo percorso personalizzato, ${this.userProfile.name}`;
                 } else if (completed === 7) {
-                    completionText.textContent = '🎉 Percorso completato! Trasformazione straordinaria raggiunta!';
+                    completionText.textContent = `🎉 Percorso completato! ${this.userProfile.name}, trasformazione straordinaria raggiunta!`;
                 } else {
-                    completionText.textContent = `${completed}/7 settimane completate - Ottimi progressi!`;
+                    completionText.textContent = `${completed}/7 settimane completate - Ottimi progressi, ${this.userProfile.name}!`;
                 }
             }
 
@@ -1488,7 +1738,7 @@
                     
                     recommendations.push({
                         title: `🎯 Prossimo Step: Settimana ${nextWeek}`,
-                        description: `${weekConfig.title} - ${personalization}`
+                        description: `${weekConfig.title} - ${personalization} • Dati salvati automaticamente nel Session Manager`
                     });
                 }
 
@@ -1500,11 +1750,17 @@
                     });
                 }
 
+                // Session manager integration recommendation
+                recommendations.push({
+                    title: '💾 Sistema Unificato Attivo',
+                    description: `Tutti i tuoi progressi sono sincronizzati automaticamente. Session manager mantiene i dati aggiornati tra tutte le pagine del sistema.`
+                });
+
                 // Progress-based recommendation
                 if (completedWeeks.length >= 3) {
                     recommendations.push({
                         title: '📈 Ottimizzazione Progresso',
-                        description: 'Hai fatto ottimi progressi! Considera di rivedere le settimane precedenti per consolidare i risultati.'
+                        description: 'Hai fatto ottimi progressi! I tuoi dati sono al sicuro nel sistema unificato. Considera di rivedere le settimane precedenti per consolidare i risultati.'
                     });
                 }
 
@@ -1538,15 +1794,15 @@
 
             getPersonalizedAdvice(config) {
                 const adviceMap = {
-                    'stressato_esaurito': 'Focus sulle settimane che lavorano su gestione stress e auto-cura. Il tuo ritmo è perfetto, continua gradualmente.',
-                    'procrastinatore_bloccato': 'Concentrati su azione immediata! Le settimane 3 e 4 ti daranno strumenti concreti per passare all\'azione.',
-                    'perfezionista_insoddisfatto': 'Ricorda: progresso over perfezione. Ogni settimana completata è una vittoria da celebrare.',
-                    'dispersivo_confuso': 'Una settimana alla volta, un focus chiaro. Il Sistema AI ti aiuta a mantenere la direzione giusta.',
-                    'motivato_inconsistente': 'Costruisci sistemi automatici con le settimane 4 e 5. La costanza è la tua chiave del successo.',
-                    'equilibrato_ottimizzatore': 'Ottimizza il tuo percorso con le settimane avanzate. Il tuo approccio strategico sta dando risultati.'
+                    'stressato_esaurito': 'Focus sulle settimane che lavorano su gestione stress e auto-cura. Il tuo ritmo è perfetto, i progressi sono salvati automaticamente.',
+                    'procrastinatore_bloccato': 'Concentrati su azione immediata! Le settimane 3 e 4 ti daranno strumenti concreti. Il sistema traccia ogni tuo progresso.',
+                    'perfezionista_insoddisfatto': 'Ricorda: progresso over perfezione. Ogni settimana completata è automaticamente salvata e celebrata dal sistema.',
+                    'dispersivo_confuso': 'Una settimana alla volta, un focus chiaro. Il Sistema AI con Session Manager ti aiuta a mantenere la direzione giusta.',
+                    'motivato_inconsistente': 'Costruisci sistemi automatici con le settimane 4 e 5. Il Session Manager mantiene la costanza dei tuoi dati.',
+                    'equilibrato_ottimizzatore': 'Ottimizza il tuo percorso con le settimane avanzate. I tuoi dati di performance sono tracciati accuratamente.'
                 };
 
-                return adviceMap[this.userProfile.profileType] || 'Continua il tuo percorso personalizzato, stai facendo progressi straordinari!';
+                return adviceMap[this.userProfile.profileType] || 'Continua il tuo percorso personalizzato, stai facendo progressi straordinari tracciati dal sistema unificato!';
             }
 
             populateModules() {
@@ -1588,7 +1844,7 @@
                     buttonText = '📖 Rivedi Settimana';
                     buttonClass = 'completed';
                 } else if (isRecommended) {
-                    statusText = '⭐ Consigliata';
+                    statusText = '⭐ Consigliata AI';
                     statusClass = 'recommended';
                     buttonText = '🎯 Inizia Ora';
                 }
@@ -1600,7 +1856,7 @@
                     </div>
                     <h3 class="week-title">${weekConfig.title}</h3>
                     <p class="week-description">${weekConfig.description}</p>
-                    <div class="week-personalization">${personalization}</div>
+                    <div class="week-personalization">💡 ${personalization} • Auto-save attivo</div>
                     <button class="week-button ${buttonClass}" onclick="navigateToWeek(${weekNum})">
                         ${buttonText}
                     </button>
@@ -1615,9 +1871,9 @@
                 
                 if (startBtn) {
                     if (completedWeeks.length > 0) {
-                        startBtn.textContent = '🚀 Continua il Tuo Percorso';
+                        startBtn.textContent = `🚀 Continua il Tuo Percorso, ${this.userProfile.name}`;
                     } else {
-                        startBtn.textContent = '🚀 Inizia il Tuo Percorso';
+                        startBtn.textContent = `🚀 Inizia il Tuo Percorso, ${this.userProfile.name}`;
                     }
                 }
                 
@@ -1634,11 +1890,59 @@
                 return Math.round(avg * 20); // Convert 1-5 to percentage
             }
 
+            setupAutoSave() {
+                // Auto-save ogni 2 minuti
+                setInterval(() => {
+                    if (this.sessionManager && this.isAuthenticated) {
+                        this.saveToSessionManager();
+                        console.log('💾 Auto-save completato nel Session Manager');
+                    }
+                }, 120000); // 2 minuti
+
+                // Save on page visibility change
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'hidden' && this.sessionManager) {
+                        this.saveToSessionManager();
+                    }
+                });
+
+                // Save before page unload
+                window.addEventListener('beforeunload', () => {
+                    if (this.sessionManager) {
+                        this.saveToSessionManager();
+                    }
+                });
+            }
+
+            saveToSessionManager() {
+                if (!this.sessionManager || !this.isAuthenticated) return;
+
+                try {
+                    // Update progress data with current state
+                    this.progressData.lastAccess = new Date().toISOString();
+                    this.progressData.completedWeeks = completedWeeks;
+                    
+                    // Save to session manager
+                    this.sessionManager.updateUserData({
+                        lifestyleProfile: this.userProfile,
+                        moduleHubProgress: this.progressData,
+                        moduleHubLastAccess: new Date().toISOString()
+                    });
+                    
+                    // Extend session
+                    this.sessionManager.extendSession();
+                    
+                    console.log('💾 Dati salvati nel Session Manager');
+                } catch (error) {
+                    console.error('❌ Errore salvataggio Session Manager:', error);
+                }
+            }
+
             loadFallbackData() {
                 console.log('⚠️ Caricamento dati fallback...');
                 this.userProfile = {
                     profileType: 'motivato_inconsistente',
-                    name: 'Utente',
+                    name: this.currentUser?.displayName || 'Utente',
                     challenges: ['consistency', 'focus'],
                     scores: { wellbeing: 3, health: 3, professional: 3, social: 3 }
                 };
@@ -1653,7 +1957,7 @@
             }
         }
 
-        // === FUNZIONI GLOBALI MANCANTI - FIX DEGLI ERRORI ===
+        // === FUNZIONI GLOBALI ===
         
         /**
          * Funzione per iniziare/continuare il percorso di coaching
@@ -1689,7 +1993,7 @@
                 }
             }
             
-            // Salva stato attuale
+            // Salva stato attuale nel session manager
             saveProgressState();
             
             // Naviga alla settimana appropriata
@@ -1705,12 +2009,12 @@
             // Mostra conferma
             const confirmRetake = confirm(
                 '⚠️ Rifare il test resetterà il tuo profilo attuale.\n\n' +
-                'I tuoi progressi nelle settimane saranno mantenuti, ma il profilo sarà aggiornato.\n\n' +
+                'I tuoi progressi nelle settimane saranno mantenuti nel Session Manager, ma il profilo sarà aggiornato.\n\n' +
                 'Vuoi continuare?'
             );
             
             if (confirmRetake) {
-                // Salva progressi attuali
+                // Salva progressi attuali nel session manager
                 saveProgressState();
                 
                 // Naviga al quiz
@@ -1724,7 +2028,15 @@
         function navigateToWeek(weekNumber) {
             console.log(`📚 Navigazione a settimana ${weekNumber}...`);
             
-            // Salva la settimana corrente
+            // Salva la settimana corrente nel session manager
+            if (hubAI && hubAI.sessionManager) {
+                hubAI.sessionManager.updateUserData({
+                    currentWeek: weekNumber,
+                    weekNavigationTime: new Date().toISOString()
+                });
+            }
+            
+            // Fallback localStorage
             localStorage.setItem('currentWeek', weekNumber);
             
             // Salva dati profilo per la settimana
@@ -1740,7 +2052,7 @@
         }
         
         /**
-         * Salva lo stato del progresso
+         * Salva lo stato del progresso nel session manager
          */
         function saveProgressState() {
             const progressState = {
@@ -1753,8 +2065,17 @@
                 lastAccess: new Date().toISOString()
             };
             
+            // Save to session manager if available
+            if (hubAI && hubAI.sessionManager) {
+                hubAI.sessionManager.updateUserData({ 
+                    moduleHubProgress: progressState,
+                    moduleHubLastSave: new Date().toISOString()
+                });
+                console.log('💾 Stato progresso salvato nel Session Manager:', progressState);
+            }
+            
+            // Fallback localStorage
             localStorage.setItem('lifestyleProgress', JSON.stringify(progressState));
-            console.log('💾 Stato progresso salvato:', progressState);
         }
         
         /**
@@ -1799,35 +2120,69 @@
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
             }, 3000);
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            const hubContainer = document.getElementById('hubContainer');
+            
+            if (loadingScreen) {
+                loadingScreen.classList.add('hidden');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }
+            
+            if (hubContainer) {
+                hubContainer.classList.add('ready');
+            }
         }
         
         // === INIZIALIZZAZIONE AL CARICAMENTO PAGINA ===
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('🏁 Inizializzazione Module Hub AI v2.0...');
+            console.log('🏠 Inizializzazione Module Hub AI v2.0 con Session Manager...');
             
             try {
                 // Crea istanza del sistema AI
                 hubAI = new ModuleHubAI();
                 
-                // Inizializza
+                // Inizializza (include controllo auth)
                 const success = await hubAI.initialize();
                 
                 if (success) {
-                    console.log('✅ Hub AI inizializzato con successo!');
-                    showNotification('🤖 Sistema AI personalizzato attivato!', 'success');
+                    console.log('✅ Hub AI inizializzato con successo con Session Manager!');
+                    showNotification('🤖 Sistema AI personalizzato attivato con dati sincronizzati!', 'success');
                 } else {
                     console.warn('⚠️ Hub AI inizializzato con dati fallback');
                     showNotification('⚠️ Alcuni dati non disponibili, uso configurazione base', 'warning');
                 }
                 
+                // Hide loading screen
+                hideLoadingScreen();
+                
             } catch (error) {
                 console.error('❌ Errore critico inizializzazione:', error);
+                
+                // Check if it's an auth error
+                if (error.message === 'Authentication required') {
+                    // Auth error, redirect will happen automatically
+                    return;
+                }
+                
+                hideLoadingScreen();
                 showNotification('❌ Errore caricamento sistema AI', 'error');
                 
-                // Carica interfaccia base senza personalizzazione
+                // Load basic interface without personalization
+                const hubContainer = document.getElementById('hubContainer');
+                if (hubContainer) {
+                    hubContainer.classList.add('ready');
+                }
+                
                 document.getElementById('profileName').textContent = 'Profilo Standard';
                 document.getElementById('profileDescription').textContent = 'Sistema AI in modalità base';
             }
@@ -1866,7 +2221,7 @@
         `;
         document.head.appendChild(style);
         
-        console.log('✅ Module Hub AI v2.0 - Sistema completamente caricato e funzionante!');
+        console.log('✅ Module Hub AI v2.0 con Session Manager - Sistema completamente caricato e funzionante!');
     </script>
 </body>
 </html>
